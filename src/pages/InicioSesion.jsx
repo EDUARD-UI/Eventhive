@@ -1,177 +1,179 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FcGoogle } from 'react-icons/fc';
+import { useNavigate, Link } from 'react-router-dom';
 import { FiMail, FiLock } from 'react-icons/fi';
+import Swal from 'sweetalert2';
+import AuthLayout from '../components/auth/AuthLayout.jsx';
+import InputField from '../components/common/InputField.jsx';
+import SocialAuthButton from '../components/common/SocialAuthButton.jsx';
+import useForm from '../hooks/useForm.js';
 
-export default function Login() {
+const validateLogin = (values) => {
+  const errors = {};
+  if (!values.email) {
+    errors.email = 'El correo electrónico es requerido.';
+  } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+    errors.email = 'Ingresa un formato de correo válido.';
+  }
+
+  if (!values.password) {
+    errors.password = 'La contraseña es requerida.';
+  } else if (values.password.length < 6) {
+    errors.password = 'La contraseña debe tener al menos 6 caracteres.';
+  }
+
+  return errors;
+};
+
+export default function InicioSesion() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [remember, setRemember] = useState(false);
-  const [error, setError] = useState('');
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    setError('');
+  const {
+    values,
+    errors,
+    touched,
+    isSubmitting,
+    submitError,
+    setSubmitError,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+  } = useForm(
+    {
+      email: '',
+      password: '',
+      remember: false,
+    },
+    validateLogin
+  );
 
-    if (!email || !password) {
-      setError('Completá correo y contraseña.');
-      return;
+  const onSubmit = async (formValues) => {
+    // Simulación de autenticación (integración preparada para Bearer token con httpClient)
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    // Si todo es correcto, almacenar token simulado y redirigir
+    localStorage.setItem('eventhive_token', 'demo_jwt_token_' + Date.now());
+    localStorage.setItem('eventhive_user', JSON.stringify({
+      email: formValues.email,
+      name: formValues.email.split('@')[0],
+      role: formValues.email.includes('admin') ? 'ADMIN' : formValues.email.includes('organizador') ? 'ORGANIZADOR' : 'CLIENTE',
+    }));
+
+    Swal.fire({
+      icon: 'success',
+      title: '¡Bienvenido de nuevo!',
+      text: 'Has iniciado sesión correctamente.',
+      timer: 1500,
+      showConfirmButton: false,
+    });
+
+    if (formValues.email.includes('admin')) {
+      navigate('/admin');
+    } else if (formValues.email.includes('organizador')) {
+      navigate('/organizador');
+    } else {
+      navigate('/');
     }
+  };
 
-    // TODO: conectar con Firebase/Supabase (signInWithEmailAndPassword)
-    console.log({ email, password, remember });
-  }
-
-  function handleGoogleLogin() {
-    // TODO: conectar con signInWithPopup(auth, new GoogleAuthProvider())
-  }
+  const handleGoogleLogin = () => {
+    Swal.fire({
+      icon: 'info',
+      title: 'Conexión con Google',
+      text: 'El proveedor de Google OAuth se vinculará con tu cuenta al completar la configuración.',
+    });
+  };
 
   return (
-    <div className="min-h-screen flex bg-bg">
-      {/* Panel de marca */}
-      <div className="hidden lg:flex lg:w-[42%] relative flex-col justify-between p-10 text-white overflow-hidden bg-[radial-gradient(120%_140%_at_15%_-10%,#2b9dff_0%,#007BFF_45%,#0047a8_100%)]">
-        <Link to="/" className="flex items-center gap-2 font-display font-bold text-xl">
-          <span
-            className="w-[22px] h-[22px] bg-accent relative inline-block"
-            style={{ clipPath: 'polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0% 50%)' }}
-          >
-            <span
-              className="absolute inset-[3px] bg-white"
-              style={{ clipPath: 'polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0% 50%)' }}
-            />
-          </span>
-          event<span className="text-accent">hive</span>
-        </Link>
+    <AuthLayout
+      title="Inicia sesión en EventHive"
+      subtitle="Accede a tus eventos guardados, compras y organizadores favoritos."
+      topPromptText="¿Aún no tienes cuenta?"
+      topActionText="Regístrate gratis"
+      topActionHref="/registro"
+      errorBanner={submitError}
+    >
+      <div className="space-y-4">
+        <SocialAuthButton
+          onClick={handleGoogleLogin}
+          text="Continuar con Google"
+        />
 
-        <div>
-          <h1 className="font-display text-3xl leading-[1.15] mb-3.5 max-w-xs">
-            Vive Cartagena,
-            <br />
-            evento a evento.
-          </h1>
-          <p className="text-sm text-sky-100 max-w-xs">
-            Iniciá sesión para guardar tus eventos favoritos, seguir organizadores y no perderte nada.
-          </p>
+        <div className="relative flex items-center justify-center my-6">
+          <div className="border-t border-borderc w-full" />
+          <span className="bg-bg px-3 text-xs text-muted uppercase font-semibold">
+            o con tu correo
+          </span>
         </div>
 
-        <p className="text-[11px] text-sky-100/80">
-          © 2026 EventHive · Cartagena, Colombia
-        </p>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          <InputField
+            id="email"
+            name="email"
+            type="email"
+            label="Correo electrónico"
+            placeholder="ejemplo@cartagena.co"
+            icon={FiMail}
+            value={values.email}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.email}
+            touched={touched.email}
+            required
+            autoComplete="email"
+          />
 
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-16 -bottom-16 w-64 h-64 opacity-20"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle, transparent 20%, rgba(255,255,255,.4) 21%, rgba(255,255,255,.4) 22%, transparent 23%)',
-            backgroundSize: '28px 28px',
-          }}
-        />
-      </div>
+          <InputField
+            id="password"
+            name="password"
+            type="password"
+            label="Contraseña"
+            placeholder="••••••••"
+            icon={FiLock}
+            value={values.password}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.password}
+            touched={touched.password}
+            required
+            autoComplete="current-password"
+          />
 
-      {/* Formulario */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 relative">
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-6 left-6 flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold bg-white border border-borderc text-slate-700 hover:border-brand hover:text-brand transition-colors"
-        >
-          ← Regresar
-        </button>
-
-
-        <div className="w-full max-w-[400px]">
-          <p className="text-brand text-xs font-bold tracking-wide mb-1.5">
-            BIENVENIDO DE NUEVO
-          </p>
-          <h2 className="font-display font-bold text-[28px] mb-8">
-            Inicia sesión
-          </h2>
-
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-muted mb-1.5">
-                Correo electrónico
-              </label>
-              <div className="relative">
-                <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="tucorreo@ejemplo.com"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-borderc text-sm focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 transition-shadow"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-muted mb-1.5">
-                Contraseña
-              </label>
-              <div className="relative">
-                <FiLock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-borderc text-sm focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 transition-shadow"
-                />
-              </div>
-            </div>
-
-            {error && (
-              <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                {error}
-              </p>
-            )}
-
-            <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center gap-1.5 text-muted">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                  className="accent-brand"
-                />
-                Recordarme
-              </label>
-              <a href="#" className="text-brand font-semibold hover:underline">
-                ¿Olvidaste tu contraseña?
-              </a>
-            </div>
+          <div className="flex items-center justify-between pt-1">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600 font-medium">
+              <input
+                type="checkbox"
+                name="remember"
+                checked={values.remember}
+                onChange={handleChange}
+                className="w-4 h-4 rounded border-borderc text-brand focus:ring-brand/20 accent-brand rounded-sm cursor-pointer"
+              />
+              <span>Recordar sesión</span>
+            </label>
 
             <button
-              type="submit"
-              className="w-full py-3 rounded-lg text-sm font-bold text-white bg-brand shadow-[0_8px_20px_-6px_rgba(0,123,255,.55)] hover:bg-brand-dark transition-colors"
+              type="button"
+              onClick={() => Swal.fire('Recuperar contraseña', 'Te enviaremos un correo de restablecimiento.', 'info')}
+              className="text-xs font-semibold text-brand hover:text-brand-dark transition-colors"
             >
-              Iniciar sesión
+              ¿Olvidaste tu contraseña?
             </button>
-          </form>
-
-          <div className="flex items-center gap-3 my-6">
-            <span className="flex-1 h-px bg-borderc" />
-            <span className="text-[11px] text-muted">o continuá con</span>
-            <span className="flex-1 h-px bg-borderc" />
           </div>
 
           <button
-            onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-lg text-sm font-semibold border border-borderc hover:border-brand hover:shadow-sm transition-all"
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full mt-2 py-3 px-4 rounded-xl bg-brand hover:bg-brand-dark text-white font-semibold text-sm shadow-md hover:shadow-lg shadow-brand/20 active:scale-[0.99] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            <FcGoogle size={18} />
-            Continuar con Google
+            {isSubmitting ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Iniciando sesión...</span>
+              </>
+            ) : (
+              'Ingresar a mi cuenta'
+            )}
           </button>
-
-          <p className="text-center text-xs text-muted mt-7">
-            ¿No tienes cuenta?{' '}
-            <Link to="/registro" className="text-brand font-semibold hover:underline">
-              Regístrate
-            </Link>
-          </p>
-        </div>
+        </form>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

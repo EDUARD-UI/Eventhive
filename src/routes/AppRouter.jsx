@@ -3,7 +3,8 @@ import Home from '../pages/Home.jsx';
 import EventDetailPage from '../pages/EventDetailPage.jsx';
 import BuscarEventosPage from '../pages/BuscarEventosPage.jsx';
 import CategoriasPage from '../pages/CategoriasPage.jsx';
-import AdminPanel from '../pages/Adminisstrador/AdminPanel.jsx';
+import OrganizadoresPage from '../pages/OrganizadoresPage.jsx';
+import AdminPanel from '../pages/Administrador/AdminPanel.jsx';
 import ModeradorPanel from '../pages/Moderador/ModeradorPanel.jsx';
 import OrganizadorIndex from '../pages/Organizador/organizadorIndex.jsx';
 import InicioSesion from '../pages/InicioSesion.jsx';
@@ -19,6 +20,7 @@ export default function AppRouter() {
         <Route path="/eventos/:id" element={<EventDetailPage />} />
         <Route path="/buscar" element={<BuscarEventosPage />} />
         <Route path="/categorias" element={<CategoriasPage />} />
+        <Route path="/organizadores" element={<OrganizadoresPage />} />
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/moderador" element={<ModeradorPanel />} />
         <Route path="/organizador" element={<OrganizadorIndex />} />

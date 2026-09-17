@@ -6,6 +6,7 @@ import MiEvento from './MiEvento.jsx';
 import AsistentesView from './AsistentesView.jsx';
 import EntradasView from './EntradasView.jsx';
 import PerfilOrganizador from './PerfilOrganizador.jsx';
+import ActividadesView from './ActividadesView.jsx';
 import {
     FiBell,
     FiCalendar,
@@ -188,6 +189,8 @@ export default function OrganizadorIndex() {
                 return <EntradasView />;
             case 'perfil':
                 return <PerfilOrganizador />;
+            case 'actividades':
+                return <ActividadesView />;
             default:
                 return (
                     <section className="flex min-h-[400px] flex-col items-center justify-center rounded-[13px] border border-[#e0e6ed] bg-white text-center">
