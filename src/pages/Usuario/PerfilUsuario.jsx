@@ -7,8 +7,7 @@ import {
   FiEdit2,
   FiMail,
 } from 'react-icons/fi';
-import Navbar from '../components/usersComponets/Navbar.jsx';
-import Footer from '../components/usersComponets/Footer.jsx';
+import Navbar from '../../components/usersComponets/Navbar.jsx';
 
 const TABS = [
   { id: 'guardados', label: 'Guardados' },
@@ -259,7 +258,6 @@ export default function PerfilCliente() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

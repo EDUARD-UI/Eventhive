@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import L from 'leaflet';
 import { Link } from 'react-router-dom';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
-import Navbar from '../components/Navbar.jsx';
+import Navbar from '../components/usersComponets/Navbar.jsx';
 import Hero from '../components/Hero.jsx';
 import FeaturedEventCard from '../components/FeaturedEventCard.jsx';
 import EventCard from '../components/EventCard.jsx';
-import Footer from '../components/Footer.jsx';
+import Footer from '../components/usersComponets/Footer.jsx';
 import { getFeaturedEvents, getMapEvents, getUpcomingEvents } from '../services/eventService.js';
 
 const CARTAGENA_CENTER = { lat: 10.3951, lng: -75.4834 };
@@ -26,9 +26,9 @@ const getDistanceKm = (lat1, lng1, lat2, lng2) => {
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLng / 2) *
+    Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return earthRadiusKm * c;
 };

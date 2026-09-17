@@ -164,7 +164,7 @@ export default function AdminPanel() {
           {/* Logo Oficial de EventHive */}
           <div className="flex items-center gap-3 px-2 mb-8 mr-4 bg-white/5 p-2.5 rounded-2xl border border-white/10">
             <img
-              src="/logo.png"
+              src={logoEventhive}
               alt="EventHive Logo"
               className="h-10 w-10 object-contain rounded-xl bg-white p-1 shadow-sm shrink-0"
             />
@@ -188,8 +188,8 @@ export default function AdminPanel() {
                   <button
                     onClick={() => setSeccionActiva(id)}
                     className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-all text-left ${active
-                        ? 'bg-[#f0f4f9] text-slate-900 font-semibold rounded-l-2xl relative z-10'
-                        : 'text-slate-300 hover:text-white hover:bg-white/5 rounded-l-2xl mr-3'
+                      ? 'bg-[#f0f4f9] text-slate-900 font-semibold rounded-l-2xl relative z-10'
+                      : 'text-slate-300 hover:text-white hover:bg-white/5 rounded-l-2xl mr-3'
                       }`}
                   >
                     <div className="flex items-center gap-3">
@@ -200,8 +200,8 @@ export default function AdminPanel() {
                     {count && (
                       <span
                         className={`text-xs font-semibold px-2 py-0.5 rounded-full ${active
-                            ? 'bg-brand-light text-brand'
-                            : 'bg-white/10 text-slate-300'
+                          ? 'bg-brand-light text-brand'
+                          : 'bg-white/10 text-slate-300'
                           }`}
                       >
                         {count}
@@ -499,8 +499,8 @@ function EventCardItem({ evento, onSelectEvento, onToggleEstado }) {
           <button
             onClick={() => onToggleEstado(evento.id)}
             className={`flex items-center justify-center py-1.5 px-3 rounded-xl text-xs font-semibold border transition-all ${evento.estado === 'Publicado'
-                ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
-                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+              ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
+              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
               }`}
           >
             {evento.estado === 'Publicado' ? 'Suspender' : 'Reactivar'}
@@ -588,8 +588,8 @@ function ModalDetalleEvento({ evento, onClose, onToggleEstado }) {
                   onClose();
                 }}
                 className={`py-2 px-4 rounded-xl text-xs font-semibold border transition-all ${evento.estado === 'Publicado'
-                    ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
-                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                  ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
+                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
                   }`}
               >
                 {evento.estado === 'Publicado' ? 'Suspender de Plataforma' : 'Reactivar Evento'}

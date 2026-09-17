@@ -1,5 +1,5 @@
 const FOOTER_COLUMNS = [
-  { title: 'Explorar', links: ['Música', 'Cultura', 'Gastronomía', 'Deportes'] },
+  { title: 'Categorías', links: ['Música', 'Cultura', 'Gastronomía', 'Deportes'] },
   { title: 'Organizadores', links: ['Publica tu evento', 'Precios', 'Recursos'] },
   { title: 'Compañía', links: ['Sobre nosotros', 'Contacto', 'Términos', 'Privacidad'] },
 ];

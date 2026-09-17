@@ -11,8 +11,8 @@ import {
   FiGrid,
   FiMusic,
 } from 'react-icons/fi';
-import Navbar from '../components/Navbar.jsx';
-import Footer from '../components/Footer.jsx';
+import Navbar from '../components/usersComponets/Navbar.jsx';
+import Footer from '../components/usersComponets/Footer.jsx';
 import { getCategoriesWithEvents } from '../services/categoryService.js';
 
 const CATEGORY_META = {

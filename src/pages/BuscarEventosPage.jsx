@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import Navbar from '../components/Navbar.jsx';
-import Footer from '../components/Footer.jsx';
+import Navbar from '../components/usersComponets/Navbar.jsx';
+import Footer from '../components/usersComponets/Footer.jsx';
 import EventCard from '../components/EventCard.jsx';
 import { searchEvents, getEventsByCategory } from '../services/eventService.js';
 
