@@ -1,9 +1,10 @@
+import { FiMapPin } from 'react-icons/fi';
 import SearchCard from './SearchCard.jsx';
 import EventHiveLogo from './common/EventHiveLogo.jsx';
 
 export default function Hero() {
   return (
-    <section className="relative px-6 sm:px-10 pt-16 sm:pt-24 pb-28 sm:pb-36 text-white overflow-hidden bg-[radial-gradient(120%_140%_at_15%_-10%,#2b9dff_0%,#007BFF_45%,#0047a8_100%)]">
+    <section className="relative px-6 sm:px-10 pt-10 sm:pt-14 pb-16 sm:pb-20 text-white bg-[radial-gradient(120%_140%_at_15%_-10%,#2b9dff_0%,#007BFF_45%,#0047a8_100%)]">
       {/* Capa Fotográfica: Murallas de Cartagena con fusión CSS avanzada (mix-blend-mode: overlay) */}
       <div
         aria-hidden="true"
@@ -15,32 +16,40 @@ export default function Hero() {
         }}
       />
 
-      {/* Gradientes superpuestos para fusionar con el fondo azul y garantizar contraste y legibilidad óptimos */}
+      {/* Gradientes superpuestos para contraste óptimo */}
       <div
         aria-hidden="true"
         className="absolute inset-0 bg-gradient-to-r from-[#0047a8]/85 via-[#007BFF]/35 to-transparent pointer-events-none"
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-t from-[#0047a8]/50 via-transparent to-transparent pointer-events-none"
+        className="absolute inset-0 bg-gradient-to-t from-[#0047a8]/60 via-transparent to-transparent pointer-events-none"
       />
 
-      {/* Marca de agua vectorial del emblema oficial EventHive en el costado derecho */}
+      {/* Marca de agua vectorial de EventHive */}
       <div
         aria-hidden="true"
-        className="hidden lg:block absolute -right-8 top-1/2 -translate-y-1/2 w-[400px] h-[400px] pointer-events-none opacity-[0.09] select-none"
+        className="hidden lg:block absolute -right-8 top-1/2 -translate-y-1/2 w-[360px] h-[360px] pointer-events-none opacity-[0.09] select-none"
       >
-        <EventHiveLogo variant="icon" size={400} />
+        <EventHiveLogo variant="icon" size={360} />
       </div>
 
       {/* Contenido Principal */}
-      <div className="relative z-10 mx-auto flex max-w-[1500px] flex-col items-start text-left">
-        <div className="mb-3.5 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ffc107]/15 border border-[#ffc107]/30 backdrop-blur-md text-[11px] font-bold uppercase tracking-wide text-[#ffc107]">
-          <span className="h-2 w-2 rounded-full bg-[#ffc107] animate-pulse" />
-          En vivo ahora — 12 eventos esta semana
+      <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-start text-left mb-6 sm:mb-8">
+        {/* Ubicación y Badge */}
+        <div className="flex flex-wrap items-center gap-3 mb-3">
+          <div className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-white/90">
+            <FiMapPin className="text-[#ffc107]" size={15} />
+            <span>Cartagena de Indias, Colombia</span>
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#ffc107]/20 border border-[#ffc107]/40 backdrop-blur-md text-[11px] font-bold uppercase tracking-wide text-[#ffc107]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#ffc107] animate-pulse" />
+            En vivo — Agenda Cultural 2026
+          </div>
         </div>
 
-        <h1 className="max-w-[900px] font-display text-[42px] font-bold leading-[1.05] sm:text-[60px] drop-shadow-sm">
+        <h1 className="max-w-3xl font-display text-[34px] sm:text-[48px] font-extrabold leading-[1.1] drop-shadow-sm">
           Vive la Magia de Cartagena :
           <br />
           Tus Eventos Favoritos te
@@ -48,24 +57,18 @@ export default function Hero() {
           Esperan
         </h1>
 
-        <p className="mb-8 mt-4 max-w-3xl text-sm text-sky-100 sm:text-base leading-relaxed font-medium">
+        <p className="mt-2.5 max-w-xl text-xs text-sky-100 sm:text-sm leading-relaxed font-normal">
           Descubre música, cultura, gastronomía y deporte en la ciudad amurallada — y más allá.
         </p>
-
-        <div className="w-full max-w-[920px] self-center drop-shadow-xl">
-          <SearchCard />
-        </div>
       </div>
 
-      {/* Curva SVG inferior para transición limpia al contenido blanco/gris */}
-      <div className="absolute left-0 right-0 -bottom-0.5 leading-[0] z-10">
-        <svg viewBox="0 0 1440 70" preserveAspectRatio="none" className="w-full h-[70px] block">
-          <path
-            d="M0,40 C240,80 480,0 720,30 C960,60 1200,10 1440,40 L1440,70 L0,70 Z"
-            fill="#f5f7fa"
-          />
-        </svg>
+      {/* Buscador de tamaño mediano que sobresale hacia la siguiente sección */}
+      <div className="relative z-20 max-w-2xl sm:max-w-[720px] mx-auto -mb-24 sm:-mb-28 px-3 sm:px-4">
+        <SearchCard />
       </div>
+
+      {/* Franja horizontal dorada en el borde inferior acorde al logo */}
+      <div className="absolute left-0 right-0 bottom-0 h-2 bg-[#ffc107] z-10 pointer-events-none" />
     </section>
   );
 }

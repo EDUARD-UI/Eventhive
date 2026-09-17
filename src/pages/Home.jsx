@@ -218,7 +218,7 @@ export default function Home() {
       <Hero />
 
       {/* 1. EVENTOS DESTACADOS (Mockup 1) */}
-      <section className="w-full px-6 sm:px-12 lg:px-20 py-10 sm:py-14 bg-white max-w-7xl mx-auto">
+      <section className="w-full px-6 sm:px-12 lg:px-20 pt-32 sm:pt-40 pb-12 sm:pb-16 bg-white max-w-7xl mx-auto">
         <div className="flex items-baseline justify-between mb-6">
           <div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0a1838]">
