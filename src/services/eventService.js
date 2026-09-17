@@ -61,6 +61,16 @@ export async function getUpcomingEvents() {
   return sortByNearestDate(events).slice(0, 4);
 }
 
+/** Eventos filtrados por categoría, paginados (GET /eventos?categoriaId=...). */
+export async function getEventsByCategory({ categoriaId, page = 0, size = 12 } = {}) {
+  const data = await httpClient.get('/eventos', { categoriaId, page, size });
+
+  return {
+    events: (data?.content || []).map(normalizeEvent),
+    total: data?.totalElements ?? 0,
+  };
+}
+
 /** Eventos para el mapa, con filtro opcional por categoría/ubicación (GET /eventos/mapa). */
 export async function getMapEvents({ categoriaId, lat, lng, radioKm } = {}) {
   const data = await httpClient.get('/eventos/mapa', { categoriaId, lat, lng, radioKm });

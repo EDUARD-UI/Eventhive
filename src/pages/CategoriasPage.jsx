@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FiActivity,
@@ -13,13 +13,8 @@ import {
 } from 'react-icons/fi';
 import Navbar from '../components/Navbar.jsx';
 import Footer from '../components/Footer.jsx';
-import { MOCK_EVENTS } from '../constants/mockEvents.js';
-// NOTA: mientras el backend no esté disponible, esta vista usa MOCK_EVENTS
-// (datos estáticos en src/constants/mockEvents.js). Cuando el backend esté
-// listo, se puede volver a usar getMapEvents() de eventService.js.
+import { getCategoriesWithEvents } from '../services/categoryService.js';
 
-// Ícono, color y descripción por categoría. Las claves están en minúscula
-// para comparar sin importar tildes/mayúsculas que vengan del backend.
 const CATEGORY_META = {
   'música': {
     icon: FiMusic,
@@ -95,7 +90,6 @@ const CATEGORY_META = {
   },
 };
 
-// Categoría sin ficha asignada todavía (por si el backend agrega una nueva).
 const DEFAULT_META = {
   icon: FiGrid,
   gradient: 'from-slate-600 to-slate-950',
@@ -103,7 +97,6 @@ const DEFAULT_META = {
   description: 'Eventos de esta categoría en Cartagena',
 };
 
-// Orden preferido de las categorías conocidas; las nuevas van al final,
 // ordenadas por cantidad de eventos.
 const PREFERRED_ORDER = [
   'música', 'musica', 'cultural', 'cultura', 'deportivo', 'deporte',
@@ -120,24 +113,45 @@ const PAGE_SIZE = 6;
 
 export default function CategoriasPage() {
   const [page, setPage] = useState(1);
+  const [rawCategories, setRawCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    setError(null);
+
+    getCategoriesWithEvents()
+      .then((data) => {
+        if (isMounted) setRawCategories(data);
+      })
+      .catch((err) => {
+        if (isMounted) setError(err.message);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const categories = useMemo(() => {
-    const counts = new Map();
+    const maxCount = Math.max(0, ...rawCategories.map((c) => c.totalEventos));
 
-    MOCK_EVENTS.forEach((event) => {
-      const name = event.category?.trim();
-      if (!name) return;
-      counts.set(name, (counts.get(name) || 0) + 1);
+    const list = rawCategories.map(({ id, nombre, totalEventos, urlFoto }) => {
+      const meta = getCategoryMeta(nombre);
+      return {
+        id,
+        name: nombre,
+        count: totalEventos,
+        isPopular: totalEventos === maxCount && maxCount > 0,
+        ...meta,
+        image: urlFoto || meta.image,
+      };
     });
-
-    const maxCount = Math.max(0, ...counts.values());
-
-    const list = Array.from(counts.entries()).map(([name, count]) => ({
-      name,
-      count,
-      isPopular: count === maxCount && maxCount > 0,
-      ...getCategoryMeta(name),
-    }));
 
     return list.sort((a, b) => {
       const ai = PREFERRED_ORDER.indexOf(a.name.toLowerCase());
@@ -147,9 +161,9 @@ export default function CategoriasPage() {
       if (bi === -1) return -1;
       return ai - bi;
     });
-  }, []);
+  }, [rawCategories]);
 
-  const totalEvents = MOCK_EVENTS.length;
+  const totalEvents = rawCategories.reduce((sum, c) => sum + c.totalEventos, 0);
   const totalPages = Math.max(1, Math.ceil(categories.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const visibleCategories = categories.slice(
@@ -180,16 +194,24 @@ export default function CategoriasPage() {
           </Link>
         </div>
 
-        {categories.length === 0 && (
-          <p className="text-[13.5px] text-muted">Aún no hay eventos publicados para mostrar categorías.</p>
+        {loading && <p className="text-[13.5px] text-muted">Cargando categorías…</p>}
+
+        {!loading && error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13.5px] text-red-700">
+            No se pudieron cargar las categorías. Verifica que el backend esté disponible ({error}).
+          </div>
         )}
 
-        {categories.length > 0 && (
+        {!loading && !error && categories.length === 0 && (
+          <p className="text-[13.5px] text-muted">Aún no hay categorías registradas.</p>
+        )}
+
+        {!loading && !error && categories.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-            {visibleCategories.map(({ name, count, description, isPopular, icon: Icon, gradient, image }) => (
+            {visibleCategories.map(({ id, name, count, description, isPopular, icon: Icon, gradient, image }) => (
               <Link
-                key={name}
-                to={`/buscar?categoria=${encodeURIComponent(name)}`}
+                key={id}
+                to={`/buscar?categoriaId=${id}&categoria=${encodeURIComponent(name)}`}
                 className="group relative aspect-[5/4] rounded-card overflow-hidden p-3 flex flex-col justify-between text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
               >
                 {image && (

@@ -3,17 +3,15 @@ import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
 import Footer from '../components/Footer.jsx';
 import EventCard from '../components/EventCard.jsx';
-import { searchEvents } from '../services/eventService.js';
-import { MOCK_EVENTS } from '../constants/mockEvents.js';
-// NOTA: el filtro por categoría usa MOCK_EVENTS (datos estáticos) mientras
-// el backend no esté disponible. La búsqueda por título/fecha sigue usando
-// searchEvents() del backend.
+import { searchEvents, getEventsByCategory } from '../services/eventService.js';
+
 
 export default function BuscarEventosPage() {
   const [searchParams] = useSearchParams();
   const titulo = searchParams.get('titulo') || '';
   const fecha = searchParams.get('fecha') || '';
   const categoria = searchParams.get('categoria') || '';
+  const categoriaId = searchParams.get('categoriaId') || '';
 
   const [events, setEvents] = useState([]);
   const [total, setTotal] = useState(0);
@@ -26,14 +24,8 @@ export default function BuscarEventosPage() {
     setError(null);
 
     const load = async () => {
-      if (categoria) {
-        // Datos estáticos mientras el backend no está disponible.
-        const filtered = MOCK_EVENTS.filter((event) => {
-          const matchesCategoria = event.category?.toLowerCase() === categoria.toLowerCase();
-          const matchesTitulo = !titulo || event.title?.toLowerCase().includes(titulo.toLowerCase());
-          return matchesCategoria && matchesTitulo;
-        });
-        return { events: filtered, total: filtered.length };
+      if (categoriaId) {
+        return getEventsByCategory({ categoriaId });
       }
 
       return searchEvents({ titulo, fecha });
@@ -55,7 +47,7 @@ export default function BuscarEventosPage() {
     return () => {
       isMounted = false;
     };
-  }, [titulo, fecha, categoria]);
+  }, [titulo, fecha, categoriaId]);
 
   const hasFilters = Boolean(titulo || fecha || categoria);
 
