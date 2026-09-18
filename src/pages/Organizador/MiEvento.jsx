@@ -13,49 +13,69 @@ const organizerEvents = [
     { id: 8, category: 'Entretenimiento', title: 'Cine bajo las estrellas', date: '4 sep', time: '7:30 PM', location: 'Parque del Centenario', price: '$15.000', color: 'red' },
 ];
 
-export default function MiEvento({ onCreate }) {
+export default function MiEvento({ onCreate, externalSearch = '' }) {
     const [category, setCategory] = useState('Todos');
     const [search, setSearch] = useState('');
 
+    const effectiveSearch = externalSearch || search;
+
     const filteredEvents = organizerEvents.filter((event) => {
         const matchesCategory = category === 'Todos' || event.category === category;
-        const matchesSearch = event.title.toLowerCase().includes(search.toLowerCase()) || event.location.toLowerCase().includes(search.toLowerCase());
+        const matchesSearch =
+            event.title.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
+            event.location.toLowerCase().includes(effectiveSearch.toLowerCase());
         return matchesCategory && matchesSearch;
     });
 
     return (
-        <div>
-            <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h2 className="font-display text-[18px] font-bold text-[#172033]">Mis Eventos</h2>
-                    <p className="mt-0.5 text-[13px] text-[#71839c]">Gestión de tus eventos aquí.</p>
+                    <h2 className="font-display text-[18px] sm:text-[20px] font-bold text-[#172033]">Gestión de Eventos</h2>
+                    <p className="mt-0.5 text-xs text-[#64748b]">Administra tus eventos activos, borradores y finalizados.</p>
                 </div>
-                <button type="button" onClick={onCreate} className="flex items-center gap-2 rounded-[8px] bg-[#087fea] px-4 py-2 text-[12px] font-semibold text-white shadow-sm transition-colors hover:bg-[#006ed8]">
-                    <FiPlus size={14} /> Crear evento
+                <button
+                    type="button"
+                    onClick={onCreate}
+                    className="flex items-center gap-2 rounded-xl bg-[#087fea] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-[#006ed8] hover:shadow-md"
+                >
+                    <FiPlus size={15} /> Crear evento
                 </button>
             </div>
 
-            <div className="mt-7 grid grid-cols-1 gap-4 md:grid-cols-3">
-                <OrganizerStat value="9" label="Activos" color="bg-[#efff62]" />
-                <OrganizerStat value="3" label="Borradores" color="bg-[#c8defd]" />
-                <OrganizerStat value="0" label="Finalizados" color="bg-[#12b981]" />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <OrganizerStat value="9" label="Eventos Activos" color="bg-emerald-500" />
+                <OrganizerStat value="3" label="Borradores" color="bg-amber-500" />
+                <OrganizerStat value="0" label="Finalizados" color="bg-blue-500" />
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-3 rounded-[11px] border border-[#e0e6ed] bg-white px-5 py-3">
-                <select value={category} onChange={(event) => setCategory(event.target.value)} className="rounded-[6px] border border-[#e0e6ed] bg-white px-2 py-1.5 text-[10px] text-[#41536c] outline-none">
-                    <option value="Todos">Categorías: Todos</option>
-                    <option value="Deportivo">Deportivo</option>
-                    <option value="Entretenimiento">Entretenimiento</option>
-                    <option value="Académico">Académico</option>
-                </select>
-                <button type="button" className="flex items-center gap-1.5 rounded-[6px] border border-[#e0e6ed] px-2.5 py-1.5 text-[10px] text-[#41536c] hover:border-[#087fea]">
-                    <FiFilter size={11} /> Filtrar
-                </button>
-                <label className="relative min-w-[190px] flex-1">
-                    <span className="sr-only">Buscar eventos</span>
-                    <FiSearch size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9aa9bb]" />
-                    <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar..." className="w-full rounded-full border border-[#dce3ea] bg-[#f2f5f8] py-1.5 pl-9 pr-3 text-[10px] outline-none focus:border-[#087fea]" />
-                </label>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[13px] border border-[#e2e8f0] bg-white px-4 py-3 shadow-sm">
+                <div className="flex items-center gap-2.5">
+                    <span className="text-xs font-semibold text-slate-500">Filtrar por:</span>
+                    <select
+                        value={category}
+                        onChange={(event) => setCategory(event.target.value)}
+                        className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 outline-none focus:border-[#087fea]"
+                    >
+                        <option value="Todos">Todas las categorías</option>
+                        <option value="Deportivo">Deportivo</option>
+                        <option value="Entretenimiento">Entretenimiento</option>
+                        <option value="Académico">Académico</option>
+                    </select>
+                </div>
+
+                {!externalSearch && (
+                    <label className="relative min-w-[200px] flex-1 sm:max-w-xs">
+                        <span className="sr-only">Buscar eventos</span>
+                        <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            placeholder="Filtrar por nombre o lugar..."
+                            className="w-full rounded-full border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-3 text-xs text-slate-700 outline-none focus:bg-white focus:border-[#087fea]"
+                        />
+                    </label>
+                )}
             </div>
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

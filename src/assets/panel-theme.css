@@ -1,0 +1,31 @@
+/* Variables y tokens de diseño para los paneles de EventHive */
+
+:root {
+  /* Paleta Estándar Compartida (Organizador y Moderador) */
+  --panel-bg: #f4f6fa;
+  --panel-card-bg: #ffffff;
+  --panel-border: #e2e8f0;
+  --panel-border-subtle: #edf2f7;
+  --panel-text-main: #172033;
+  --panel-text-muted: #64748b;
+  --panel-brand: #087fea;
+  --panel-brand-hover: #0066c9;
+  --panel-brand-light: #e8f2ff;
+  --panel-accent: #FFC107;
+  --panel-accent-dark: #d9a406;
+  --panel-sidebar-bg: #131b2e;
+}
+
+/* Tema Administrador (fondo gris claro profesional con sidebar oscuro distintivo) */
+.admin-theme {
+  --panel-bg: #f1f5f9;
+  --panel-card-bg: #ffffff;
+  --panel-border: #e2e8f0;
+  --panel-border-subtle: #edf2f7;
+  --panel-text-main: #0f172a;
+  --panel-text-muted: #64748b;
+  --panel-brand: #087fea;
+  --panel-brand-hover: #0060cc;
+  --panel-brand-light: rgba(8, 127, 234, 0.12);
+  --panel-sidebar-bg: #131b2e;
+}

@@ -1,15 +1,15 @@
 
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import SideBar from '../../components/usersComponets/SideBar.jsx';
+import StandardLayout from '../../layouts/StandardLayout.jsx';
+import StatCard from '../../components/Shared/StatCard.jsx';
+import Badge from '../../components/Shared/Badge.jsx';
 import {
   FiClipboard, FiList, FiCheck, FiEdit3, FiX, FiTrendingUp,
   FiBriefcase, FiArrowLeft, FiClock, FiSearch, FiCheckCircle,
   FiAlertTriangle, FiEye, FiBell, FiCalendar, FiMapPin, FiUsers,
   FiFileText, FiShield,
 } from 'react-icons/fi';
-
-const PAGE_BG = '#f0f4f9';
 
 const INITIAL_PENDIENTES = [
   {
@@ -93,20 +93,7 @@ const secciones = [
   { id: 'motivos', label: 'Motivos de Rechazo', icon: FiList, count: '6' },
 ];
 
-function Badge({ children, tone = 'gray' }) {
-  const tones = {
-    gray: 'bg-slate-100 text-slate-600 border border-slate-200',
-    green: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-    blue: 'bg-brand-light text-brand border border-blue-100',
-    amber: 'bg-amber-50 text-amber-800 border border-amber-200',
-    red: 'bg-rose-50 text-rose-700 border border-rose-200',
-  };
-  return (
-    <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full ${tones[tone] || tones.gray}`}>
-      {children}
-    </span>
-  );
-}
+
 
 export default function ModeradorPanel() {
   const [seccionActiva, setSeccionActiva] = useState('eventos');
@@ -127,66 +114,43 @@ export default function ModeradorPanel() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#f0f4f9] font-body text-ink">
-      <SideBar role="Moderador" items={secciones} activeItem={seccionActiva} onSelect={setSeccionActiva} />
-
-      {/* Contenido Principal */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {/* Barra superior de encabezado */}
-        <header className="flex items-center justify-between px-8 py-6">
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-brand bg-brand-light px-2.5 py-1 rounded-md">
-              Módulo de Moderación
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-bold font-display text-ink mt-2">
-              {seccion.label}
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Buscador */}
-            <div className="flex items-center gap-2.5 bg-white border border-slate-200/80 shadow-sm rounded-full px-4 py-2 text-sm text-muted focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/10 transition-all">
-              <FiSearch size={16} className="text-slate-400" />
-              <input
-                type="text"
-                placeholder="Buscar evento o motivo..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-transparent border-none outline-none text-ink placeholder-slate-400 text-sm w-44 sm:w-56"
-              />
-            </div>
-
-            {/* Notificaciones */}
-            <button className="w-10 h-10 rounded-full bg-white border border-slate-200/80 shadow-sm flex items-center justify-center text-slate-600 hover:text-brand hover:border-brand transition-colors relative">
-              <FiBell size={17} />
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-500" />
-            </button>
-          </div>
-        </header>
-
-        {/* Cuerpo de la vista */}
-        <main className="px-8 pb-10 flex-1">
-          {seccionActiva === 'resumen' && (
-            <SeccionResumenModeracion
-              pendientes={pendientes}
-              onInspect={setEventoModal}
-              onAprobar={handleAprobar}
-              onRechazar={handleRechazar}
-            />
-          )}
-          {seccionActiva === 'eventos' && (
-            <SeccionPendientes
-              pendientes={pendientes}
-              searchTerm={searchTerm}
-              onInspect={setEventoModal}
-              onAprobar={handleAprobar}
-              onRechazar={handleRechazar}
-            />
-          )}
-          {seccionActiva === 'organizaciones' && <SeccionOrganizacionesPendientes />}
-          {seccionActiva === 'motivos' && <SeccionMotivos searchTerm={searchTerm} />}
-        </main>
-      </div>
+    <StandardLayout
+      role="Moderador"
+      menuItems={secciones}
+      activeItem={seccionActiva}
+      onSelect={setSeccionActiva}
+      headerProps={{
+        title: seccion.label,
+        badgeText: 'Módulo de Moderación',
+        showSearch: true,
+        searchTerm: searchTerm,
+        onSearchChange: setSearchTerm,
+        searchPlaceholder: 'Buscar evento o motivo...',
+        userName: 'Moderador',
+        userInitials: 'MD',
+      }}
+      maxWidthClass="max-w-[1280px]"
+    >
+      {/* Cuerpo de la vista */}
+      {seccionActiva === 'resumen' && (
+        <SeccionResumenModeracion
+          pendientes={pendientes}
+          onInspect={setEventoModal}
+          onAprobar={handleAprobar}
+          onRechazar={handleRechazar}
+        />
+      )}
+      {seccionActiva === 'eventos' && (
+        <SeccionPendientes
+          pendientes={pendientes}
+          searchTerm={searchTerm}
+          onInspect={setEventoModal}
+          onAprobar={handleAprobar}
+          onRechazar={handleRechazar}
+        />
+      )}
+      {seccionActiva === 'organizaciones' && <SeccionOrganizacionesPendientes />}
+      {seccionActiva === 'motivos' && <SeccionMotivos searchTerm={searchTerm} />}
 
       {/* Modal de Inspección y Moderación */}
       {eventoModal && (
@@ -197,7 +161,7 @@ export default function ModeradorPanel() {
           onRechazar={() => handleRechazar(eventoModal.id)}
         />
       )}
-    </div>
+    </StandardLayout>
   );
 }
 
@@ -212,17 +176,15 @@ function SeccionResumenModeracion({ pendientes, onInspect, onAprobar, onRechazar
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(({ label, value, icon: Icon, color, bg }) => (
-          <div
+        {stats.map(({ label, value, icon, color, bg }) => (
+          <StatCard
             key={label}
-            className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5"
-          >
-            <div className={`w-11 h-11 rounded-xl ${bg} ${color} flex items-center justify-center mb-3.5`}>
-              <Icon size={20} />
-            </div>
-            <p className="text-3xl font-bold font-display text-ink">{value}</p>
-            <p className="text-xs font-semibold text-muted uppercase tracking-wider mt-1">{label}</p>
-          </div>
+            label={label}
+            value={value}
+            icon={icon}
+            iconBg={bg}
+            iconColor={color}
+          />
         ))}
       </div>
 

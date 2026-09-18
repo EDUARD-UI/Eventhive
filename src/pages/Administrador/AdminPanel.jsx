@@ -1,14 +1,14 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import SideBar from '../../components/usersComponets/SideBar.jsx';
+import AdminLayout from '../../layouts/AdminLayout.jsx';
+import StatCard from '../../components/Shared/StatCard.jsx';
+import Badge from '../../components/Shared/Badge.jsx';
 import {
   FiUsers, FiShield, FiClipboard, FiCalendar, FiTrendingUp,
   FiGrid, FiKey, FiTag, FiSearch, FiCheck, FiX, FiArrowUpRight,
   FiArrowLeft, FiBell, FiMapPin, FiEye, FiAlertCircle, FiDollarSign,
   FiLayers, FiPlus, FiPercent, FiAward, FiLock, FiEdit2, FiTrash2,
 } from 'react-icons/fi';
-
-const PAGE_BG = '#f0f4f9';
 
 const INITIAL_EVENTS = [
   {
@@ -95,21 +95,6 @@ const secciones = [
   { id: 'promociones', label: 'Promociones', icon: FiTag, count: '3' },
 ];
 
-function Badge({ children, tone = 'gray' }) {
-  const tones = {
-    gray: 'bg-slate-100 text-slate-600 border border-slate-200',
-    green: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-    blue: 'bg-brand-light text-brand border border-blue-100',
-    amber: 'bg-amber-50 text-amber-800 border border-amber-200',
-    red: 'bg-rose-50 text-rose-700 border border-rose-200',
-  };
-  return (
-    <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full ${tones[tone] || tones.gray}`}>
-      {children}
-    </span>
-  );
-}
-
 function Avatar({ nombre }) {
   const iniciales = nombre.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
   return (
@@ -156,154 +141,38 @@ export default function AdminPanel() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#f0f4f9] font-body text-ink">
-      <SideBar role="Admin" variant="admin" items={secciones} activeItem={seccionActiva} onSelect={setSeccionActiva} />
-      {/* Legacy sidebar markup retained temporarily for layout compatibility. */}
-      <div className="hidden">
-        <div>
-          {/* Logo Oficial de EventHive */}
-          <div className="flex items-center gap-3 px-2 mb-8 mr-4 bg-white/5 p-2.5 rounded-2xl border border-white/10">
-            <img
-              src={logoEventhive}
-              alt="EventHive Logo"
-              className="h-10 w-10 object-contain rounded-xl bg-white p-1 shadow-sm shrink-0"
-            />
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 font-display font-bold text-sm text-white leading-tight">
-                Event<span className="text-[#3b82f6]">Hive</span>
-                <span className="text-[9px] font-bold text-slate-900 bg-accent px-1.5 py-0.5 rounded tracking-wider uppercase">
-                  Admin
-                </span>
-              </div>
-              <p className="text-[10px] text-slate-400 truncate mt-0.5">Tu evento. Conecta.</p>
-            </div>
-          </div>
-
-          {/* Navegación con pestañas conectadas */}
-          <nav className="flex flex-col gap-1">
-            {secciones.map(({ id, label, icon: Icon, count }) => {
-              const active = seccionActiva === id;
-              return (
-                <div key={id} className="relative">
-                  <button
-                    onClick={() => setSeccionActiva(id)}
-                    className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-all text-left ${active
-                      ? 'bg-[#f0f4f9] text-slate-900 font-semibold rounded-l-2xl relative z-10'
-                      : 'text-slate-300 hover:text-white hover:bg-white/5 rounded-l-2xl mr-3'
-                      }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon size={18} className={active ? 'text-brand' : 'text-slate-400'} />
-                      <span>{label}</span>
-                    </div>
-
-                    {count && (
-                      <span
-                        className={`text-xs font-semibold px-2 py-0.5 rounded-full ${active
-                          ? 'bg-brand-light text-brand'
-                          : 'bg-white/10 text-slate-300'
-                          }`}
-                      >
-                        {count}
-                      </span>
-                    )}
-                  </button>
-
-                  {/* Curvas cóncavas superior e inferior */}
-                  {active && (
-                    <>
-                      <span
-                        className="absolute -top-5 right-0 w-5 h-5 pointer-events-none z-10"
-                        style={{
-                          background: `radial-gradient(circle at 0 0, transparent 19px, ${PAGE_BG} 19.5px)`,
-                        }}
-                      />
-                      <span
-                        className="absolute -bottom-5 right-0 w-5 h-5 pointer-events-none z-10"
-                        style={{
-                          background: `radial-gradient(circle at 0 100%, transparent 19px, ${PAGE_BG} 19.5px)`,
-                        }}
-                      />
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Link volver al sitio */}
-        <div className="pt-4 border-t border-white/10 mr-4">
-          <Link
-            to="/"
-            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors rounded-xl hover:bg-white/5"
-          >
-            <FiArrowLeft size={15} />
-            Volver a la plataforma
-          </Link>
-        </div>
-      </div>
-
-      {/* Contenido Principal */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {/* Barra superior de encabezado */}
-        <header className="flex items-center justify-between px-8 py-6">
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-brand bg-brand-light px-2.5 py-1 rounded-md">
-              Panel de Administración
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-bold font-display text-ink mt-2">
-              {seccion.label}
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Buscador interactivo */}
-            <div className="flex items-center gap-2.5 bg-white border border-slate-200/80 shadow-sm rounded-full px-4 py-2 text-sm text-muted focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/10 transition-all">
-              <FiSearch size={16} className="text-slate-400" />
-              <input
-                type="text"
-                placeholder={`Buscar en ${seccion.label.toLowerCase()}...`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-transparent border-none outline-none text-ink placeholder-slate-400 text-sm w-44 sm:w-56"
-              />
-            </div>
-
-            {/* Notificaciones */}
-            <button className="w-10 h-10 rounded-full bg-white border border-slate-200/80 shadow-sm flex items-center justify-center text-slate-600 hover:text-brand hover:border-brand transition-colors relative">
-              <FiBell size={17} />
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500" />
-            </button>
-          </div>
-        </header>
-
-        {/* Cuerpo principal */}
-        <main className="px-8 pb-10 flex-1">
-          {seccionActiva === 'resumen' && (
-            <SeccionResumen
-              eventos={eventos}
-              onSelectEvento={setEventoSeleccionado}
-              onToggleEstado={toggleEstadoEvento}
-            />
-          )}
-          {seccionActiva === 'usuarios' && <SeccionUsuarios searchTerm={searchTerm} />}
-          {seccionActiva === 'moderadores' && <SeccionModeradores searchTerm={searchTerm} />}
-          {seccionActiva === 'solicitudes' && <SeccionSolicitudes />}
-          {seccionActiva === 'eventos' && (
-            <SeccionEventos
-              eventos={eventos}
-              searchTerm={searchTerm}
-              onSelectEvento={setEventoSeleccionado}
-              onToggleEstado={toggleEstadoEvento}
-            />
-          )}
-          {seccionActiva === 'niveles' && <SeccionNiveles />}
-          {seccionActiva === 'categorias' && <SeccionCategorias searchTerm={searchTerm} />}
-          {seccionActiva === 'roles' && <SeccionRoles />}
-          {seccionActiva === 'promociones' && <SeccionPromociones searchTerm={searchTerm} />}
-        </main>
-      </div>
+    <AdminLayout
+      menuItems={secciones}
+      activeItem={seccionActiva}
+      onSelect={setSeccionActiva}
+      title={seccion.label}
+      badgeText="Panel de Administración"
+      searchTerm={searchTerm}
+      onSearchChange={setSearchTerm}
+    >
+      {/* Cuerpo principal */}
+      {seccionActiva === 'resumen' && (
+        <SeccionResumen
+          eventos={eventos}
+          onSelectEvento={setEventoSeleccionado}
+          onToggleEstado={toggleEstadoEvento}
+        />
+      )}
+      {seccionActiva === 'usuarios' && <SeccionUsuarios searchTerm={searchTerm} />}
+      {seccionActiva === 'moderadores' && <SeccionModeradores searchTerm={searchTerm} />}
+      {seccionActiva === 'solicitudes' && <SeccionSolicitudes />}
+      {seccionActiva === 'eventos' && (
+        <SeccionEventos
+          eventos={eventos}
+          searchTerm={searchTerm}
+          onSelectEvento={setEventoSeleccionado}
+          onToggleEstado={toggleEstadoEvento}
+        />
+      )}
+      {seccionActiva === 'niveles' && <SeccionNiveles />}
+      {seccionActiva === 'categorias' && <SeccionCategorias searchTerm={searchTerm} />}
+      {seccionActiva === 'roles' && <SeccionRoles />}
+      {seccionActiva === 'promociones' && <SeccionPromociones searchTerm={searchTerm} />}
 
       {/* Modal de Detalle de Evento */}
       {eventoSeleccionado && (
@@ -313,7 +182,7 @@ export default function AdminPanel() {
           onToggleEstado={toggleEstadoEvento}
         />
       )}
-    </div>
+    </AdminLayout>
   );
 }
 
@@ -329,22 +198,16 @@ function SeccionResumen({ eventos, onSelectEvento, onToggleEstado }) {
     <div className="space-y-6">
       {/* Tarjetas de Estadísticas Principales */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(({ label, value, change, icon: Icon, color, bg }) => (
-          <div
+        {stats.map(({ label, value, change, icon, color, bg }) => (
+          <StatCard
             key={label}
-            className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className={`w-11 h-11 rounded-xl ${bg} ${color} flex items-center justify-center`}>
-                <Icon size={20} />
-              </div>
-              <span className="text-[11px] font-medium text-slate-500 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
-                {change}
-              </span>
-            </div>
-            <p className="text-3xl font-bold font-display text-ink">{value}</p>
-            <p className="text-xs font-semibold text-muted uppercase tracking-wider mt-1">{label}</p>
-          </div>
+            label={label}
+            value={value}
+            change={change}
+            icon={icon}
+            iconBg={bg}
+            iconColor={color}
+          />
         ))}
       </div>
 
