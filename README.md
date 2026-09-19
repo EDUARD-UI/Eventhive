@@ -10,7 +10,4 @@ npm install
 npm run dev
 ```
 
-## Estado actual
-Solo la vista **Home** está implementada. La arquitectura queda lista en `src/`
-(`components`, `pages`, `hooks`, `services`, `constants`, `utils`, `routes`)
-para agregar Explorador, Detalle de evento, Panel organizador y Perfil.
+##### USAR NEO-BRUTALISMO COMO ESTILO DE DISEÑO
