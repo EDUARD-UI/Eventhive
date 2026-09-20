@@ -14,6 +14,7 @@ export default function EventHiveLogo({
   size = 40,
   className = '',
   textClassName = '',
+  eventClassName = '',
 }) {
   // Coordenadas calculadas para hexágonos regulares con esquinas redondeadas
   const hexPath = 'M0,-58 L50.2,-29 L50.2,29 L0,58 L-50.2,29 L-50.2,-29 Z';
@@ -331,11 +332,9 @@ export default function EventHiveLogo({
 
       <div className="flex flex-col justify-center leading-none select-none">
         <div className={`flex items-center gap-1 font-display font-extrabold text-ink tracking-tight ${textClassName || 'text-xl sm:text-2xl'}`}>
-          <span>Event</span>
+          <span className={eventClassName}>Event</span>
           <span className="text-[#007BFF]">Hive</span>
-          <span className="text-[9px] font-bold text-[#b47a00] bg-[#fff4cc] border border-[#ffe17d] px-1.5 py-0.5 rounded tracking-wider ml-0.5">
-            CTG
-          </span>
+          
         </div>
         <span className="text-[9.5px] font-semibold tracking-widest uppercase text-muted mt-0.5">
           Cartagena de Indias

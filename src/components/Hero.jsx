@@ -1,6 +1,7 @@
 import { FiMapPin } from 'react-icons/fi';
 import SearchCard from './SearchCard.jsx';
 import EventHiveLogo from './common/EventHiveLogo.jsx';
+import heroBackground from '../assets/image.png';
 
 export default function Hero() {
   return (
@@ -10,7 +11,7 @@ export default function Hero() {
         aria-hidden="true"
         className="absolute inset-0 bg-cover bg-center pointer-events-none transition-opacity duration-1000"
         style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1583531352515-8884af319dc1?auto=format&fit=crop&w=2000&q=85')`,
+          backgroundImage: `url('${heroBackground}')`,
           mixBlendMode: 'overlay',
           opacity: 0.38,
         }}
@@ -43,10 +44,7 @@ export default function Hero() {
             <span>Cartagena de Indias, Colombia</span>
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#ffc107]/20 border border-[#ffc107]/40 backdrop-blur-md text-[11px] font-bold uppercase tracking-wide text-[#ffc107]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#ffc107] animate-pulse" />
-            En vivo — Agenda Cultural 2026
-          </div>
+
         </div>
 
         <h1 className="max-w-3xl font-display text-[34px] sm:text-[48px] font-extrabold leading-[1.1] drop-shadow-sm">

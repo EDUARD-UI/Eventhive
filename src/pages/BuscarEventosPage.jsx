@@ -169,7 +169,11 @@ export default function BuscarEventosPage() {
 
         {/* Filter Bar (Matching Mockup 3 & 5) */}
         <section className="max-w-6xl mx-auto px-6 sm:px-12 lg:px-8 -mt-6 relative z-20">
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-6 sm:inset-x-12 lg:inset-x-8 top-2 bottom-[-4px] rounded-2xl bg-[#ffc107] pointer-events-none"
+          />
+          <div className="relative bg-white rounded-2xl border-2 border-[#ffc107] shadow-lg p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Left: Filter title & icon */}
             <div className="flex items-center gap-2.5 text-[#0a1838]">
               <div className="w-9 h-9 rounded-xl bg-blue-50 text-brand flex items-center justify-center">
@@ -211,16 +215,15 @@ export default function BuscarEventosPage() {
               </select>
 
               {/* Clear filters pill */}
-              {hasActiveFilters && (
-                <button
-                  type="button"
-                  onClick={handleClearFilters}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-semibold transition-colors"
-                >
-                  <FiX size={14} />
-                  Limpiar filtros
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                disabled={!hasActiveFilters}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <FiX size={14} />
+                Limpiar filtros
+              </button>
             </div>
           </div>
         </section>

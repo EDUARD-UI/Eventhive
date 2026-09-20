@@ -182,11 +182,10 @@ export default function PerfilCliente() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
-                    active
+                  className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${active
                       ? 'bg-brand text-white shadow-md shadow-brand/20'
                       : 'text-muted hover:text-brand hover:bg-brand-light'
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -216,13 +215,7 @@ export default function PerfilCliente() {
                 <FiMapPin size={12} /> {usuario.ciudad}
               </p>
 
-              <button
-                onClick={() => setEditModal(true)}
-                className="w-full mt-5 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold border border-borderc hover:border-brand hover:text-brand hover:bg-brand-light active:scale-[0.98] transition-all"
-              >
-                <FiEdit2 size={13} />
-                Editar perfil
-              </button>
+
             </div>
 
             <div className="bg-white border border-borderc rounded-2xl shadow-sm p-6">
@@ -424,7 +417,7 @@ export default function PerfilCliente() {
                       type="submit"
                       className="px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-semibold shadow-sm hover:shadow-md transition-all"
                     >
-                      Guardar Preferencias
+                      Guardar Cambios
                     </button>
                   </div>
                 </form>
