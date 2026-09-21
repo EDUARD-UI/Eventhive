@@ -187,7 +187,7 @@ export default function OrganizadorIndex() {
 
     return (
         <StandardLayout
-            role="Organizador"
+            role="Organización"
             menuItems={menuItems}
             activeItem={activeItem}
             onSelect={(item) => {
@@ -196,7 +196,7 @@ export default function OrganizadorIndex() {
                 setNotification(false);
             }}
             headerProps={{
-                title: activeMenu ? activeMenu.label : 'Panel del Organizador',
+                title: activeMenu ? activeMenu.label : 'Panel de la Organización',
                 badgeText: 'Módulo de Organización',
                 showSearch: true,
                 searchTerm: searchTerm,

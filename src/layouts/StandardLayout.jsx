@@ -3,7 +3,7 @@ import Sidebar from '../components/Shared/Sidebar.jsx';
 import Header from '../components/Shared/Header.jsx';
 
 export default function StandardLayout({
-  role = 'Organizador',
+  role = 'Organización',
   menuItems = [],
   activeItem,
   onSelect,

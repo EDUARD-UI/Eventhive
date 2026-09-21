@@ -399,7 +399,7 @@ function ModalDetalleEvento({ evento, onClose, onToggleEstado }) {
             </div>
             <div className="flex items-center gap-1.5">
               <FiUsers className="text-brand" size={15} />
-              <span>Organizado por: <strong className="text-slate-800">{evento.organizador}</strong></span>
+              <span>Organización: <strong className="text-slate-800">{evento.organizador}</strong></span>
             </div>
           </div>
 
@@ -882,7 +882,7 @@ function SeccionRoles() {
       },
     },
     {
-      rol: 'Organizador Verificado',
+      rol: 'Organización Verificada',
       desc: 'Creadores y productoras con documentación validada y comisiones reducidas.',
       usuarios: 48,
       permisos: {

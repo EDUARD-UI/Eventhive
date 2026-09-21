@@ -72,7 +72,7 @@ export default function Navbar() {
           {currentUser ? (
             <div className="hidden md:flex items-center gap-2">
               <Link
-                to={currentUser.role === 'ADMIN' ? '/admin' : currentUser.role === 'ORGANIZADOR' ? '/organizador' : '/perfil'}
+                to={currentUser.role === 'ADMIN' ? '/admin' : currentUser.role === 'ORGANIZADOR' ? '/organizacion' : '/perfil'}
                 className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-borderc bg-slate-50 text-xs font-semibold text-ink hover:border-brand hover:text-brand transition-all"
               >
                 <span className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[10px] font-bold">

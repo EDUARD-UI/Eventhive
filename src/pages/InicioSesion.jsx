@@ -68,7 +68,7 @@ export default function InicioSesion() {
     if (formValues.email.includes('admin')) {
       navigate('/admin');
     } else if (formValues.email.includes('organizador')) {
-      navigate('/organizador');
+      navigate('/organizacion');
     } else {
       navigate('/');
     }
@@ -85,7 +85,7 @@ export default function InicioSesion() {
   return (
     <AuthLayout
       title="Inicia sesión en EventHive"
-      subtitle="Accede a tus eventos guardados, compras y organizadores favoritos."
+      subtitle="Accede a tus eventos guardados, compras y organizaciones favoritas."
       topPromptText="¿Aún no tienes cuenta?"
       topActionText="Regístrate gratis"
       topActionHref="/registro"

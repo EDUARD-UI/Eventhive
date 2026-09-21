@@ -119,8 +119,10 @@ export default function EventDetailPage() {
                   <p className="mt-1 font-medium text-white">{event.location}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400">Organizador</p>
-                  <p className="mt-1 font-medium text-white">{event.organizer?.nombre}</p>
+                  <p className="text-slate-400">Organización</p>
+                  <p className="mt-1 font-medium text-white">
+                    {typeof event.organization === 'string' ? event.organization : event.organization?.nombre || 'No disponible'}
+                  </p>
                 </div>
               </div>
 

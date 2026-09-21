@@ -5,7 +5,6 @@ import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import EventCard from '../components/EventCard.jsx';
 import { searchEvents, getEventsByCategory } from '../services/eventService.js';
-import { MOCK_EVENTS } from '../constants/mockEvents.js';
 
 const CATEGORY_OPTIONS = [
   { label: 'Todas las categorías', value: '' },
@@ -78,24 +77,7 @@ export default function BuscarEventosPage() {
             : results;
           setEvents(filtered);
         } else {
-          // Fallback to MOCK_EVENTS so navigation between categories displays real mock events
-          let filtered = [...MOCK_EVENTS];
-
-          if (categoriaParam) {
-            filtered = filtered.filter((ev) => matchCategory(ev.category, categoriaParam));
-          }
-
-          if (tituloParam) {
-            const q = tituloParam.toLowerCase();
-            filtered = filtered.filter(
-              (ev) =>
-                ev.title.toLowerCase().includes(q) ||
-                ev.location.toLowerCase().includes(q) ||
-                ev.category.toLowerCase().includes(q)
-            );
-          }
-
-          setEvents(filtered);
+          setEvents([]);
         }
       })
       .finally(() => {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FiSearch,
@@ -12,73 +12,31 @@ import {
 } from 'react-icons/fi';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
-
-// Colectivos y Organizaciones locales de Cartagena
-const CARTAGENA_ORGANIZERS = [
-  {
-    id: 'org-1',
-    name: 'Fundación Cultural Caribe',
-    category: 'Festivales & Tradición',
-    verified: true,
-    rating: '4.9',
-    eventsCount: 14,
-    followers: 1250,
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    description: 'Gestores de festivales de danza, poesía y tambores en el Centro Histórico y Murallas.',
-    targetCategory: 'Cultural',
-  },
-  {
-    id: 'org-2',
-    name: 'Muralla Sounds & Beats',
-    category: 'Conciertos & Festivales',
-    verified: true,
-    rating: '4.8',
-    eventsCount: 9,
-    followers: 2100,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-    description: 'Producción de grandes conciertos de jazz, salsa y música electrónica frente al mar Caribe.',
-    targetCategory: 'Música',
-  },
-  {
-    id: 'org-3',
-    name: 'Sabores de la Heroica',
-    category: 'Rutas Gastronómicas',
-    verified: true,
-    rating: '5.0',
-    eventsCount: 8,
-    followers: 980,
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
-    description: 'Colectivo de chefs y artesanos culinarios promoviendo la gastronomía caribeña y catas de café.',
-    targetCategory: 'Gastronómico',
-  },
-  {
-    id: 'org-4',
-    name: 'Getsemaní Arte Urbano',
-    category: 'Cultura & Comunidad',
-    verified: true,
-    rating: '4.9',
-    eventsCount: 6,
-    followers: 1450,
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
-    description: 'Rutas de murales, exposiciones fotográficas al aire libre y talleres artísticos en el barrio histórico.',
-    targetCategory: 'Cultural',
-  },
-];
+import { organizationService } from '../services/organizerService.js';
 
 export default function OrganizadoresPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('directorio'); // 'directorio' | 'informacion'
+  const [organizations, setOrganizations] = useState([]);
+
+  useEffect(() => {
+    organizationService.listOrganizations()
+      .then(({ organizations: results }) => setOrganizations(results))
+      .catch(() => setOrganizations([]));
+  }, []);
+
+  const availableOrganizations = organizations;
 
   const filteredOrganizers = useMemo(() => {
-    if (!searchTerm.trim()) return CARTAGENA_ORGANIZERS;
+    if (!searchTerm.trim()) return availableOrganizations;
     const term = searchTerm.toLowerCase();
-    return CARTAGENA_ORGANIZERS.filter(
+    return availableOrganizations.filter(
       (org) =>
         org.name.toLowerCase().includes(term) ||
         org.category.toLowerCase().includes(term) ||
         org.description.toLowerCase().includes(term)
     );
-  }, [searchTerm]);
+  }, [searchTerm, availableOrganizations]);
 
   return (
     <div className="w-full min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col justify-between">
@@ -91,10 +49,10 @@ export default function OrganizadoresPage() {
             COMUNIDAD EVENTHIVE
           </span>
           <h1 className="text-3xl sm:text-5xl font-black text-[#0a1838] tracking-tight mb-3">
-            Conoce a nuestros organizadores
+            Conoce a nuestras organizaciones
           </h1>
           <p className="text-slate-500 text-sm sm:text-base max-w-2xl leading-relaxed mb-8">
-            Descubre perfiles verificados, sigue tus organizaciones favoritas y encuentra sus próximos eventos.
+            Descubre organizaciones verificadas, sigue tus favoritas y encuentra sus próximos eventos.
           </p>
 
           {/* Barra de búsqueda (Mockup) */}
@@ -109,7 +67,7 @@ export default function OrganizadoresPage() {
             />
           </div>
 
-          {/* Selector de pestañas: Directorio vs Información para Organizadores */}
+          {/* Selector de pestañas: Directorio vs Información para Organizaciones */}
           <div className="flex items-center gap-2 border-b border-slate-200 pb-3 mb-8">
             <button
               type="button"
@@ -120,7 +78,7 @@ export default function OrganizadoresPage() {
                   : 'text-slate-600 hover:text-[#0a1838] hover:bg-slate-100'
               }`}
             >
-              Directorio de Organizadores
+              Directorio de Organizaciones
             </button>
             <button
               type="button"
@@ -131,7 +89,7 @@ export default function OrganizadoresPage() {
                   : 'text-slate-600 hover:text-[#0a1838] hover:bg-slate-100'
               }`}
             >
-              Información para Organizadores
+              Información para Organizaciones
             </button>
           </div>
         </section>
@@ -180,7 +138,7 @@ export default function OrganizadoresPage() {
                     Organizaciones pioneras en Cartagena
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {CARTAGENA_ORGANIZERS.map((org) => (
+                    {availableOrganizations.map((org) => (
                       <div
                         key={org.id}
                         className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
@@ -282,7 +240,7 @@ export default function OrganizadoresPage() {
           </section>
         )}
 
-        {/* Contenido: Tab Información Para Organizadores */}
+      {/* Contenido: Tab Información Para Organizaciones */}
         {activeTab === 'informacion' && (
           <section className="max-w-6xl mx-auto px-6 sm:px-12 lg:px-8 pb-16">
             {/* Beneficios */}
@@ -324,7 +282,7 @@ export default function OrganizadoresPage() {
               </div>
             </div>
 
-            {/* Banner de Registro para Organizadores */}
+            {/* Banner de Registro para Organizaciones */}
             <div className="rounded-3xl bg-gradient-to-r from-[#0a1838] via-[#0d2352] to-[#007bff] p-8 sm:p-12 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
               <div className="max-w-xl">
                 <span className="text-[#ffc107] font-bold text-xs uppercase tracking-widest block mb-2">
@@ -343,11 +301,11 @@ export default function OrganizadoresPage() {
                   to="/registro"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#ffc107] hover:bg-[#e0a800] text-[#0a1838] font-bold text-xs uppercase tracking-wider shadow-md transition-all active:scale-95"
                 >
-                  Registrarme como Organizador
+                  Registrarme como Organización
                   <FiArrowRight size={14} />
                 </Link>
                 <Link
-                  to="/organizador"
+                  to="/organizacion"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider transition-all"
                 >
                   Ir al Panel

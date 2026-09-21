@@ -89,14 +89,14 @@ export default function Registro() {
       icon: 'success',
       title: '¡Cuenta creada con éxito!',
       text: isOrganizer
-        ? 'Bienvenido como organizador. Te redirigiremos a tu panel.'
+        ? 'Bienvenido como organización. Te redirigiremos a tu panel.'
         : 'Bienvenido a EventHive Cartagena. Ya puedes explorar eventos.',
       timer: 2000,
       showConfirmButton: false,
     });
 
     if (isOrganizer) {
-      navigate('/organizador');
+      navigate('/organizacion');
     } else {
       navigate('/');
     }
@@ -120,7 +120,7 @@ export default function Registro() {
       errorBanner={submitError}
     >
       <div className="space-y-4">
-        {/* Selector de Rol Asistente vs Organizador */}
+        {/* Selector de Rol Asistente vs Organización */}
         <div className="p-1 rounded-xl bg-slate-100 border border-slate-200 flex gap-1">
           <button
             type="button"
@@ -142,7 +142,7 @@ export default function Registro() {
                 : 'text-muted hover:text-ink'
             }`}
           >
-            Soy organizador de eventos
+              Soy una organización de eventos
           </button>
         </div>
 
@@ -270,7 +270,7 @@ export default function Registro() {
                 <span>Creando tu cuenta...</span>
               </>
             ) : isOrganizer ? (
-              'Crear cuenta de Organizador'
+              'Crear cuenta de Organización'
             ) : (
               'Crear mi cuenta gratis'
             )}

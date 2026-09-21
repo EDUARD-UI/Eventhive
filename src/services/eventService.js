@@ -22,17 +22,17 @@ const normalizeEvent = (event) => ({
   id: String(event.id),
   title: event.titulo,
   description: event.descripcion,
-  category: event.categoria?.nombre || 'Evento',
-  location: event.lugar || '',
+  category: typeof event.categoria === 'string' ? event.categoria : event.categoria?.nombre || 'Evento',
+  location: event.ubicacion || event.lugar || '',
   date: formatDisplayDate(event.fecha, event.hora),
   startsAt: event.fecha ? `${event.fecha}T${event.hora || '00:00:00'}` : null,
   lat: event.latitud,
   lng: event.longitud,
-  price: event.localidades?.[0]?.precio ?? 0,
+  price: event.precio ?? event.localidades?.[0]?.precio ?? 0,
   gradient: 'from-brand to-sky-300',
   favorite: false,
   photo: event.foto,
-  organizer: event.organizador,
+  organization: event.organizacion || event.organizador,
   localidades: event.localidades || [],
 });
 
@@ -74,7 +74,8 @@ export async function getEventsByCategory({ categoriaId, page = 0, size = 12 } =
 /** Eventos para el mapa, con filtro opcional por categoría/ubicación (GET /eventos/mapa). */
 export async function getMapEvents({ categoriaId, lat, lng, radioKm } = {}) {
   const data = await httpClient.get('/eventos/mapa', { categoriaId, lat, lng, radioKm });
-  return (data || []).map(normalizeEvent);
+  const events = Array.isArray(data) ? data : data?.content || [];
+  return events.map(normalizeEvent);
 }
 
 /** Detalle de un evento (GET /eventos/{id}). */

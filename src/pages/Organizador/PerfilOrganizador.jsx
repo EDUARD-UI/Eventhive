@@ -7,7 +7,7 @@ const initialProfile = {
     telefono: '+57 321 456 7890',
     ciudad: 'Cartagena',
     sitioWeb: 'www.fundacioncaribe.co',
-    descripcion: 'Organizador cultural enfocado en experiencias, arte, patrimonio y comunidad.',
+    descripcion: 'Organización cultural enfocada en experiencias, arte, patrimonio y comunidad.',
     instagram: '@fundacioncaribe',
     facebook: 'Fundación Cultural Caribe',
 };
@@ -32,7 +32,7 @@ export default function PerfilOrganizador() {
             <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                     <h2 className="font-display text-[18px] font-bold text-[#172033]">Mi perfil</h2>
-                    <p className="mt-0.5 text-[13px] text-[#71839c]">Actualiza la información pública y de contacto del organizador.</p>
+                    <p className="mt-0.5 text-[13px] text-[#71839c]">Actualiza la información pública y de contacto de la organización.</p>
                 </div>
                 <button type="button" onClick={handleSave} className="rounded-[8px] bg-[#087fea] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#006ed8]">
                     Guardar cambios
@@ -51,7 +51,7 @@ export default function PerfilOrganizador() {
                             <div className="flex h-16 w-16 items-center justify-center rounded-[16px] bg-[#dfeaff] text-[18px] font-bold text-[#0c5ecd]">FC</div>
                             <div>
                                 <p className="font-display text-[18px] font-bold text-[#172033]">{profile.nombre}</p>
-                                <p className="text-[10px] text-[#71839c]">Organizador principal</p>
+                                <p className="text-[10px] text-[#71839c]">Organización principal</p>
                             </div>
                         </div>
                         <span className="rounded-full border border-[#dfe7f1] bg-[#f8fbff] px-2.5 py-1 text-[9px] font-semibold text-[#087fea]">Verificado</span>

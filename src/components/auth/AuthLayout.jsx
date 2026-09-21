@@ -49,7 +49,7 @@ export default function AuthLayout({
             {[
               'Boletos 100% verificados con código QR digital',
               'Geolocalización interactiva en tiempo real',
-              'Comunidad activa de organizadores y asistentes',
+              'Comunidad activa de organizaciones y asistentes',
             ].map((feature) => (
               <div key={feature} className="flex items-center gap-3 text-sm text-sky-50 font-medium">
                 <FiCheckCircle className="text-[#ffc107] shrink-0" size={17} />

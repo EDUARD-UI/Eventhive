@@ -20,11 +20,13 @@ export default function AppRouter() {
         <Route path="/eventos/:id" element={<EventDetailPage />} />
         <Route path="/buscar" element={<BuscarEventosPage />} />
         <Route path="/categorias" element={<CategoriasPage />} />
-        <Route path="/organizadores" element={<OrganizadoresPage />} />
+        <Route path="/organizaciones" element={<OrganizadoresPage />} />
+        <Route path="/organizadores" element={<Navigate to="/organizaciones" replace />} />
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/Admin" element={<Navigate to="/admin" replace />} />
         <Route path="/moderador" element={<ModeradorPanel />} />
-        <Route path="/organizador" element={<OrganizadorIndex />} />
+        <Route path="/organizacion" element={<OrganizadorIndex />} />
+        <Route path="/organizador" element={<Navigate to="/organizacion" replace />} />
         <Route path="/iniciosesion" element={<InicioSesion />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/perfil" element={<PerfilUsuario />} />

@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { FiX, FiSend, FiMessageCircle, FiCalendar, FiHelpCircle, FiChevronRight } from "react-icons/fi";
 import { getUpcomingEvents } from "../services/eventService.js";
-import { MOCK_EVENTS } from "../constants/mockEvents.js";
 import { useNavigate } from "react-router-dom";
 
 const INITIAL_MESSAGE = {
@@ -51,10 +50,11 @@ export default function HelpChatWidget({ isOpen, onClose }) {
     setLoadingEvents(true);
     try {
       const events = await getUpcomingEvents();
-      const list = events?.length ? events : MOCK_EVENTS.slice(0, 4);
-      pushBotMessage({ text: "Estos son los próximos eventos:", events: list });
+      pushBotMessage(events?.length
+        ? { text: "Estos son los próximos eventos:", events }
+        : { text: "No hay próximos eventos disponibles en este momento." });
     } catch {
-      pushBotMessage({ text: "Estos son los próximos eventos:", events: MOCK_EVENTS.slice(0, 4) });
+      pushBotMessage({ text: "No fue posible cargar los próximos eventos." });
     } finally {
       setLoadingEvents(false);
     }

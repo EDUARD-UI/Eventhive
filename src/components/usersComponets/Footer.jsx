@@ -46,19 +46,19 @@ export default function Footer({ onHelpClick }) {
             </ul>
           </div>
 
-          {/* Col 2: Organizadores */}
+          {/* Col 2: Organizaciones */}
           <div>
             <h4 className="text-white font-bold text-xs uppercase tracking-wider mb-4">
-              Organizadores
+              Organizaciones
             </h4>
             <ul className="space-y-2.5 text-xs sm:text-sm text-slate-400">
               <li>
-                <Link to="/organizador" className="hover:text-brand transition-colors">
+                <Link to="/organizacion" className="hover:text-brand transition-colors">
                   Crear evento
                 </Link>
               </li>
               <li>
-                <Link to="/organizadores" className="hover:text-brand transition-colors">
+                <Link to="/organizaciones" className="hover:text-brand transition-colors">
                   Directorio
                 </Link>
               </li>

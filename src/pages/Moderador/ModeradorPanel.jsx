@@ -394,7 +394,7 @@ function ModalModeracionEvento({ evento, onClose, onAprobar, onRechazar }) {
               </label>
               <textarea
                 rows={3}
-                placeholder="Escribe aquí las observaciones específicas que debe corregir el organizador..."
+                placeholder="Escribe aquí las observaciones específicas que debe corregir la organización..."
                 value={motivoCorreccion}
                 onChange={(e) => setMotivoCorreccion(e.target.value)}
                 className="w-full p-3 rounded-xl border border-amber-300 bg-white text-xs text-slate-800 outline-none focus:ring-2 focus:ring-amber-500/20"
