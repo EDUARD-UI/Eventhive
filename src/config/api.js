@@ -6,7 +6,7 @@
  * 2. Backend desplegado de EventHive.
  */
 
-const DEFAULT_API_URL = 'https://eventhive-backend-mr93.onrender.com/api';
+const DEFAULT_API_URL = 'https://eventhive-backend-e6c4.onrender.com/api';
 
 const deployedUrl = import.meta.env.VITE_API_URL?.trim();
 
