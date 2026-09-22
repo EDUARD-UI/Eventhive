@@ -1,6 +1,5 @@
 import { API_BASE_URL } from '../config/api.js';
-
-const TOKEN_STORAGE_KEY = 'eventhive_token';
+import { session } from './session.js';
 
 const buildUrl = (path, params) => {
   const url = new URL(`${API_BASE_URL}${path}`);
@@ -15,7 +14,7 @@ const buildUrl = (path, params) => {
 };
 
 async function request(path, { method = 'GET', params, body, isFormData = false } = {}) {
-  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+  const token = session.getToken();
 
   const headers = {};
   if (!isFormData) headers['Content-Type'] = 'application/json';
@@ -31,6 +30,16 @@ async function request(path, { method = 'GET', params, body, isFormData = false 
     });
   } catch {
     throw new Error('No fue posible conectar con el servidor. Verifica que el backend esté disponible.');
+  }
+
+  // Token vencido o inválido: se limpia la sesión y se manda al login,
+  // salvo que la petición que falló sea el propio login (para no
+  // entrar en loop de redirecciones).
+  if (response.status === 401 && path !== '/auth/login') {
+    session.clear();
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/iniciosesion')) {
+      window.location.href = '/iniciosesion';
+    }
   }
 
   const payload = await response.json().catch(() => null);

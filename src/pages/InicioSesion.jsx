@@ -5,6 +5,7 @@ import AuthLayout from '../components/auth/AuthLayout.jsx';
 import InputField from '../components/common/InputField.jsx';
 import SocialAuthButton from '../components/common/SocialAuthButton.jsx';
 import useForm from '../hooks/useForm.js';
+import { authService } from '../services/authService.js';
 
 const validateLogin = (values) => {
   const errors = {};
@@ -32,7 +33,6 @@ export default function InicioSesion() {
     touched,
     isSubmitting,
     submitError,
-    setSubmitError,
     handleChange,
     handleBlur,
     handleSubmit,
@@ -46,18 +46,13 @@ export default function InicioSesion() {
   );
 
   const onSubmit = async (formValues) => {
-    // Simulación de autenticación (integración preparada para Bearer token con httpClient)
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    // authService.login ya guarda accessToken/refreshToken/usuario en
+    // sesión (ver src/services/session.js). Si el backend responde con
+    // success:false o un status de error, lanza un Error que useForm
+    // captura solo y muestra en errorBanner.
+    const data = await authService.login(formValues.email, formValues.password);
 
-    // Si todo es correcto, almacenar token simulado y redirigir
-    localStorage.setItem('eventhive_token', 'demo_jwt_token_' + Date.now());
-    localStorage.setItem('eventhive_user', JSON.stringify({
-      email: formValues.email,
-      name: formValues.email.split('@')[0],
-      role: formValues.email.includes('admin') ? 'ADMIN' : formValues.email.includes('organizador') ? 'ORGANIZADOR' : 'CLIENTE',
-    }));
-
-    Swal.fire({
+    await Swal.fire({
       icon: 'success',
       title: '¡Bienvenido de nuevo!',
       text: 'Has iniciado sesión correctamente.',
@@ -65,9 +60,12 @@ export default function InicioSesion() {
       showConfirmButton: false,
     });
 
-    if (formValues.email.includes('admin')) {
+    // data.rol viene del backend tal cual ("ADMIN", "CLIENTE",
+    // "REPRESENTANTE", etc.), aquí se compara contra el valor crudo,
+    // no contra el mapeado que usa session.js para el resto de la app.
+    if (data.rol === 'ADMIN') {
       navigate('/admin');
-    } else if (formValues.email.includes('organizador')) {
+    } else if (data.rol === 'REPRESENTANTE') {
       navigate('/organizacion');
     } else {
       navigate('/');

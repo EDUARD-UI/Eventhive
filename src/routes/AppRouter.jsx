@@ -10,6 +10,7 @@ import OrganizadorIndex from '../pages/Organizador/organizadorIndex.jsx';
 import InicioSesion from '../pages/InicioSesion.jsx';
 import Registro from '../pages/Registro.jsx';
 import PerfilUsuario from '../pages/PerfilUsuario.jsx';
+import RutaProtegida from './RutaProtegida.jsx';
 
 
 export default function AppRouter() {
@@ -22,16 +23,50 @@ export default function AppRouter() {
         <Route path="/categorias" element={<CategoriasPage />} />
         <Route path="/organizaciones" element={<OrganizadoresPage />} />
         <Route path="/organizadores" element={<Navigate to="/organizaciones" replace />} />
-        <Route path="/admin" element={<AdminPanel />} />
+
+        <Route
+          path="/admin"
+          element={
+            <RutaProtegida rolesPermitidos={['ADMIN']}>
+              <AdminPanel />
+            </RutaProtegida>
+          }
+        />
         <Route path="/Admin" element={<Navigate to="/admin" replace />} />
-        <Route path="/moderador" element={<ModeradorPanel />} />
-        <Route path="/organizacion" element={<OrganizadorIndex />} />
+
+        {/* Verifica en tu tabla de roles que "MODERADOR" sea el nombre
+            real (mismo caso que ORGANIZADOR/REPRESENTANTE). */}
+        <Route
+          path="/moderador"
+          element={
+            <RutaProtegida rolesPermitidos={['ADMIN', 'MODERADOR']}>
+              <ModeradorPanel />
+            </RutaProtegida>
+          }
+        />
+
+        <Route
+          path="/organizacion"
+          element={
+            <RutaProtegida rolesPermitidos={['ORGANIZADOR']}>
+              <OrganizadorIndex />
+            </RutaProtegida>
+          }
+        />
         <Route path="/organizador" element={<Navigate to="/organizacion" replace />} />
+
         <Route path="/iniciosesion" element={<InicioSesion />} />
         <Route path="/registro" element={<Registro />} />
-        <Route path="/perfil" element={<PerfilUsuario />} />
+
+        <Route
+          path="/perfil"
+          element={
+            <RutaProtegida>
+              <PerfilUsuario />
+            </RutaProtegida>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
 }
-

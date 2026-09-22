@@ -6,6 +6,7 @@ import MobileDrawer from "../MobileDrawer.jsx";
 import HelpChat from "../HelpChat.jsx";
 import { useDisclosure } from "../../hooks/useDisclosure.js";
 import EventHiveLogo from "../common/EventHiveLogo.jsx";
+import { session } from "../../services/session.js";
 
 export default function Navbar() {
   const { isOpen, open, close } = useDisclosure(false);
@@ -15,21 +16,15 @@ export default function Navbar() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('eventhive_user');
-      if (stored) {
-        setCurrentUser(JSON.parse(stored));
-      } else {
-        setCurrentUser(null);
-      }
-    } catch {
-      setCurrentUser(null);
-    }
+    // session.getUser() ya guarda el rol normalizado ("ORGANIZADOR" en
+    // vez del "REPRESENTANTE" que usa el backend), así que las
+    // comparaciones de abajo (ADMIN / ORGANIZADOR) siguen funcionando
+    // igual que antes.
+    setCurrentUser(session.getUser());
   }, [location.pathname]);
 
   const handleLogout = () => {
-    localStorage.removeItem('eventhive_token');
-    localStorage.removeItem('eventhive_user');
+    session.clear();
     setCurrentUser(null);
     navigate('/');
   };
