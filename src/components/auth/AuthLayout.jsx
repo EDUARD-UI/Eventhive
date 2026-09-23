@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FiCheckCircle } from 'react-icons/fi';
-import EventHiveLogo from '../common/EventHiveLogo.jsx';
+import AppLogo from '../common/AppLogo.jsx';
 
 export default function AuthLayout({
   children,
@@ -25,9 +25,9 @@ export default function AuthLayout({
           className="pointer-events-none absolute left-10 bottom-24 w-60 h-60 rounded-full bg-[#ffc107]/15 blur-3xl"
         />
 
-        {/* Logo EventHive Vectorial */}
+        {/* Logo EventHive */}
         <Link to="/" className="relative z-10 flex items-center w-fit group">
-          <EventHiveLogo variant="horizontal" size={44} textClassName="text-white text-2xl" />
+          <AppLogo className="h-11 w-fit" textClassName="text-white text-2xl" hiveClassName="text-white" />
         </Link>
 
         {/* Contenido Central Inspirador */}
@@ -73,7 +73,7 @@ export default function AuthLayout({
         {/* Barra Superior con Enlace de Cambio */}
         <div className="flex items-center justify-between lg:justify-end gap-3 text-xs sm:text-sm">
           <Link to="/" className="lg:hidden flex items-center">
-            <EventHiveLogo variant="horizontal" size={28} textClassName="text-base" />
+            <AppLogo className="h-8 w-fit" textClassName="text-base" hiveClassName="text-white" />
           </Link>
 
           {topPromptText && topActionText && topActionHref && (

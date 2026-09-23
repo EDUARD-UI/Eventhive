@@ -1,6 +1,6 @@
 import { FiMapPin } from 'react-icons/fi';
 import SearchCard from './SearchCard.jsx';
-import EventHiveLogo from './common/EventHiveLogo.jsx';
+import AppLogo from './common/AppLogo.jsx';
 import heroBackground from '../assets/image.png';
 
 export default function Hero() {
@@ -27,12 +27,12 @@ export default function Hero() {
         className="absolute inset-0 bg-gradient-to-t from-[#0047a8]/60 via-transparent to-transparent pointer-events-none"
       />
 
-      {/* Marca de agua vectorial de EventHive */}
+      {/* Marca de agua de EventHive */}
       <div
         aria-hidden="true"
         className="hidden lg:block absolute -right-8 top-1/2 -translate-y-1/2 w-[360px] h-[360px] pointer-events-none opacity-[0.09] select-none"
       >
-        <EventHiveLogo variant="icon" size={360} />
+        <AppLogo showName={false} className="h-full w-full" />
       </div>
 
       {/* Contenido Principal */}

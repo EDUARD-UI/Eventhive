@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom';
 import { FiArrowLeft, FiSettings } from 'react-icons/fi';
-import EventHiveLogo from '../common/EventHiveLogo.jsx';
+import AppLogo from '../common/AppLogo.jsx';
 
 const PAGE_BG = '#f0f4f9';
 
 function Logo({ role }) {
     return (
         <div className="flex items-center gap-3 px-2 mb-8 mr-4 bg-white/5 p-2.5 rounded-2xl border border-white/10">
-            <EventHiveLogo variant="icon" size={38} className="rounded-xl p-0.5 bg-white/10 shadow-sm shrink-0" />
+            <Link to="/" aria-label="Ir al inicio" className="shrink-0">
+                <AppLogo showName={false} className="h-10 w-10 rounded-xl p-0.5 bg-white/10 shadow-sm" />
+            </Link>
             <div className="min-w-0">
                 <div className="flex items-center gap-1.5 font-display font-bold text-sm text-white leading-tight">
                     Event<span className="text-[#3b82f6]">Hive</span>

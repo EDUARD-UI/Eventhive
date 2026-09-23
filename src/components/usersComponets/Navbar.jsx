@@ -5,7 +5,7 @@ import { NAV_LINKS } from "../../constants/navigation.js";
 import MobileDrawer from "../MobileDrawer.jsx";
 import HelpChat from "../HelpChat.jsx";
 import { useDisclosure } from "../../hooks/useDisclosure.js";
-import EventHiveLogo from "../common/EventHiveLogo.jsx";
+import AppLogo from "../common/AppLogo.jsx";
 import { session } from "../../services/session.js";
 
 export default function Navbar() {
@@ -33,7 +33,7 @@ export default function Navbar() {
     <>
       <header className="flex items-center justify-between px-6 sm:px-10 py-3.5 border-b border-borderc bg-white/95 backdrop-blur-md sticky top-0 z-30 transition-all shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
         <Link to="/" className="flex items-center group">
-          <EventHiveLogo variant="horizontal" size={38} />
+          <AppLogo className="h-10 w-fit" />
         </Link>
 
         <nav className="hidden md:flex items-center gap-7 text-[14.5px] font-medium">
