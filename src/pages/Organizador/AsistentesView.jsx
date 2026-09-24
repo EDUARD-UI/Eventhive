@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   FiCheck,
   FiCheckCircle,
@@ -410,7 +411,8 @@ export default function AsistentesView() {
 
       {/* 4. Modal para Crear o Editar Asistente */}
       {editingAttendee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 animate-fade-in">
+        createPortal(
+        <div className="fixed inset-0 z-[100] flex min-h-screen w-screen items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-3 pb-4 border-b border-slate-100">
               <div>
@@ -521,7 +523,9 @@ export default function AsistentesView() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
+        )
       )}
     </div>
   );

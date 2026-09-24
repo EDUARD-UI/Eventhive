@@ -375,13 +375,15 @@ export default function OrganizadorIndex() {
       }}
       headerProps={{
         title: activeMenu ? activeMenu.label : 'Panel de la Organización',
-        badgeText: 'Módulo de Organización',
+        
         showSearch: true,
+        showNotifications: false,
         searchTerm: searchTerm,
         onSearchChange: setSearchTerm,
         searchPlaceholder: 'Buscar eventos, entradas...',
         userName: 'Fundación Cultural Caribe',
         userInitials: 'FC',
+        onProfileClick: () => setActiveItem('perfil'),
       }}
       maxWidthClass="max-w-[1280px]"
     >

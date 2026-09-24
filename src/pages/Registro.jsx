@@ -6,6 +6,7 @@ import AuthLayout from '../components/auth/AuthLayout.jsx';
 import InputField from '../components/common/InputField.jsx';
 import SocialAuthButton from '../components/common/SocialAuthButton.jsx';
 import useForm from '../hooks/useForm.js';
+import { authService } from '../services/authService.js';
 
 const validateRegister = (values) => {
   const errors = {};
@@ -71,19 +72,21 @@ export default function Registro() {
   const isOrganizer = values.role === 'organizador';
 
   const onSubmit = async (formValues) => {
-    // Simulación de registro preparado para backend REST
-    await new Promise((resolve) => setTimeout(resolve, 900));
-
-    localStorage.setItem('eventhive_token', 'demo_jwt_token_' + Date.now());
-    localStorage.setItem(
-      'eventhive_user',
-      JSON.stringify({
-        email: formValues.email,
-        name: formValues.name,
-        role: isOrganizer ? 'ORGANIZADOR' : 'CLIENTE',
-        orgName: formValues.orgName,
-      })
-    );
+    if (isOrganizer) {
+      await authService.registrarOrganizacion(
+        formValues.orgName || formValues.name,
+        formValues.email,
+        formValues.phone || '',
+        formValues.password
+      );
+    } else {
+      await authService.registrarCliente(
+        formValues.name,
+        formValues.email,
+        formValues.phone || '',
+        formValues.password
+      );
+    }
 
     await Swal.fire({
       icon: 'success',

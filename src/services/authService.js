@@ -53,7 +53,12 @@ export const authService = {
     return httpClient.get('/auth/me');
   },
 
-  logout() {
+  async logout() {
+    try {
+      await httpClient.post('/auth/logout');
+    } catch {
+      // Ignore server errors — always clear local session
+    }
     session.clear();
   },
 };

@@ -27,7 +27,7 @@ export default function AuthLayout({
 
         {/* Logo EventHive */}
         <Link to="/" className="relative z-10 flex items-center w-fit group">
-          <AppLogo className="h-11 w-fit" textClassName="text-white text-2xl" hiveClassName="text-white" />
+          <AppLogo className="h-8 w-fit" textClassName="text-base" hiveClassName="text-brand" />
         </Link>
 
         {/* Contenido Central Inspirador */}
@@ -61,7 +61,7 @@ export default function AuthLayout({
 
         {/* Pie de Panel Izquierdo */}
         <div className="relative z-10 flex items-center justify-between text-xs text-sky-100/70 border-t border-white/15 pt-6">
-          <p>© 2026 EventHive CTG · Cartagena de Indias</p>
+          <p>© 2026 EventHive. Todos los derechos reservados.</p>
           <Link to="/" className="hover:text-white transition-colors underline underline-offset-4">
             Explorar eventos
           </Link>
@@ -73,7 +73,7 @@ export default function AuthLayout({
         {/* Barra Superior con Enlace de Cambio */}
         <div className="flex items-center justify-between lg:justify-end gap-3 text-xs sm:text-sm">
           <Link to="/" className="lg:hidden flex items-center">
-            <AppLogo className="h-8 w-fit" textClassName="text-base" hiveClassName="text-white" />
+            <AppLogo className="h-8 w-fit" textClassName="text-base" hiveClassName="text-brand" />
           </Link>
 
           {topPromptText && topActionText && topActionHref && (

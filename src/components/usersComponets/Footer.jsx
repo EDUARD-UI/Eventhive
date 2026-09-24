@@ -10,7 +10,7 @@ export default function Footer({ onHelpClick }) {
           {/* Brand Col */}
           <div className="md:col-span-2 space-y-4">
             <Link to="/" className="inline-block">
-              <AppLogo className="h-10 w-fit" textClassName="text-white" hiveClassName="text-white" />
+              <AppLogo className="h-8 w-fit" textClassName="text-base" hiveClassName="text-brand" />
             </Link>
             <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-sm">
               La mejor plataforma para descubrir y compartir eventos en Cartagena. Conectamos la cultura, el arte y el entretenimiento caribeño con la comunidad.
