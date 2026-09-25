@@ -15,10 +15,11 @@ const buildUrl = (path, params) => {
 
 async function request(path, { method = 'GET', params, body, isFormData = false } = {}) {
   const token = session.getToken();
+  const isDevSession = session.isDevSession();  // de prueba pára actualizar los paneles de admin/moderador/organizador sin login real
 
   const headers = {};
   if (!isFormData) headers['Content-Type'] = 'application/json';
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (token && !isDevSession) headers.Authorization = `Bearer ${token}`;
 
   let response;
 
@@ -35,7 +36,7 @@ async function request(path, { method = 'GET', params, body, isFormData = false 
   // Token vencido o inválido: se limpia la sesión y se manda al login,
   // salvo que la petición que falló sea el propio login (para no
   // entrar en loop de redirecciones).
-  if (response.status === 401 && path !== '/auth/login') {
+  if (response.status === 401 && path !== '/auth/login' && !isDevSession) {  // de prueba pára actualizar los paneles de admin/moderador/organizador sin login real
     session.clear();
     if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/iniciosesion')) {
       window.location.href = '/iniciosesion';

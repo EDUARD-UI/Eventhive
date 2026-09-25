@@ -28,11 +28,7 @@ export default function Footer({ onHelpClick }) {
                   Todos los eventos
                 </Link>
               </li>
-              <li>
-                <a href="#proximos" className="hover:text-brand transition-colors">
-                  Próximos
-                </a>
-              </li>
+              
               <li>
                 <Link to="/categorias" className="hover:text-brand transition-colors">
                   Categorías
