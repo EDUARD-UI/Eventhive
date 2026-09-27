@@ -55,7 +55,7 @@ export default function Sidebar({
           collapsed ? 'px-2' : 'pl-4 pr-0'
         }`}
       >
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1">
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-0 no-scrollbar">
           {/* Cabecera del Sidebar */}
           {collapsed ? (
             /* Cabecera en estado Colapsado (Desktop) */

@@ -149,3 +149,35 @@ body {
 .map-popup-card__button:hover {
   background: #1765cc;
 }
+
+/* ==========================================================================
+   OCULTAR BARRAS DE SCROLL VISUALES MANTENIENDO FUNCIONALIDAD TOTAL DE SCROLL
+   ========================================================================== */
+
+/* Navegador global (html y body) */
+html,
+body {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE y Edge */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Clases utilitarias Tailwind / CSS para contenedores (Sidebar, Dashboard, Modales) */
+.no-scrollbar,
+.scrollbar-hide {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-hide::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
