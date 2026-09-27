@@ -149,3 +149,27 @@ body {
 .map-popup-card__button:hover {
   background: #1765cc;
 }
+
+/* Transición elegante y sobria al abrir el Home (UX Premium sin exageraciones) */
+@keyframes homeFadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-transition-enter {
+  animation: homeFadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-transition-enter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

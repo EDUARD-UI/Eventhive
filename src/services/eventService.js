@@ -22,7 +22,8 @@ const normalizeEvent = (event) => ({
   id: String(event.id),
   title: event.titulo,
   description: event.descripcion,
-  category: typeof event.categoria === 'string' ? event.categoria : event.categoria?.nombre || 'Evento',
+  category: typeof event.categoria === 'string' ? event.categoria : event.categoria?.nombre || event.nombreCategoria || 'Evento',
+  categoriaId: event.categoria?.id || event.categoriaId || null,
   location: event.ubicacion || event.lugar || '',
   date: formatDisplayDate(event.fecha, event.hora),
   startsAt: event.fecha ? `${event.fecha}T${event.hora || '00:00:00'}` : null,
@@ -31,7 +32,7 @@ const normalizeEvent = (event) => ({
   price: event.precio ?? event.localidades?.[0]?.precio ?? 0,
   gradient: 'from-brand to-sky-300',
   favorite: false,
-  photo: event.foto,
+  photo: event.foto || null,
   organization: event.organizacion || event.organizador,
   localidades: event.localidades || [],
 });
@@ -54,8 +55,17 @@ export async function getFeaturedEvents() {
   return sortByNearestDate(events).slice(0, 2);
 }
 
-/** Más eventos para la sección "Más eventos" (GET /eventos). */
+/** Más eventos para la sección "Más eventos" (GET /eventos/proximos o GET /eventos). */
 export async function getUpcomingEvents() {
+  try {
+    const proximosData = await httpClient.get('/eventos/proximos', { page: 0, size: 8 });
+    const content = proximosData?.content || [];
+    if (content.length > 0) {
+      return content.map(normalizeEvent).slice(0, 4);
+    }
+  } catch {
+    // fallback a /eventos si /eventos/proximos no tiene datos
+  }
   const data = await httpClient.get('/eventos', { page: 0, size: 12, sort: 'fecha,asc' });
   const events = (data?.content || []).map(normalizeEvent);
   return sortByNearestDate(events).slice(0, 4);

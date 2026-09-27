@@ -158,17 +158,17 @@ En caso de error, la respuesta suele devolver:
 }
 ```
 
-#### `POST /api/auth/registrar-organizacion`
-- Recibe: body `RegistroRequest` con nombre, correo, teléfono y clave.
+#### `POST /api/auth/registro-organizador`
+- Recibe: body JSON `SolicitudVerificacionRequest` con `nombreCompleto`, `correoUsuario`, `password`, `razonSocial`, `nit` y `correoEmpresarial`.
 - Devuelve: `ApiResponse<Void>`
-- Descripción: registra una organización con su usuario representante.
+- Descripción: crea la cuenta del representante y la organización en estado de pre-registro. El RUT se carga posteriormente mediante `/api/verificacion/{solicitudId}/subir-rut`.
 - Permisos: público.
 - Ejemplo de respuesta:
 
 ```json
 {
   "success": true,
-  "mensaje": "Registro exitoso",
+  "mensaje": "Usuario y pre-registro de organización creados con éxito. Ya puedes ingresar al Dashboard.",
   "data": null
 }
 ```
@@ -366,15 +366,30 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 15,
         "titulo": "Festival de Jazz",
-        "categoria": "Música",
+        "descripcion": "Evento musical con artistas locales",
+        "lugar": "Parque Central, Santiago",
+        "foto": "https://storage.example/eventos/festival-jazz.jpg",
         "fecha": "2026-10-14",
-        "precio": 25000
+        "hora": "19:30:00",
+        "estado": "PUBLICADO",
+        "latitud": -33.4489,
+        "longitud": -70.6693,
+        "categoria": {
+          "id": 1,
+          "nombre": "Música"
+        },
+        "organizacion": {
+          "id": 20,
+          "nombre": "Eventica"
+        }
       }
     ],
     "pageNumber": 0,
     "pageSize": 10,
     "totalElements": 1,
-    "totalPages": 1
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
   }
 }
 ```
@@ -394,10 +409,30 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 18,
         "titulo": "Expo Creativa",
-        "fecha": "2026-09-20",
-        "estado": "PUBLICADO"
+        "descripcion": "Encuentro de arte, diseño y creatividad",
+        "lugar": "Centro Cultural, Santiago",
+        "foto": "https://storage.example/eventos/expo-creativa.jpg",
+        "fecha": "2026-10-20",
+        "hora": "10:00:00",
+        "estado": "PUBLICADO",
+        "latitud": -33.4372,
+        "longitud": -70.6506,
+        "categoria": {
+          "id": 3,
+          "nombre": "Arte"
+        },
+        "organizacion": {
+          "id": 21,
+          "nombre": "Colectivo Creativo"
+        }
       }
-    ]
+    ],
+    "pageNumber": 0,
+    "pageSize": 10,
+    "totalElements": 1,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
   }
 }
 ```
@@ -416,10 +451,37 @@ En caso de error, la respuesta suele devolver:
     "id": 15,
     "titulo": "Festival de Jazz",
     "descripcion": "Evento musical con artistas locales",
+    "lugar": "Parque Central, Santiago",
+    "foto": "https://storage.example/eventos/festival-jazz.jpg",
     "fecha": "2026-10-14",
-    "ubicacion": "Santiago",
-    "precio": 25000,
-    "estado": "PUBLICADO"
+    "hora": "19:30:00",
+    "estado": "PUBLICADO",
+    "latitud": -33.4489,
+    "longitud": -70.6693,
+    "categoria": {
+      "id": 1,
+      "nombre": "Música"
+    },
+    "organizacion": {
+      "id": 20,
+      "nombre": "Eventica"
+    },
+    "localidades": [
+      {
+        "id": 1,
+        "nombre": "General",
+        "precio": 25000,
+        "capacidad": 150,
+        "disponibles": 120
+      },
+      {
+        "id": 2,
+        "nombre": "VIP",
+        "precio": 60000,
+        "capacidad": 40,
+        "disponibles": 35
+      }
+    ]
   }
 }
 ```
@@ -437,8 +499,31 @@ En caso de error, la respuesta suele devolver:
   "data": {
     "id": 15,
     "titulo": "Festival de Jazz",
-    "organizacionId": 20,
-    "estado": "PENDIENTE"
+    "descripcion": "Evento musical con artistas locales",
+    "lugar": "Parque Central, Santiago",
+    "foto": "https://storage.example/eventos/festival-jazz.jpg",
+    "fecha": "2026-10-14",
+    "hora": "19:30:00",
+    "estado": "BORRADOR",
+    "latitud": -33.4489,
+    "longitud": -70.6693,
+    "categoria": {
+      "id": 1,
+      "nombre": "Música"
+    },
+    "organizacion": {
+      "id": 20,
+      "nombre": "Eventica"
+    },
+    "localidades": [
+      {
+        "id": 1,
+        "nombre": "General",
+        "precio": 25000,
+        "capacidad": 150,
+        "disponibles": 120
+      }
+    ]
   }
 }
 ```
@@ -459,13 +544,30 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 15,
         "titulo": "Festival de Jazz",
-        "estado": "PUBLICADO"
+        "descripcion": "Evento musical con artistas locales",
+        "lugar": "Parque Central, Santiago",
+        "foto": "https://storage.example/eventos/festival-jazz.jpg",
+        "fecha": "2026-10-14",
+        "hora": "19:30:00",
+        "estado": "PUBLICADO",
+        "latitud": -33.4489,
+        "longitud": -70.6693,
+        "categoria": {
+          "id": 1,
+          "nombre": "Música"
+        },
+        "organizacion": {
+          "id": 20,
+          "nombre": "Eventica"
+        }
       }
     ],
     "pageNumber": 0,
     "pageSize": 10,
     "totalElements": 1,
-    "totalPages": 1
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
   }
 }
 ```
@@ -483,8 +585,31 @@ En caso de error, la respuesta suele devolver:
   "data": {
     "id": 15,
     "titulo": "Festival de Jazz",
+    "descripcion": "Evento musical con artistas locales",
+    "lugar": "Parque Central, Santiago",
+    "foto": "https://storage.example/eventos/festival-jazz.jpg",
+    "fecha": "2026-10-14",
+    "hora": "19:30:00",
     "estado": "PENDIENTE_REVISION",
-    "organizacion": "Eventica"
+    "latitud": -33.4489,
+    "longitud": -70.6693,
+    "categoria": {
+      "id": 1,
+      "nombre": "Música"
+    },
+    "organizacion": {
+      "id": 20,
+      "nombre": "Eventica"
+    },
+    "localidades": [
+      {
+        "id": 1,
+        "nombre": "General",
+        "precio": 25000,
+        "capacidad": 150,
+        "disponibles": 120
+      }
+    ]
   }
 }
 ```
@@ -525,13 +650,16 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 15,
         "titulo": "Festival de Jazz",
+        "nombreCategoria": "Música",
         "fecha": "2026-10-14"
       }
     ],
     "pageNumber": 0,
     "pageSize": 10,
     "totalElements": 1,
-    "totalPages": 1
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
   }
 }
 ```
@@ -550,9 +678,31 @@ En caso de error, la respuesta suele devolver:
     "content": [
       {
         "id": 15,
-        "titulo": "Festival de Jazz"
+        "titulo": "Festival de Jazz",
+        "descripcion": "Evento musical con artistas locales",
+        "lugar": "Parque Central, Santiago",
+        "foto": "https://storage.example/eventos/festival-jazz.jpg",
+        "fecha": "2026-10-14",
+        "hora": "19:30:00",
+        "estado": "PUBLICADO",
+        "latitud": -33.4489,
+        "longitud": -70.6693,
+        "categoria": {
+          "id": 1,
+          "nombre": "Música"
+        },
+        "organizacion": {
+          "id": 20,
+          "nombre": "Eventica"
+        }
       }
-    ]
+    ],
+    "pageNumber": 0,
+    "pageSize": 10,
+    "totalElements": 1,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
   }
 }
 ```
@@ -572,9 +722,30 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 15,
         "titulo": "Festival de Jazz",
-        "estado": "PENDIENTE"
+        "descripcion": "Evento musical con artistas locales",
+        "lugar": "Parque Central, Santiago",
+        "foto": "https://storage.example/eventos/festival-jazz.jpg",
+        "fecha": "2026-10-14",
+        "hora": "19:30:00",
+        "estado": "PENDIENTE_REVISION",
+        "latitud": -33.4489,
+        "longitud": -70.6693,
+        "categoria": {
+          "id": 1,
+          "nombre": "Música"
+        },
+        "organizacion": {
+          "id": 20,
+          "nombre": "Eventica"
+        }
       }
-    ]
+    ],
+    "pageNumber": 0,
+    "pageSize": 10,
+    "totalElements": 1,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
   }
 }
 ```
@@ -594,7 +765,23 @@ En caso de error, la respuesta suele devolver:
   "data": {
     "id": 15,
     "titulo": "Festival de Jazz",
-    "estado": "BORRADOR"
+    "descripcion": "Evento musical con artistas locales",
+    "lugar": "Parque Central, Santiago",
+    "foto": "https://storage.example/eventos/festival-jazz.jpg",
+    "fecha": "2026-10-14",
+    "hora": "19:30:00",
+    "estado": "BORRADOR",
+    "latitud": -33.4489,
+    "longitud": -70.6693,
+    "categoria": {
+      "id": 1,
+      "nombre": "Música"
+    },
+    "organizacion": {
+      "id": 20,
+      "nombre": "Eventica"
+    },
+    "localidades": []
   }
 }
 ```
@@ -614,7 +801,31 @@ En caso de error, la respuesta suele devolver:
   "data": {
     "id": 15,
     "titulo": "Festival de Jazz Actualizado",
-    "estado": "BORRADOR"
+    "descripcion": "Evento musical con artistas locales",
+    "lugar": "Parque Central, Santiago",
+    "foto": "https://storage.example/eventos/festival-jazz.jpg",
+    "fecha": "2026-10-14",
+    "hora": "19:30:00",
+    "estado": "BORRADOR",
+    "latitud": -33.4489,
+    "longitud": -70.6693,
+    "categoria": {
+      "id": 1,
+      "nombre": "Música"
+    },
+    "organizacion": {
+      "id": 20,
+      "nombre": "Eventica"
+    },
+    "localidades": [
+      {
+        "id": 1,
+        "nombre": "General",
+        "precio": 25000,
+        "capacidad": 150,
+        "disponibles": 120
+      }
+    ]
   }
 }
 ```
@@ -643,6 +854,36 @@ En caso de error, la respuesta suele devolver:
 {
   "success": true,
   "mensaje": "Evento retirado a borrador",
+  "data": null
+}
+```
+
+#### `PATCH /api/eventos/{id}/enviar-revision`
+- Recibe: `id` del evento en path, sin body.
+- Devuelve: `ApiResponse<Void>`
+- Descripción: envía el evento a revisión.
+- Permisos: REPRESENTANTE o OPERADOR.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "Evento enviado a revisión",
+  "data": null
+}
+```
+
+#### `PATCH /api/eventos/{id}/reabrir`
+- Recibe: `id` del evento en path, sin body.
+- Devuelve: `ApiResponse<Void>`
+- Descripción: reabre el evento y lo devuelve a borrador.
+- Permisos: REPRESENTANTE o OPERADOR.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "Evento reabierto a borrador",
   "data": null
 }
 ```
@@ -891,13 +1132,30 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 20,
         "titulo": "Concierto Nocturno",
-        "fecha": "2026-11-12"
+        "descripcion": "Concierto al aire libre",
+        "lugar": "Anfiteatro, Santiago",
+        "foto": "https://storage.example/eventos/concierto-nocturno.jpg",
+        "fecha": "2026-11-12",
+        "hora": "20:00:00",
+        "estado": "PUBLICADO",
+        "latitud": -33.4489,
+        "longitud": -70.6693,
+        "categoria": {
+          "id": 1,
+          "nombre": "Música"
+        },
+        "organizacion": {
+          "id": 20,
+          "nombre": "Eventica"
+        }
       }
     ],
     "pageNumber": 0,
     "pageSize": 10,
     "totalElements": 1,
-    "totalPages": 1
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
   }
 }
 ```
@@ -1102,6 +1360,31 @@ En caso de error, la respuesta suele devolver:
 }
 ```
 
+#### `POST /api/organizaciones/buscar`
+- Recibe: body JSON `BuscarOrganizacionRequest` con `razonSocial` y parámetros de paginación (`page`, `size`, `sort`).
+- Devuelve: `ApiResponse<PagedResponse<OrganizacionPublicaDTO>>`
+- Descripción: busca organizaciones por razón social.
+- Permisos: público.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "Organizaciones encontradas",
+  "data": {
+    "content": [
+      { "id": 10, "nombre": "Eventica", "descripcion": "Organización de eventos" }
+    ],
+    "pageNumber": 0,
+    "pageSize": 10,
+    "totalElements": 1,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
+}
+```
+
 #### `GET /api/organizaciones/{organizacionId}`
 - Recibe: `organizacionId` en path.
 - Devuelve: `ApiResponse<OrganizacionDTO>`
@@ -1117,6 +1400,24 @@ En caso de error, la respuesta suele devolver:
     "nombre": "Eventica",
     "rut": "76.123.456-7",
     "estado": "VERIFICADA"
+  }
+}
+```
+
+#### `GET /api/organizaciones/{organizacionId}/rut-url`
+- Recibe: `organizacionId` en path.
+- Devuelve: `ApiResponse<RutUrlDTO>` con `url` temporal y `expiresInSeconds`.
+- Descripción: obtiene un enlace temporal para consultar el documento RUT de la organización.
+- Permisos: autenticado.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "URL temporal del RUT obtenida",
+  "data": {
+    "url": "https://storage.example/rut-temporal",
+    "expiresInSeconds": 300
   }
 }
 ```
@@ -1576,8 +1877,15 @@ En caso de error, la respuesta suele devolver:
   "mensaje": "Solicitud obtenida",
   "data": {
     "id": 5,
+    "organizacionId": 10,
+    "representanteId": 7,
+    "representanteNombre": "Carlos Pérez",
+    "representanteCorreo": "carlos@email.com",
+    "razonSocial": "Eventica SpA",
+    "nit": "76.123.456-7",
+    "correoEmpresarial": "contacto@eventica.cl",
     "estado": "PENDIENTE",
-    "organizacion": "Eventica"
+    "fechaSolicitud": "2026-09-26T10:30:00"
   }
 }
 ```
@@ -1585,7 +1893,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/verificacion/pendientes`
 - Recibe: paginación.
 - Devuelve: `ApiResponse<Page<SolicitudVerificacionDTO>>`
-- Permisos: ADMINISTRADOR o MODERADOR.
+- Permisos: ADMINISTRADOR.
 - Ejemplo de respuesta:
 
 ```json
@@ -1596,8 +1904,11 @@ En caso de error, la respuesta suele devolver:
     "content": [
       {
         "id": 5,
+        "organizacionId": 10,
+        "representanteNombre": "Carlos Pérez",
+        "razonSocial": "Eventica SpA",
         "estado": "PENDIENTE",
-        "organizacion": "Eventica"
+        "fechaSolicitud": "2026-09-26T10:30:00"
       }
     ]
   }
@@ -1607,7 +1918,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/verificacion/{solicitudId}`
 - Recibe: `solicitudId` en path.
 - Devuelve: `ApiResponse<SolicitudVerificacionDTO>`
-- Permisos: ADMINISTRADOR o MODERADOR.
+- Permisos: ADMINISTRADOR.
 - Ejemplo de respuesta:
 
 ```json
@@ -1616,15 +1927,40 @@ En caso de error, la respuesta suele devolver:
   "mensaje": "Solicitud obtenida",
   "data": {
     "id": 5,
+    "organizacionId": 10,
+    "representanteId": 7,
+    "representanteNombre": "Carlos Pérez",
+    "representanteCorreo": "carlos@email.com",
+    "razonSocial": "Eventica SpA",
+    "nit": "76.123.456-7",
+    "representanteLegal": 7,
+    "correoEmpresarial": "contacto@eventica.cl",
+    "mensaje": "Documento recibido",
     "estado": "PENDIENTE",
-    "organizacion": "Eventica",
-    "motivo": "Documentación incompleta"
+    "fechaSolicitud": "2026-09-26T10:30:00",
+    "fechaResolucion": null,
+    "administradorNombre": null,
+    "motivoRechazo": null
   }
 }
 ```
 
-#### `POST /api/verificacion/solicitar`
-- Recibe: multipart/form-data con `datos` y `rut` opcional.
+#### `POST /api/verificacion/registro-organizador`
+- Recibe: body JSON `SolicitudVerificacionRequest` con `nombreCompleto`, `correoUsuario`, `password`, `razonSocial`, `nit` y `correoEmpresarial`.
+- Devuelve: `ApiResponse<Void>`; crea la cuenta y la organización en pre-registro. Este flujo también está disponible en `POST /api/auth/registro-organizador`.
+- Permisos: público.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "Cuenta y organización creadas. Completa tu RUT para publicar eventos.",
+  "data": null
+}
+```
+
+#### `PATCH /api/verificacion/{solicitudId}/subir-rut`
+- Recibe: `solicitudId` en path y archivo obligatorio `rut` como multipart/form-data.
 - Devuelve: `ApiResponse<Void>`
 - Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
@@ -1632,29 +1968,29 @@ En caso de error, la respuesta suele devolver:
 ```json
 {
   "success": true,
-  "mensaje": "Solicitud de verificación enviada correctamente",
+  "mensaje": "RUT cargado. Tu solicitud entró a cola de revisión.",
   "data": null
 }
 ```
 
 #### `PUT /api/verificacion/{solicitudId}/aprobar`
 - Recibe: `solicitudId` en path.
-- Devuelve: `ApiResponse<String>`
-- Permisos: ADMINISTRADOR o MODERADOR.
+- Devuelve: `ApiResponse<String>` (el endpoint actualmente deja `data` en `null`).
+- Permisos: ADMINISTRADOR.
 - Ejemplo de respuesta:
 
 ```json
 {
   "success": true,
-  "mensaje": "Solicitud aprobada. Comparte esta contraseña con el organizador",
-  "data": "CLAVE-VERIFICACION-123"
+  "mensaje": "Organización verificada.",
+  "data": null
 }
 ```
 
 #### `PUT /api/verificacion/{solicitudId}/rechazar`
-- Recibe: `solicitudId` en path y parámetro `motivo`.
+- Recibe: `solicitudId` en path y parámetro de query `motivo`.
 - Devuelve: `ApiResponse<Void>`
-- Permisos: ADMINISTRADOR o MODERADOR.
+- Permisos: ADMINISTRADOR.
 - Ejemplo de respuesta:
 
 ```json
@@ -1666,25 +2002,21 @@ En caso de error, la respuesta suele devolver:
 ```
 
 #### `PATCH /api/verificacion/{solicitudId}/solicitar-correccion`
-- Recibe: `solicitudId` en path y parámetro `motivo`.
-- Devuelve: `ApiResponse<SolicitudVerificacionDTO>`
-- Permisos: ADMINISTRADOR o MODERADOR.
+- Recibe: `solicitudId` en path y parámetro de query `motivo`.
+- Devuelve: `ApiResponse<SolicitudVerificacionDTO>` (el endpoint actualmente deja `data` en `null`).
+- Permisos: ADMINISTRADOR.
 - Ejemplo de respuesta:
 
 ```json
 {
   "success": true,
-  "mensaje": "Solicitud marcada para correccion",
-  "data": {
-    "id": 5,
-    "estado": "CORRECCION",
-    "motivo": "Falta firma digital"
-  }
+  "mensaje": "Solicitud marcada para corrección",
+  "data": null
 }
 ```
 
 #### `PATCH /api/verificacion/{solicitudId}/reenviar`
-- Recibe: `solicitudId` en path.
+- Recibe: `solicitudId` en path y multipart/form-data con `datos` (`SolicitudVerificacionRequest`) obligatorio y `rut` opcional.
 - Devuelve: `ApiResponse<Void>`
 - Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
@@ -1702,6 +2034,25 @@ En caso de error, la respuesta suele devolver:
 ## 15. Moderaciones
 
 ### Base: `/api/moderaciones`
+
+#### `GET /api/moderaciones/estadisticas`
+- Recibe: sin parámetros.
+- Devuelve: `ApiResponse<ModeracionEstadisticasDTO>` con `revisados`, `aprobados`, `rechazados` y `correccionesSolicitadas`.
+- Permisos: MODERADOR.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "Estadísticas de moderación obtenidas",
+  "data": {
+    "revisados": 24,
+    "aprobados": 18,
+    "rechazados": 2,
+    "correccionesSolicitadas": 4
+  }
+}
+```
 
 #### `GET /api/moderaciones/moderadores`
 - Recibe: paginación.
@@ -1752,7 +2103,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/moderaciones/eventos/pendientes`
 - Recibe: paginación.
 - Devuelve: `ApiResponse<PagedResponse<EventoDTO>>`
-- Permisos: MODERADOR o ADMINISTRADOR.
+- Permisos: MODERADOR.
 - Ejemplo de respuesta:
 
 ```json
@@ -1764,9 +2115,30 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 15,
         "titulo": "Festival de Jazz",
-        "estado": "PENDIENTE"
+        "descripcion": "Evento musical con artistas locales",
+        "lugar": "Parque Central, Santiago",
+        "foto": "https://storage.example/eventos/festival-jazz.jpg",
+        "fecha": "2026-10-14",
+        "hora": "19:30:00",
+        "estado": "PENDIENTE_REVISION",
+        "latitud": -33.4489,
+        "longitud": -70.6693,
+        "categoria": {
+          "id": 1,
+          "nombre": "Música"
+        },
+        "organizacion": {
+          "id": 20,
+          "nombre": "Eventica"
+        }
       }
-    ]
+    ],
+    "pageNumber": 0,
+    "pageSize": 10,
+    "totalElements": 1,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
   }
 }
 ```
@@ -1797,7 +2169,7 @@ En caso de error, la respuesta suele devolver:
 #### `PATCH /api/moderaciones/eventos/{eventoId}/aprobar`
 - Recibe: `eventoId` en path.
 - Devuelve: `ApiResponse<EventoDTO>`
-- Permisos: MODERADOR o ADMINISTRADOR.
+- Permisos: MODERADOR.
 - Ejemplo de respuesta:
 
 ```json
@@ -1807,7 +2179,22 @@ En caso de error, la respuesta suele devolver:
   "data": {
     "id": 15,
     "titulo": "Festival de Jazz",
-    "estado": "PUBLICADO"
+    "descripcion": "Evento musical con artistas locales",
+    "lugar": "Parque Central, Santiago",
+    "foto": "https://storage.example/eventos/festival-jazz.jpg",
+    "fecha": "2026-10-14",
+    "hora": "19:30:00",
+    "estado": "PUBLICADO",
+    "latitud": -33.4489,
+    "longitud": -70.6693,
+    "categoria": {
+      "id": 1,
+      "nombre": "Música"
+    },
+    "organizacion": {
+      "id": 20,
+      "nombre": "Eventica"
+    }
   }
 }
 ```
@@ -1815,7 +2202,7 @@ En caso de error, la respuesta suele devolver:
 #### `PATCH /api/moderaciones/eventos/{eventoId}/solicitar-correccion`
 - Recibe: `eventoId` y body `ModeracionEventoRequest`.
 - Devuelve: `ApiResponse<EventoDTO>`
-- Permisos: MODERADOR o ADMINISTRADOR.
+- Permisos: MODERADOR.
 - Ejemplo de respuesta:
 
 ```json
@@ -1825,7 +2212,22 @@ En caso de error, la respuesta suele devolver:
   "data": {
     "id": 15,
     "titulo": "Festival de Jazz",
-    "estado": "CORRECCION"
+    "descripcion": "Evento musical con artistas locales",
+    "lugar": "Parque Central, Santiago",
+    "foto": "https://storage.example/eventos/festival-jazz.jpg",
+    "fecha": "2026-10-14",
+    "hora": "19:30:00",
+    "estado": "EN_CORRECCION",
+    "latitud": -33.4489,
+    "longitud": -70.6693,
+    "categoria": {
+      "id": 1,
+      "nombre": "Música"
+    },
+    "organizacion": {
+      "id": 20,
+      "nombre": "Eventica"
+    }
   }
 }
 ```
@@ -1833,7 +2235,7 @@ En caso de error, la respuesta suele devolver:
 #### `PATCH /api/moderaciones/eventos/{eventoId}/rechazar`
 - Recibe: `eventoId` y body `ModeracionEventoRequest`.
 - Devuelve: `ApiResponse<EventoDTO>`
-- Permisos: MODERADOR o ADMINISTRADOR.
+- Permisos: MODERADOR.
 - Ejemplo de respuesta:
 
 ```json
@@ -1843,7 +2245,22 @@ En caso de error, la respuesta suele devolver:
   "data": {
     "id": 15,
     "titulo": "Festival de Jazz",
-    "estado": "RECHAZADO"
+    "descripcion": "Evento musical con artistas locales",
+    "lugar": "Parque Central, Santiago",
+    "foto": "https://storage.example/eventos/festival-jazz.jpg",
+    "fecha": "2026-10-14",
+    "hora": "19:30:00",
+    "estado": "RECHAZADO",
+    "latitud": -33.4489,
+    "longitud": -70.6693,
+    "categoria": {
+      "id": 1,
+      "nombre": "Música"
+    },
+    "organizacion": {
+      "id": 20,
+      "nombre": "Eventica"
+    }
   }
 }
 ```
@@ -1861,7 +2278,22 @@ En caso de error, la respuesta suele devolver:
   "data": {
     "id": 15,
     "titulo": "Festival de Jazz",
-    "estado": "SUSPENDIDO"
+    "descripcion": "Evento musical con artistas locales",
+    "lugar": "Parque Central, Santiago",
+    "foto": "https://storage.example/eventos/festival-jazz.jpg",
+    "fecha": "2026-10-14",
+    "hora": "19:30:00",
+    "estado": "SUSPENDIDO",
+    "latitud": -33.4489,
+    "longitud": -70.6693,
+    "categoria": {
+      "id": 1,
+      "nombre": "Música"
+    },
+    "organizacion": {
+      "id": 20,
+      "nombre": "Eventica"
+    }
   }
 }
 ```
@@ -1879,7 +2311,22 @@ En caso de error, la respuesta suele devolver:
   "data": {
     "id": 15,
     "titulo": "Festival de Jazz",
-    "estado": "PUBLICADO"
+    "descripcion": "Evento musical con artistas locales",
+    "lugar": "Parque Central, Santiago",
+    "foto": "https://storage.example/eventos/festival-jazz.jpg",
+    "fecha": "2026-10-14",
+    "hora": "19:30:00",
+    "estado": "PUBLICADO",
+    "latitud": -33.4489,
+    "longitud": -70.6693,
+    "categoria": {
+      "id": 1,
+      "nombre": "Música"
+    },
+    "organizacion": {
+      "id": 20,
+      "nombre": "Eventica"
+    }
   }
 }
 ```
@@ -2088,19 +2535,90 @@ En caso de error, la respuesta suele devolver:
 
 ---
 
-## 19. Resumen de permisos por rol
+## 19. Palabras prohibidas
+
+### Base: `/api/administracion/palabras-prohibidas`
+
+Todos los endpoints de este módulo requieren rol ADMINISTRADOR. `PalabraProhibidaRequest` recibe `palabra` (texto de hasta 100 caracteres) y `severidad` (`GRAVE` o `SOSPECHOSA`, enum `SeveridadPalabra`).
+
+#### `GET /api/administracion/palabras-prohibidas`
+- Recibe: parámetros de paginación (`page`, `size`, `sort`).
+- Devuelve: `ApiResponse<PagedResponse<PalabraProhibidaDTO>>`; cada elemento contiene `id`, `palabra`, `severidad`, `activa` y `fechaCreacion`.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "Palabras prohibidas obtenidas",
+  "data": {
+    "content": [
+      {
+        "id": 1,
+        "palabra": "ejemplo",
+        "severidad": "GRAVE",
+        "activa": true,
+        "fechaCreacion": "2026-09-26T10:30:00"
+      }
+    ],
+    "pageNumber": 0,
+    "pageSize": 10,
+    "totalElements": 1,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
+}
+```
+
+#### `POST /api/administracion/palabras-prohibidas`
+- Recibe: body JSON `PalabraProhibidaRequest` con `palabra` y `severidad`.
+- Devuelve: `ApiResponse<PalabraProhibidaDTO>`.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "Palabra creada",
+  "data": {
+    "id": 1,
+    "palabra": "ejemplo",
+    "severidad": "GRAVE",
+    "activa": true,
+    "fechaCreacion": "2026-09-26T10:30:00"
+  }
+}
+```
+
+#### `PUT /api/administracion/palabras-prohibidas/{id}`
+- Recibe: `id` en path y body JSON `PalabraProhibidaRequest` con `palabra` y `severidad`.
+- Devuelve: `ApiResponse<PalabraProhibidaDTO>`.
+- Ejemplo de respuesta: `data` contiene el DTO actualizado con `id`, `palabra`, `severidad`, `activa` y `fechaCreacion`.
+
+#### `PATCH /api/administracion/palabras-prohibidas/{id}/activa`
+- Recibe: `id` en path y parámetro de query booleano `activa`.
+- Devuelve: `ApiResponse<Void>`.
+- Ejemplo de respuesta: `{"success":true,"mensaje":"Palabra desactivada","data":null}`. Si `activa=true`, el mensaje es `Palabra activada`.
+
+#### `DELETE /api/administracion/palabras-prohibidas/{id}`
+- Recibe: `id` en path.
+- Devuelve: `ApiResponse<Void>`.
+- Ejemplo de respuesta: `{"success":true,"mensaje":"Palabra eliminada","data":null}`.
+
+---
+
+## 20. Resumen de permisos por rol
 
 - Público: registro/login, consulta pública de eventos y organizaciones
 - Autenticado: perfil, compras, lista de deseos, notificaciones, seguimientos
 - CLIENTE: compras, boletos, valoraciones
 - REPRESENTANTE: gestión de eventos, organización, promociones, verificación
 - OPERADOR: gestión de eventos y localidades
-- MODERADOR: revisión y moderación de eventos, verificación
-- ADMINISTRADOR: administración general, roles, moderadores, categorías, promociones, aprobaciones
+- MODERADOR: revisión y moderación de eventos
+- ADMINISTRADOR: administración general, roles, moderadores, categorías, palabras prohibidas, promociones y verificación de organizaciones
 
 ---
 
-## 20. Nota práctica
+## 21. Nota práctica
 
 Si quieres, este documento puede ampliarse con:
 

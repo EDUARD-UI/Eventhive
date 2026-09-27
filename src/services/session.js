@@ -1,19 +1,8 @@
 const TOKEN_KEY = 'eventhive_token';
 const REFRESH_TOKEN_KEY = 'eventhive_refresh_token';
 const USER_KEY = 'eventhive_user';
-const DEV_SESSION_KEY = 'eventhive_dev_session'; // de prueba pára actualizar los paneles de admin/moderador/organizador sin login real
+const DEV_SESSION_KEY = 'eventhive_dev_session';
 
-/**
- * El backend nombra el rol de las organizaciones "REPRESENTANTE"
- * (ver ServiceAutenticacion.registrarOrganizacion), pero el resto del
- * frontend (Navbar, rutas protegidas, etc.) fue construido usando
- * "ORGANIZADOR". Se centraliza el mapeo aquí para no repetirlo ni
- * olvidarlo en cada pantalla.
- *
- * Si en el backend existe también un rol "MODERADOR" con ese nombre
- * exacto, no hace falta tocar nada más aquí. Si tu semilla de roles usa
- * otro nombre, agrégalo a este mapa.
- */
 const ROLE_MAP = {
   REPRESENTANTE: 'ORGANIZADOR',
 };
@@ -34,26 +23,26 @@ export const session = {
     }
   },
 
-  /**
-   * Guarda la sesión a partir de la respuesta real de
-   * POST /api/auth/login (LoginResponseDTO del backend):
-   * { accessToken, refreshToken, tipo, correo, rol }
-   */
-  save: ({ accessToken, refreshToken, correo, rol, nombre }) => {
-    localStorage.removeItem(DEV_SESSION_KEY);  // de prueba pára actualizar los paneles de admin/moderador/organizador sin login real
-    localStorage.setItem(TOKEN_KEY, accessToken);
+  save: (data = {}) => {
+    const { accessToken, refreshToken, correo, rol, nombre, usuario } = data;
+    const email = correo || usuario?.correo || '';
+    const name = nombre || usuario?.nombre || email?.split('@')[0] || 'Usuario';
+    const role = rol || usuario?.rol || '';
+
+    localStorage.removeItem(DEV_SESSION_KEY);
+    if (accessToken) localStorage.setItem(TOKEN_KEY, accessToken);
     if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
 
     localStorage.setItem(
       USER_KEY,
       JSON.stringify({
-        email: correo,
-        name: nombre || correo?.split('@')[0] || 'Usuario',
-        role: mapRolBackendToFrontend(rol),
+        email,
+        name,
+        role: mapRolBackendToFrontend(role),
       })
     );
   },
-// de prueba pára actualizar los paneles de admin/moderador/organizador sin login real
+
   startDev: (role) => {
     const usersByRole = {
       ADMIN: { email: 'admin@eventhive.local', name: 'Admin de prueba' },
@@ -76,7 +65,7 @@ export const session = {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(DEV_SESSION_KEY);  // de prueba pára actualizar los paneles de admin/moderador/organizador sin login real
+    localStorage.removeItem(DEV_SESSION_KEY);
   },
 };
 

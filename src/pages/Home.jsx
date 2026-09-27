@@ -15,9 +15,10 @@ import Hero from '../components/Hero.jsx';
 import FeaturedEventCard from '../components/FeaturedEventCard.jsx';
 import EventCard from '../components/EventCard.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
+import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import { getFeaturedEvents, getMapEvents, getUpcomingEvents } from '../services/eventService.js';
 import { organizationService } from '../services/organizerService.js';
-import { getFeaturedCategories } from '../services/categoryService.js';
+import { getFeaturedCategories, getAllCategories } from '../services/categoryService.js';
 
 const CARTAGENA_CENTER = { lat: 10.3951, lng: -75.4834 };
 const DISTANCE_OPTIONS = [
@@ -25,6 +26,15 @@ const DISTANCE_OPTIONS = [
   { value: '5', label: 'Hasta 5 km' },
   { value: '10', label: 'Hasta 10 km' },
   { value: '15', label: 'Hasta 15 km' },
+];
+
+const CATEGORY_COLORS = [
+  'bg-gradient-to-br from-blue-600 to-indigo-700',
+  'bg-gradient-to-br from-indigo-600 to-purple-700',
+  'bg-gradient-to-br from-sky-600 to-blue-800',
+  'bg-gradient-to-br from-amber-500 to-orange-600',
+  'bg-gradient-to-br from-emerald-600 to-teal-700',
+  'bg-gradient-to-br from-rose-600 to-pink-700',
 ];
 
 const toRad = (value) => (value * Math.PI) / 180;
@@ -63,6 +73,7 @@ export default function Home() {
   const [mapEvents, setMapEvents] = useState([]);
   const [featuredOrganizations, setFeaturedOrganizations] = useState([]);
   const [featuredCategories, setFeaturedCategories] = useState([]);
+  const [categoryList, setCategoryList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDistance, setSelectedDistance] = useState('all');
 
@@ -88,17 +99,19 @@ export default function Home() {
     getFeaturedCategories()
       .then((data) => setFeaturedCategories(data || []))
       .catch(() => setFeaturedCategories([]));
-  }, []);
 
-  const categories = useMemo(
-    () => ['all', ...new Set(mapEvents.map((event) => event.category))],
-    [mapEvents]
-  );
+    // Conectar el endpoint /api/categorias/nombres para el menú desplegable
+    getAllCategories()
+      .then((data) => setCategoryList(data || []))
+      .catch(() => setCategoryList([]));
+  }, []);
 
   const filteredMapEvents = useMemo(() => {
     return mapEvents.filter((event) => {
       const matchesCategory =
-        selectedCategory === 'all' || event.category === selectedCategory;
+        selectedCategory === 'all' ||
+        event.category?.toLowerCase() === selectedCategory.toLowerCase() ||
+        String(event.categoriaId) === String(selectedCategory);
 
       const matchesDistance =
         selectedDistance === 'all' ||
@@ -118,7 +131,7 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-white text-slate-900">
+    <div className="w-full min-h-screen bg-white text-slate-900 home-transition-enter">
       <Navbar />
       <Hero />
 
@@ -207,10 +220,12 @@ export default function Home() {
                 value={selectedCategory}
                 onChange={(event) => setSelectedCategory(event.target.value)}
                 className="bg-transparent text-[#0a1838] font-semibold outline-none cursor-pointer"
+                aria-label="Filtrar eventos por categoría"
               >
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category === 'all' ? 'Todas las categorías' : category}
+                <option value="all">Todas las categorías</option>
+                {categoryList.map((category) => (
+                  <option key={category.id || category.nombre} value={category.nombre}>
+                    {category.nombre}
                   </option>
                 ))}
               </select>
@@ -303,15 +318,16 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Grid of the 6 colorful category cards */}
+          {/* Grid of the colorful category cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {featuredCategories.map((cat) => {
+            {featuredCategories.map((cat, index) => {
+              const bgClass = cat.bgColor || CATEGORY_COLORS[index % CATEGORY_COLORS.length];
               return (
                 <button
                   key={cat.id}
                   type="button"
                   onClick={() => handleCategoryRedirect(cat)}
-                  className={`group relative rounded-2xl p-6 sm:p-7 text-white ${cat.bgColor} shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between min-h-[170px] text-left cursor-pointer active:scale-[0.99]`}
+                  className={`group relative rounded-2xl p-6 sm:p-7 text-white ${bgClass} shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between min-h-[170px] text-left cursor-pointer active:scale-[0.99]`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-lg">
@@ -375,15 +391,19 @@ export default function Home() {
                 <div>
                   <div className="flex items-start justify-between mb-4">
                     <div className="relative">
-                      <img
+                      <ImageWithFallback
                         src={org.avatar}
                         alt={org.name}
-                        className="w-14 h-14 rounded-2xl object-cover border-2 border-slate-100 shadow-sm"
+                        showText={false}
+                        className="w-14 h-14 rounded-2xl border-2 border-slate-100 shadow-sm"
+                        imgClassName="w-14 h-14 rounded-2xl object-cover"
+                        fallbackClassName="w-14 h-14 rounded-2xl"
+                        iconSize={20}
                       />
                       {org.verified && (
                         <span
                           title="Organización Verificada"
-                          className="absolute -bottom-1 -right-1 bg-brand text-white p-1 rounded-full shadow-sm"
+                          className="absolute -bottom-1 -right-1 bg-brand text-white p-1 rounded-full shadow-sm z-10"
                         >
                           <FiCheckCircle size={11} />
                         </span>

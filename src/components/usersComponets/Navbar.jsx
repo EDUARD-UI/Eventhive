@@ -16,12 +16,9 @@ export default function Navbar() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    // session.getUser() ya guarda el rol normalizado ("ORGANIZADOR" en
-    // vez del "REPRESENTANTE" que usa el backend), así que las
-    // comparaciones de abajo (ADMIN / ORGANIZADOR) siguen funcionando
-    // igual que antes.
     setCurrentUser(session.getUser());
-  }, [location.pathname]);
+    close();
+  }, [location.pathname, location.search]);
 
   const handleLogout = () => {
     session.clear();

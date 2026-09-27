@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiUser, FiMail, FiLock, FiBriefcase, FiPhone } from 'react-icons/fi';
+import { FiUser, FiMail, FiLock, FiBriefcase, FiPhone, FiFileText } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import AuthLayout from '../components/auth/AuthLayout.jsx';
 import InputField from '../components/common/InputField.jsx';
@@ -10,23 +9,49 @@ import { authService } from '../services/authService.js';
 
 const validateRegister = (values) => {
   const errors = {};
-
-  if (!values.name?.trim()) {
-    errors.name = 'Tu nombre completo es obligatorio.';
-  }
-
-  if (!values.email?.trim()) {
-    errors.email = 'El correo electrónico es obligatorio.';
-  } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
-    errors.email = 'Ingresa un formato de correo válido.';
-  }
+  const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 
   if (values.role === 'organizador') {
-    if (!values.orgName?.trim()) {
-      errors.orgName = 'El nombre de la organización o marca es obligatorio.';
+    if (!values.razonSocial?.trim()) {
+      errors.razonSocial = 'La razón social de la organización es obligatoria.';
     }
+
+    if (!values.nit?.trim()) {
+      errors.nit = 'El NIT es obligatorio.';
+    } else if (values.nit.trim().length < 6) {
+      errors.nit = 'Ingresa un NIT válido (mínimo 6 caracteres).';
+    }
+
+    if (!values.correoEmpresarial?.trim()) {
+      errors.correoEmpresarial = 'El correo institucional o empresarial es obligatorio.';
+    } else if (!emailRegex.test(values.correoEmpresarial)) {
+      errors.correoEmpresarial = 'Ingresa un formato de correo empresarial válido.';
+    }
+
+    if (!values.nombreCompleto?.trim()) {
+      errors.nombreCompleto = 'El nombre completo del representante legal es obligatorio.';
+    }
+
+    if (!values.correoUsuario?.trim()) {
+      errors.correoUsuario = 'El correo de acceso del representante es obligatorio.';
+    } else if (!emailRegex.test(values.correoUsuario)) {
+      errors.correoUsuario = 'Ingresa un formato de correo válido.';
+    }
+  } else {
+    if (!values.name?.trim()) {
+      errors.name = 'Tu nombre completo es obligatorio.';
+    }
+
+    if (!values.email?.trim()) {
+      errors.email = 'El correo electrónico es obligatorio.';
+    } else if (!emailRegex.test(values.email)) {
+      errors.email = 'Ingresa un formato de correo válido.';
+    }
+
     if (!values.phone?.trim()) {
       errors.phone = 'El teléfono de contacto es obligatorio.';
+    } else if (values.phone.trim().length < 7) {
+      errors.phone = 'Ingresa un número de teléfono válido (mínimo 7 dígitos).';
     }
   }
 
@@ -60,9 +85,13 @@ export default function Registro() {
     {
       role: 'usuario',
       name: '',
-      orgName: '',
-      phone: '',
       email: '',
+      phone: '',
+      razonSocial: '',
+      nit: '',
+      correoEmpresarial: '',
+      nombreCompleto: '',
+      correoUsuario: '',
       password: '',
       confirmPassword: '',
     },
@@ -73,26 +102,28 @@ export default function Registro() {
 
   const onSubmit = async (formValues) => {
     if (isOrganizer) {
-      await authService.registrarOrganizacion(
-        formValues.orgName || formValues.name,
-        formValues.email,
-        formValues.phone || '',
-        formValues.password
-      );
+      await authService.registrarOrganizacion({
+        razonSocial: formValues.razonSocial.trim(),
+        nit: formValues.nit.trim(),
+        correoEmpresarial: formValues.correoEmpresarial.trim(),
+        nombreCompleto: formValues.nombreCompleto.trim(),
+        correoUsuario: formValues.correoUsuario.trim(),
+        password: formValues.password,
+      });
     } else {
-      await authService.registrarCliente(
-        formValues.name,
-        formValues.email,
-        formValues.phone || '',
-        formValues.password
-      );
+      await authService.registrarCliente({
+        nombre: formValues.name.trim(),
+        correo: formValues.email.trim(),
+        telefono: formValues.phone.trim(),
+        clave: formValues.password,
+      });
     }
 
     await Swal.fire({
       icon: 'success',
       title: '¡Cuenta creada con éxito!',
       text: isOrganizer
-        ? 'Bienvenido como organización. Te redirigiremos a tu panel.'
+        ? 'Bienvenido como organización. Tu pre-registro ha sido creado con éxito. Te redirigiremos a tu panel.'
         : 'Bienvenido a EventHive Cartagena. Ya puedes explorar eventos.',
       timer: 2000,
       showConfirmButton: false,
@@ -128,24 +159,22 @@ export default function Registro() {
           <button
             type="button"
             onClick={() => setFieldValue('role', 'usuario')}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-              !isOrganizer
+            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${!isOrganizer
                 ? 'bg-white text-ink shadow-sm'
                 : 'text-muted hover:text-ink'
-            }`}
+              }`}
           >
             Quiero asistir a eventos
           </button>
           <button
             type="button"
             onClick={() => setFieldValue('role', 'organizador')}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-              isOrganizer
+            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${isOrganizer
                 ? 'bg-brand text-white shadow-sm'
                 : 'text-muted hover:text-ink'
-            }`}
+              }`}
           >
-              Soy una organización de eventos
+            Soy una organización de eventos
           </button>
         </div>
 
@@ -162,37 +191,130 @@ export default function Registro() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5" noValidate>
-          <InputField
-            id="name"
-            name="name"
-            type="text"
-            label="Nombre y apellido"
-            placeholder="Ej: Sofia Vergara"
-            icon={FiUser}
-            value={values.name}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={errors.name}
-            touched={touched.name}
-            required
-            autoComplete="name"
-          />
+          {isOrganizer ? (
+            <div className="space-y-3.5 animate-fade-in">
+              <div className="flex items-center gap-2 pt-1 pb-1 text-xs font-bold text-slate-700 uppercase tracking-wide border-b border-borderc">
+                <FiBriefcase className="text-brand" size={14} />
+                <span>Datos de la Organización</span>
+              </div>
 
-          {isOrganizer && (
-            <div className="space-y-3.5 pt-1 animate-fade-in">
               <InputField
-                id="orgName"
-                name="orgName"
+                id="razonSocial"
+                name="razonSocial"
                 type="text"
-                label="Nombre de la empresa u organización"
-                placeholder="Ej: Cartagena Live Producciones"
+                label="Razón social de la organización"
+                placeholder="Ej: Cartagena Live Producciones S.A.S."
                 icon={FiBriefcase}
-                value={values.orgName}
+                value={values.razonSocial}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                error={errors.orgName}
-                touched={touched.orgName}
+                error={errors.razonSocial}
+                touched={touched.razonSocial}
                 required
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <InputField
+                  id="nit"
+                  name="nit"
+                  type="text"
+                  label="NIT"
+                  placeholder="Ej: 900.123.456-7"
+                  icon={FiFileText}
+                  value={values.nit}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={errors.nit}
+                  touched={touched.nit}
+                  required
+                />
+
+                <InputField
+                  id="correoEmpresarial"
+                  name="correoEmpresarial"
+                  type="email"
+                  label="Correo institucional / empresarial"
+                  placeholder="contacto@organizacion.co"
+                  icon={FiMail}
+                  value={values.correoEmpresarial}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={errors.correoEmpresarial}
+                  touched={touched.correoEmpresarial}
+                  required
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-3 pb-1 text-xs font-bold text-slate-700 uppercase tracking-wide border-b border-borderc">
+                <FiUser className="text-brand" size={14} />
+                <span>Datos del Representante (Acceso al Dashboard)</span>
+              </div>
+
+              <InputField
+                id="nombreCompleto"
+                name="nombreCompleto"
+                type="text"
+                label="Nombre completo del representante legal"
+                placeholder="Ej: Carlos Pérez Martínez"
+                icon={FiUser}
+                value={values.nombreCompleto}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={errors.nombreCompleto}
+                touched={touched.nombreCompleto}
+                required
+                autoComplete="name"
+              />
+
+              <InputField
+                id="correoUsuario"
+                name="correoUsuario"
+                type="email"
+                label="Correo de acceso del usuario"
+                placeholder="carlos@email.com"
+                icon={FiMail}
+                value={values.correoUsuario}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={errors.correoUsuario}
+                touched={touched.correoUsuario}
+                required
+                helperText="Este correo será tu usuario para iniciar sesión en tu panel."
+                autoComplete="email"
+              />
+            </div>
+          ) : (
+            <div className="space-y-3.5 animate-fade-in">
+              <InputField
+                id="name"
+                name="name"
+                type="text"
+                label="Nombre y apellido"
+                placeholder="Ej: Sofia Vergara"
+                icon={FiUser}
+                value={values.name}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={errors.name}
+                touched={touched.name}
+                required
+                autoComplete="name"
+              />
+
+              <InputField
+                id="email"
+                name="email"
+                type="email"
+                label="Correo electrónico"
+                placeholder="ejemplo@cartagena.co"
+                icon={FiMail}
+                value={values.email}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={errors.email}
+                touched={touched.email}
+                required
+                autoComplete="email"
               />
 
               <InputField
@@ -208,27 +330,12 @@ export default function Registro() {
                 error={errors.phone}
                 touched={touched.phone}
                 required
+                autoComplete="tel"
               />
             </div>
           )}
 
-          <InputField
-            id="email"
-            name="email"
-            type="email"
-            label="Correo electrónico"
-            placeholder="ejemplo@cartagena.co"
-            icon={FiMail}
-            value={values.email}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={errors.email}
-            touched={touched.email}
-            required
-            autoComplete="email"
-          />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <InputField
               id="password"
               name="password"
@@ -273,7 +380,7 @@ export default function Registro() {
                 <span>Creando tu cuenta...</span>
               </>
             ) : isOrganizer ? (
-              'Crear cuenta de Organización'
+              'Registrar Organización'
             ) : (
               'Crear mi cuenta gratis'
             )}

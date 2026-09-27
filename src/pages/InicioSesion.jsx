@@ -66,13 +66,14 @@ export default function InicioSesion() {
       showConfirmButton: false,
     });
 
-    // data.rol viene del backend tal cual ("ADMIN", "CLIENTE",
-    // "REPRESENTANTE", etc.), aquí se compara contra el valor crudo,
-    // no contra el mapeado que usa session.js para el resto de la app.
-    if (data.rol === 'ADMIN') {
+    const userRole = data?.rol || data?.usuario?.rol || session.getUser()?.role;
+
+    if (userRole === 'ADMIN' || userRole === 'ADMINISTRADOR') {
       navigate('/admin');
-    } else if (data.rol === 'REPRESENTANTE') {
+    } else if (userRole === 'REPRESENTANTE' || userRole === 'ORGANIZADOR') {
       navigate('/organizacion');
+    } else if (userRole === 'MODERADOR') {
+      navigate('/moderador');
     } else {
       navigate('/');
     }
@@ -178,7 +179,7 @@ export default function InicioSesion() {
           </button>
         </form>
 
-        // de prueba pára actualizar los paneles de admin/moderador/organizador sin login real
+        {/* Acceso de prueba para actualizar paneles de admin/moderador/organizador sin login real */}
         {import.meta.env.DEV && (
           <section className="border-t border-borderc pt-4" aria-label="Acceso de desarrollo">
             <p className="mb-2 text-xs font-semibold text-slate-600">Acceso de desarrollo</p>

@@ -5,8 +5,9 @@ import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import EventCard from '../components/EventCard.jsx';
 import { searchEvents, getEventsByCategory } from '../services/eventService.js';
+import { getAllCategories } from '../services/categoryService.js';
 
-const CATEGORY_OPTIONS = [
+const DEFAULT_CATEGORY_OPTIONS = [
   { label: 'Todas las categorías', value: '' },
   { label: 'Música', value: 'Música' },
   { label: 'Arte y Cultura', value: 'Cultural' },
@@ -51,6 +52,35 @@ export default function BuscarEventosPage() {
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [categoryList, setCategoryList] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    getAllCategories()
+      .then((data) => {
+        if (isMounted && data?.length > 0) {
+          setCategoryList(data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const categoryOptions = useMemo(() => {
+    if (categoryList.length > 0) {
+      return [
+        { label: 'Todas las categorías', value: '' },
+        ...categoryList.map((c) => ({
+          label: c.nombre,
+          value: c.nombre,
+          id: c.id,
+        })),
+      ];
+    }
+    return DEFAULT_CATEGORY_OPTIONS;
+  }, [categoryList]);
 
   useEffect(() => {
     let isMounted = true;
@@ -121,11 +151,11 @@ export default function BuscarEventosPage() {
 
   const activeCategoryLabel = useMemo(() => {
     if (!categoriaParam) return '';
-    const found = CATEGORY_OPTIONS.find(
+    const found = categoryOptions.find(
       (opt) => opt.value && matchCategory(opt.value, categoriaParam)
     );
     return found ? found.label : categoriaParam;
-  }, [categoriaParam]);
+  }, [categoriaParam, categoryOptions]);
 
   return (
     <div className="w-full min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col justify-between">
@@ -175,8 +205,8 @@ export default function BuscarEventosPage() {
                 className="bg-slate-50 border border-slate-200 text-slate-700 text-xs sm:text-sm rounded-xl px-3.5 py-2.5 outline-none focus:border-brand focus:ring-1 focus:ring-brand font-medium transition-colors cursor-pointer"
                 aria-label="Filtrar por categoría"
               >
-                {CATEGORY_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
+                {categoryOptions.map((opt) => (
+                  <option key={opt.value || 'all'} value={opt.value}>
                     {opt.label}
                   </option>
                 ))}

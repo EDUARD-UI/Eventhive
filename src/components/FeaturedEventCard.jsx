@@ -1,23 +1,29 @@
 import { Link } from 'react-router-dom';
 import { FiCalendar, FiMapPin, FiArrowRight } from 'react-icons/fi';
 import { formatPrice } from '../utils/formatters.js';
+import ImageWithFallback from './common/ImageWithFallback.jsx';
 
 export default function FeaturedEventCard({ event }) {
   const { id, category, title, date, location, price, photo } = event;
 
   return (
     <article className="group flex flex-col sm:flex-row flex-1 bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-      <div className="relative w-full sm:w-2/5 aspect-video sm:aspect-auto overflow-hidden bg-slate-100">
-        <img
+      <div className="relative w-full sm:w-2/5 aspect-video sm:aspect-auto overflow-hidden">
+        <ImageWithFallback
           src={photo}
           alt={title}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-60 sm:opacity-40" />
+          className="h-full w-full min-h-[190px]"
+          imgClassName="group-hover:scale-105 duration-500"
+          fallbackClassName="h-full w-full min-h-[190px]"
+          fallbackText="Sin imagen"
+          iconSize={26}
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-60 sm:opacity-40 pointer-events-none" />
 
-        <span className="absolute left-3 top-3 text-[11px] font-bold bg-[#ffc107] text-amber-950 px-2.5 py-1 rounded-lg shadow-sm z-10 flex items-center gap-1">
-          <span>★</span> Destacado
-        </span>
+          <span className="absolute left-3 top-3 text-[11px] font-bold bg-[#ffc107] text-amber-950 px-2.5 py-1 rounded-lg shadow-sm z-10 flex items-center gap-1">
+            <span>★</span> Destacado
+          </span>
+        </ImageWithFallback>
       </div>
 
       <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between bg-white">

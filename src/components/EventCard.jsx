@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { FiCalendar, FiMapPin, FiArrowRight } from 'react-icons/fi';
 import FavoriteButton from './FavoriteButton.jsx';
 import { formatPrice } from '../utils/formatters.js';
+import ImageWithFallback from './common/ImageWithFallback.jsx';
 
 export default function EventCard({ event }) {
   const { id, category, title, date, location, price, favorite, photo } = event;
@@ -9,28 +10,33 @@ export default function EventCard({ event }) {
   return (
     <article className="group bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
       <div>
-        <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-          <img
+        <div className="relative aspect-[4/3] overflow-hidden">
+          <ImageWithFallback
             src={photo}
             alt={title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+            className="h-full w-full aspect-[4/3]"
+            imgClassName="group-hover:scale-105 duration-500"
+            fallbackClassName="h-full w-full aspect-[4/3]"
+            fallbackText="Sin imagen"
+            iconSize={26}
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity pointer-events-none" />
 
-          {/* Categoría Badge con Glassmorphism */}
-          <span className="absolute left-3.5 top-3.5 text-[11px] font-bold bg-white/90 backdrop-blur-md text-ink px-2.5 py-1 rounded-lg shadow-sm z-10">
-            {category}
-          </span>
-
-          <div className="absolute right-3.5 top-3.5 z-10">
-            <FavoriteButton initialActive={favorite} />
-          </div>
-
-          <div className="absolute bottom-3 left-3.5 right-3.5 flex items-center justify-between text-white z-10">
-            <span className="text-xs font-semibold bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-md">
-              {price === 0 ? 'Entrada Libre' : `Desde ${formatPrice(price)}`}
+            {/* Categoría Badge con Glassmorphism */}
+            <span className="absolute left-3.5 top-3.5 text-[11px] font-bold bg-white/90 backdrop-blur-md text-ink px-2.5 py-1 rounded-lg shadow-sm z-10">
+              {category}
             </span>
-          </div>
+
+            <div className="absolute right-3.5 top-3.5 z-10">
+              <FavoriteButton initialActive={favorite} />
+            </div>
+
+            <div className="absolute bottom-3 left-3.5 right-3.5 flex items-center justify-between text-white z-10 pointer-events-none">
+              <span className="text-xs font-semibold bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-md">
+                {price === 0 ? 'Entrada Libre' : `Desde ${formatPrice(price)}`}
+              </span>
+            </div>
+          </ImageWithFallback>
         </div>
 
         <div className="p-4 sm:p-5">

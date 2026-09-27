@@ -13,6 +13,7 @@ import {
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import { organizationService } from '../services/organizerService.js';
+import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 
 export default function OrganizadoresPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -146,13 +147,17 @@ export default function OrganizadoresPage() {
                         <div>
                           <div className="flex items-start justify-between mb-3">
                             <div className="relative">
-                              <img
+                              <ImageWithFallback
                                 src={org.avatar}
                                 alt={org.name}
-                                className="w-12 h-12 rounded-xl object-cover border border-slate-100"
+                                showText={false}
+                                className="w-12 h-12 rounded-xl border border-slate-100"
+                                imgClassName="w-12 h-12 rounded-xl object-cover"
+                                fallbackClassName="w-12 h-12 rounded-xl"
+                                iconSize={18}
                               />
                               {org.verified && (
-                                <span className="absolute -bottom-1 -right-1 bg-brand text-white p-0.5 rounded-full shadow-sm text-[10px]">
+                                <span className="absolute -bottom-1 -right-1 bg-brand text-white p-0.5 rounded-full shadow-sm text-[10px] z-10">
                                   <FiCheckCircle size={10} />
                                 </span>
                               )}
@@ -201,10 +206,14 @@ export default function OrganizadoresPage() {
                       >
                         <div>
                           <div className="flex items-start justify-between mb-3">
-                            <img
+                            <ImageWithFallback
                               src={org.avatar}
                               alt={org.name}
-                              className="w-12 h-12 rounded-xl object-cover border border-slate-100"
+                              showText={false}
+                              className="w-12 h-12 rounded-xl border border-slate-100"
+                              imgClassName="w-12 h-12 rounded-xl object-cover"
+                              fallbackClassName="w-12 h-12 rounded-xl"
+                              iconSize={18}
                             />
                             <span className="text-[11px] font-bold text-amber-950 bg-amber-100 px-2 py-0.5 rounded-full">
                               ★ {org.rating}
