@@ -1,7 +1,7 @@
 # Event Hive — Frontend
 
 ## Stack
-React + Vite + Tailwind CSS + React Router + SweetAlert2 + React Icons.
+React + Vite + Tailwind CSS + React Router + SweetAlert2 + React Icons + LUCIDE icons.
 
 ## Instalación
 
