@@ -150,26 +150,38 @@ body {
   background: #1765cc;
 }
 
-/* Transición elegante y sobria al abrir el Home (UX Premium sin exageraciones) */
-@keyframes homeFadeSlideUp {
-  0% {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* ==========================================================================
+   OCULTAR BARRAS DE SCROLL VISUALES MANTENIENDO FUNCIONALIDAD TOTAL DE SCROLL
+   ========================================================================== */
+
+/* Navegador global (html y body) */
+html,
+body {
+  scrollbar-width: none !important;
+  /* Firefox */
+  -ms-overflow-style: none !important;
+  /* IE y Edge */
 }
 
-.home-transition-enter {
-  animation: homeFadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important;
+  /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .home-transition-enter {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
+/* Clases utilitarias Tailwind / CSS para contenedores (Sidebar, Dashboard, Modales) */
+.no-scrollbar,
+.scrollbar-hide {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-hide::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }

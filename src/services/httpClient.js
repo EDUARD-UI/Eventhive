@@ -24,11 +24,16 @@ async function request(path, { method = 'GET', params, body, isFormData = false 
   let response;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
     response = await fetch(buildUrl(path, params), {
       method,
       headers,
       body: isFormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
   } catch {
     throw new Error('No fue posible conectar con el servidor. Verifica que el backend esté disponible.');
   }
