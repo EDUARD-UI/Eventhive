@@ -1,4 +1,4 @@
-import { useNavigate, Link } from 'react-router-dom';
+﻿import { useNavigate, Link } from 'react-router-dom';
 import { FiMail, FiLock } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import AuthLayout from '../components/auth/AuthLayout.jsx';
@@ -6,7 +6,7 @@ import InputField from '../components/common/InputField.jsx';
 import SocialAuthButton from '../components/common/SocialAuthButton.jsx';
 import useForm from '../hooks/useForm.js';
 import { authService } from '../services/authService.js';
-import { session } from '../services/session.js'; // de prueba pára actualizar los paneles de admin/moderador/organizador sin login real
+import { session, getDashboardPathForRole } from '../services/session.js';
 
 const validateLogin = (values) => {
   const errors = {};
@@ -27,7 +27,7 @@ const validateLogin = (values) => {
 
 export default function InicioSesion() {
   const navigate = useNavigate();
-  const devRoles = [  // de prueba pára actualizar los paneles de admin/moderador/organizador sin login real
+  const devRoles = [
     { role: 'ADMIN', label: 'Administración', path: '/admin' },
     { role: 'MODERADOR', label: 'Moderación', path: '/moderador' },
     { role: 'ORGANIZADOR', label: 'Organización', path: '/organizacion' },
@@ -52,31 +52,19 @@ export default function InicioSesion() {
   );
 
   const onSubmit = async (formValues) => {
-    // authService.login ya guarda accessToken/refreshToken/usuario en
-    // sesión (ver src/services/session.js). Si el backend responde con
-    // success:false o un status de error, lanza un Error que useForm
-    // captura solo y muestra en errorBanner.
     const data = await authService.login(formValues.email, formValues.password);
 
     await Swal.fire({
       icon: 'success',
       title: '¡Bienvenido de nuevo!',
       text: 'Has iniciado sesión correctamente.',
-      timer: 1500,
+      timer: 1200,
       showConfirmButton: false,
     });
 
-    const userRole = data?.rol || data?.usuario?.rol || session.getUser()?.role;
-
-    if (userRole === 'ADMIN' || userRole === 'ADMINISTRADOR') {
-      navigate('/admin');
-    } else if (userRole === 'REPRESENTANTE' || userRole === 'ORGANIZADOR') {
-      navigate('/organizacion');
-    } else if (userRole === 'MODERADOR') {
-      navigate('/moderador');
-    } else {
-      navigate('/');
-    }
+    const userRole = data?.rol || data?.role || data?.usuario?.rol || session.getUser()?.role;
+    const destination = getDashboardPathForRole(userRole);
+    navigate(destination, { replace: true });
   };
 
   const handleGoogleLogin = () => {

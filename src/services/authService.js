@@ -1,5 +1,23 @@
-import { httpClient } from './httpClient.js';
+﻿import { httpClient } from './httpClient.js';
 import { session } from './session.js';
+
+const parseJwtPayload = (token) => {
+  try {
+    if (!token || typeof token !== 'string') return null;
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+};
 
 export const authService = {
   async login(email, password) {
@@ -7,30 +25,56 @@ export const authService = {
       correo: email,
       clave: password,
     });
+
+    // 1. Guardar tokens iniciales y usuario base
     session.save(data);
 
-    // Si la respuesta del backend no incluye el rol directamente, consultamos /auth/me
-    if (!data?.rol && !data?.usuario?.rol) {
+    // 2. Extraer rol disponible o consultar /auth/me inmediatamente
+    let detectedRole = data?.rol || data?.role || data?.usuario?.rol || data?.usuario?.role;
+
+    // Si aún no tenemos rol, consultar el endpoint oficial /api/auth/me
+    if (!detectedRole) {
       try {
         const meData = await httpClient.get('/auth/me');
-        if (meData) {
-          const enriched = {
+        if (meData?.rol || meData?.role) {
+          detectedRole = meData.rol || meData.role;
+          session.updateUser({
+            ...meData,
+            role: detectedRole,
+          });
+          return {
             ...data,
             usuario: {
               ...(data?.usuario || {}),
               ...meData,
             },
-            rol: meData.rol,
+            rol: detectedRole,
+            role: detectedRole,
           };
-          session.save(enriched);
-          return enriched;
         }
       } catch {
-        // Si /auth/me no responde, mantenemos la data del login
+        // Fallback: intentar inspeccionar claims del accessToken
+        const jwtData = parseJwtPayload(data?.accessToken);
+        if (jwtData?.rol || jwtData?.role || jwtData?.authorities) {
+          const jwtRole =
+            jwtData.rol ||
+            jwtData.role ||
+            (Array.isArray(jwtData.authorities) ? jwtData.authorities[0] : null);
+          if (jwtRole) {
+            detectedRole = jwtRole;
+            session.updateUser({ role: detectedRole });
+          }
+        }
       }
+    } else {
+      session.updateUser({ role: detectedRole });
     }
 
-    return data;
+    return {
+      ...data,
+      rol: detectedRole,
+      role: detectedRole,
+    };
   },
 
   async registrarCliente(nombreOrData, email, telefono, password) {

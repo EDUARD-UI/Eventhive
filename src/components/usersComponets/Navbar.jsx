@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FiMenu, FiLogOut } from "react-icons/fi";
 import { NAV_LINKS } from "../../constants/navigation.js";
@@ -6,7 +6,7 @@ import MobileDrawer from "../MobileDrawer.jsx";
 import HelpChat from "../HelpChat.jsx";
 import { useDisclosure } from "../../hooks/useDisclosure.js";
 import AppLogo from "../common/AppLogo.jsx";
-import { session } from "../../services/session.js";
+import { session, normalizeRole, getDashboardPathForRole } from "../../services/session.js";
 
 export default function Navbar() {
   const { isOpen, open, close } = useDisclosure(false);
@@ -26,6 +26,9 @@ export default function Navbar() {
     close();
     navigate('/');
   };
+
+  const role = normalizeRole(currentUser?.role);
+  const panelPath = getDashboardPathForRole(role);
 
   return (
     <>
@@ -65,13 +68,18 @@ export default function Navbar() {
           {currentUser ? (
             <div className="hidden items-center gap-2 xl:flex">
               <Link
-                to={currentUser.role === 'ADMIN' ? '/admin' : currentUser.role === 'ORGANIZADOR' ? '/organizacion' : '/perfil'}
-                className="flex max-w-[220px] items-center gap-2 rounded-xl border border-borderc bg-slate-50 px-3.5 py-2 text-xs font-semibold text-ink transition-all hover:border-brand hover:text-brand"
+                to={panelPath}
+                className="flex max-w-[240px] items-center gap-2 rounded-xl border border-borderc bg-slate-50 px-3.5 py-2 text-xs font-semibold text-ink transition-all hover:border-brand hover:text-brand"
               >
-                <span className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[10px] font-bold">
+                <span className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[10px] font-bold shrink-0">
                   {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                 </span>
                 <span className="truncate">{currentUser.name || 'Mi Cuenta'}</span>
+                {role && role !== 'CLIENTE' && (
+                  <span className="ml-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-accent/20 text-amber-900 border border-amber-300">
+                    {role}
+                  </span>
+                )}
               </Link>
 
               <button
@@ -122,4 +130,3 @@ export default function Navbar() {
     </>
   );
 }
-   
