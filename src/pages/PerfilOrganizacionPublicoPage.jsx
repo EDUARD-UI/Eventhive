@@ -183,10 +183,10 @@ export default function PerfilOrganizacionPublicoPage() {
             {/* Botón de retroceso */}
             <Link
               to="/organizaciones"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white mb-6 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white mb-6 transition-colors group"
             >
-              <FiArrowLeft size={14} />
-              Volver a todas las organizaciones
+              <FiArrowLeft size={14} className="transition-transform duration-200 group-hover:-translate-x-1" />
+              <span>Volver a todas las organizaciones</span>
             </Link>
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -258,7 +258,7 @@ export default function PerfilOrganizacionPublicoPage() {
                 <button
                   type="button"
                   onClick={handleToggleFollow}
-                  className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2 ${
+                  className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer ${
                     isFollowing
                       ? 'bg-white/20 text-white border border-white/30 hover:bg-white/30'
                       : 'bg-[#ffc107] hover:bg-[#e0a800] text-[#0a1838]'
@@ -294,12 +294,12 @@ export default function PerfilOrganizacionPublicoPage() {
               </p>
             </div>
 
-            {/* Pestañas de estado */}
-            <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl self-start sm:self-auto">
+            {/* Pestañas de estado con segmented control */}
+            <div className="inline-flex p-1 rounded-2xl bg-slate-200/80 border border-slate-200 shadow-inner self-start sm:self-auto">
               <button
                 type="button"
                 onClick={() => handleTabChange('todos')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
                   activeTab === 'todos'
                     ? 'bg-white text-[#0a1838] shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
@@ -310,7 +310,7 @@ export default function PerfilOrganizacionPublicoPage() {
               <button
                 type="button"
                 onClick={() => handleTabChange('publicados')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
                   activeTab === 'publicados'
                     ? 'bg-white text-[#0a1838] shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
@@ -321,7 +321,7 @@ export default function PerfilOrganizacionPublicoPage() {
               <button
                 type="button"
                 onClick={() => handleTabChange('finalizados')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
                   activeTab === 'finalizados'
                     ? 'bg-white text-[#0a1838] shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'

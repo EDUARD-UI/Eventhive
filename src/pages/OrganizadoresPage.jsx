@@ -81,42 +81,53 @@ export default function OrganizadoresPage() {
             Descubre organizaciones verificadas, explora sus perfiles públicos y encuentra sus eventos activos y pasados.
           </p>
 
-          {/* Barra de búsqueda */}
-          <div className="relative max-w-md mb-8">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              placeholder="Buscar organización por nombre o categoría..."
-              className="w-full bg-white border border-slate-200/90 rounded-xl pl-11 pr-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-brand focus:ring-1 focus:ring-brand shadow-sm transition-all"
-            />
-          </div>
+          {/* Barra de búsqueda y Selector de pestañas */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-8">
+            <div className="relative w-full max-w-md">
+              <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-base" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                placeholder="Buscar organización por nombre o categoría..."
+                className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-2.5 text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 shadow-xs transition-all"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
 
-          {/* Selector de pestañas */}
-          <div className="flex items-center gap-2 border-b border-slate-200 pb-3 mb-8">
-            <button
-              type="button"
-              onClick={() => setActiveTab('directorio')}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-colors ${
-                activeTab === 'directorio'
-                  ? 'bg-[#0a1838] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-[#0a1838] hover:bg-slate-100'
-              }`}
-            >
-              Directorio de Organizaciones
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('informacion')}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-colors ${
-                activeTab === 'informacion'
-                  ? 'bg-[#0a1838] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-[#0a1838] hover:bg-slate-100'
-              }`}
-            >
-              Información para Organizaciones
-            </button>
+            {/* Segmented control tabs */}
+            <div className="inline-flex p-1 rounded-2xl bg-slate-200/80 border border-slate-200 shadow-inner self-start">
+              <button
+                type="button"
+                onClick={() => setActiveTab('directorio')}
+                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
+                  activeTab === 'directorio'
+                    ? 'bg-white text-[#0a1838] shadow-sm'
+                    : 'text-slate-600 hover:text-[#0a1838]'
+                }`}
+              >
+                Directorio
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('informacion')}
+                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
+                  activeTab === 'informacion'
+                    ? 'bg-white text-[#0a1838] shadow-sm'
+                    : 'text-slate-600 hover:text-[#0a1838]'
+                }`}
+              >
+                Información para Productores
+              </button>
+            </div>
           </div>
         </section>
 
@@ -132,7 +143,7 @@ export default function OrganizadoresPage() {
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <span className="text-xs font-bold text-amber-600 uppercase tracking-widest block mb-0.5">
+                    <span className="text-[10px] font-bold text-brand uppercase tracking-widest block mb-0.5">
                       {searchTerm.trim() ? 'BÚSQUEDA' : 'DESTACADAS'}
                     </span>
                     <h3 className="text-lg sm:text-2xl font-black text-[#0a1838]">
@@ -155,26 +166,26 @@ export default function OrganizadoresPage() {
                         <Link
                           key={org.id}
                           to={`/organizaciones/${org.id}`}
-                          className="group bg-white rounded-2xl border-2 border-amber-200/70 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between block relative overflow-hidden"
+                          className="group bg-white rounded-2xl border border-slate-200/90 p-5 card-interactive flex flex-col justify-between block relative overflow-hidden shadow-xs"
                         >
-                          <div className="absolute top-0 right-0 bg-[#ffc107] text-[#0a1838] text-[9px] font-black uppercase px-2 py-0.5 rounded-bl-lg shadow-sm">
+                          <div className="absolute top-0 right-0 bg-[#ffc107] text-[#0a1838] text-[9px] font-black uppercase px-2.5 py-0.5 rounded-bl-lg shadow-xs">
                             ★ Top
                           </div>
 
                           <div>
-                            <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-start justify-between mb-3.5">
                               <div className="relative">
                                 <ImageWithFallback
                                   src={org.avatar}
                                   alt={org.name}
                                   showText={false}
-                                  className="w-13 h-13 rounded-xl border border-slate-100"
+                                  className="w-13 h-13 rounded-xl border border-slate-100 shadow-xs"
                                   imgClassName="w-13 h-13 rounded-xl object-cover"
                                   fallbackClassName="w-13 h-13 rounded-xl"
                                   iconSize={20}
                                 />
                                 {org.verified && (
-                                  <span className="absolute -bottom-1 -right-1 bg-brand text-white p-0.5 rounded-full shadow-sm text-[10px] z-10">
+                                  <span className="absolute -bottom-1 -right-1 bg-brand text-white p-0.5 rounded-full shadow-xs text-[10px] z-10">
                                     <FiCheckCircle size={10} />
                                   </span>
                                 )}
@@ -187,7 +198,7 @@ export default function OrganizadoresPage() {
                             <span className="text-[10px] font-bold uppercase tracking-wider text-brand block mb-1">
                               {org.category}
                             </span>
-                            <h4 className="font-bold text-base text-slate-900 group-hover:text-brand transition-colors mb-1.5 line-clamp-1">
+                            <h4 className="font-bold text-base text-slate-900 group-hover:text-brand transition-colors duration-200 mb-1.5 line-clamp-1">
                               {org.name}
                             </h4>
                             <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-3">
@@ -197,10 +208,10 @@ export default function OrganizadoresPage() {
 
                           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                             <span className="font-semibold text-slate-500">
-                              {org.eventsCount || 0} eventos
+                              <strong className="text-slate-800 font-bold">{org.eventsCount || 0}</strong> eventos
                             </span>
-                            <span className="font-bold text-brand group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                              Ver perfil público →
+                            <span className="font-bold text-brand group-hover:translate-x-1 transition-transform duration-200 inline-flex items-center gap-1">
+                              Ver perfil →
                             </span>
                           </div>
                         </Link>

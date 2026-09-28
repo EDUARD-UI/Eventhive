@@ -214,7 +214,7 @@ export default function BuscarEventosPage() {
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-brand/20 rounded-full blur-3xl pointer-events-none" />
         </section>
 
-        {/* Filter Bar (Matching Mockup 3 & 5) */}
+        {/* Filter Bar */}
         <section className="max-w-6xl mx-auto px-6 sm:px-12 lg:px-8 -mt-6 relative z-20">
           <div
             aria-hidden="true"
@@ -223,12 +223,17 @@ export default function BuscarEventosPage() {
           <div className="relative bg-white rounded-2xl border-2 border-[#ffc107] shadow-lg p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Left: Filter title & icon */}
             <div className="flex items-center gap-2.5 text-[#0a1838]">
-              <div className="w-9 h-9 rounded-xl bg-blue-50 text-brand flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-brand flex items-center justify-center shadow-xs">
                 <FiSliders size={18} />
               </div>
-              <span className="font-extrabold text-sm sm:text-base tracking-wide uppercase">
-                FILTRAR EVENTOS
-              </span>
+              <div>
+                <span className="text-[10px] font-bold text-brand uppercase tracking-wider block">
+                  EXPLORAR AGENDA
+                </span>
+                <span className="font-extrabold text-sm sm:text-base tracking-wide uppercase text-[#0a1838]">
+                  FILTRAR EVENTOS
+                </span>
+              </div>
             </div>
 
             {/* Right: Selectors & Clear button */}
@@ -237,7 +242,7 @@ export default function BuscarEventosPage() {
               <select
                 value={categoriaParam}
                 onChange={handleCategoryChange}
-                className="bg-slate-50 border border-slate-200 text-slate-700 text-xs sm:text-sm rounded-xl px-3.5 py-2.5 outline-none focus:border-brand focus:ring-1 focus:ring-brand font-medium transition-colors cursor-pointer"
+                className="bg-slate-50 border border-slate-200 text-slate-700 text-xs sm:text-sm rounded-xl px-3.5 py-2.5 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 font-medium transition-all cursor-pointer shadow-xs"
                 aria-label="Filtrar por categoría"
               >
                 {categoryOptions.map((opt) => (
@@ -247,17 +252,17 @@ export default function BuscarEventosPage() {
                 ))}
               </select>
 
-              {/* Date selector: solo el buscar debe recibir fecha; al filtrar por categorías se deshabilita */}
+              {/* Date selector */}
               <div className="relative group">
                 <input
                   type="date"
                   value={hasCategoryFilter ? '' : fechaParam}
                   onChange={handleDateChange}
                   disabled={hasCategoryFilter}
-                  className={`border text-xs sm:text-sm rounded-xl px-3.5 py-2 outline-none font-medium transition-colors ${
+                  className={`border text-xs sm:text-sm rounded-xl px-3.5 py-2.5 outline-none font-medium transition-all shadow-xs ${
                     hasCategoryFilter
                       ? 'opacity-40 cursor-not-allowed border-slate-200 text-slate-400 bg-slate-100'
-                      : 'border-slate-200 text-slate-700 bg-slate-50 hover:border-slate-300 focus:border-brand focus:ring-1 focus:ring-brand cursor-pointer'
+                      : 'border-slate-200 text-slate-700 bg-slate-50 hover:border-slate-300 focus:border-brand focus:ring-2 focus:ring-brand/20 cursor-pointer'
                   }`}
                   aria-label="Filtrar por fecha"
                   title={hasCategoryFilter ? 'El filtro por fecha no es requerido al filtrar por categoría' : 'Buscar por fecha'}
@@ -274,7 +279,7 @@ export default function BuscarEventosPage() {
                 type="button"
                 onClick={handleClearFilters}
                 disabled={!hasActiveFilters}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition-all disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer active:scale-95"
               >
                 <FiX size={14} />
                 Limpiar filtros

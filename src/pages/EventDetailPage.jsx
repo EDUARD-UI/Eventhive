@@ -366,14 +366,14 @@ export default function EventDetailPage() {
           </div>
 
           <aside className="lg:col-span-4 lg:sticky lg:top-24">
-            <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm space-y-5">
+            <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-md space-y-6">
               <div>
-                <span className="text-xs font-medium text-slate-500 block">Precio desde</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Precio desde</span>
                 <div className="mt-1 flex items-baseline gap-1.5">
-                  <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                  <span className="text-3xl font-black text-slate-900 tracking-tight">
                     ${displayedPrice.toLocaleString('es-CO')}
                   </span>
-                  <span className="text-sm font-bold text-slate-600">COP</span>
+                  <span className="text-xs font-bold text-slate-500 uppercase">COP</span>
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
                   {selectedLocalidad?.nombre
@@ -383,9 +383,9 @@ export default function EventDetailPage() {
               </div>
 
               {localidades.length > 0 && (
-                <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                <div className="space-y-3 pt-3 border-t border-slate-100">
                   <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
-                    Localidad
+                    Selecciona Localidad
                   </span>
                   <div className="space-y-2">
                     {localidades.map((loc) => {
@@ -394,9 +394,9 @@ export default function EventDetailPage() {
                         <label
                           key={loc.id}
                           onClick={() => setSelectedLocalidad(loc)}
-                          className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                          className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all duration-200 ${
                             isSelected
-                              ? 'border-brand bg-brand/5 ring-1 ring-brand'
+                              ? 'border-brand bg-brand/5 ring-2 ring-brand/20 shadow-xs'
                               : 'border-slate-200 hover:border-slate-300 bg-white'
                           }`}
                         >
@@ -408,11 +408,11 @@ export default function EventDetailPage() {
                               onChange={() => setSelectedLocalidad(loc)}
                               className="w-4 h-4 text-brand focus:ring-brand accent-brand cursor-pointer"
                             />
-                            <span className="text-xs sm:text-sm font-medium text-slate-800">
+                            <span className="text-xs sm:text-sm font-semibold text-slate-800">
                               {loc.nombre}
                             </span>
                           </div>
-                          <span className="text-xs sm:text-sm font-bold text-slate-900">
+                          <span className="text-xs sm:text-sm font-black text-slate-900">
                             ${Number(loc.precio).toLocaleString('es-CO')}
                           </span>
                         </label>
@@ -422,11 +422,11 @@ export default function EventDetailPage() {
                 </div>
               )}
 
-              <div className="space-y-2.5 pt-2">
+              <div className="space-y-3 pt-2">
                 <button
                   type="button"
                   onClick={handlePurchase}
-                  className="w-full py-3.5 px-4 rounded-xl bg-brand hover:bg-brand-dark text-white font-bold text-sm shadow-md shadow-brand/20 transition-all active:scale-[0.99] flex items-center justify-center gap-2"
+                  className="w-full py-3.5 px-4 rounded-xl bg-brand hover:bg-brand-dark text-white font-bold text-sm shadow-md hover:shadow-lg shadow-brand/25 transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Comprar entradas
                 </button>
@@ -434,14 +434,14 @@ export default function EventDetailPage() {
                 <button
                   type="button"
                   onClick={handleToggleFavorite}
-                  className={`w-full py-3 px-4 rounded-xl border text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+                  className={`w-full py-3 px-4 rounded-xl border text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] ${
                     isFavorite
-                      ? 'border-amber-400 bg-amber-50 text-amber-900'
-                      : 'border-amber-400/90 text-slate-800 bg-white hover:bg-amber-50/50'
+                      ? 'border-amber-400 bg-amber-50 text-amber-900 shadow-xs'
+                      : 'border-slate-200 hover:border-amber-400/80 text-slate-700 bg-white hover:bg-amber-50/30'
                   }`}
                 >
-                  <FiHeart className={isFavorite ? 'fill-amber-500 text-amber-500' : 'text-amber-500'} size={15} />
-                  <span>{isFavorite ? 'Evento guardado' : 'Guardar evento'}</span>
+                  <FiHeart className={`transition-transform duration-200 ${isFavorite ? 'fill-amber-500 text-amber-500 scale-110' : 'text-amber-500'}`} size={16} />
+                  <span>{isFavorite ? 'Evento guardado en deseos' : 'Guardar en mi lista de deseos'}</span>
                 </button>
               </div>
             </div>

@@ -162,27 +162,29 @@ export default function Registro() {
       errorBanner={submitError}
     >
       <div className="space-y-4">
-        {/* Selector de Rol Asistente vs Organización */}
-        <div className="p-1 rounded-xl bg-slate-100 border border-slate-200 flex gap-1">
+        {/* Selector de Rol Asistente vs Organización con Segmented Control */}
+        <div className="p-1.5 rounded-2xl bg-slate-200/80 border border-slate-200 shadow-inner flex gap-1.5">
           <button
             type="button"
             onClick={() => setFieldValue('role', 'usuario')}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${!isOrganizer
-                ? 'bg-white text-ink shadow-sm'
-                : 'text-muted hover:text-ink'
-              }`}
+            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
+              !isOrganizer
+                ? 'bg-white text-[#0a1838] shadow-sm'
+                : 'text-slate-600 hover:text-[#0a1838]'
+            }`}
           >
             Quiero asistir a eventos
           </button>
           <button
             type="button"
             onClick={() => setFieldValue('role', 'organizador')}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${isOrganizer
-                ? 'bg-brand text-white shadow-sm'
-                : 'text-muted hover:text-ink'
-              }`}
+            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
+              isOrganizer
+                ? 'bg-[#0a1838] text-white shadow-sm'
+                : 'text-slate-600 hover:text-[#0a1838]'
+            }`}
           >
-            Soy una organización de eventos
+            Organización de eventos
           </button>
         </div>
 
@@ -380,7 +382,7 @@ export default function Registro() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-3 py-3 px-4 rounded-xl bg-brand hover:bg-brand-dark text-white font-semibold text-sm shadow-md hover:shadow-lg shadow-brand/20 active:scale-[0.99] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+            className="w-full mt-4 py-3.5 px-4 rounded-xl bg-brand hover:bg-brand-dark text-white font-bold text-sm shadow-md hover:shadow-lg shadow-brand/25 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
           >
             {isSubmitting ? (
               <>

@@ -149,10 +149,10 @@ export default function CategoriasPage() {
                       key={cat.id}
                       type="button"
                       onClick={() => handleCategoryClick(cat)}
-                      className={`group relative rounded-2xl p-7 sm:p-8 text-white shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between min-h-[200px] sm:min-h-[230px] text-left cursor-pointer active:scale-[0.99] overflow-hidden border ${theme.border} ${
+                      className={`group relative rounded-2xl p-7 sm:p-8 text-white card-interactive flex flex-col justify-between min-h-[210px] sm:min-h-[240px] text-left cursor-pointer active:scale-[0.98] overflow-hidden border ${theme.border} ${
                         hasImage
-                          ? 'bg-slate-900'
-                          : `bg-gradient-to-br ${theme.bg}`
+                          ? 'bg-slate-900 shadow-md'
+                          : `bg-gradient-to-br ${theme.bg} shadow-md`
                       }`}
                       aria-label={`Ver eventos de ${cat.nombre}`}
                     >
@@ -160,26 +160,26 @@ export default function CategoriasPage() {
                       {hasImage ? (
                         <>
                           <div
-                            className="absolute inset-0 bg-cover bg-center opacity-45 group-hover:scale-105 group-hover:opacity-55 transition-all duration-500"
+                            className="absolute inset-0 bg-cover bg-center opacity-40 group-hover:scale-105 group-hover:opacity-55 transition-all duration-500 ease-out"
                             style={{ backgroundImage: `url(${imageUrl})` }}
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/45 to-transparent pointer-events-none" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent pointer-events-none" />
                         </>
                       ) : (
                         <>
                           {/* Luces sutiles si no hay imagen para darle estética premium */}
                           <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
-                          <div className="absolute -left-6 -top-6 w-32 h-32 bg-black/20 rounded-full blur-xl pointer-events-none" />
+                          <div className="absolute -left-6 -top-6 w-32 h-32 bg-black/25 rounded-full blur-xl pointer-events-none" />
                         </>
                       )}
 
                       {/* Top: Icon & Event Count */}
                       <div className="relative z-10 flex items-center justify-between">
-                        <div className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white text-xl shadow-inner group-hover:rotate-6 transition-transform">
-                          <Icon size={24} />
+                        <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md border border-white/25 flex items-center justify-center text-white text-xl shadow-inner group-hover:rotate-6 transition-transform duration-300">
+                          <Icon size={22} />
                         </div>
 
-                        <span className="bg-white/20 backdrop-blur-md text-xs font-bold px-3 py-1 rounded-full border border-white/20">
+                        <span className="bg-white/20 backdrop-blur-md text-xs font-bold px-3 py-1 rounded-full border border-white/25 shadow-xs">
                           {cat.totalEventos ?? 0} {(cat.totalEventos ?? 0) === 1 ? 'evento' : 'eventos'}
                         </span>
                       </div>
@@ -187,7 +187,7 @@ export default function CategoriasPage() {
                       {/* Bottom: Title, Subtitle, Arrow */}
                       <div className="relative z-10 flex items-end justify-between mt-8">
                         <div>
-                          <h2 className="text-xl sm:text-2xl font-black uppercase tracking-wide leading-snug drop-shadow-sm group-hover:text-amber-200 transition-colors">
+                          <h2 className="text-xl sm:text-2xl font-black uppercase tracking-wide leading-snug drop-shadow-sm group-hover:text-amber-200 transition-colors duration-200">
                             {cat.nombre}
                           </h2>
                           <p className="text-white/80 text-xs sm:text-sm mt-1 font-medium">
@@ -195,7 +195,7 @@ export default function CategoriasPage() {
                           </p>
                         </div>
 
-                        <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 flex items-center justify-center group-hover:translate-x-1.5 group-hover:bg-[#ffc107] group-hover:text-[#0a1838] transition-all shadow-sm">
+                        <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/25 flex items-center justify-center group-hover:translate-x-1.5 group-hover:bg-[#ffc107] group-hover:text-[#0a1838] transition-all duration-200 shadow-xs">
                           <FiArrowRight size={18} />
                         </div>
                       </div>

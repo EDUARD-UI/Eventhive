@@ -371,10 +371,10 @@ export default function PerfilUsuario() {
         </div>
       </div>
 
-      <main className="flex-1 px-6 sm:px-10 pb-12">
-        {/* Navegación de Tabs */}
-        <div className="relative z-10 flex justify-center mt-6 mb-8">
-          <div className="bg-white border border-borderc rounded-2xl shadow-sm p-1.5 flex gap-1.5 w-fit max-w-full overflow-x-auto">
+      <main className="flex-1 px-6 sm:px-10 pb-16">
+        {/* Navegación de Tabs con Segmented Control Moderno */}
+        <div className="relative z-10 flex justify-center -mt-6 mb-8">
+          <div className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl shadow-md p-1.5 flex gap-1.5 w-fit max-w-full overflow-x-auto no-scrollbar">
             {TABS.map((tab) => {
               const active = activeTab === tab.id;
               let count = null;
@@ -386,16 +386,16 @@ export default function PerfilUsuario() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
+                  className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap flex items-center gap-2 cursor-pointer ${
                     active
-                      ? 'bg-brand text-white shadow-md shadow-brand/20'
-                      : 'text-muted hover:text-brand hover:bg-brand-light'
+                      ? 'bg-brand text-white shadow-md shadow-brand/25 scale-[1.02]'
+                      : 'text-slate-600 hover:text-brand hover:bg-slate-50'
                   }`}
                 >
                   <span>{tab.label}</span>
                   {count !== null && count > 0 && (
                     <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
                         active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
                       }`}
                     >
@@ -408,35 +408,35 @@ export default function PerfilUsuario() {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 max-w-[1400px] mx-auto">
+        <div className="flex flex-col lg:flex-row gap-8 max-w-[1400px] mx-auto">
           {/* Sidebar de Usuario */}
           <aside className="w-full lg:w-[320px] shrink-0 space-y-5">
-            <div className="bg-white border border-borderc rounded-2xl shadow-sm p-7 text-center hover:shadow-md transition-shadow">
+            <div className="bg-white border border-slate-200/90 rounded-2xl shadow-sm p-7 text-center card-interactive">
               <div className="relative w-24 h-24 mx-auto">
                 <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-sky-500 ring-4 ring-white shadow-md flex items-center justify-center text-white text-2xl font-bold font-display select-none">
                   {getInitials(usuario.nombreCompleto)}
                 </div>
               </div>
-              <h2 className="font-display font-bold text-xl mt-4 text-ink truncate">
+              <h2 className="font-display font-bold text-xl mt-4 text-slate-900 truncate">
                 {usuario.nombreCompleto || 'Usuario EventHive'}
               </h2>
-              <p className="flex items-center justify-center gap-1.5 text-xs text-muted mt-1.5 truncate">
-                <FiMail size={12} className="shrink-0" /> {usuario.correo || 'correo@eventhive.com'}
+              <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500 mt-1.5 truncate">
+                <FiMail size={12} className="shrink-0 text-brand" /> {usuario.correo || 'correo@eventhive.com'}
               </p>
               {usuario.telefono && (
                 <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500 mt-1">
-                  <FiPhone size={12} className="shrink-0" /> {usuario.telefono}
+                  <FiPhone size={12} className="shrink-0 text-brand" /> {usuario.telefono}
                 </p>
               )}
               <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500 mt-1">
-                <FiMapPin size={12} className="shrink-0" /> {usuario.ciudad}
+                <FiMapPin size={12} className="shrink-0 text-rose-500" /> {usuario.ciudad}
               </p>
 
               <div className="mt-5 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setEditModal(true)}
-                  className="w-full py-2.5 px-3 rounded-xl border border-borderc hover:border-brand text-xs font-semibold text-slate-700 hover:text-brand flex items-center justify-center gap-1.5 transition-colors"
+                  className="w-full py-2.5 px-3 rounded-xl border border-slate-200 hover:border-brand text-xs font-bold text-slate-700 hover:text-brand flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer active:scale-95"
                 >
                   <FiEdit2 size={13} />
                   <span>Editar datos de perfil</span>

@@ -259,59 +259,71 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-white text-slate-900 home-transition-enter">
+    <div className="w-full min-h-screen bg-white text-slate-900">
       <Navbar />
       <Hero />
 
-      {/* 1. EVENTOS DESTACADOS (Mockup 1) */}
-      <section className="w-full px-6 sm:px-12 lg:px-20 pt-32 sm:pt-40 pb-12 sm:pb-16 bg-white max-w-7xl mx-auto">
-        <div className="flex items-baseline justify-between mb-6">
+      {/* 1. EVENTOS DESTACADOS */}
+      <section className="w-full px-6 sm:px-12 lg:px-20 pt-32 sm:pt-36 pb-14 sm:pb-20 bg-white max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0a1838]">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10.5px] font-extrabold uppercase tracking-widest bg-brand/10 text-brand">
+                AGENDA DESTACADA
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0a1838] tracking-tight">
               Eventos destacados
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Las experiencias más esperadas de la temporada en Cartagena
+            <p className="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-xl leading-relaxed">
+              Las experiencias, festivales y conciertos más esperados de la temporada en Cartagena.
             </p>
           </div>
           <Link
             to="/buscar"
-            className="text-xs sm:text-sm font-bold text-brand hover:underline inline-flex items-center gap-1"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-brand hover:text-brand-dark transition-colors group shrink-0"
           >
-            Ver más →
+            <span>Ver toda la agenda</span>
+            <FiArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
         </div>
 
         {featuredEvents.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-7">
             {featuredEvents.slice(0, 2).map((event) => (
               <FeaturedEventCard key={event.id} event={event} />
             ))}
           </div>
         ) : (
-          <div className="border border-dashed border-slate-300 rounded-xl p-10 text-center text-slate-400 text-sm">
-            No hay eventos disponibles
+          <div className="border border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-400 text-sm">
+            No hay eventos destacados disponibles en este momento
           </div>
         )}
       </section>
 
-      {/* 2. PRÓXIMOS EVENTOS (Mockup 1) */}
-      <section id="proximos" className="w-full bg-[#f8fafc] px-6 sm:px-12 lg:px-20 py-12 sm:py-16">
+      {/* 2. PRÓXIMOS EVENTOS */}
+      <section id="proximos" className="w-full bg-[#f8fafc] border-y border-slate-200/70 px-6 sm:px-12 lg:px-20 py-14 sm:py-20">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-baseline justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0a1838]">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10.5px] font-extrabold uppercase tracking-widest bg-amber-400/20 text-amber-900 border border-amber-300/40">
+                  CARTELERA SEMANAL
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0a1838] tracking-tight">
                 Próximos Eventos
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Descubre lo que sucede esta semana
+              <p className="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-xl leading-relaxed">
+                Descubre planes de música, arte, gastronomía y cultura que suceden esta semana.
               </p>
             </div>
             <Link
               to="/buscar"
-              className="text-xs sm:text-sm font-bold text-brand hover:underline inline-flex items-center gap-1"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-brand hover:text-brand-dark transition-colors group shrink-0"
             >
-              Ver todos →
+              <span>Ver todos los eventos</span>
+              <FiArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
           </div>
 
@@ -322,24 +334,29 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="border border-dashed border-slate-300 rounded-xl p-10 text-center text-slate-400 text-sm">
-              No hay eventos disponibles
+            <div className="border border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-400 text-sm">
+              No hay eventos disponibles actualmente
             </div>
           )}
         </div>
       </section>
 
-      {/* 3. MAPA DE EVENTOS (Mockup 1) */}
-      <section className="w-full px-6 sm:px-12 lg:px-20 py-12 sm:py-16 max-w-7xl mx-auto">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      {/* 3. MAPA DE EVENTOS */}
+      <section className="w-full px-6 sm:px-12 lg:px-20 py-14 sm:py-20 max-w-7xl mx-auto">
+        <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0a1838]">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10.5px] font-extrabold uppercase tracking-widest bg-blue-500/10 text-brand">
+                GEOLOCALIZACIÓN
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0a1838] tracking-tight">
               Mapa de Eventos
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            <p className="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-xl leading-relaxed">
               {userLocation
-                ? 'Mostrando eventos calculados a partir de tu ubicación actual'
-                : 'Descubre eventos cercanos a tu ubicación en Cartagena de Indias'}
+                ? 'Mostrando eventos calculados a partir de tu ubicación actual en tiempo real.'
+                : 'Explora y ubica visualmente las experiencias más cercanas a ti en Cartagena.'}
             </p>
           </div>
 
@@ -518,28 +535,36 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. CATEGORÍAS DESTACADAS (Dark Navy section from Mockup 2) */}
-      <section className="w-full bg-[#0b1a3d] text-white py-14 sm:py-18 px-6 sm:px-12 lg:px-20 border-t border-b border-[#ffc107]/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-end justify-between mb-8">
+      {/* 4. CATEGORÍAS DESTACADAS */}
+      <section className="w-full bg-[#0a1838] text-white py-16 sm:py-20 px-6 sm:px-12 lg:px-20 border-t-2 border-b-2 border-[#ffc107]/40 relative overflow-hidden">
+        {/* Subtle background mesh glows */}
+        <div aria-hidden className="absolute -top-32 -left-32 w-96 h-96 bg-brand/15 rounded-full blur-3xl pointer-events-none" />
+        <div aria-hidden className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#ffc107]/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
             <div>
               <span className="text-[#ffc107] font-bold text-xs sm:text-sm tracking-widest uppercase block mb-2">
                 EXPLORA POR INTERÉS
               </span>
-              <h2 className="text-2xl sm:text-4xl font-extrabold uppercase tracking-tight">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold uppercase tracking-tight">
                 CATEGORÍAS DESTACADAS
               </h2>
+              <p className="text-slate-300 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
+                Descubre eventos organizados por temática y encuentra exactamente lo que te apasiona.
+              </p>
             </div>
             <Link
               to="/categorias"
-              className="text-[#ffc107] hover:text-amber-300 text-xs sm:text-sm font-bold tracking-wide flex items-center gap-1 transition-colors"
+              className="inline-flex items-center gap-1.5 text-[#ffc107] hover:text-amber-300 text-xs sm:text-sm font-bold tracking-wide transition-colors group shrink-0"
             >
-              Ver todas ↗
+              <span>Ver todas las categorías</span>
+              <FiArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
           </div>
 
-          {/* Grid of the colorful category cards con soporte de imagen del backend */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {/* Grid of the colorful category cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredCategories.map((cat, index) => {
               const bgClass = cat.bgColor || CATEGORY_COLORS[index % CATEGORY_COLORS.length];
               const imageUrl = cat.urlFoto || cat.foto || cat.imagen;
@@ -550,15 +575,15 @@ export default function Home() {
                   key={cat.id}
                   type="button"
                   onClick={() => handleCategoryRedirect(cat)}
-                  className={`group relative rounded-2xl p-6 sm:p-7 text-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between min-h-[175px] text-left cursor-pointer active:scale-[0.99] overflow-hidden ${
-                    hasImage ? 'bg-slate-900 border border-slate-700/60' : `${bgClass} border border-white/10`
+                  className={`group relative rounded-2xl p-6 sm:p-7 text-white card-interactive flex flex-col justify-between min-h-[185px] text-left cursor-pointer active:scale-[0.98] overflow-hidden ${
+                    hasImage ? 'bg-slate-900 border border-slate-700/80 shadow-md' : `${bgClass} border border-white/15 shadow-md`
                   }`}
                 >
                   {/* Si tiene imagen, se muestra con overlay para lectura clara */}
                   {hasImage ? (
                     <>
                       <div
-                        className="absolute inset-0 bg-cover bg-center opacity-45 group-hover:scale-105 group-hover:opacity-55 transition-all duration-500"
+                        className="absolute inset-0 bg-cover bg-center opacity-40 group-hover:scale-105 group-hover:opacity-55 transition-all duration-500 ease-out"
                         style={{ backgroundImage: `url(${imageUrl})` }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-slate-950/20 pointer-events-none" />
@@ -567,17 +592,17 @@ export default function Home() {
                     <>
                       {/* Efectos de luz para estética viva cuando no hay imagen */}
                       <div className="absolute -right-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
-                      <div className="absolute -left-6 -top-6 w-28 h-28 bg-black/20 rounded-full blur-xl pointer-events-none" />
+                      <div className="absolute -left-6 -top-6 w-28 h-28 bg-black/25 rounded-full blur-xl pointer-events-none" />
                     </>
                   )}
 
                   <div className="relative z-10 flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-white text-lg shadow-inner group-hover:rotate-6 transition-transform">
+                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-white text-lg shadow-inner group-hover:rotate-6 transition-transform duration-300">
                       <FiAward size={20} />
                     </div>
 
                     {cat.totalEventos > 0 && (
-                      <span className="bg-white/20 backdrop-blur-md text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-white/20">
+                      <span className="bg-white/20 backdrop-blur-md text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-white/25">
                         {cat.totalEventos} {cat.totalEventos === 1 ? 'evento' : 'eventos'}
                       </span>
                     )}
@@ -585,7 +610,7 @@ export default function Home() {
 
                   <div className="relative z-10 flex items-end justify-between mt-6">
                     <div>
-                      <h3 className="text-lg sm:text-xl font-black uppercase tracking-wide leading-snug drop-shadow-sm group-hover:text-[#ffc107] transition-colors">
+                      <h3 className="text-lg sm:text-xl font-black uppercase tracking-wide leading-snug drop-shadow-sm group-hover:text-[#ffc107] transition-colors duration-200">
                         {cat.nombre}
                       </h3>
                       <p className="text-white/85 text-xs mt-0.5 font-medium">
@@ -593,7 +618,7 @@ export default function Home() {
                       </p>
                     </div>
 
-                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 flex items-center justify-center group-hover:translate-x-1 group-hover:bg-[#ffc107] group-hover:text-[#0a1838] transition-all">
+                    <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm border border-white/25 flex items-center justify-center group-hover:translate-x-1 group-hover:bg-[#ffc107] group-hover:text-[#0a1838] transition-all duration-200 shadow-xs">
                       <FiArrowRight size={16} />
                     </div>
                   </div>
@@ -605,24 +630,24 @@ export default function Home() {
       </section>
 
       {/* 5. DIRECTORIO DE ORGANIZACIONES */}
-      <section id="organizaciones" className="w-full bg-slate-50 py-14 sm:py-20 px-6 sm:px-12 lg:px-20 border-b border-slate-200">
+      <section id="organizaciones" className="w-full bg-slate-50 py-16 sm:py-24 px-6 sm:px-12 lg:px-20 border-b border-slate-200">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
             <div>
               <span className="text-brand font-bold text-xs sm:text-sm tracking-widest uppercase block mb-2">
                 COMUNIDAD & PRODUCTORES
               </span>
-              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0a1838] tracking-tight">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0a1838] tracking-tight">
                 Organizaciones Destacadas
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-xl">
+              <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-xl leading-relaxed">
                 Las mentes y colectivos detrás de los festivales, conciertos y experiencias culturales más vibrantes de Cartagena.
               </p>
             </div>
 
             <Link
               to="/organizacion"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0a1838] hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm active:scale-95 shrink-0 self-start md:self-end"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0a1838] hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-xs hover:shadow active:scale-95 shrink-0 self-start md:self-end"
             >
               <FiPlusCircle size={15} className="text-[#ffc107]" />
               Publicar mi evento
@@ -635,9 +660,9 @@ export default function Home() {
               <div
                 key={org.id}
                 onClick={() => navigate(`/organizaciones/${org.id}`)}
-                className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-lg transition-all flex flex-col justify-between group cursor-pointer relative overflow-hidden"
+                className="bg-white rounded-2xl border border-slate-200/90 p-6 card-interactive flex flex-col justify-between group cursor-pointer relative overflow-hidden shadow-xs"
               >
-                <div className="absolute top-0 right-0 bg-[#ffc107] text-[#0a1838] text-[9px] font-black uppercase px-2 py-0.5 rounded-bl-lg shadow-sm">
+                <div className="absolute top-0 right-0 bg-[#ffc107] text-[#0a1838] text-[9px] font-black uppercase px-2.5 py-0.5 rounded-bl-lg shadow-xs">
                   ★ Top
                 </div>
 
@@ -648,7 +673,7 @@ export default function Home() {
                         src={org.avatar}
                         alt={org.name}
                         showText={false}
-                        className="w-14 h-14 rounded-2xl border-2 border-slate-100 shadow-sm"
+                        className="w-14 h-14 rounded-2xl border-2 border-slate-100 shadow-xs"
                         imgClassName="w-14 h-14 rounded-2xl object-cover"
                         fallbackClassName="w-14 h-14 rounded-2xl"
                         iconSize={20}
@@ -656,7 +681,7 @@ export default function Home() {
                       {org.verified && (
                         <span
                           title="Organización Verificada"
-                          className="absolute -bottom-1 -right-1 bg-brand text-white p-1 rounded-full shadow-sm z-10"
+                          className="absolute -bottom-1 -right-1 bg-brand text-white p-1 rounded-full shadow-xs z-10"
                         >
                           <FiCheckCircle size={11} />
                         </span>
@@ -671,7 +696,7 @@ export default function Home() {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-brand block mb-1">
                     {org.category}
                   </span>
-                  <h3 className="font-display text-base font-extrabold text-slate-900 group-hover:text-brand transition-colors mb-2">
+                  <h3 className="font-display text-base font-extrabold text-slate-900 group-hover:text-brand transition-colors duration-200 mb-2">
                     {org.name}
                   </h3>
                   <p className="text-xs text-slate-500 leading-relaxed line-clamp-3 mb-4">
@@ -684,7 +709,7 @@ export default function Home() {
                     <strong className="text-slate-900 font-bold">{org.eventsCount || 0}</strong> eventos
                   </span>
 
-                  <span className="text-xs font-bold text-brand hover:text-brand-dark flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                  <span className="text-xs font-bold text-brand hover:text-brand-dark flex items-center gap-1 group-hover:translate-x-0.5 transition-transform duration-200">
                     Ver perfil →
                   </span>
                 </div>
@@ -693,7 +718,7 @@ export default function Home() {
           </div>
 
           {/* Banner for Cartagena Organizers Call to Action */}
-          <div className="mt-12 rounded-2xl bg-gradient-to-r from-[#0a1838] via-[#0d2352] to-[#007bff] p-8 sm:p-10 text-white flex flex-col lg:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden">
+          <div className="mt-12 rounded-3xl bg-gradient-to-r from-[#0a1838] via-[#0d2352] to-[#007bff] p-8 sm:p-12 text-white flex flex-col lg:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden">
             <div className="relative z-10 max-w-2xl">
               <span className="text-[#ffc107] font-bold text-xs uppercase tracking-widest block mb-2">
                 ¿ORGANIZAS EVENTOS EN CARTAGENA?
@@ -709,7 +734,7 @@ export default function Home() {
             <div className="relative z-10 shrink-0">
               <Link
                 to="/registro"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#ffc107] hover:bg-[#e0a800] text-[#0a1838] font-bold text-xs uppercase tracking-wider shadow-md transition-all active:scale-95"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#ffc107] hover:bg-[#e0a800] text-[#0a1838] font-bold text-xs uppercase tracking-wider shadow-md transition-all active:scale-95 duration-200"
               >
                 Únete como Organización
                 <FiArrowRight size={14} />

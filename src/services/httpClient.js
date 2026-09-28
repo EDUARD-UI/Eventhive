@@ -13,7 +13,51 @@ const buildUrl = (path, params) => {
   return url;
 };
 
-async function request(path, { method = 'GET', params, body, isFormData = false } = {}) {
+// Evita que N peticiones en paralelo (ej. el dashboard de Admin que dispara
+// varias llamadas con Promise.all) intenten refrescar el token N veces o
+// disparen N redirecciones. Todas comparten la misma promesa en curso.
+let refreshInFlight = null;
+
+async function intentarRefrescarToken() {
+  if (refreshInFlight) return refreshInFlight;
+
+  const refreshToken = session.getRefreshToken();
+  if (!refreshToken) return null;
+
+  refreshInFlight = (async () => {
+    try {
+      const response = await fetch(buildUrl('/auth/refresh'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) return null;
+
+      const payload = await response.json().catch(() => null);
+      if (!payload?.data) return null;
+
+      // Guarda el nuevo accessToken (y conserva/actualiza el refreshToken)
+      session.save(payload.data);
+      return payload.data;
+    } catch {
+      return null;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+
+  return refreshInFlight;
+}
+
+function cerrarSesionYRedirigir() {
+  session.clear();
+  if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/iniciosesion')) {
+    window.location.href = '/iniciosesion';
+  }
+}
+
+async function request(path, { method = 'GET', params, body, isFormData = false, _retried = false } = {}) {
   const token = session.getToken();
 
   const headers = {};
@@ -40,12 +84,21 @@ async function request(path, { method = 'GET', params, body, isFormData = false 
     throw new Error('No fue posible conectar con el servidor. Verifica que el backend esté disponible.');
   }
 
-  // Token vencido o inválido: limpiar sesión y redirigir a inicio de sesión
-  if (response.status === 401 && path !== '/auth/login') {
-    session.clear();
-    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/iniciosesion')) {
-      window.location.href = '/iniciosesion';
+  // Rutas públicas de auth: nunca dispares el flujo de refresh/logout por un 401 aquí
+  // (por ejemplo login con credenciales incorrectas).
+  const esRutaAuthPublica = path === '/auth/login' || path === '/auth/refresh';
+
+  if (response.status === 401 && !esRutaAuthPublica) {
+    // Antes de asumir que la sesión murió, intenta un refresh silencioso UNA sola vez.
+    if (!_retried) {
+      const nuevaSesion = await intentarRefrescarToken();
+      if (nuevaSesion?.accessToken) {
+        return request(path, { method, params, body, isFormData, _retried: true });
+      }
     }
+
+    // El refresh también falló (o no había refreshToken): ahí sí, sesión inválida de verdad.
+    cerrarSesionYRedirigir();
   }
 
   const payload = await response.json().catch(() => null);
@@ -54,10 +107,7 @@ async function request(path, { method = 'GET', params, body, isFormData = false 
     throw new Error(payload?.mensaje || 'Ocurrió un error al procesar la solicitud.');
   }
 
-  if (payload && typeof payload === 'object' && payload.data !== undefined) {
-    return payload.data;
-  }
-  return payload;
+  return payload?.data;
 }
 
 export const httpClient = {
