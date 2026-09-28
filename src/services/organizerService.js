@@ -1,12 +1,13 @@
 import { httpClient } from './httpClient.js';
+import { normalizeEvent } from './eventService.js';
 
 const normalizeOrganization = (organization) => ({
   ...organization,
   id: String(organization.id),
-  name: organization.nombre,
+  name: organization.nombre || organization.razonSocial || 'Organización',
   category: organization.categoria?.nombre || organization.categoria || 'Organización',
-  description: organization.descripcion || 'Organización de eventos en EventHive.',
-  avatar: organization.logo || organization.imagen,
+  description: organization.descripcion || '',
+  avatar: organization.logo || organization.imagen || organization.foto || null,
   verified: organization.estado === 'VERIFICADA',
   rating: organization.valoracion ?? organization.rating ?? null,
   eventsCount: organization.eventosCount ?? organization.cantidadEventos ?? 0,
@@ -35,9 +36,97 @@ export const organizationService = {
     return { organizations: getPageContent(data), total: data?.totalElements ?? 0 };
   },
 
+  async searchOrganizations(razonSocial, { page = 0, size = 12 } = {}) {
+    try {
+      const data = await httpClient.post('/organizaciones/buscar', { razonSocial }, { params: { page, size } });
+      return { organizations: getPageContent(data), total: data?.totalElements ?? 0 };
+    } catch {
+      const all = await this.listOrganizations({ page: 0, size: 50 });
+      const term = (razonSocial || '').toLowerCase();
+      const filtered = all.organizations.filter(
+        (o) =>
+          o.name?.toLowerCase().includes(term) ||
+          o.category?.toLowerCase().includes(term) ||
+          o.description?.toLowerCase().includes(term)
+      );
+      return { organizations: filtered, total: filtered.length };
+    }
+  },
+
   async getOrganizationById(organizationId) {
-    const data = await httpClient.get(`/organizaciones/${organizationId}`);
-    return data ? normalizeOrganization(data) : null;
+    try {
+      const data = await httpClient.get(`/organizaciones/${organizationId}`);
+      if (data) return normalizeOrganization(data);
+    } catch {
+      // Ignorar para buscar en listas
+    }
+
+    try {
+      const top = await this.listTopOrganizations({ page: 0, size: 50 });
+      const foundTop = top.organizations.find((o) => String(o.id) === String(organizationId));
+      if (foundTop) return foundTop;
+
+      const all = await this.listOrganizations({ page: 0, size: 50 });
+      return all.organizations.find((o) => String(o.id) === String(organizationId)) || null;
+    } catch {
+      return null;
+    }
+  },
+
+  async getOrganizationEvents(organizationId, { page = 0, size = 50 } = {}) {
+    // 1. Intentar endpoint directo GET /api/organizaciones/{id}/eventos
+    try {
+      const data = await httpClient.get(`/organizaciones/${organizationId}/eventos`, { page, size });
+      const events = Array.isArray(data) ? data : data?.content || [];
+      if (events.length > 0) return events.map(normalizeEvent);
+    } catch {
+      // Continuar al siguiente intento
+    }
+
+    // 2. Intentar GET /api/eventos con filtro por organizador
+    try {
+      const data = await httpClient.get('/eventos', { organizadorId: organizationId, page, size });
+      const events = Array.isArray(data) ? data : data?.content || [];
+      if (events.length > 0) return events.map(normalizeEvent);
+    } catch {
+      // Continuar al fallback
+    }
+
+    // 3. Fallback: traer eventos generales y filtrar los relacionados
+    try {
+      const data = await httpClient.get('/eventos', { page: 0, size: 100 });
+      const allEvents = (data?.content || []).map(normalizeEvent);
+      return allEvents.filter(
+        (e) =>
+          String(e.organization?.id) === String(organizationId) ||
+          String(e.organizador?.id) === String(organizationId) ||
+          String(e.organizadorId) === String(organizationId) ||
+          String(e.organizacionId) === String(organizationId) ||
+          (typeof e.organization === 'string' && e.organization.toLowerCase() === String(organizationId).toLowerCase())
+      );
+    } catch {
+      return [];
+    }
+  },
+
+  getMisCompras(params) {
+    return organizerService.getMisCompras(params);
+  },
+
+  getBoletos(compraId) {
+    return organizerService.getBoletos(compraId);
+  },
+
+  getDeseos(params) {
+    return organizerService.getDeseos(params);
+  },
+
+  agregarDeseo(eventoId) {
+    return organizerService.agregarDeseo(eventoId);
+  },
+
+  eliminarDeseo(eventoId) {
+    return organizerService.eliminarDeseo(eventoId);
   },
 };
 
@@ -61,6 +150,11 @@ export const organizerService = {
   /** GET /api/organizaciones/mi-organizacion */
   getMiOrganizacion() {
     return httpClient.get('/organizaciones/mi-organizacion');
+  },
+
+  /** PUT /api/organizaciones/mi-organizacion */
+  updateMiOrganizacion(data) {
+    return httpClient.put('/organizaciones/mi-organizacion', data);
   },
 
   /** GET /api/eventos/organizador — paginated list of organizer events */

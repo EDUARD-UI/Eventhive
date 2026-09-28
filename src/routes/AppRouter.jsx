@@ -5,6 +5,7 @@ import EventDetailPage from '../pages/EventDetailPage.jsx';
 import BuscarEventosPage from '../pages/BuscarEventosPage.jsx';
 import CategoriasPage from '../pages/CategoriasPage.jsx';
 import OrganizadoresPage from '../pages/OrganizadoresPage.jsx';
+import PerfilOrganizacionPublicoPage from '../pages/PerfilOrganizacionPublicoPage.jsx';
 import AdminPanel from '../pages/Administrador/AdminPanel.jsx';
 import ModeradorPanel from '../pages/Moderador/ModeradorPanel.jsx';
 import OrganizadorIndex from '../pages/Organizador/organizadorIndex.jsx';
@@ -27,13 +28,15 @@ export default function AppRouter() {
         <Route path="/buscar" element={<BuscarEventosPage />} />
         <Route path="/categorias" element={<CategoriasPage />} />
         <Route path="/organizaciones" element={<OrganizadoresPage />} />
+        <Route path="/organizaciones/:id" element={<PerfilOrganizacionPublicoPage />} />
+        <Route path="/organizacion/perfil/:id" element={<PerfilOrganizacionPublicoPage />} />
         <Route path="/organizadores" element={<Navigate to="/organizaciones" replace />} />
 
         {/* Paneles y rutas protegidas */}
         <Route
           path="/admin"
           element={
-            <RutaProtegida rolesPermitidos={['ADMIN']}>
+            <RutaProtegida rolesPermitidos={['ADMINISTRADOR']}>
               <AdminPanel />
             </RutaProtegida>
           }
@@ -43,7 +46,7 @@ export default function AppRouter() {
         <Route
           path="/moderador"
           element={
-            <RutaProtegida rolesPermitidos={['ADMIN', 'MODERADOR']}>
+            <RutaProtegida rolesPermitidos={['ADMINISTRADOR', 'MODERADOR']}>
               <ModeradorPanel />
             </RutaProtegida>
           }
@@ -52,7 +55,7 @@ export default function AppRouter() {
         <Route
           path="/organizacion"
           element={
-            <RutaProtegida rolesPermitidos={['ORGANIZADOR']}>
+            <RutaProtegida rolesPermitidos={['REPRESENTANTE', 'OPERADOR']}>
               <OrganizadorIndex />
             </RutaProtegida>
           }

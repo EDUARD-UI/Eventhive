@@ -1,32 +1,87 @@
 import { httpClient } from './httpClient.js';
 
-const normalizeCategory = (categoria) => ({
-  id: categoria.id,
-  nombre: categoria.nombre,
-  urlFoto: categoria.urlFoto || null,
-  totalEventos: categoria.totalEventos ?? 0,
-});
+export const normalizeCategory = (categoria) => {
+  if (typeof categoria === 'string') {
+    return {
+      id: categoria,
+      nombre: categoria,
+      urlFoto: null,
+      totalEventos: 0,
+      descripcion: '',
+    };
+  }
 
-/** Todas las categorías con su cantidad de eventos publicados (GET /categorias/con-eventos). */
-export async function getCategoriesWithEvents() {
-  const data = await httpClient.get('/categorias/con-eventos');
-  return (data || []).map(normalizeCategory);
-}
+  return {
+    id: categoria.id,
+    nombre: categoria.nombre || '',
+    urlFoto: categoria.urlFoto || categoria.foto || categoria.imagen || categoria.imagenUrl || null,
+    totalEventos:
+      categoria.totalEventos ??
+      categoria.eventosCount ??
+      categoria.cantidadEventos ??
+      categoria.numeroEventos ??
+      (Array.isArray(categoria.eventos) ? categoria.eventos.length : 0),
+    descripcion: categoria.descripcion || '',
+  };
+};
 
-/** Listado simple de categorías, sin conteo (GET /categorias/nombres). */
+/**
+ * Listado de todas las categorías con imagen y conteo de eventos (GET /categorias).
+ * Usado para la interfaz de Categorías y tarjetas completas.
+ */
 export async function getAllCategories() {
-  const data = await httpClient.get('/categorias/nombres');
-  return (data || []).map(normalizeCategory);
+  const data = await httpClient.get('/categorias');
+  const list = Array.isArray(data) ? data : data?.content || [];
+  return list.map(normalizeCategory);
 }
 
-/** Top 4 categorías con más eventos (GET /categorias/destacadas). */
+/**
+ * Listado exclusivo de nombres para menús desplegables / selects (GET /categorias/nombres).
+ */
+export async function getCategoryNames() {
+  const data = await httpClient.get('/categorias/nombres');
+  const list = Array.isArray(data) ? data : data?.content || [];
+  return list.map((item) => {
+    if (typeof item === 'string') {
+      return { id: item, nombre: item };
+    }
+    return { id: item.id || item.nombre, nombre: item.nombre || item };
+  });
+}
+
+/** Mantener compatibilidad: /categorias/con-eventos delega a getAllCategories. */
+export async function getCategoriesWithEvents() {
+  return getAllCategories();
+}
+
+/** Categorías destacadas (GET /categorias/destacadas o fallback a primeras de /categorias). */
 export async function getFeaturedCategories() {
-  const data = await httpClient.get('/categorias/destacadas');
-  return (data || []).map(normalizeCategory);
+  try {
+    const data = await httpClient.get('/categorias/destacadas');
+    const list = Array.isArray(data) ? data : data?.content || [];
+    if (list.length > 0) return list.map(normalizeCategory);
+  } catch {
+    // Si no está disponible /categorias/destacadas, tomar las primeras de /categorias
+  }
+  const all = await getAllCategories();
+  return all.slice(0, 6);
 }
 
 /** Detalle de una categoría (GET /categorias/{id}). */
 export async function getCategoryById(categoriaId) {
-  const data = await httpClient.get(`/categorias/${categoriaId}`);
-  return data ? normalizeCategory(data) : null;
+  try {
+    const data = await httpClient.get(`/categorias/${categoriaId}`);
+    return data ? normalizeCategory(data) : null;
+  } catch {
+    const all = await getAllCategories();
+    return all.find((c) => String(c.id) === String(categoriaId)) || null;
+  }
 }
+
+export default {
+  getAllCategories,
+  getCategoryNames,
+  getCategoriesWithEvents,
+  getFeaturedCategories,
+  getCategoryById,
+};

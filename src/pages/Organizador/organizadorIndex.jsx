@@ -27,7 +27,8 @@ import {
   FiArrowRight,
   FiClock,
 } from 'react-icons/fi';
-import { organizerEvents } from '../../features/organizer/data/mockOrganizerData.js';
+import { organizerService } from '../../services/organizerService.js';
+import { session } from '../../services/session.js';
 
 const menuItems = [
   { id: 'resumen', label: 'Resumen', icon: FiGrid },
@@ -113,6 +114,48 @@ export default function OrganizadorIndex() {
   const [creationView, setCreationView] = useState(null);
   const [notification, setNotification] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [organizerEvents, setOrganizerEvents] = useState([]);
+  const [orgData, setOrgData] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    organizerService.getEventosOrganizador({ page: 0, size: 50 })
+      .then((data) => {
+        if (!isMounted) return;
+        const normalized = (data || []).map((e) => ({
+          ...e,
+          id: e.id,
+          title: e.titulo || e.title,
+          category: e.categoria?.nombre || e.categoria || 'Evento',
+          date: e.fecha || e.date || 'Próximamente',
+          time: e.hora || e.time || '7:00 PM',
+          location: e.lugar || e.ubicacion || e.location || 'Cartagena de Indias',
+          price: e.precio ?? e.localidades?.[0]?.precio ?? 0,
+          status: e.estado === 'PUBLICADO' ? 'Activo' : e.estado === 'FINALIZADO' ? 'Finalizado' : 'Borrador',
+          tone: e.estado === 'PUBLICADO' ? 'active' : e.estado === 'FINALIZADO' ? 'neutral' : 'warning',
+          sold: e.entradasVendidas ?? e.boletosVendidos ?? 0,
+          capacity: e.aforoMaximo ?? e.capacidad ?? 100,
+          photo: e.foto || e.imagen || null,
+        }));
+        setOrganizerEvents(normalized);
+      })
+      .catch(() => {});
+
+    organizerService.getMiOrganizacion()
+      .then((data) => {
+        if (isMounted && data) setOrgData(data);
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const orgName = orgData?.nombre || orgData?.razonSocial || session.getUser()?.name || 'Mi Organización';
+  const activeEventsCount = organizerEvents.filter((e) => e.status === 'Activo').length;
+  const totalSold = organizerEvents.reduce((acc, curr) => acc + (Number(curr.sold) || 0), 0);
+  const totalCapacity = organizerEvents.reduce((acc, curr) => acc + (Number(curr.capacity) || 0), 0);
 
   const activeMenu = menuItems.find((m) => m.id === activeItem);
 
@@ -246,7 +289,7 @@ export default function OrganizadorIndex() {
                   PANEL DE ORGANIZACIÓN
                 </span>
                 <h2 className="text-xl sm:text-2xl font-black">
-                  Fundación Cultural Caribe
+                  {orgName}
                 </h2>
                 <p className="text-slate-200 text-xs sm:text-sm mt-1 leading-relaxed">
                   Supervisa tus eventos culturales en Cartagena, administra tus entradas y acredita a tus asistentes en tiempo real.
@@ -278,8 +321,8 @@ export default function OrganizadorIndex() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard
                 label="Eventos Activos"
-                value="8"
-                change="+2 este mes"
+                value={String(activeEventsCount)}
+                change={activeEventsCount > 0 ? `${activeEventsCount} en cartelera` : 'Sin eventos activos'}
                 trend="up"
                 icon={FiCalendar}
                 iconBg="bg-blue-50"
@@ -287,26 +330,26 @@ export default function OrganizadorIndex() {
               />
               <StatCard
                 label="Entradas Vendidas"
-                value="3.412"
-                change="+12.4% vs mes ant."
+                value={String(totalSold)}
+                change={totalSold > 0 ? `${totalSold} vendidas` : '0 vendidas'}
                 trend="up"
                 icon={FiCreditCard}
                 iconBg="bg-emerald-50"
                 iconColor="text-emerald-600"
               />
               <StatCard
-                label="Ingresos Acumulados"
-                value="$187M COP"
-                change="+8.1% vs proyección"
+                label="Aforo Total"
+                value={String(totalCapacity)}
+                change="Capacidad combinada"
                 trend="up"
                 icon={FiDollarSign}
                 iconBg="bg-amber-50"
                 iconColor="text-amber-600"
               />
               <StatCard
-                label="Asistentes Registrados"
-                value="5.098"
-                change="+5.6% nuevos usuarios"
+                label="Total Eventos"
+                value={String(organizerEvents.length)}
+                change={`${organizerEvents.length} registrados`}
                 trend="up"
                 icon={FiUsers}
                 iconBg="bg-purple-50"
@@ -381,8 +424,8 @@ export default function OrganizadorIndex() {
         searchTerm: searchTerm,
         onSearchChange: setSearchTerm,
         searchPlaceholder: 'Buscar eventos, entradas...',
-        userName: 'Fundación Cultural Caribe',
-        userInitials: 'FC',
+        userName: orgName,
+        userInitials: orgName.slice(0, 2).toUpperCase(),
         onProfileClick: () => setActiveItem('perfil'),
       }}
       maxWidthClass="max-w-[1280px]"

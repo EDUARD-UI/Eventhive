@@ -4,6 +4,7 @@ import { FiCalendar, FiArrowLeft, FiHeart } from 'react-icons/fi';
 import L from 'leaflet';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import Swal from 'sweetalert2';
+import { showLoginAlert } from '../utils/alertUtils.js';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import { getEventById } from '../services/eventService.js';
@@ -110,10 +111,10 @@ export default function EventDetailPage() {
   const handleToggleFollow = async () => {
     const user = session.getUser();
     if (!user) {
-      Swal.fire({
-        icon: 'info',
+      showLoginAlert({
         title: 'Inicia sesión',
         text: 'Debes iniciar sesión para seguir a este organizador.',
+        navigate,
       });
       return;
     }
@@ -136,10 +137,10 @@ export default function EventDetailPage() {
   const handleToggleFavorite = async () => {
     const user = session.getUser();
     if (!user) {
-      Swal.fire({
-        icon: 'info',
+      showLoginAlert({
         title: 'Inicia sesión',
         text: 'Debes iniciar sesión para guardar eventos en tu lista de deseos.',
+        navigate,
       });
       return;
     }
@@ -160,10 +161,10 @@ export default function EventDetailPage() {
   const handlePurchase = async () => {
     const user = session.getUser();
     if (!user) {
-      Swal.fire({
-        icon: 'info',
+      showLoginAlert({
         title: 'Inicia sesión',
         text: 'Debes iniciar sesión para comprar entradas.',
+        navigate,
       });
       return;
     }

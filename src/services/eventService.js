@@ -17,7 +17,7 @@ const formatDisplayDate = (dateString, timeString) => {
   return `${capitalizedWeekday} ${day} ${month} · ${hour}`;
 };
 
-const normalizeEvent = (event) => ({
+export const normalizeEvent = (event) => ({
   ...event,
   id: String(event.id),
   title: event.titulo,
@@ -71,14 +71,26 @@ export async function getUpcomingEvents() {
   return sortByNearestDate(events).slice(0, 4);
 }
 
-/** Eventos filtrados por categoría, paginados (GET /eventos?categoriaId=...). */
-export async function getEventsByCategory({ categoriaId, page = 0, size = 12 } = {}) {
-  const data = await httpClient.get('/eventos', { categoriaId, page, size });
+/** Eventos paginados, con categoriaId opcional (GET /eventos). */
+export async function getEvents({ categoriaId, page = 0, size = 12, sort = 'fecha,asc' } = {}) {
+  const params = { page, size, sort };
+  if (categoriaId) params.categoriaId = categoriaId;
+  const data = await httpClient.get('/eventos', params);
+  const events = (data?.content || []).map(normalizeEvent);
+  const total = data?.totalElements ?? events.length;
+  const totalPages = data?.totalPages ?? Math.max(1, Math.ceil(total / size));
 
   return {
-    events: (data?.content || []).map(normalizeEvent),
-    total: data?.totalElements ?? 0,
+    events,
+    total,
+    totalPages,
+    currentPage: data?.number ?? page,
   };
+}
+
+/** Eventos filtrados por categoría, paginados (GET /eventos?categoriaId=...). */
+export async function getEventsByCategory({ categoriaId, page = 0, size = 12 } = {}) {
+  return getEvents({ categoriaId, page, size });
 }
 
 /** Eventos para el mapa, con filtro opcional por categoría/ubicación (GET /eventos/mapa). */
@@ -96,10 +108,18 @@ export async function getEventById(eventId) {
 
 /** Búsqueda de eventos por título o fecha (GET /eventos/buscar). */
 export async function searchEvents({ titulo, fecha, page = 0, size = 12 } = {}) {
-  const data = await httpClient.get('/eventos/buscar', { titulo, fecha, page, size });
+  const params = { page, size };
+  if (titulo && String(titulo).trim()) params.titulo = String(titulo).trim();
+  if (fecha && String(fecha).trim()) params.fecha = String(fecha).trim();
+  const data = await httpClient.get('/eventos/buscar', params);
+  const events = (data?.content || []).map(normalizeEvent);
+  const total = data?.totalElements ?? events.length;
+  const totalPages = data?.totalPages ?? Math.max(1, Math.ceil(total / size));
 
   return {
-    events: (data?.content || []).map(normalizeEvent),
-    total: data?.totalElements ?? 0,
+    events,
+    total,
+    totalPages,
+    currentPage: data?.number ?? page,
   };
 }

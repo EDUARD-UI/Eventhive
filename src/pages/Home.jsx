@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import L from 'leaflet';
 import { Link, useNavigate } from 'react-router-dom';
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import Swal from 'sweetalert2';
+import mascotaImg from '../assets/mascota.jpg';
+import { showLocationPromptAlert } from '../utils/alertUtils.js';
 import {
   FiArrowRight,
   FiMapPin,
@@ -9,6 +12,7 @@ import {
   FiAward,
   FiPlusCircle,
   FiSliders,
+  FiNavigation,
 } from 'react-icons/fi';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import Hero from '../components/Hero.jsx';
@@ -18,7 +22,7 @@ import Footer from '../components/usersComponets/Footer.jsx';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import { getFeaturedEvents, getMapEvents, getUpcomingEvents } from '../services/eventService.js';
 import { organizationService } from '../services/organizerService.js';
-import { getFeaturedCategories, getAllCategories } from '../services/categoryService.js';
+import { getFeaturedCategories, getCategoryNames } from '../services/categoryService.js';
 
 const CARTAGENA_CENTER = { lat: 10.3951, lng: -75.4834 };
 const DISTANCE_OPTIONS = [
@@ -66,6 +70,30 @@ const locationPinIcon = () =>
     popupAnchor: [0, -18],
   });
 
+const userLocationPinIcon = () =>
+  L.divIcon({
+    className: 'custom-user-pin-wrapper',
+    html: `
+      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px;">
+        <span style="position: absolute; width: 28px; height: 28px; border-radius: 9999px; background: rgba(0, 123, 255, 0.35); animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+        <span style="position: relative; width: 14px; height: 14px; border-radius: 9999px; background: #007BFF; border: 2.5px solid #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.35);"></span>
+      </div>
+    `,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14],
+  });
+
+function MapViewController({ center, zoom }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center && center[0] && center[1]) {
+      map.flyTo(center, zoom || 13, { duration: 1.2 });
+    }
+  }, [center, zoom, map]);
+  return null;
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const [featuredEvents, setFeaturedEvents] = useState([]);
@@ -76,6 +104,8 @@ export default function Home() {
   const [categoryList, setCategoryList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDistance, setSelectedDistance] = useState('all');
+  const [userLocation, setUserLocation] = useState(null);
+  const [isLocating, setIsLocating] = useState(false);
 
   useEffect(() => {
     getFeaturedEvents()
@@ -90,9 +120,9 @@ export default function Home() {
       .then((data) => setMapEvents(data || []))
       .catch(() => setMapEvents([]));
 
-    organizationService.listTopOrganizations()
+    organizationService.listTopOrganizations({ page: 0, size: 4 })
       .then(({ organizations }) => {
-        if (organizations?.length > 0) setFeaturedOrganizations(organizations);
+        if (organizations?.length > 0) setFeaturedOrganizations(organizations.slice(0, 4));
       })
       .catch(() => {});
 
@@ -101,10 +131,101 @@ export default function Home() {
       .catch(() => setFeaturedCategories([]));
 
     // Conectar el endpoint /api/categorias/nombres para el menú desplegable
-    getAllCategories()
+    getCategoryNames()
       .then((data) => setCategoryList(data || []))
       .catch(() => setCategoryList([]));
   }, []);
+
+  const requestLocation = (targetDistance = null) => {
+    if (!navigator.geolocation) {
+      Swal.fire({
+        imageUrl: mascotaImg,
+        imageWidth: 120,
+        imageHeight: 140,
+        imageAlt: 'Mascota EventHive',
+        title: 'Geolocalización no soportada',
+        text: 'Tu navegador no admite geolocalización para calcular distancias.',
+        confirmButtonColor: '#007BFF',
+      });
+      setSelectedDistance('all');
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const coords = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setUserLocation(coords);
+        setIsLocating(false);
+
+        if (targetDistance && targetDistance !== 'all') {
+          setSelectedDistance(targetDistance);
+        }
+
+        Swal.fire({
+          icon: 'success',
+          title: '¡Ubicación activada!',
+          text: 'El mapa ahora buscará los eventos según tu ubicación actual.',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      },
+      (error) => {
+        setIsLocating(false);
+        let message = 'No fue posible obtener tu ubicación.';
+        if (error.code === error.PERMISSION_DENIED) {
+          message = 'Permiso denegado. Para buscar eventos por distancia cercana, permite el acceso a tu ubicación en tu navegador.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          message = 'La señal de tu ubicación no está disponible en este momento.';
+        } else if (error.code === error.TIMEOUT) {
+          message = 'Se agotó el tiempo esperando tu ubicación.';
+        }
+
+        Swal.fire({
+          imageUrl: mascotaImg,
+          imageWidth: 120,
+          imageHeight: 140,
+          imageAlt: 'Mascota EventHive',
+          title: 'Ubicación requerida',
+          text: message,
+          confirmButtonColor: '#007BFF',
+          confirmButtonText: 'Entendido',
+        });
+        setSelectedDistance('all');
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+      }
+    );
+  };
+
+  const handleDistanceChange = async (distanceValue) => {
+    if (distanceValue === 'all') {
+      setSelectedDistance('all');
+      return;
+    }
+
+    if (!userLocation) {
+      const distanceLabel = DISTANCE_OPTIONS.find((o) => o.value === distanceValue)?.label.toLowerCase() || 'esta distancia';
+      const result = await showLocationPromptAlert({
+        title: 'Activa tu ubicación',
+        text: `Para buscar eventos a ${distanceLabel}, necesitamos conocer tu ubicación actual. ¿Deseas activarla ahora?`,
+        confirmButtonText: 'Activar ubicación',
+        cancelButtonText: 'Cancelar',
+      });
+
+      if (result.isConfirmed) {
+        requestLocation(distanceValue);
+      }
+    } else {
+      setSelectedDistance(distanceValue);
+    }
+  };
 
   const filteredMapEvents = useMemo(() => {
     return mapEvents.filter((event) => {
@@ -113,18 +234,25 @@ export default function Home() {
         event.category?.toLowerCase() === selectedCategory.toLowerCase() ||
         String(event.categoriaId) === String(selectedCategory);
 
-      const matchesDistance =
-        selectedDistance === 'all' ||
-        getDistanceKm(
-          CARTAGENA_CENTER.lat,
-          CARTAGENA_CENTER.lng,
-          event.lat,
-          event.lng
-        ) <= Number(selectedDistance);
+      if (!matchesCategory) return false;
 
-      return matchesCategory && matchesDistance;
+      if (selectedDistance === 'all') return true;
+
+      // Si se filtra por distancia, requerimos ubicación del usuario y coordenadas del evento
+      if (!userLocation || event.lat == null || event.lng == null) {
+        return false;
+      }
+
+      const distance = getDistanceKm(
+        userLocation.lat,
+        userLocation.lng,
+        Number(event.lat),
+        Number(event.lng)
+      );
+
+      return distance <= Number(selectedDistance);
     });
-  }, [mapEvents, selectedCategory, selectedDistance]);
+  }, [mapEvents, selectedCategory, selectedDistance, userLocation]);
 
   const handleCategoryRedirect = (cat) => {
     navigate(`/buscar?categoriaId=${encodeURIComponent(cat.id)}&categoria=${encodeURIComponent(cat.nombre)}`);
@@ -209,11 +337,43 @@ export default function Home() {
               Mapa de Eventos
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Descubre eventos cercanos a tu ubicación en Cartagena de Indias
+              {userLocation
+                ? 'Mostrando eventos calculados a partir de tu ubicación actual'
+                : 'Descubre eventos cercanos a tu ubicación en Cartagena de Indias'}
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Botón interactivo de Geolocalización */}
+            <button
+              type="button"
+              onClick={() => requestLocation(selectedDistance !== 'all' ? selectedDistance : null)}
+              disabled={isLocating}
+              className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs sm:text-sm font-semibold transition-all shadow-sm ${
+                userLocation
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                  : 'border-blue-200 bg-blue-50 text-brand hover:bg-blue-100'
+              }`}
+              title={userLocation ? 'Tu ubicación está activa. Haz clic para actualizarla' : 'Activar mi ubicación para calcular distancias'}
+            >
+              {isLocating ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-brand border-t-transparent rounded-full animate-spin" />
+                  <span>Obteniendo ubicación...</span>
+                </>
+              ) : userLocation ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Mi ubicación activa</span>
+                </>
+              ) : (
+                <>
+                  <FiNavigation className="text-brand shrink-0" size={14} />
+                  <span>Activar mi ubicación</span>
+                </>
+              )}
+            </button>
+
             <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs sm:text-sm shadow-sm">
               <span className="text-slate-500 font-medium">Categoría:</span>
               <select
@@ -235,8 +395,9 @@ export default function Home() {
               <span className="text-slate-500 font-medium">Distancia:</span>
               <select
                 value={selectedDistance}
-                onChange={(event) => setSelectedDistance(event.target.value)}
+                onChange={(event) => handleDistanceChange(event.target.value)}
                 className="bg-transparent text-[#0a1838] font-semibold outline-none cursor-pointer"
+                aria-label="Filtrar eventos por distancia"
               >
                 {DISTANCE_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -248,12 +409,31 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Mensaje informativo cuando el filtro de distancia no encuentra resultados */}
+        {selectedDistance !== 'all' && filteredMapEvents.length === 0 && (
+          <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-2">
+              <FiMapPin className="text-amber-600 shrink-0" size={16} />
+              <span>
+                No se encontraron eventos dentro de <strong>{DISTANCE_OPTIONS.find((o) => o.value === selectedDistance)?.label.toLowerCase()}</strong> de tu ubicación.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedDistance('all')}
+              className="text-xs font-bold text-brand hover:underline shrink-0"
+            >
+              Ver todas las distancias →
+            </button>
+          </div>
+        )}
+
         <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-md h-[420px] sm:h-[480px]">
           <MapContainer
-            center={[10.4150, -75.5400]}
+            center={userLocation ? [userLocation.lat, userLocation.lng] : [10.4150, -75.5400]}
             zoom={13}
-            minZoom={10}
-            maxZoom={16}
+            minZoom={9}
+            maxZoom={17}
             scrollWheelZoom={false}
             dragging={true}
             doubleClickZoom={false}
@@ -267,33 +447,73 @@ export default function Home() {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {filteredMapEvents.map((event) => (
+            <MapViewController
+              center={userLocation ? [userLocation.lat, userLocation.lng] : [10.4150, -75.5400]}
+              zoom={13}
+            />
+
+            {/* Marcador de la ubicación del usuario */}
+            {userLocation && (
               <Marker
-                key={event.id}
-                position={[event.lat, event.lng]}
-                icon={locationPinIcon()}
+                position={[userLocation.lat, userLocation.lng]}
+                icon={userLocationPinIcon()}
               >
                 <Popup>
-                  <div className="p-1 min-w-[180px]">
-                    <span className="text-[10px] font-bold text-brand uppercase block mb-1">
-                      {event.category}
+                  <div className="p-1 text-center min-w-[150px]">
+                    <span className="font-bold text-xs text-brand block mb-0.5">
+                      📍 Tu ubicación actual
                     </span>
-                    <h4 className="text-xs font-bold text-slate-900 mb-1">
-                      {event.title}
-                    </h4>
-                    <p className="text-[11px] text-slate-600 mb-2">
-                      {event.description}
-                    </p>
-                    <Link
-                      to={`/eventos/${event.id}`}
-                      className="text-[11px] font-bold text-brand hover:underline inline-block"
-                    >
-                      Ver detalle →
-                    </Link>
+                    <span className="text-[11px] text-slate-500 block">
+                      {selectedDistance === 'all'
+                        ? 'Ubicación de referencia'
+                        : `Buscando eventos en un radio de ${selectedDistance} km`}
+                    </span>
                   </div>
                 </Popup>
               </Marker>
-            ))}
+            )}
+
+            {filteredMapEvents.map((event) => {
+              const distanceToUser =
+                userLocation && event.lat != null && event.lng != null
+                  ? getDistanceKm(userLocation.lat, userLocation.lng, Number(event.lat), Number(event.lng))
+                  : null;
+
+              return (
+                <Marker
+                  key={event.id}
+                  position={[event.lat, event.lng]}
+                  icon={locationPinIcon()}
+                >
+                  <Popup>
+                    <div className="p-1 min-w-[190px]">
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <span className="text-[10px] font-bold text-brand uppercase block">
+                          {event.category}
+                        </span>
+                        {distanceToUser != null && (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                            {distanceToUser.toFixed(1)} km
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 mb-1">
+                        {event.title}
+                      </h4>
+                      <p className="text-[11px] text-slate-600 mb-2">
+                        {event.description}
+                      </p>
+                      <Link
+                        to={`/eventos/${event.id}`}
+                        className="text-[11px] font-bold text-brand hover:underline inline-block"
+                      >
+                        Ver detalle →
+                      </Link>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
           </MapContainer>
         </div>
       </section>
@@ -318,34 +538,62 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Grid of the colorful category cards */}
+          {/* Grid of the colorful category cards con soporte de imagen del backend */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {featuredCategories.map((cat, index) => {
               const bgClass = cat.bgColor || CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+              const imageUrl = cat.urlFoto || cat.foto || cat.imagen;
+              const hasImage = Boolean(imageUrl);
+
               return (
                 <button
                   key={cat.id}
                   type="button"
                   onClick={() => handleCategoryRedirect(cat)}
-                  className={`group relative rounded-2xl p-6 sm:p-7 text-white ${bgClass} shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between min-h-[170px] text-left cursor-pointer active:scale-[0.99]`}
+                  className={`group relative rounded-2xl p-6 sm:p-7 text-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between min-h-[175px] text-left cursor-pointer active:scale-[0.99] overflow-hidden ${
+                    hasImage ? 'bg-slate-900 border border-slate-700/60' : `${bgClass} border border-white/10`
+                  }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-lg">
+                  {/* Si tiene imagen, se muestra con overlay para lectura clara */}
+                  {hasImage ? (
+                    <>
+                      <div
+                        className="absolute inset-0 bg-cover bg-center opacity-45 group-hover:scale-105 group-hover:opacity-55 transition-all duration-500"
+                        style={{ backgroundImage: `url(${imageUrl})` }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-slate-950/20 pointer-events-none" />
+                    </>
+                  ) : (
+                    <>
+                      {/* Efectos de luz para estética viva cuando no hay imagen */}
+                      <div className="absolute -right-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
+                      <div className="absolute -left-6 -top-6 w-28 h-28 bg-black/20 rounded-full blur-xl pointer-events-none" />
+                    </>
+                  )}
+
+                  <div className="relative z-10 flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-white text-lg shadow-inner group-hover:rotate-6 transition-transform">
                       <FiAward size={20} />
                     </div>
+
+                    {cat.totalEventos > 0 && (
+                      <span className="bg-white/20 backdrop-blur-md text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-white/20">
+                        {cat.totalEventos} {cat.totalEventos === 1 ? 'evento' : 'eventos'}
+                      </span>
+                    )}
                   </div>
 
-                  <div className="flex items-end justify-between mt-6">
+                  <div className="relative z-10 flex items-end justify-between mt-6">
                     <div>
-                      <h3 className="text-lg sm:text-xl font-black uppercase tracking-wide leading-snug">
+                      <h3 className="text-lg sm:text-xl font-black uppercase tracking-wide leading-snug drop-shadow-sm group-hover:text-[#ffc107] transition-colors">
                         {cat.nombre}
                       </h3>
                       <p className="text-white/85 text-xs mt-0.5 font-medium">
-                        {cat.totalEventos} eventos publicados
+                        {cat.totalEventos} {cat.totalEventos === 1 ? 'evento publicado' : 'eventos publicados'}
                       </p>
                     </div>
 
-                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 flex items-center justify-center group-hover:translate-x-1 group-hover:bg-[#ffc107] group-hover:text-[#0a1838] transition-all">
                       <FiArrowRight size={16} />
                     </div>
                   </div>
@@ -383,11 +631,16 @@ export default function Home() {
 
           {/* Cards of Organizers */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredOrganizations.map((org) => (
+            {featuredOrganizations.slice(0, 4).map((org) => (
               <div
                 key={org.id}
-                className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-lg transition-all flex flex-col justify-between group"
+                onClick={() => navigate(`/organizaciones/${org.id}`)}
+                className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-lg transition-all flex flex-col justify-between group cursor-pointer relative overflow-hidden"
               >
+                <div className="absolute top-0 right-0 bg-[#ffc107] text-[#0a1838] text-[9px] font-black uppercase px-2 py-0.5 rounded-bl-lg shadow-sm">
+                  ★ Top
+                </div>
+
                 <div>
                   <div className="flex items-start justify-between mb-4">
                     <div className="relative">
@@ -410,8 +663,8 @@ export default function Home() {
                       )}
                     </div>
 
-                    <span className="text-[11px] font-bold text-amber-950 bg-amber-100 px-2 py-0.5 rounded-full flex items-center gap-1">
-                      ★ {org.rating}
+                    <span className="text-[11px] font-bold text-amber-950 bg-amber-100 px-2 py-0.5 rounded-full flex items-center gap-1 mr-8">
+                      ★ {org.rating ? Number(org.rating).toFixed(1) : 'Top'}
                     </span>
                   </div>
 
@@ -428,16 +681,12 @@ export default function Home() {
 
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-600">
-                    <strong className="text-slate-900 font-bold">{org.eventsCount}</strong> eventos
+                    <strong className="text-slate-900 font-bold">{org.eventsCount || 0}</strong> eventos
                   </span>
 
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/buscar?categoria=${encodeURIComponent(org.targetCategory)}`)}
-                    className="text-xs font-bold text-brand hover:text-brand-dark flex items-center gap-1 group-hover:underline"
-                  >
-                    Ver eventos →
-                  </button>
+                  <span className="text-xs font-bold text-brand hover:text-brand-dark flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                    Ver perfil →
+                  </span>
                 </div>
               </div>
             ))}

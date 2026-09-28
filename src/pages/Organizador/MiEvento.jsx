@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   FiCalendar,
   FiCheckCircle,
@@ -17,15 +17,59 @@ import DataTable from '../../components/Shared/DataTable.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
-import { organizerEvents } from '../../features/organizer/data/mockOrganizerData.js';
+import { organizerService } from '../../services/organizerService.js';
+import { getCategoryNames } from '../../services/categoryService.js';
 
 export default function MiEvento({ onCreate, externalSearch = '' }) {
+  const [organizerEvents, setOrganizerEvents] = useState([]);
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
   const [category, setCategory] = useState('Todos');
   const [statusFilter, setStatusFilter] = useState('Todos');
   const [localSearch, setLocalSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(6);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+
+    Promise.all([
+      organizerService.getEventosOrganizador({ page: 0, size: 100 }),
+      getCategoryNames(),
+    ])
+      .then(([eventsData, categoriesData]) => {
+        if (!isMounted) return;
+        const normalized = (eventsData || []).map((e) => ({
+          ...e,
+          id: String(e.id),
+          title: e.titulo || e.title || 'Sin título',
+          category: typeof e.categoria === 'string' ? e.categoria : e.categoria?.nombre || e.nombreCategoria || 'Evento',
+          date: e.fecha || e.date || 'Próximamente',
+          time: e.hora || e.time || '7:00 PM',
+          location: e.lugar || e.ubicacion || e.location || 'Cartagena de Indias',
+          price: e.precio ?? e.localidades?.[0]?.precio ?? 0,
+          status: e.estado === 'PUBLICADO' ? 'Activo' : e.estado === 'FINALIZADO' ? 'Finalizado' : 'Borrador',
+          tone: e.estado === 'PUBLICADO' ? 'active' : e.estado === 'FINALIZADO' ? 'neutral' : 'warning',
+          sold: e.entradasVendidas ?? e.boletosVendidos ?? 0,
+          capacity: e.aforoMaximo ?? e.capacidad ?? 100,
+          photo: e.foto || e.imagen || null,
+        }));
+        setOrganizerEvents(normalized);
+        if (categoriesData) setCategoryOptions(categoriesData);
+      })
+      .catch((err) => {
+        console.error('Error cargando eventos:', err);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const effectiveSearch = externalSearch || localSearch;
 
@@ -241,11 +285,11 @@ export default function MiEvento({ onCreate, externalSearch = '' }) {
               className="bg-transparent font-bold text-slate-800 outline-none cursor-pointer"
             >
               <option value="Todos">Todas</option>
-              <option value="Música">Música</option>
-              <option value="Gastronómico">Gastronómico</option>
-              <option value="Académico">Académico</option>
-              <option value="Entretenimiento">Entretenimiento</option>
-              <option value="Deportivo">Deportivo</option>
+              {categoryOptions.map((c) => (
+                <option key={c.id || c.nombre} value={c.nombre}>
+                  {c.nombre}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -295,7 +339,12 @@ export default function MiEvento({ onCreate, externalSearch = '' }) {
       </div>
 
       {/* 4. Renderizado Condicional: Vista en Tarjetas vs Vista en Tabla */}
-      {viewMode === 'grid' ? (
+      {loading ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-16 text-center shadow-sm">
+          <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-xs text-slate-500 font-medium">Cargando eventos de tu organización...</p>
+        </div>
+      ) : viewMode === 'grid' ? (
         <div className="space-y-6">
           {paginatedGridEvents.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

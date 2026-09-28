@@ -6,7 +6,7 @@ import InputField from '../components/common/InputField.jsx';
 import SocialAuthButton from '../components/common/SocialAuthButton.jsx';
 import useForm from '../hooks/useForm.js';
 import { authService } from '../services/authService.js';
-import { session } from '../services/session.js'; // de prueba pára actualizar los paneles de admin/moderador/organizador sin login real
+import { session, normalizeRole } from '../services/session.js';
 
 const validateLogin = (values) => {
   const errors = {};
@@ -27,11 +27,6 @@ const validateLogin = (values) => {
 
 export default function InicioSesion() {
   const navigate = useNavigate();
-  const devRoles = [  // de prueba pára actualizar los paneles de admin/moderador/organizador sin login real
-    { role: 'ADMIN', label: 'Administración', path: '/admin' },
-    { role: 'MODERADOR', label: 'Moderación', path: '/moderador' },
-    { role: 'ORGANIZADOR', label: 'Organización', path: '/organizacion' },
-  ];
 
   const {
     values,
@@ -66,16 +61,24 @@ export default function InicioSesion() {
       showConfirmButton: false,
     });
 
-    const userRole = data?.rol || data?.usuario?.rol || session.getUser()?.role;
+    const user = session.getUser();
+    const userRole = normalizeRole(
+      data?.rol ||
+      data?.role ||
+      data?.usuario?.rol ||
+      data?.usuario?.role ||
+      user?.role ||
+      user?.rol
+    );
 
-    if (userRole === 'ADMIN' || userRole === 'ADMINISTRADOR') {
+    if (userRole === 'ADMINISTRADOR') {
       navigate('/admin');
-    } else if (userRole === 'REPRESENTANTE' || userRole === 'ORGANIZADOR') {
+    } else if (userRole === 'REPRESENTANTE' || userRole === 'OPERADOR') {
       navigate('/organizacion');
     } else if (userRole === 'MODERADOR') {
       navigate('/moderador');
     } else {
-      navigate('/');
+      navigate('/perfil');
     }
   };
 
@@ -178,28 +181,6 @@ export default function InicioSesion() {
             )}
           </button>
         </form>
-
-        {/* Acceso de prueba para actualizar paneles de admin/moderador/organizador sin login real */}
-        {import.meta.env.DEV && (
-          <section className="border-t border-borderc pt-4" aria-label="Acceso de desarrollo">
-            <p className="mb-2 text-xs font-semibold text-slate-600">Acceso de desarrollo</p>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              {devRoles.map(({ role, label, path }) => (
-                <button
-                  key={role}
-                  type="button"
-                  onClick={() => {
-                    session.startDev(role);
-                    navigate(path);
-                  }}
-                  className="rounded-lg border border-borderc px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:border-brand hover:text-brand"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </AuthLayout>
   );

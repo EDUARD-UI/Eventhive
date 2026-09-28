@@ -15,17 +15,16 @@ const buildUrl = (path, params) => {
 
 async function request(path, { method = 'GET', params, body, isFormData = false } = {}) {
   const token = session.getToken();
-  const isDevSession = session.isDevSession();  // de prueba pára actualizar los paneles de admin/moderador/organizador sin login real
 
   const headers = {};
   if (!isFormData) headers['Content-Type'] = 'application/json';
-  if (token && !isDevSession) headers.Authorization = `Bearer ${token}`;
+  if (token) headers.Authorization = `Bearer ${token}`;
 
   let response;
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     response = await fetch(buildUrl(path, params), {
       method,
@@ -34,14 +33,15 @@ async function request(path, { method = 'GET', params, body, isFormData = false 
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
-  } catch {
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('La solicitud tardó demasiado tiempo en responder. Verifica la conexión con el servidor.');
+    }
     throw new Error('No fue posible conectar con el servidor. Verifica que el backend esté disponible.');
   }
 
-  // Token vencido o inválido: se limpia la sesión y se manda al login,
-  // salvo que la petición que falló sea el propio login (para no
-  // entrar en loop de redirecciones).
-  if (response.status === 401 && path !== '/auth/login' && !isDevSession) {  // de prueba pára actualizar los paneles de admin/moderador/organizador sin login real
+  // Token vencido o inválido: limpiar sesión y redirigir a inicio de sesión
+  if (response.status === 401 && path !== '/auth/login') {
     session.clear();
     if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/iniciosesion')) {
       window.location.href = '/iniciosesion';
@@ -54,7 +54,10 @@ async function request(path, { method = 'GET', params, body, isFormData = false 
     throw new Error(payload?.mensaje || 'Ocurrió un error al procesar la solicitud.');
   }
 
-  return payload?.data;
+  if (payload && typeof payload === 'object' && payload.data !== undefined) {
+    return payload.data;
+  }
+  return payload;
 }
 
 export const httpClient = {

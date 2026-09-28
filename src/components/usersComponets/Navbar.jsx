@@ -6,7 +6,15 @@ import MobileDrawer from "../MobileDrawer.jsx";
 import HelpChat from "../HelpChat.jsx";
 import { useDisclosure } from "../../hooks/useDisclosure.js";
 import AppLogo from "../common/AppLogo.jsx";
-import { session } from "../../services/session.js";
+import { session, normalizeRole } from "../../services/session.js";
+
+const getDashboardRoute = (role) => {
+  const r = normalizeRole(role);
+  if (r === 'ADMINISTRADOR') return '/admin';
+  if (r === 'REPRESENTANTE' || r === 'OPERADOR') return '/organizacion';
+  if (r === 'MODERADOR') return '/moderador';
+  return '/perfil';
+};
 
 export default function Navbar() {
   const { isOpen, open, close } = useDisclosure(false);
@@ -65,7 +73,7 @@ export default function Navbar() {
           {currentUser ? (
             <div className="hidden items-center gap-2 xl:flex">
               <Link
-                to={currentUser.role === 'ADMIN' ? '/admin' : currentUser.role === 'ORGANIZADOR' ? '/organizacion' : '/perfil'}
+                to={getDashboardRoute(currentUser.role || currentUser.rol)}
                 className="flex max-w-[220px] items-center gap-2 rounded-xl border border-borderc bg-slate-50 px-3.5 py-2 text-xs font-semibold text-ink transition-all hover:border-brand hover:text-brand"
               >
                 <span className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[10px] font-bold">

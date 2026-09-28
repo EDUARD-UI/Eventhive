@@ -1,21 +1,9 @@
 import { Navigate } from 'react-router-dom';
-import { session } from '../services/session.js';
+import { session, normalizeRole } from '../services/session.js';
 
 /**
- * Envuelve rutas que requieren sesión iniciada y, opcionalmente,
- * un rol específico (ya normalizado por session.js, ej: "ADMIN",
- * "ORGANIZADOR", "CLIENTE", "MODERADOR").
- *
- * Uso:
- *   <Route path="/admin" element={
- *     <RutaProtegida rolesPermitidos={['ADMIN']}>
- *       <AdminPanel />
- *     </RutaProtegida>
- *   } />
- *
- * Importante: esto solo evita que la interfaz se muestre sin sesión.
- * La seguridad real sigue estando en el backend (SecurityConfig +
- * JwtAuthFilter) — este componente es solo para UX, no reemplaza eso.
+ * Protege rutas que requieren sesión activa y valida los roles autorizados:
+ * ADMINISTRADOR, MODERADOR, REPRESENTANTE, OPERADOR, CLIENTE
  */
 export default function RutaProtegida({ children, rolesPermitidos }) {
   const token = session.getToken();
@@ -25,8 +13,25 @@ export default function RutaProtegida({ children, rolesPermitidos }) {
     return <Navigate to="/iniciosesion" replace />;
   }
 
-  if (rolesPermitidos && !rolesPermitidos.includes(usuario.role)) {
-    return <Navigate to="/" replace />;
+  if (rolesPermitidos && rolesPermitidos.length > 0) {
+    const userRole = normalizeRole(usuario.role || usuario.rol);
+
+    const isAuthorized = rolesPermitidos.some((r) => {
+      const allowed = normalizeRole(r);
+      if (allowed === userRole) return true;
+      // Compatibilidad de acceso entre roles de organización
+      if (
+        (allowed === 'REPRESENTANTE' || allowed === 'OPERADOR') &&
+        (userRole === 'REPRESENTANTE' || userRole === 'OPERADOR')
+      ) {
+        return true;
+      }
+      return false;
+    });
+
+    if (!isAuthorized) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return children;

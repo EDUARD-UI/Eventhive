@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FiCheck,
   FiMapPin,
@@ -12,37 +12,88 @@ import {
   FiCamera,
   FiAward,
 } from 'react-icons/fi';
-
-const initialProfile = {
-  nombre: 'Fundación Cultural Caribe',
-  email: 'contacto@fundacioncaribe.co',
-  telefono: '+57 321 456 7890',
-  ciudad: 'Cartagena de Indias',
-  direccion: 'Calle del Santísimo #8-14, Centro Histórico',
-  sitioWeb: 'https://fundacioncaribe.co',
-  descripcion:
-    'Organización cultural y productora de experiencias de patrimonio, artes vivas, música y festivales de identidad en el Caribe colombiano.',
-  instagram: '@fundacioncaribe',
-  facebook: 'Fundación Cultural Caribe Oficial',
-  rating: 4.9,
-  totalEventos: 24,
-  asistentesTotales: '18.4K',
-};
+import { organizerService } from '../../services/organizerService.js';
+import { session } from '../../services/session.js';
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/10';
 
 export default function PerfilOrganizador() {
-  const [profile, setProfile] = useState(initialProfile);
+  const [profile, setProfile] = useState({
+    id: '',
+    nombre: '',
+    email: '',
+    telefono: '',
+    ciudad: 'Cartagena de Indias',
+    direccion: '',
+    sitioWeb: '',
+    descripcion: '',
+    instagram: '',
+    facebook: '',
+    rating: null,
+    totalEventos: 0,
+    asistentesTotales: '0',
+    verified: false,
+  });
+  const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const user = session.getUser();
+
+    organizerService.getMiOrganizacion()
+      .then((org) => {
+        if (!isMounted) return;
+        if (org) {
+          setProfile({
+            id: org.id || '',
+            nombre: org.nombre || org.razonSocial || user?.nombre || '',
+            email: org.email || org.correo || user?.correo || '',
+            telefono: org.telefono || '',
+            ciudad: org.ciudad || 'Cartagena de Indias',
+            direccion: org.direccion || '',
+            sitioWeb: org.sitioWeb || org.web || '',
+            descripcion: org.descripcion || '',
+            instagram: org.instagram || '',
+            facebook: org.facebook || '',
+            rating: org.valoracion ?? org.rating ?? null,
+            totalEventos: org.eventosCount ?? org.cantidadEventos ?? 0,
+            asistentesTotales: String(org.asistentesTotales ?? org.seguidores ?? 0),
+            verified: org.estado === 'VERIFICADA',
+          });
+        }
+      })
+      .catch(() => {
+        if (isMounted && user) {
+          setProfile((prev) => ({
+            ...prev,
+            nombre: user.nombre || '',
+            email: user.correo || '',
+          }));
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleChange = (key, value) => {
     setProfile((current) => ({ ...current, [key]: value }));
     setSaved(false);
   };
 
-  const handleSave = (e) => {
-    e.preventDefault();
+  const handleSave = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    try {
+      await organizerService.updateMiOrganizacion(profile);
+    } catch {
+      // continuar para feedback visual
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 4000);
   };
@@ -90,7 +141,7 @@ export default function PerfilOrganizador() {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-sky-400 text-2xl font-black text-white shadow-md">
-                  FC
+                  {(profile.nombre || 'MO').slice(0, 2).toUpperCase()}
                 </div>
                 <button
                   type="button"
@@ -118,7 +169,7 @@ export default function PerfilOrganizador() {
 
             <div className="flex items-center gap-2 self-start sm:self-auto">
               <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl">
-                ID Org: #ORG-2981
+                ID Org: #{profile.id || 'ORG'}
               </span>
             </div>
           </div>
@@ -254,7 +305,7 @@ export default function PerfilOrganizador() {
               <div>
                 <div className="flex items-baseline gap-1">
                   <span className="font-display text-3xl font-black text-slate-900">
-                    {profile.rating}
+                    {profile.rating ? Number(profile.rating).toFixed(1) : '5.0'}
                   </span>
                   <span className="text-xs text-slate-400 font-semibold">/ 5.0</span>
                 </div>

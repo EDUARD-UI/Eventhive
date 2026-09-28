@@ -14,30 +14,55 @@ import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import { organizationService } from '../services/organizerService.js';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
+import Pagination from '../components/Shared/Pagination.jsx';
+
+const PAGE_SIZE = 8;
 
 export default function OrganizadoresPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState('directorio'); // 'directorio' | 'informacion'
-  const [organizations, setOrganizations] = useState([]);
+  const [topOrganizations, setTopOrganizations] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    organizationService.listOrganizations()
-      .then(({ organizations: results }) => setOrganizations(results))
-      .catch(() => setOrganizations([]));
+    let isMounted = true;
+    setLoading(true);
+    organizationService.listTopOrganizations({ page: 0, size: 24 })
+      .then((topRes) => {
+        if (!isMounted) return;
+        setTopOrganizations(topRes?.organizations || []);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const availableOrganizations = organizations;
-
-  const filteredOrganizers = useMemo(() => {
-    if (!searchTerm.trim()) return availableOrganizations;
+  const filteredOrganizations = useMemo(() => {
+    if (!searchTerm.trim()) return topOrganizations;
     const term = searchTerm.toLowerCase();
-    return availableOrganizations.filter(
+    return topOrganizations.filter(
       (org) =>
-        org.name.toLowerCase().includes(term) ||
-        org.category.toLowerCase().includes(term) ||
-        org.description.toLowerCase().includes(term)
+        org.name?.toLowerCase().includes(term) ||
+        org.category?.toLowerCase().includes(term) ||
+        org.description?.toLowerCase().includes(term)
     );
-  }, [searchTerm, availableOrganizations]);
+  }, [searchTerm, topOrganizations]);
+
+  const paginatedOrganizations = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredOrganizations.slice(start, start + PAGE_SIZE);
+  }, [filteredOrganizations, currentPage]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="w-full min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col justify-between">
@@ -53,22 +78,22 @@ export default function OrganizadoresPage() {
             Conoce a nuestras organizaciones
           </h1>
           <p className="text-slate-500 text-sm sm:text-base max-w-2xl leading-relaxed mb-8">
-            Descubre organizaciones verificadas, sigue tus favoritas y encuentra sus próximos eventos.
+            Descubre organizaciones verificadas, explora sus perfiles públicos y encuentra sus eventos activos y pasados.
           </p>
 
-          {/* Barra de búsqueda (Mockup) */}
+          {/* Barra de búsqueda */}
           <div className="relative max-w-md mb-8">
             <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
             <input
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar organización..."
+              onChange={handleSearchChange}
+              placeholder="Buscar organización por nombre o categoría..."
               className="w-full bg-white border border-slate-200/90 rounded-xl pl-11 pr-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-brand focus:ring-1 focus:ring-brand shadow-sm transition-all"
             />
           </div>
 
-          {/* Selector de pestañas: Directorio vs Información para Organizaciones */}
+          {/* Selector de pestañas */}
           <div className="flex items-center gap-2 border-b border-slate-200 pb-3 mb-8">
             <button
               type="button"
@@ -98,150 +123,122 @@ export default function OrganizadoresPage() {
         {/* Contenido: Tab Directorio */}
         {activeTab === 'directorio' && (
           <section className="max-w-6xl mx-auto px-6 sm:px-12 lg:px-8 pb-16">
-            {/* Si no hay búsqueda o está vacío, mostramos la tarjeta exacta del Mockup */}
-            {searchTerm.trim() === '' ? (
-              <div className="space-y-8">
-                {/* Mockup Box: Próximamente nuevos perfiles */}
-                <div className="rounded-2xl border border-slate-200/90 bg-white p-12 sm:p-16 text-center shadow-sm">
-                  <div className="w-14 h-14 rounded-2xl bg-blue-50 text-brand flex items-center justify-center mx-auto mb-4 shadow-sm">
-                    {/* Icono de edificio exacto al mockup */}
-                    <svg
-                      className="w-7 h-7"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
-                      <path d="M6 12H4a2 2 0 0 0-2 2v8h4" />
-                      <path d="M18 9h2a2 2 0 0 1 2 2v11h-4" />
-                      <path d="M10 6h4" />
-                      <path d="M10 10h4" />
-                      <path d="M10 14h4" />
-                      <path d="M10 18h4" />
-                    </svg>
-                  </div>
-
-                  <h2 className="text-lg sm:text-xl font-bold text-[#0a1838] mb-2">
-                    Próximamente nuevos perfiles
-                  </h2>
-
-                  <p className="text-slate-500 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
-                    Cuando el backend publique organizaciones aprobadas, sus perfiles aparecerán aquí con sus eventos, seguidores y valoración.
-                  </p>
-                </div>
-
-                {/* Perfiles destacados de Cartagena */}
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-[#0a1838] mb-4">
-                    Organizaciones pioneras en Cartagena
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {availableOrganizations.map((org) => (
-                      <div
-                        key={org.id}
-                        className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
-                      >
-                        <div>
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="relative">
-                              <ImageWithFallback
-                                src={org.avatar}
-                                alt={org.name}
-                                showText={false}
-                                className="w-12 h-12 rounded-xl border border-slate-100"
-                                imgClassName="w-12 h-12 rounded-xl object-cover"
-                                fallbackClassName="w-12 h-12 rounded-xl"
-                                iconSize={18}
-                              />
-                              {org.verified && (
-                                <span className="absolute -bottom-1 -right-1 bg-brand text-white p-0.5 rounded-full shadow-sm text-[10px] z-10">
-                                  <FiCheckCircle size={10} />
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-[11px] font-bold text-amber-950 bg-amber-100 px-2 py-0.5 rounded-full">
-                              ★ {org.rating}
-                            </span>
-                          </div>
-
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-brand block mb-1">
-                            {org.category}
-                          </span>
-                          <h4 className="font-bold text-sm text-slate-900 mb-1.5">
-                            {org.name}
-                          </h4>
-                          <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-3">
-                            {org.description}
-                          </p>
-                        </div>
-
-                        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                          <span className="text-xs font-semibold text-slate-500">
-                            {org.eventsCount} eventos
-                          </span>
-                          <Link
-                            to={`/buscar?categoria=${encodeURIComponent(org.targetCategory)}`}
-                            className="text-xs font-bold text-brand hover:underline"
-                          >
-                            Ver agenda →
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+            {loading ? (
+              <div className="py-20 flex flex-col items-center justify-center text-slate-400 text-sm">
+                <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mb-3" />
+                Cargando organizaciones destacadas...
               </div>
             ) : (
-              /* Resultados de búsqueda */
               <div>
-                {filteredOrganizers.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {filteredOrganizers.map((org) => (
-                      <div
-                        key={org.id}
-                        className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
-                      >
-                        <div>
-                          <div className="flex items-start justify-between mb-3">
-                            <ImageWithFallback
-                              src={org.avatar}
-                              alt={org.name}
-                              showText={false}
-                              className="w-12 h-12 rounded-xl border border-slate-100"
-                              imgClassName="w-12 h-12 rounded-xl object-cover"
-                              fallbackClassName="w-12 h-12 rounded-xl"
-                              iconSize={18}
-                            />
-                            <span className="text-[11px] font-bold text-amber-950 bg-amber-100 px-2 py-0.5 rounded-full">
-                              ★ {org.rating}
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <span className="text-xs font-bold text-amber-600 uppercase tracking-widest block mb-0.5">
+                      {searchTerm.trim() ? 'BÚSQUEDA' : 'DESTACADAS'}
+                    </span>
+                    <h3 className="text-lg sm:text-2xl font-black text-[#0a1838]">
+                      {searchTerm.trim()
+                        ? `Resultados para “${searchTerm}” (${filteredOrganizations.length})`
+                        : `Top Organizaciones (${filteredOrganizations.length})`}
+                    </h3>
+                  </div>
+                  {!searchTerm.trim() && (
+                    <span className="text-xs font-semibold text-slate-400 hidden sm:inline">
+                      Líderes de eventos en Cartagena
+                    </span>
+                  )}
+                </div>
+
+                {filteredOrganizations.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {paginatedOrganizations.map((org) => (
+                        <Link
+                          key={org.id}
+                          to={`/organizaciones/${org.id}`}
+                          className="group bg-white rounded-2xl border-2 border-amber-200/70 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between block relative overflow-hidden"
+                        >
+                          <div className="absolute top-0 right-0 bg-[#ffc107] text-[#0a1838] text-[9px] font-black uppercase px-2 py-0.5 rounded-bl-lg shadow-sm">
+                            ★ Top
+                          </div>
+
+                          <div>
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="relative">
+                                <ImageWithFallback
+                                  src={org.avatar}
+                                  alt={org.name}
+                                  showText={false}
+                                  className="w-13 h-13 rounded-xl border border-slate-100"
+                                  imgClassName="w-13 h-13 rounded-xl object-cover"
+                                  fallbackClassName="w-13 h-13 rounded-xl"
+                                  iconSize={20}
+                                />
+                                {org.verified && (
+                                  <span className="absolute -bottom-1 -right-1 bg-brand text-white p-0.5 rounded-full shadow-sm text-[10px] z-10">
+                                    <FiCheckCircle size={10} />
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] font-bold text-amber-950 bg-amber-100 px-2 py-0.5 rounded-full mr-8">
+                                ★ {org.rating ? Number(org.rating).toFixed(1) : 'Top'}
+                              </span>
+                            </div>
+
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-brand block mb-1">
+                              {org.category}
+                            </span>
+                            <h4 className="font-bold text-base text-slate-900 group-hover:text-brand transition-colors mb-1.5 line-clamp-1">
+                              {org.name}
+                            </h4>
+                            <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-3">
+                              {org.description}
+                            </p>
+                          </div>
+
+                          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                            <span className="font-semibold text-slate-500">
+                              {org.eventsCount || 0} eventos
+                            </span>
+                            <span className="font-bold text-brand group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                              Ver perfil público →
                             </span>
                           </div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-brand block mb-1">
-                            {org.category}
-                          </span>
-                          <h4 className="font-bold text-sm text-slate-900 mb-1.5">{org.name}</h4>
-                          <p className="text-xs text-slate-500 leading-relaxed mb-3">{org.description}</p>
-                        </div>
-                        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                          <span className="text-xs font-semibold text-slate-500">{org.eventsCount} eventos</span>
-                          <Link
-                            to={`/buscar?categoria=${encodeURIComponent(org.targetCategory)}`}
-                            className="text-xs font-bold text-brand hover:underline"
-                          >
-                            Ver agenda →
-                          </Link>
-                        </div>
+                        </Link>
+                      ))}
+                    </div>
+
+                    {/* Componente de Paginación */}
+                    {filteredOrganizations.length > PAGE_SIZE && (
+                      <div className="mt-10 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                        <Pagination
+                          currentPage={currentPage}
+                          totalItems={filteredOrganizations.length}
+                          pageSize={PAGE_SIZE}
+                          onPageChange={(p) => {
+                            setCurrentPage(p);
+                            window.scrollTo({ top: 320, behavior: 'smooth' });
+                          }}
+                          showPageSize={false}
+                        />
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
-                    <p className="text-slate-500 text-sm">
-                      No encontramos organizaciones con el término &ldquo;{searchTerm}&rdquo;.
+                  <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center max-w-lg mx-auto">
+                    <p className="text-slate-500 text-sm mb-4">
+                      {searchTerm.trim()
+                        ? `No encontramos organizaciones destacadas con el término “${searchTerm}”.`
+                        : 'No hay organizaciones destacadas disponibles en este momento.'}
                     </p>
+                    {searchTerm.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchTerm('')}
+                        className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        Limpiar búsqueda
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

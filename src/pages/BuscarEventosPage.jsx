@@ -4,18 +4,9 @@ import { FiSliders, FiFilter, FiX } from 'react-icons/fi';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import EventCard from '../components/EventCard.jsx';
-import { searchEvents, getEventsByCategory } from '../services/eventService.js';
-import { getAllCategories } from '../services/categoryService.js';
-
-const DEFAULT_CATEGORY_OPTIONS = [
-  { label: 'Todas las categorías', value: '' },
-  { label: 'Música', value: 'Música' },
-  { label: 'Arte y Cultura', value: 'Cultural' },
-  { label: 'Negocios', value: 'Negocios' },
-  { label: 'Deportes', value: 'Deportivo' },
-  { label: 'Gastronomía', value: 'Gastronómico' },
-  { label: 'Educación', value: 'Educación' },
-];
+import Pagination from '../components/Shared/Pagination.jsx';
+import { searchEvents, getEvents, getEventsByCategory } from '../services/eventService.js';
+import { getCategoryNames } from '../services/categoryService.js';
 
 const DATE_OPTIONS = [
   { label: 'Cualquier fecha', value: '' },
@@ -49,14 +40,17 @@ export default function BuscarEventosPage() {
   const fechaParam = searchParams.get('fecha') || '';
   const categoriaParam = searchParams.get('categoria') || '';
   const categoriaIdParam = searchParams.get('categoriaId') || '';
+  const pageParam = Math.max(0, parseInt(searchParams.get('page') || '0', 10));
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categoryList, setCategoryList] = useState([]);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     let isMounted = true;
-    getAllCategories()
+    getCategoryNames()
       .then((data) => {
         if (isMounted && data?.length > 0) {
           setCategoryList(data);
@@ -69,18 +63,17 @@ export default function BuscarEventosPage() {
   }, []);
 
   const categoryOptions = useMemo(() => {
-    if (categoryList.length > 0) {
-      return [
-        { label: 'Todas las categorías', value: '' },
-        ...categoryList.map((c) => ({
-          label: c.nombre,
-          value: c.nombre,
-          id: c.id,
-        })),
-      ];
-    }
-    return DEFAULT_CATEGORY_OPTIONS;
+    return [
+      { label: 'Todas las categorías', value: '' },
+      ...categoryList.map((c) => ({
+        label: c.nombre,
+        value: c.nombre,
+        id: c.id,
+      })),
+    ];
   }, [categoryList]);
+
+  const hasCategoryFilter = Boolean(categoriaIdParam || categoriaParam);
 
   useEffect(() => {
     let isMounted = true;
@@ -88,26 +81,52 @@ export default function BuscarEventosPage() {
 
     const load = async () => {
       try {
-        if (categoriaIdParam) {
-          return await getEventsByCategory({ categoriaId: categoriaIdParam });
+        // 1. Al filtrar por categoría: usar /eventos con categoriaId (NO recibe fecha)
+        if (hasCategoryFilter) {
+          let catId = categoriaIdParam;
+          if (!catId && categoriaParam) {
+            const found = categoryOptions.find((c) => matchCategory(c.value, categoriaParam));
+            if (found && found.id) catId = String(found.id);
+          }
+          return await getEvents({
+            categoriaId: catId || undefined,
+            page: pageParam,
+            size: 12,
+          });
         }
-        return await searchEvents({ titulo: tituloParam, fecha: fechaParam });
+
+        // 2. Solo el buscar debe recibir fecha: GET /eventos/buscar
+        if (tituloParam || fechaParam) {
+          return await searchEvents({
+            titulo: tituloParam ? tituloParam.trim() : undefined,
+            fecha: fechaParam ? fechaParam.trim() : undefined,
+            page: pageParam,
+            size: 12,
+          });
+        }
+
+        // 3. Catálogo general por defecto: GET /eventos (todos los eventos)
+        return await getEvents({ page: pageParam, size: 12 });
       } catch {
-        return { events: [], total: 0 };
+        return { events: [], total: 0, totalPages: 1, currentPage: 0 };
       }
     };
 
     load()
-      .then(({ events: results }) => {
+      .then(({ events: results, total, totalPages: pages }) => {
         if (!isMounted) return;
         if (results && results.length > 0) {
-          // If category filter is also set in text, filter
-          const filtered = categoriaParam
+          // Filtrar adicionalmente si hay nombre de categoría textual
+          const filtered = categoriaParam && !categoriaIdParam
             ? results.filter((ev) => matchCategory(ev.category, categoriaParam))
             : results;
           setEvents(filtered);
+          setTotalElements(total || results.length);
+          setTotalPages(pages || 1);
         } else {
           setEvents([]);
+          setTotalElements(0);
+          setTotalPages(1);
         }
       })
       .finally(() => {
@@ -117,14 +136,29 @@ export default function BuscarEventosPage() {
     return () => {
       isMounted = false;
     };
-  }, [tituloParam, fechaParam, categoriaParam, categoriaIdParam]);
+  }, [tituloParam, fechaParam, categoriaParam, categoriaIdParam, pageParam, categoryOptions, hasCategoryFilter]);
+
+  const handlePageChange = (newPage) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('page', String(newPage));
+    setSearchParams(next);
+    window.scrollTo({ top: 320, behavior: 'smooth' });
+  };
 
   const handleCategoryChange = (e) => {
     const val = e.target.value;
     const next = new URLSearchParams(searchParams);
+    next.delete('page');
     if (val) {
       next.set('categoria', val);
-      next.delete('categoriaId');
+      // Al filtrar por categoría, la fecha no se requiere y se deshabilita
+      next.delete('fecha');
+      const found = categoryOptions.find((opt) => opt.value === val);
+      if (found && found.id) {
+        next.set('categoriaId', String(found.id));
+      } else {
+        next.delete('categoriaId');
+      }
     } else {
       next.delete('categoria');
       next.delete('categoriaId');
@@ -135,6 +169,7 @@ export default function BuscarEventosPage() {
   const handleDateChange = (e) => {
     const val = e.target.value;
     const next = new URLSearchParams(searchParams);
+    next.delete('page');
     if (val) {
       next.set('fecha', val);
     } else {
@@ -147,7 +182,7 @@ export default function BuscarEventosPage() {
     setSearchParams({});
   };
 
-  const hasActiveFilters = Boolean(tituloParam || fechaParam || categoriaParam || categoriaIdParam);
+  const hasActiveFilters = Boolean(tituloParam || (!hasCategoryFilter && fechaParam) || categoriaParam || categoriaIdParam);
 
   const activeCategoryLabel = useMemo(() => {
     if (!categoriaParam) return '';
@@ -212,26 +247,34 @@ export default function BuscarEventosPage() {
                 ))}
               </select>
 
-              {/* Date selector */}
-              <select
-                value={fechaParam}
-                onChange={handleDateChange}
-                className="bg-slate-50 border border-slate-200 text-slate-700 text-xs sm:text-sm rounded-xl px-3.5 py-2.5 outline-none focus:border-brand focus:ring-1 focus:ring-brand font-medium transition-colors cursor-pointer"
-                aria-label="Filtrar por fecha"
-              >
-                {DATE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              {/* Date selector: solo el buscar debe recibir fecha; al filtrar por categorías se deshabilita */}
+              <div className="relative group">
+                <input
+                  type="date"
+                  value={hasCategoryFilter ? '' : fechaParam}
+                  onChange={handleDateChange}
+                  disabled={hasCategoryFilter}
+                  className={`border text-xs sm:text-sm rounded-xl px-3.5 py-2 outline-none font-medium transition-colors ${
+                    hasCategoryFilter
+                      ? 'opacity-40 cursor-not-allowed border-slate-200 text-slate-400 bg-slate-100'
+                      : 'border-slate-200 text-slate-700 bg-slate-50 hover:border-slate-300 focus:border-brand focus:ring-1 focus:ring-brand cursor-pointer'
+                  }`}
+                  aria-label="Filtrar por fecha"
+                  title={hasCategoryFilter ? 'El filtro por fecha no es requerido al filtrar por categoría' : 'Buscar por fecha'}
+                />
+                {hasCategoryFilter && (
+                  <span className="hidden group-hover:block absolute bottom-full mb-1 left-0 bg-[#0a1838] text-white text-[11px] px-2.5 py-1 rounded shadow-md whitespace-nowrap z-30 pointer-events-none">
+                    Fecha deshabilitada al filtrar por categoría
+                  </span>
+                )}
+              </div>
 
               {/* Clear filters pill */}
               <button
                 type="button"
                 onClick={handleClearFilters}
                 disabled={!hasActiveFilters}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
                 <FiX size={14} />
                 Limpiar filtros
@@ -242,6 +285,26 @@ export default function BuscarEventosPage() {
 
         {/* Events Grid or Empty State (Matching Mockups) */}
         <section className="max-w-6xl mx-auto px-6 sm:px-12 lg:px-8 py-10 sm:py-14">
+          {/* Banner cuando se filtró por categoría desde una card o selector */}
+          {hasCategoryFilter && (
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-blue-50/90 border border-blue-200 px-4 py-3 rounded-xl text-xs sm:text-sm shadow-sm">
+              <div className="flex items-center gap-2 text-brand font-semibold">
+                <FiSliders size={16} />
+                <span>
+                  Mostrando eventos de la categoría: <strong className="text-[#0a1838]">{categoriaParam || activeCategoryLabel || 'Seleccionada'}</strong>
+                  <span className="text-slate-500 font-normal ml-2 hidden sm:inline">(Filtro de fecha deshabilitado)</span>
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="text-xs font-bold text-slate-600 hover:text-brand underline transition-colors cursor-pointer"
+              >
+                ✕ Ver todos los eventos
+              </button>
+            </div>
+          )}
+
           {loading ? (
             <div className="flex items-center justify-center py-20 text-slate-500 text-sm">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mr-3" />
@@ -252,7 +315,7 @@ export default function BuscarEventosPage() {
               <div className="flex items-center justify-between mb-6">
                 <p className="text-xs sm:text-sm font-semibold text-slate-600">
                   Mostrando <span className="text-brand font-bold">{events.length}</span> evento
-                  {events.length === 1 ? '' : 's'} en Cartagena
+                  {events.length === 1 ? '' : 's'} {totalElements > events.length ? `de ${totalElements}` : ''} en Cartagena
                 </p>
               </div>
 
@@ -261,6 +324,19 @@ export default function BuscarEventosPage() {
                   <EventCard key={event.id} event={event} />
                 ))}
               </div>
+
+              {/* Componente de Paginación */}
+              {totalElements > 12 && (
+                <div className="mt-10 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                  <Pagination
+                    currentPage={pageParam + 1}
+                    totalItems={totalElements}
+                    pageSize={12}
+                    onPageChange={(p) => handlePageChange(p - 1)}
+                    showPageSize={false}
+                  />
+                </div>
+              )}
             </div>
           ) : (
             /* EXACT Mockup 3 & 5 Empty State */

@@ -6,6 +6,7 @@ import InputField from '../components/common/InputField.jsx';
 import SocialAuthButton from '../components/common/SocialAuthButton.jsx';
 import useForm from '../hooks/useForm.js';
 import { authService } from '../services/authService.js';
+import { session, normalizeRole } from '../services/session.js';
 
 const validateRegister = (values) => {
   const errors = {};
@@ -119,20 +120,27 @@ export default function Registro() {
       });
     }
 
+    const user = session.getUser();
+    const userRole = normalizeRole(user?.role || user?.rol);
+
     await Swal.fire({
       icon: 'success',
       title: '¡Cuenta creada con éxito!',
-      text: isOrganizer
-        ? 'Bienvenido como organización. Tu pre-registro ha sido creado con éxito. Te redirigiremos a tu panel.'
-        : 'Bienvenido a EventHive Cartagena. Ya puedes explorar eventos.',
+      text: isOrganizer || userRole === 'REPRESENTANTE' || userRole === 'OPERADOR'
+        ? 'Bienvenido como organización. Tu cuenta ha sido creada con éxito. Te redirigiremos a tu panel.'
+        : 'Bienvenido a EventHive Cartagena. Te redirigiremos a tu perfil.',
       timer: 2000,
       showConfirmButton: false,
     });
 
-    if (isOrganizer) {
+    if (isOrganizer || userRole === 'REPRESENTANTE' || userRole === 'OPERADOR') {
       navigate('/organizacion');
+    } else if (userRole === 'ADMINISTRADOR') {
+      navigate('/admin');
+    } else if (userRole === 'MODERADOR') {
+      navigate('/moderador');
     } else {
-      navigate('/');
+      navigate('/perfil');
     }
   };
 

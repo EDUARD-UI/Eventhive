@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { FiCalendar, FiMapPin, FiArrowRight } from 'react-icons/fi';
 import FavoriteButton from './FavoriteButton.jsx';
-import { formatPrice } from '../utils/formatters.js';
+import { formatPrice, getCategoryGradient } from '../utils/formatters.js';
 import ImageWithFallback from './common/ImageWithFallback.jsx';
 
 export default function EventCard({ event }) {
@@ -17,7 +17,8 @@ export default function EventCard({ event }) {
             className="h-full w-full aspect-[4/3]"
             imgClassName="group-hover:scale-105 duration-500"
             fallbackClassName="h-full w-full aspect-[4/3]"
-            fallbackText="Sin imagen"
+            fallbackGradient={getCategoryGradient(category)}
+            fallbackText={category || 'Sin imagen'}
             iconSize={26}
           >
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity pointer-events-none" />
@@ -28,7 +29,7 @@ export default function EventCard({ event }) {
             </span>
 
             <div className="absolute right-3.5 top-3.5 z-10">
-              <FavoriteButton initialActive={favorite} />
+              <FavoriteButton initialActive={favorite} eventId={id} />
             </div>
 
             <div className="absolute bottom-3 left-3.5 right-3.5 flex items-center justify-between text-white z-10 pointer-events-none">
