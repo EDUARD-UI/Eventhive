@@ -321,12 +321,7 @@ export default function OrganizadoresPage() {
                   Registrarme como Organización
                   <FiArrowRight size={14} />
                 </Link>
-                <Link
-                  to="/organizacion"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider transition-all"
-                >
-                  Ir al Panel
-                </Link>
+                
               </div>
             </div>
           </section>

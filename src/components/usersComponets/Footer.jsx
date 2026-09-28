@@ -78,28 +78,28 @@ export default function Footer({ onHelpClick }) {
           {/* Col 3: Sobre */}
           <div>
             <h4 className="text-white font-bold text-xs uppercase tracking-wider mb-4">
-              Sobre
+              Nosotros 
             </h4>
             <ul className="space-y-2.5 text-xs sm:text-sm text-slate-400">
               <li>
-                <span className="cursor-pointer hover:text-brand transition-colors">
+                <Link to="/acerca-de" className="hover:text-brand transition-colors">
                   Acerca de
-                </span>
+                </Link>
               </li>
               <li>
-                <span className="cursor-pointer hover:text-brand transition-colors">
+                <Link to="/privacidad" className="hover:text-brand transition-colors">
                   Privacidad
-                </span>
+                </Link>
               </li>
               <li>
-                <span className="cursor-pointer hover:text-brand transition-colors">
+                <Link to="/terminos" className="hover:text-brand transition-colors">
                   Términos
-                </span>
+                </Link>
               </li>
               <li>
-                <span className="cursor-pointer hover:text-brand transition-colors">
+                <Link to="/contacto" className="hover:text-brand transition-colors">
                   Contacto
-                </span>
+                </Link>
               </li>
             </ul>
           </div>

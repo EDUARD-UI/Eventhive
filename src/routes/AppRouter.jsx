@@ -1,4 +1,4 @@
-﻿import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import ScrollToTop from './ScrollToTop.jsx';
 import Home from '../pages/Home.jsx';
 import EventDetailPage from '../pages/EventDetailPage.jsx';
@@ -14,6 +14,10 @@ import Registro from '../pages/Registro.jsx';
 import RutaProtegida from './RutaProtegida.jsx';
 import PerfilRouteGuard from './PerfilRouteGuard.jsx';
 import { session, normalizeRole, getDashboardPathForRole } from '../services/session.js';
+import AcercaDe from '../pages/SobreNosotros/AcercaDe.jsx';
+import Privacidad from '../pages/SobreNosotros/Privacidad.jsx';
+import Terminos from '../pages/SobreNosotros/Terminos.jsx';
+import Contacto from '../pages/SobreNosotros/Contacto.jsx';
 
 /**
  * Si un Administrador, Organizador o Moderador ingresa a la raíz (/),
@@ -66,6 +70,12 @@ export default function AppRouter() {
         <Route path="/organizaciones/:id" element={<PerfilOrganizacionPublicoPage />} />
         <Route path="/organizacion/perfil/:id" element={<PerfilOrganizacionPublicoPage />} />
         <Route path="/organizadores" element={<Navigate to="/organizaciones" replace />} />
+
+        {/* Rutas de Nosotros */}
+        <Route path="/acerca-de" element={<AcercaDe />} />
+        <Route path="/privacidad" element={<Privacidad />} />
+        <Route path="/terminos" element={<Terminos />} />
+        <Route path="/contacto" element={<Contacto />} />
 
         {/* Paneles y rutas protegidas estrictas por rol */}
         <Route
