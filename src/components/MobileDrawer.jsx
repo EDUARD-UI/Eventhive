@@ -1,20 +1,13 @@
 import { FiX } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { NAV_LINKS } from '../constants/navigation.js';
-import { normalizeRole } from '../services/session.js';
+import { getDashboardPathForRole, normalizeRole } from '../services/session.js';
 
 export default function MobileDrawer({ isOpen, onClose, onHelpClick, currentUser, onLogout }) {
   if (!isOpen) return null;
 
   const userRole = normalizeRole(currentUser?.role || currentUser?.rol);
-  const accountPath =
-    userRole === 'ADMINISTRADOR'
-      ? '/admin'
-      : userRole === 'REPRESENTANTE' || userRole === 'OPERADOR'
-      ? '/organizacion'
-      : userRole === 'MODERADOR'
-      ? '/moderador'
-      : '/perfil';
+  const accountPath = currentUser ? getDashboardPathForRole(userRole) : '/perfil';
 
   return (
     <div

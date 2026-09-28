@@ -6,15 +6,7 @@ import MobileDrawer from "../MobileDrawer.jsx";
 import HelpChat from "../HelpChat.jsx";
 import { useDisclosure } from "../../hooks/useDisclosure.js";
 import AppLogo from "../common/AppLogo.jsx";
-import { session, normalizeRole } from "../../services/session.js";
-
-const getDashboardRoute = (role) => {
-  const r = normalizeRole(role);
-  if (r === 'ADMINISTRADOR') return '/admin';
-  if (r === 'REPRESENTANTE' || r === 'OPERADOR') return '/organizacion';
-  if (r === 'MODERADOR') return '/moderador';
-  return '/perfil';
-};
+import { session, normalizeRole, getDashboardPathForRole } from "../../services/session.js";
 
 export default function Navbar() {
   const { isOpen, open, close } = useDisclosure(false);
@@ -34,6 +26,9 @@ export default function Navbar() {
     close();
     navigate('/');
   };
+
+  const role = normalizeRole(currentUser?.role || currentUser?.rol);
+  const panelPath = getDashboardPathForRole(role);
 
   return (
     <>
@@ -73,13 +68,18 @@ export default function Navbar() {
           {currentUser ? (
             <div className="hidden items-center gap-2 xl:flex">
               <Link
-                to={getDashboardRoute(currentUser.role || currentUser.rol)}
-                className="flex max-w-[220px] items-center gap-2 rounded-xl border border-borderc bg-slate-50 px-3.5 py-2 text-xs font-semibold text-ink transition-all hover:border-brand hover:text-brand"
+                to={panelPath}
+                className="flex max-w-[240px] items-center gap-2 rounded-xl border border-borderc bg-slate-50 px-3.5 py-2 text-xs font-semibold text-ink transition-all hover:border-brand hover:text-brand"
               >
-                <span className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[10px] font-bold">
+                <span className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[10px] font-bold shrink-0">
                   {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                 </span>
                 <span className="truncate">{currentUser.name || 'Mi Cuenta'}</span>
+                {role && role !== 'CLIENTE' && (
+                  <span className="ml-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-accent/20 text-amber-900 border border-amber-300">
+                    {role}
+                  </span>
+                )}
               </Link>
 
               <button
@@ -130,4 +130,3 @@ export default function Navbar() {
     </>
   );
 }
-   

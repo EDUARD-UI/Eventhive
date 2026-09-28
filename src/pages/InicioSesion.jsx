@@ -6,7 +6,7 @@ import InputField from '../components/common/InputField.jsx';
 import SocialAuthButton from '../components/common/SocialAuthButton.jsx';
 import useForm from '../hooks/useForm.js';
 import { authService } from '../services/authService.js';
-import { session, normalizeRole } from '../services/session.js';
+import { session, normalizeRole, getDashboardPathForRole } from '../services/session.js';
 
 const validateLogin = (values) => {
   const errors = {};
@@ -47,17 +47,13 @@ export default function InicioSesion() {
   );
 
   const onSubmit = async (formValues) => {
-    // authService.login ya guarda accessToken/refreshToken/usuario en
-    // sesión (ver src/services/session.js). Si el backend responde con
-    // success:false o un status de error, lanza un Error que useForm
-    // captura solo y muestra en errorBanner.
     const data = await authService.login(formValues.email, formValues.password);
 
     await Swal.fire({
       icon: 'success',
       title: '¡Bienvenido de nuevo!',
       text: 'Has iniciado sesión correctamente.',
-      timer: 1500,
+      timer: 1200,
       showConfirmButton: false,
     });
 
@@ -71,15 +67,8 @@ export default function InicioSesion() {
       user?.rol
     );
 
-    if (userRole === 'ADMINISTRADOR') {
-      navigate('/admin');
-    } else if (userRole === 'REPRESENTANTE' || userRole === 'OPERADOR') {
-      navigate('/organizacion');
-    } else if (userRole === 'MODERADOR') {
-      navigate('/moderador');
-    } else {
-      navigate('/perfil');
-    }
+    const destination = getDashboardPathForRole(userRole);
+    navigate(destination, { replace: true });
   };
 
   const handleGoogleLogin = () => {
