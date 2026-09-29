@@ -89,7 +89,7 @@ export default function AdminModeradoresView({
               Tiempo Promedio
             </span>
             <span className="text-2xl font-black text-indigo-800 mt-1 block">
-              {moderationStats.tiempoPromedioRevision || '2.4h'}
+              {moderationStats.tiempoPromedioRevision || '0h'}
             </span>
             <span className="text-[10px] text-indigo-600">SLA &lt; 4 horas</span>
           </div>
@@ -99,7 +99,7 @@ export default function AdminModeradoresView({
               Carga Promedio
             </span>
             <span className="text-2xl font-black text-slate-800 mt-1 block">
-              {moderationStats.cargaPorModerador || '3.2'}
+              {moderationStats.cargaPorModerador || '0'}
             </span>
             <span className="text-[10px] text-slate-400">Casos activos/agente</span>
           </div>
@@ -181,7 +181,7 @@ export default function AdminModeradoresView({
                     Efectividad
                   </span>
                   <span className="font-extrabold text-emerald-700">
-                    {mod.efectividad || '96%'}
+                    {mod.efectividad || '—'}
                   </span>
                 </div>
               </div>

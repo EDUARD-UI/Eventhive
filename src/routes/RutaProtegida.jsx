@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { session, normalizeRole, getDashboardPathForRole } from '../services/session.js';
+import { session, normalizeRole, getDashboardPathForRole, isTokenExpired } from '../services/session.js';
 import { authService } from '../services/authService.js';
+import { intentarRefrescarToken } from '../services/httpClient.js';
 
 /**
  * Envuelve rutas que requieren sesión iniciada y, opcionalmente,
@@ -15,7 +16,7 @@ export default function RutaProtegida({ children, rolesPermitidos }) {
   const token = session.getToken();
   const [currentUser, setCurrentUser] = useState(() => session.getUser());
   const [verificando, setVerificando] = useState(() => {
-    return Boolean(token && (!currentUser || !currentUser.role));
+    return Boolean(token && (isTokenExpired(token) || !currentUser || !currentUser.role));
   });
 
   useEffect(() => {
@@ -25,6 +26,28 @@ export default function RutaProtegida({ children, rolesPermitidos }) {
       if (!token) {
         if (activo) setVerificando(false);
         return;
+      }
+
+      // 1. Si el token está vencido, intentar refrescarlo antes de renderizar vistas protegidas
+      if (isTokenExpired(token) && !session.isDevSession()) {
+        try {
+          const renovado = await intentarRefrescarToken();
+          if (!renovado) {
+            session.clear();
+            if (activo) {
+              setCurrentUser(null);
+              setVerificando(false);
+            }
+            return;
+          }
+        } catch {
+          session.clear();
+          if (activo) {
+            setCurrentUser(null);
+            setVerificando(false);
+          }
+          return;
+        }
       }
 
       if (!currentUser?.role && !session.isDevSession()) {

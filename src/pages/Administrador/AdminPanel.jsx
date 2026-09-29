@@ -41,34 +41,55 @@ import ModalAsignarModerador from '../../components/componentsAdmin/ModalAsignar
 
 // Servicios de Datos
 import adminService from '../../features/admin/services/adminService.js';
-import {
-  AGGREGATED_METRICS,
-  COMMERCIAL_METRICS,
-  MODERATION_STATS,
-  INITIAL_ORGANIZACIONES,
-  INITIAL_EVENTS,
-  INITIAL_USERS,
-  INITIAL_MODERADORES,
-  INITIAL_CATEGORIES,
-  INITIAL_PROMOTIONS,
-  ADMIN_AUDIT_LOG,
-} from '../../features/admin/data/mockAdminData.js';
 
 export default function AdminPanel() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'resumen';
 
-  // Estados de datos principales
-  const [metrics, setMetrics] = useState(AGGREGATED_METRICS);
-  const [commercialMetrics, setCommercialMetrics] = useState(COMMERCIAL_METRICS);
-  const [moderationStats, setModerationStats] = useState(MODERATION_STATS);
-  const [organizaciones, setOrganizaciones] = useState(INITIAL_ORGANIZACIONES);
-  const [eventos, setEventos] = useState(INITIAL_EVENTS);
-  const [usuarios, setUsuarios] = useState(INITIAL_USERS);
-  const [moderadores, setModeradores] = useState(INITIAL_MODERADORES);
-  const [categorias, setCategorias] = useState(INITIAL_CATEGORIES);
-  const [promociones, setPromociones] = useState(INITIAL_PROMOTIONS);
-  const [auditLogs, setAuditLogs] = useState(ADMIN_AUDIT_LOG);
+  // Estados de datos principales reales (cero datos falsos/estáticos)
+  const [metrics, setMetrics] = useState({
+    totalUsuarios: 0,
+    totalOrganizaciones: 0,
+    solicitudesVerificacionPendientes: 0,
+    organizacionesAprobadas: 0,
+    organizacionesPendientes: 0,
+    organizacionesSuspendidas: 0,
+    totalEventos: 0,
+    eventosPublicados: 0,
+    eventosPendientesRevision: 0,
+    eventosEnCorreccion: 0,
+    eventosFinalizados: 0,
+    eventosCancelados: 0,
+    eventosSuspendidos: 0,
+    ticketsVendidos: 0,
+    ventasTotales: 0,
+    totalModeradores: 0,
+    totalCategorias: 0,
+    totalPromociones: 0,
+  });
+  const [commercialMetrics, setCommercialMetrics] = useState({
+    ventasTotales: 0,
+    ticketsVendidos: 0,
+    ingresosPlataforma: 0,
+    eventosTop: [],
+    organizacionesTop: [],
+  });
+  const [moderationStats, setModerationStats] = useState({
+    revisados: 0,
+    aprobados: 0,
+    rechazados: 0,
+    correcciones: 0,
+    tiempoPromedio: '0 min',
+  });
+  const [organizaciones, setOrganizaciones] = useState([]);
+  const [solicitudesVerificacion, setSolicitudesVerificacion] = useState([]);
+  const [solicitudesLoading, setSolicitudesLoading] = useState(false);
+  const [eventos, setEventos] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
+  const [moderadores, setModeradores] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [promociones, setPromociones] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
 
   // Estados de carga y feedback
   const [loading, setLoading] = useState(false);
@@ -95,16 +116,27 @@ export default function AdminPanel() {
     async function loadData() {
       try {
         setLoading(true);
-        const [dashRes, orgsRes, eventsRes, modsRes, catsRes, promosRes, logsRes] =
-          await Promise.allSettled([
-            adminService.getDashboardMetrics(),
-            adminService.getOrganizaciones(),
-            adminService.getEventos(),
-            adminService.getModeradores(),
-            adminService.getCategorias(),
-            adminService.getPromociones(),
-            adminService.getHistorialAuditoria(),
-          ]);
+        const [
+          dashRes,
+          orgsRes,
+          verifRes,
+          eventsRes,
+          usersRes,
+          modsRes,
+          catsRes,
+          promosRes,
+          logsRes,
+        ] = await Promise.allSettled([
+          adminService.getDashboardMetrics(),
+          adminService.getOrganizaciones(),
+          adminService.getSolicitudesVerificacion(),
+          adminService.getEventos(),
+          adminService.getUsuarios(),
+          adminService.getModeradores(),
+          adminService.getCategorias(),
+          adminService.getPromociones(),
+          adminService.getHistorialAuditoria(),
+        ]);
 
         if (!isMounted) return;
 
@@ -117,8 +149,14 @@ export default function AdminPanel() {
         if (orgsRes.status === 'fulfilled' && orgsRes.value?.data) {
           setOrganizaciones(orgsRes.value.data);
         }
+        if (verifRes.status === 'fulfilled' && verifRes.value?.data) {
+          setSolicitudesVerificacion(verifRes.value.data);
+        }
         if (eventsRes.status === 'fulfilled' && eventsRes.value?.data) {
           setEventos(eventsRes.value.data);
+        }
+        if (usersRes.status === 'fulfilled' && usersRes.value?.data) {
+          setUsuarios(usersRes.value.data);
         }
         if (modsRes.status === 'fulfilled' && modsRes.value?.data) {
           setModeradores(modsRes.value.data);
@@ -184,12 +222,68 @@ export default function AdminPanel() {
       { id: 'historial', label: 'Historial & Auditoría', icon: History },
       {
         id: 'solicitudes',
-        label: 'Admisión (Moderación)',
+        label: 'Verificación RUT',
         icon: ClipboardList,
+        count: solicitudesVerificacion.length > 0 ? solicitudesVerificacion.length : null,
       },
     ],
-    [orgsPendientesCount, eventosPendientesCount]
+    [orgsPendientesCount, eventosPendientesCount, solicitudesVerificacion.length]
   );
+
+  // ==================== ACCIONES: VERIFICACIÓN DE ORGANIZACIONES (RUT) ====================
+  const handleAprobarSolicitud = async (solicitudId) => {
+    try {
+      setSolicitudesLoading(true);
+      await adminService.aprobarSolicitudVerificacion(solicitudId);
+      showToast('Organización verificada exitosamente.', 'success');
+      const [verifRes, orgsRes, dashRes] = await Promise.allSettled([
+        adminService.getSolicitudesVerificacion(),
+        adminService.getOrganizaciones(),
+        adminService.getDashboardMetrics(),
+      ]);
+      if (verifRes.status === 'fulfilled' && verifRes.value?.data) {
+        setSolicitudesVerificacion(verifRes.value.data);
+      }
+      if (orgsRes.status === 'fulfilled' && orgsRes.value?.data) {
+        setOrganizaciones(orgsRes.value.data);
+      }
+      if (dashRes.status === 'fulfilled' && dashRes.value?.metrics) {
+        setMetrics(dashRes.value.metrics);
+      }
+    } catch (err) {
+      showToast(err.message || 'Error al aprobar la verificación.', 'error');
+    } finally {
+      setSolicitudesLoading(false);
+    }
+  };
+
+  const handleRechazarSolicitud = async (solicitudId, motivo) => {
+    try {
+      setSolicitudesLoading(true);
+      await adminService.rechazarSolicitudVerificacion(solicitudId, motivo);
+      showToast('Solicitud de verificación rechazada.', 'info');
+      const verifRes = await adminService.getSolicitudesVerificacion();
+      if (verifRes?.data) setSolicitudesVerificacion(verifRes.data);
+    } catch (err) {
+      showToast(err.message || 'Error al rechazar solicitud.', 'error');
+    } finally {
+      setSolicitudesLoading(false);
+    }
+  };
+
+  const handleSolicitarCorreccionSolicitud = async (solicitudId, motivo) => {
+    try {
+      setSolicitudesLoading(true);
+      await adminService.solicitarCorreccionVerificacion(solicitudId, motivo);
+      showToast('Se solicitaron correcciones a la organización.', 'info');
+      const verifRes = await adminService.getSolicitudesVerificacion();
+      if (verifRes?.data) setSolicitudesVerificacion(verifRes.data);
+    } catch (err) {
+      showToast(err.message || 'Error al solicitar corrección.', 'error');
+    } finally {
+      setSolicitudesLoading(false);
+    }
+  };
 
   // ==================== ACCIONES: ORGANIZACIONES ====================
   const handleVerPerfilOrg = (org) => {
@@ -618,9 +712,12 @@ export default function AdminPanel() {
       case 'solicitudes':
         return (
           <AdminSolicitudesView
-            organizaciones={organizaciones}
-            onNavigateTab={handleSelectTab}
-            onVerPerfil={handleVerPerfilOrg}
+            solicitudes={solicitudesVerificacion}
+            loading={solicitudesLoading}
+            onAprobar={handleAprobarSolicitud}
+            onRechazar={handleRechazarSolicitud}
+            onSolicitarCorreccion={handleSolicitarCorreccionSolicitud}
+            onVerDetalle={handleVerPerfilOrg}
           />
         );
 

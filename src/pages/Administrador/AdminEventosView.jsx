@@ -144,7 +144,7 @@ export default function AdminEventosView({
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
                   <th className="py-3.5 px-4">Evento / Título</th>
                   <th className="py-3.5 px-4">Organización</th>
-                  <th className="py-3.5 px-4">PULEP</th>
+                  <th className="py-3.5 px-4">ID Evento</th>
                   <th className="py-3.5 px-4">Fecha y Lugar</th>
                   <th className="py-3.5 px-4 text-center">Estado</th>
                   <th className="py-3.5 px-4 text-right">Acciones</th>
@@ -157,13 +157,15 @@ export default function AdminEventosView({
                       <div className="font-bold text-slate-900 hover:text-primary transition-colors cursor-pointer" onClick={() => onVerDetalle(ev)}>
                         {ev.titulo}
                       </div>
-                      <span className="text-[11px] text-slate-400">{ev.categoria}</span>
+                      <span className="text-[11px] text-slate-400">
+                        {ev.categoria?.nombre || ev.categoria || 'General'}
+                      </span>
                     </td>
                     <td className="py-3.5 px-4 text-slate-700 font-medium">
-                      {ev.organizacion}
+                      {ev.organizacion?.nombre || ev.organizacion || 'Organización'}
                     </td>
                     <td className="py-3.5 px-4 font-mono text-[11px] text-slate-600">
-                      {ev.pulep || 'N/A'}
+                      #{ev.id}
                     </td>
                     <td className="py-3.5 px-4 text-slate-600">
                       <div>{ev.fecha}</div>

@@ -99,38 +99,30 @@ export default function AdminResumenView({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <StatCard
             title="Total Usuarios"
-            value={metrics.totalUsuarios?.toLocaleString('es-CO') || '1,420'}
-            subtitle="Compradores y creadores activos"
+            value={(metrics?.totalUsuarios || 0).toLocaleString('es-CO')}
+            subtitle="Compradores y creadores registrados"
             icon={Users}
-            trend="up"
-            trendValue="+14% este mes"
             color="primary"
           />
           <StatCard
             title="Total Organizaciones"
-            value={metrics.totalOrganizaciones || '18'}
-            subtitle={`${metrics.organizacionesAprobadas || 14} activas • ${metrics.organizacionesPendientes || 3} pendientes`}
+            value={metrics?.totalOrganizaciones || 0}
+            subtitle={`${metrics?.organizacionesAprobadas || 0} verificadas • ${metrics?.solicitudesVerificacionPendientes || 0} pendientes`}
             icon={Building2}
-            trend="up"
-            trendValue="+2 nuevas"
             color="emerald"
           />
           <StatCard
             title="Tickets Vendidos"
-            value={metrics.ticketsVendidos?.toLocaleString('es-CO') || '1,960'}
+            value={(metrics?.ticketsVendidos || 0).toLocaleString('es-CO')}
             subtitle="Entradas emitidas con QR"
             icon={Ticket}
-            trend="up"
-            trendValue="+18.5%"
             color="violet"
           />
           <StatCard
             title="Ventas Totales Brutas"
-            value={formatCOP(metrics.ventasTotales || 485000000)}
-            subtitle="Recaudo total simulado"
+            value={formatCOP(metrics?.ventasTotales || 0)}
+            subtitle="Recaudo registrado"
             icon={DollarSign}
-            trend="up"
-            trendValue="+22.4%"
             color="amber"
           />
         </div>
@@ -156,19 +148,19 @@ export default function AdminResumenView({
               <div className="p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-100">
                 <div className="flex items-center justify-center gap-1 text-emerald-700 text-xs font-semibold mb-0.5">
                   <CheckCircle2 className="w-3 h-3" strokeWidth={2} />
-                  <span>Aprobadas</span>
+                  <span>Verificadas</span>
                 </div>
                 <div className="text-lg font-black text-emerald-800">
-                  {metrics.organizacionesAprobadas || 14}
+                  {metrics?.organizacionesAprobadas || 0}
                 </div>
               </div>
               <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-100">
                 <div className="flex items-center justify-center gap-1 text-amber-700 text-xs font-semibold mb-0.5">
                   <Clock className="w-3 h-3" strokeWidth={2} />
-                  <span>Pendientes</span>
+                  <span>Pendientes RUT</span>
                 </div>
                 <div className="text-lg font-black text-amber-800">
-                  {metrics.organizacionesPendientes || 3}
+                  {metrics?.solicitudesVerificacionPendientes || 0}
                 </div>
               </div>
               <div className="p-2.5 rounded-xl bg-rose-50/60 border border-rose-100">
@@ -177,7 +169,7 @@ export default function AdminResumenView({
                   <span>Suspendidas</span>
                 </div>
                 <div className="text-lg font-black text-rose-800">
-                  {metrics.organizacionesSuspendidas || 1}
+                  {metrics?.organizacionesSuspendidas || 0}
                 </div>
               </div>
             </div>
@@ -202,37 +194,37 @@ export default function AdminResumenView({
               <div className="p-2 rounded-xl bg-emerald-50/60 border border-emerald-100">
                 <span className="text-[10px] font-bold text-emerald-700 block">Publicados</span>
                 <span className="text-base font-black text-emerald-800">
-                  {metrics.eventosPublicados || 8}
+                  {metrics?.eventosPublicados || 0}
                 </span>
               </div>
               <div className="p-2 rounded-xl bg-amber-50/60 border border-amber-100">
                 <span className="text-[10px] font-bold text-amber-700 block">En Revisión</span>
                 <span className="text-base font-black text-amber-800">
-                  {metrics.eventosPendientesRevision || 3}
+                  {metrics?.eventosPendientesRevision || 0}
                 </span>
               </div>
               <div className="p-2 rounded-xl bg-blue-50/60 border border-blue-100">
                 <span className="text-[10px] font-bold text-blue-700 block">Corrección</span>
                 <span className="text-base font-black text-blue-800">
-                  {metrics.eventosEnCorreccion || 1}
+                  {metrics?.eventosEnCorreccion || 0}
                 </span>
               </div>
               <div className="p-2 rounded-xl bg-slate-50 border border-slate-200">
                 <span className="text-[10px] font-bold text-slate-600 block">Finalizados</span>
                 <span className="text-base font-black text-slate-800">
-                  {metrics.eventosFinalizados || 2}
+                  {metrics?.eventosFinalizados || 0}
                 </span>
               </div>
               <div className="p-2 rounded-xl bg-slate-50 border border-slate-200">
                 <span className="text-[10px] font-bold text-slate-600 block">Cancelados</span>
                 <span className="text-base font-black text-slate-800">
-                  {metrics.eventosCancelados || 1}
+                  {metrics?.eventosCancelados || 0}
                 </span>
               </div>
               <div className="p-2 rounded-xl bg-rose-50/60 border border-rose-100">
                 <span className="text-[10px] font-bold text-rose-700 block">Suspendidos</span>
                 <span className="text-base font-black text-rose-800">
-                  {metrics.eventosSuspendidos || 1}
+                  {metrics?.eventosSuspendidos || 0}
                 </span>
               </div>
             </div>

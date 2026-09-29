@@ -1,529 +1,347 @@
-
-import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import StandardLayout from '../../layouts/StandardLayout.jsx';
-import StatCard from '../../components/Shared/StatCard.jsx';
-import Badge from '../../components/Shared/Badge.jsx';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import ModeradorLayout from '../../layouts/ModeradorLayout.jsx';
+import ModeradorResumenView from './ModeradorResumenView.jsx';
+import ModeradorPendientesView from './ModeradorPendientesView.jsx';
+import ModeradorHistorialView from './ModeradorHistorialView.jsx';
+import ModeradorMotivosView from './ModeradorMotivosView.jsx';
+import ModalDetalleEventoModeracion from './ModalDetalleEventoModeracion.jsx';
+import ModalAccionModeracion from './ModalAccionModeracion.jsx';
+import moderationService from '../../services/moderationService.js';
 import {
-  FiClipboard, FiList, FiCheck, FiEdit3, FiX, FiTrendingUp,
-  FiBriefcase, FiArrowLeft, FiClock, FiSearch, FiCheckCircle,
-  FiAlertTriangle, FiEye, FiBell, FiCalendar, FiMapPin, FiUsers,
-  FiFileText, FiShield,
+  FiTrendingUp,
+  FiClipboard,
+  FiLayers,
+  FiList,
+  FiCheckCircle,
+  FiAlertCircle,
+  FiX,
 } from 'react-icons/fi';
 
-const INITIAL_PENDIENTES = [
-  {
-    id: 1,
-    titulo: 'Concierto de Rock en la Muralla',
-    organizador: 'Producciones XYZ',
-    nit: '900.123.456-7',
-    fecha: '20 Sep 2026',
-    hora: '8:00 PM',
-    lugar: 'Baluarte de San Ignacio, Cartagena',
-    horas: 'Enviado hace 2h',
-    categoria: 'Música',
-    foto: 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=800&q=80',
-    descripcion: 'Montaje en tarima principal frente al mar. Se adjuntan permisos de la Alcaldía y código PULEP.',
-    pulep: 'PUL-2026-8921',
-    aforo: 800,
-    localidades: [
-      { nombre: 'General', precio: 85000, capacidad: 600 },
-      { nombre: 'VIP Frente a Tarima', precio: 160000, capacidad: 200 },
-    ],
-    validaciones: [
-      { label: 'Aforo y Localidades Coincidentes', passed: true },
-      { label: 'Imagen en Alta Resolución', passed: true },
-      { label: 'Permiso Municipal / PULEP Adjunto', passed: true },
-      { label: 'Información de Lugar Verificada', passed: true },
-    ],
-  },
-  {
-    id: 2,
-    titulo: 'Feria Gastronómica del Caribe',
-    organizador: 'Sabores Cartagena SAS',
-    nit: '900.654.321-1',
-    fecha: '25 Sep 2026',
-    hora: '12:00 PM',
-    lugar: 'Plaza de la Aduana, Cartagena',
-    horas: 'Enviado hace 5h',
-    categoria: 'Gastronomía',
-    foto: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-    descripcion: 'Feria con 30 stands gastronómicos de comida típica caribeña.',
-    pulep: 'PUL-2026-4412',
-    aforo: 1200,
-    localidades: [
-      { nombre: 'Entrada General', precio: 35000, capacidad: 1200 },
-    ],
-    validaciones: [
-      { label: 'Aforo y Localidades Coincidentes', passed: true },
-      { label: 'Imagen en Alta Resolución', passed: true },
-      { label: 'Permiso Sanitario / Bromatología', passed: true },
-      { label: 'Información de Lugar Verificada', passed: true },
-    ],
-  },
-  {
-    id: 3,
-    titulo: 'Expo Arte Urbano Getsemaní',
-    organizador: 'Colectivo Mural',
-    nit: '800.771.229-3',
-    fecha: '02 Oct 2026',
-    hora: '4:00 PM',
-    lugar: 'Callejón Angosto, Getsemaní',
-    horas: 'Enviado ayer',
-    categoria: 'Cultura',
-    foto: 'https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?auto=format&fit=crop&w=800&q=80',
-    descripcion: 'Recorrido guiado de arte urbano y exposición de pintura al aire libre.',
-    pulep: 'N/A (Entrada Libre)',
-    aforo: 450,
-    localidades: [
-      { nombre: 'Entrada Libre', precio: 0, capacidad: 450 },
-    ],
-    validaciones: [
-      { label: 'Aforo y Localidades Coincidentes', passed: true },
-      { label: 'Imagen en Alta Resolución', passed: true },
-      { label: 'Permiso de Espacio Público', passed: true },
-    ],
-  },
-];
-
-const secciones = [
-  { id: 'resumen', label: 'Resumen', icon: FiTrendingUp, count: null },
-  { id: 'eventos', label: 'Eventos Pendientes', icon: FiClipboard, count: '12' },
-  { id: 'organizaciones', label: 'Organizaciones', icon: FiBriefcase, count: '2' },
-  { id: 'motivos', label: 'Motivos de Rechazo', icon: FiList, count: '6' },
-];
-
-
-
 export default function ModeradorPanel() {
-  const [seccionActiva, setSeccionActiva] = useState('eventos');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [pendientes, setPendientes] = useState(INITIAL_PENDIENTES);
-  const [eventoModal, setEventoModal] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'resumen';
 
-  const seccion = secciones.find((s) => s.id === seccionActiva);
+  // Estados de datos reales
+  const [stats, setStats] = useState({
+    revisados: 0,
+    aprobados: 0,
+    rechazados: 0,
+    correccionesSolicitadas: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(false);
 
-  const handleAprobar = (id) => {
-    setPendientes((prev) => prev.filter((e) => e.id !== id));
-    if (eventoModal?.id === id) setEventoModal(null);
+  // Eventos pendientes paginados
+  const [pendientes, setPendientes] = useState([]);
+  const [pagedData, setPagedData] = useState(null);
+  const [pendientesLoading, setPendientesLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+
+  // Motivos reales del backend (/api/enums/motivos-rechazos)
+  const [motivos, setMotivos] = useState([]);
+  const [motivosLoading, setMotivosLoading] = useState(false);
+
+  // Feedback y Modales
+  const [toast, setToast] = useState(null); // { message, type: 'success' | 'error' }
+  const [eventoModalDetalle, setEventoModalDetalle] = useState(null);
+  const [accionModal, setAccionModal] = useState(null); // { evento, tipo: 'correccion'|'rechazo' }
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast(null);
+    }, 4500);
+  }, []);
+
+  // 1. Cargar Estadísticas reales del Moderador
+  const fetchEstadisticas = useCallback(async () => {
+    try {
+      setStatsLoading(true);
+      const res = await moderationService.getEstadisticas();
+      if (res) {
+        setStats(res);
+      }
+    } catch (err) {
+      console.error('Error cargando estadísticas de moderación:', err);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
+
+  // 2. Cargar Eventos Pendientes de Moderación
+  const fetchPendientes = useCallback(async (targetPage = 0, targetSize = 10) => {
+    try {
+      setPendientesLoading(true);
+      const res = await moderationService.getEventosPendientes({
+        page: targetPage,
+        size: targetSize,
+      });
+
+      const content = res?.content || (Array.isArray(res) ? res : []);
+      setPendientes(content);
+      setPagedData(res);
+    } catch (err) {
+      console.error('Error cargando eventos pendientes:', err);
+      setPendientes([]);
+      setPagedData(null);
+    } finally {
+      setPendientesLoading(false);
+    }
+  }, []);
+
+  // 3. Cargar Motivos Oficiales de Rechazo / Corrección
+  const fetchMotivos = useCallback(async () => {
+    try {
+      setMotivosLoading(true);
+      const res = await moderationService.getMotivosRechazo();
+      if (Array.isArray(res)) {
+        setMotivos(res);
+      }
+    } catch (err) {
+      console.error('Error cargando motivos de rechazo:', err);
+      // Si el endpoint aún no retorna datos, dejar vacío y no usar datos falsos
+      setMotivos([]);
+    } finally {
+      setMotivosLoading(false);
+    }
+  }, []);
+
+  // Efecto inicial
+  useEffect(() => {
+    fetchEstadisticas();
+    fetchMotivos();
+  }, [fetchEstadisticas, fetchMotivos]);
+
+  // Efecto de paginación de pendientes
+  useEffect(() => {
+    fetchPendientes(page, size);
+  }, [page, size, fetchPendientes]);
+
+  // Acciones de Moderación
+  const handleAprobarEvento = async (eventoId) => {
+    try {
+      setActionLoading(true);
+      await moderationService.aprobarEvento(eventoId);
+      showToast('¡Evento aprobado y publicado exitosamente en la cartelera!', 'success');
+      setEventoModalDetalle(null);
+      // Refrescar datos
+      fetchPendientes(page, size);
+      fetchEstadisticas();
+    } catch (err) {
+      showToast(err.message || 'Error al aprobar el evento.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleRechazar = (id) => {
-    setPendientes((prev) => prev.filter((e) => e.id !== id));
-    if (eventoModal?.id === id) setEventoModal(null);
+  const handleSolicitarCorreccion = async (eventoId, { observacion, motivo }) => {
+    try {
+      setActionLoading(true);
+      await moderationService.solicitarCorreccion(eventoId, observacion, motivo);
+      showToast('Se solicitaron las correcciones a la organización.', 'success');
+      setEventoModalDetalle(null);
+      setAccionModal(null);
+      // Refrescar datos
+      fetchPendientes(page, size);
+      fetchEstadisticas();
+    } catch (err) {
+      showToast(err.message || 'Error al solicitar corrección del evento.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
   };
+
+  const handleRechazarEvento = async (eventoId, { observacion, motivo }) => {
+    try {
+      setActionLoading(true);
+      await moderationService.rechazarEvento(eventoId, observacion, motivo);
+      showToast('Evento rechazado conforme a las políticas comunitarias.', 'success');
+      setEventoModalDetalle(null);
+      setAccionModal(null);
+      // Refrescar datos
+      fetchPendientes(page, size);
+      fetchEstadisticas();
+    } catch (err) {
+      showToast(err.message || 'Error al rechazar el evento.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const totalPendientesCount = pagedData?.totalElements ?? pendientes.length;
+
+  // Menú del Sidebar del Moderador con badge dinámico
+  const menuItems = useMemo(
+    () => [
+      { id: 'resumen', label: 'Resumen', icon: FiTrendingUp, count: null },
+      {
+        id: 'eventos',
+        label: 'Eventos Pendientes',
+        icon: FiClipboard,
+        count: totalPendientesCount > 0 ? String(totalPendientesCount) : null,
+      },
+      { id: 'historial', label: 'Explorar Eventos', icon: FiLayers, count: null },
+      {
+        id: 'motivos',
+        label: 'Motivos de Rechazo',
+        icon: FiList,
+        count: motivos.length > 0 ? String(motivos.length) : null,
+      },
+    ],
+    [totalPendientesCount, motivos.length]
+  );
+
+  const titlesByTab = {
+    resumen: {
+      title: 'Panel del Moderador',
+      subtitle: 'Resumen operativo y cola prioritaria de revisiones',
+    },
+    eventos: {
+      title: 'Eventos Pendientes',
+      subtitle: 'Bandeja de solicitudes de publicación que requieren moderación',
+    },
+    historial: {
+      title: 'Explorar Eventos del Sistema',
+      subtitle: 'Búsqueda por estado, historial de moderación y auditoría',
+    },
+    motivos: {
+      title: 'Catálogo de Motivos Oficiales',
+      subtitle: 'Criterios normativos provistos por el backend para correcciones y rechazos',
+    },
+  };
+
+  const activeHeaderInfo = titlesByTab[currentTab] || titlesByTab.resumen;
 
   return (
-    <StandardLayout
-      role="Moderador"
-      menuItems={secciones}
-      activeItem={seccionActiva}
-      onSelect={setSeccionActiva}
-      headerProps={{
-        title: seccion.label,
-        badgeText: 'Módulo de Moderación',
-        showSearch: true,
-        searchTerm: searchTerm,
-        onSearchChange: setSearchTerm,
-        searchPlaceholder: 'Buscar evento o motivo...',
-        userName: 'Moderador',
-        userInitials: 'MD',
-      }}
-      maxWidthClass="max-w-[1280px]"
+    <ModeradorLayout
+      menuItems={menuItems}
+      activeItem={currentTab}
+      onSelect={(tabId) => setSearchParams({ tab: tabId })}
+      title={activeHeaderInfo.title}
+      subtitle={activeHeaderInfo.subtitle}
+      badgeText="Módulo de Moderación"
     >
-      {/* Cuerpo de la vista */}
-      {seccionActiva === 'resumen' && (
-        <SeccionResumenModeracion
-          pendientes={pendientes}
-          onInspect={setEventoModal}
-          onAprobar={handleAprobar}
-          onRechazar={handleRechazar}
-        />
-      )}
-      {seccionActiva === 'eventos' && (
-        <SeccionPendientes
-          pendientes={pendientes}
-          searchTerm={searchTerm}
-          onInspect={setEventoModal}
-          onAprobar={handleAprobar}
-          onRechazar={handleRechazar}
-        />
-      )}
-      {seccionActiva === 'organizaciones' && <SeccionOrganizacionesPendientes />}
-      {seccionActiva === 'motivos' && <SeccionMotivos searchTerm={searchTerm} />}
-
-      {/* Modal de Inspección y Moderación */}
-      {eventoModal && (
-        <ModalModeracionEvento
-          evento={eventoModal}
-          onClose={() => setEventoModal(null)}
-          onAprobar={() => handleAprobar(eventoModal.id)}
-          onRechazar={() => handleRechazar(eventoModal.id)}
-        />
-      )}
-    </StandardLayout>
-  );
-}
-
-function SeccionResumenModeracion({ pendientes, onInspect, onAprobar, onRechazar }) {
-  const stats = [
-    { label: 'Eventos pendientes', value: `${pendientes.length}`, icon: FiClipboard, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Eventos aprobados', value: '184', icon: FiCheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'En corrección', value: '6', icon: FiAlertTriangle, color: 'text-brand', bg: 'bg-brand-light' },
-    { label: 'Tiempo prom. revisión', value: '18 min', icon: FiClock, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-  ];
-
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(({ label, value, icon, color, bg }) => (
-          <StatCard
-            key={label}
-            label={label}
-            value={value}
-            icon={icon}
-            iconBg={bg}
-            iconColor={color}
-          />
-        ))}
-      </div>
-
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="font-display font-semibold text-base text-ink">Bandeja de Eventos por Revisar</h3>
-            <p className="text-xs text-muted">Ordenados por antigüedad de envío</p>
-          </div>
-        </div>
-        <SeccionPendientes
-          pendientes={pendientes}
-          searchTerm=""
-          onInspect={onInspect}
-          onAprobar={onAprobar}
-          onRechazar={onRechazar}
-        />
-      </div>
-    </div>
-  );
-}
-
-function SeccionPendientes({ pendientes, searchTerm, onInspect, onAprobar, onRechazar }) {
-  const filtrados = useMemo(() => {
-    if (!searchTerm) return pendientes;
-    const term = searchTerm.toLowerCase();
-    return pendientes.filter(
-      (e) =>
-        e.titulo.toLowerCase().includes(term) ||
-        e.organizador.toLowerCase().includes(term) ||
-        e.categoria.toLowerCase().includes(term)
-    );
-  }, [pendientes, searchTerm]);
-
-  if (filtrados.length === 0) {
-    return (
-      <div className="bg-white border border-dashed border-slate-200 rounded-2xl p-10 text-center text-slate-500">
-        <FiCheckCircle className="mx-auto text-emerald-500 mb-2" size={32} />
-        <p className="font-semibold text-ink">¡Bandeja al día!</p>
-        <p className="text-xs text-muted mt-1">No hay eventos pendientes que coincidan con la búsqueda.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-0 max-w-4xl">
-      {filtrados.map((e, i) => (
-        <div key={e.id} className="flex gap-4">
-          {/* Línea de tiempo conectada */}
-          <div className="flex flex-col items-center">
-            <div className="w-4 h-4 rounded-full bg-brand ring-4 ring-brand-light mt-6 shrink-0 shadow-sm" />
-            {i < filtrados.length - 1 && <div className="w-0.5 flex-1 bg-slate-200 mt-2" />}
-          </div>
-
-          {/* Tarjeta de Evento con Imagen */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 mb-5 flex-1 shadow-sm hover:shadow-md transition-all">
-            <div className="flex flex-col sm:flex-row gap-4 items-start">
-              {/* Imagen del Evento */}
-              <div className="relative w-full sm:w-44 aspect-[16/10] sm:aspect-auto sm:h-32 rounded-xl overflow-hidden bg-slate-100 shrink-0">
-                <img src={e.foto} alt={e.titulo} className="w-full h-full object-cover" />
-                <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-brand font-bold text-[10px] px-2 py-0.5 rounded shadow-sm">
-                  {e.categoria}
-                </span>
-              </div>
-
-              {/* Información General */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h4 className="font-display font-semibold text-base text-ink leading-snug">
-                      {e.titulo}
-                    </h4>
-                    <p className="text-xs text-muted mt-0.5 font-medium">
-                      {e.organizador} · NIT {e.nit}
-                    </p>
-                  </div>
-                  <Badge tone="amber">{e.horas}</Badge>
-                </div>
-
-                <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-                  <div className="flex items-center gap-1.5">
-                    <FiCalendar className="text-brand shrink-0" size={13} />
-                    <span>{e.fecha} · {e.hora}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <FiMapPin className="text-brand shrink-0" size={13} />
-                    <span>{e.lugar}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <FiUsers className="text-brand shrink-0" size={13} />
-                    <span>Aforo: {e.aforo} pers.</span>
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-600 mt-2 line-clamp-2 leading-relaxed">
-                  {e.descripcion}
-                </p>
-              </div>
-            </div>
-
-            {/* Acciones de Moderación */}
-            <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 mt-4">
-              <button
-                onClick={() => onAprobar(e.id)}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-2 px-5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-semibold shadow-sm transition-colors"
-              >
-                <FiCheck size={15} /> Aprobar
-              </button>
-              <button
-                onClick={() => onInspect(e)}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold transition-colors"
-              >
-                <FiEdit3 size={14} /> Solicitar Corrección
-              </button>
-              <button
-                onClick={() => onRechazar(e.id)}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition-colors"
-              >
-                <FiX size={14} /> Rechazar
-              </button>
-              <button
-                onClick={() => onInspect(e)}
-                title="Revisión detallada"
-                className="flex items-center justify-center px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
-              >
-                <FiEye size={15} className="mr-1" /> Revisar Detalle
-              </button>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ModalModeracionEvento({ evento, onClose, onAprobar, onRechazar }) {
-  const [motivoCorreccion, setMotivoCorreccion] = useState('');
-  const [mostrarCorreccion, setMostrarCorreccion] = useState(false);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 overflow-hidden">
-        {/* Banner de Imagen */}
-        <div className="relative h-60 w-full bg-slate-900">
-          <img src={evento.foto} alt={evento.titulo} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent" />
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-colors backdrop-blur-sm"
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 duration-200">
+          <div
+            className={`flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl text-xs font-semibold border ${
+              toast.type === 'error'
+                ? 'bg-rose-900 text-white border-rose-800 shadow-rose-950/20'
+                : 'bg-slate-900 text-white border-slate-800 shadow-slate-950/20'
+            }`}
           >
-            <FiX size={18} />
-          </button>
-          <div className="absolute bottom-4 left-6 right-6">
-            <span className="bg-brand text-white text-[11px] font-bold px-2.5 py-1 rounded-lg">
-              {evento.categoria}
-            </span>
-            <h2 className="text-2xl font-bold font-display text-white mt-1.5">{evento.titulo}</h2>
-            <p className="text-xs text-slate-300 mt-0.5">{evento.organizador} · {evento.lugar}</p>
-          </div>
-        </div>
-
-        {/* Contenido de Inspección */}
-        <div className="p-6 space-y-6">
-          {/* Validaciones Automáticas */}
-          <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-900 mb-2 flex items-center gap-1.5">
-              <FiCheckCircle className="text-emerald-600" size={15} />
-              Validaciones Automáticas del Sistema
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-              {evento.validaciones?.map((val, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs text-emerald-800 font-medium">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                  {val.label}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Localidades y Aforo */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted mb-2.5">
-              Configuración de Localidades (Aforo Total: {evento.aforo})
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {evento.localidades?.map((loc, i) => (
-                <div key={i} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 flex justify-between items-center">
-                  <div>
-                    <p className="font-semibold text-sm text-slate-800">{loc.nombre}</p>
-                    <p className="text-xs text-muted">Capacidad: {loc.capacidad} cupos</p>
-                  </div>
-                  <p className="font-bold text-sm text-brand font-display">
-                    {loc.precio === 0
-                      ? 'Gratis'
-                      : new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(loc.precio)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Formulario de Corrección */}
-          {mostrarCorreccion && (
-            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2">
-              <label className="text-xs font-bold text-amber-900 block">
-                Motivo / Observación de Corrección para la Organización:
-              </label>
-              <textarea
-                rows={3}
-                placeholder="Escribe aquí las observaciones específicas que debe corregir la organización..."
-                value={motivoCorreccion}
-                onChange={(e) => setMotivoCorreccion(e.target.value)}
-                className="w-full p-3 rounded-xl border border-amber-300 bg-white text-xs text-slate-800 outline-none focus:ring-2 focus:ring-amber-500/20"
-              />
-              <div className="flex justify-end gap-2 pt-1">
-                <button
-                  onClick={() => setMostrarCorreccion(false)}
-                  className="px-3 py-1.5 rounded-lg text-xs text-slate-600 bg-white border border-slate-200"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => {
-                    onRechazar();
-                    onClose();
-                  }}
-                  className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 transition-colors"
-                >
-                  Enviar a Corrección
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Footer de Acciones del Moderador */}
-          <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-            <span className="text-xs text-muted">PULEP: <strong className="text-slate-800">{evento.pulep}</strong></span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setMostrarCorreccion(true)}
-                className="py-2 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold transition-colors"
-              >
-                <FiEdit3 size={14} className="inline mr-1" /> Solicitar Corrección
-              </button>
-              <button
-                onClick={onRechazar}
-                className="py-2 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition-colors"
-              >
-                <FiX size={14} className="inline mr-1" /> Rechazar
-              </button>
-              <button
-                onClick={onAprobar}
-                className="py-2 px-5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-semibold shadow-sm transition-colors"
-              >
-                <FiCheck size={14} className="inline mr-1" /> Aprobar y Publicar
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SeccionOrganizacionesPendientes() {
-  const organizaciones = [
-    { nombre: 'Fundación Festival de Jazz', tipo: 'Cultural / Sin ánimo de lucro', ciudad: 'Cartagena', fecha: '21 Ago 2026', nit: '900.887.112-9' },
-    { nombre: 'Eventos del Sinú SAS', tipo: 'Empresa Privada', ciudad: 'Montería', fecha: '22 Ago 2026', nit: '901.442.883-1' },
-  ];
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
-      {organizaciones.map((org) => (
-        <div
-          key={org.nombre}
-          className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <p className="font-display font-semibold text-base text-ink">{org.nombre}</p>
-              <p className="text-xs text-muted mt-0.5">{org.tipo} · {org.ciudad}</p>
-            </div>
-            <Badge tone="amber">Pendiente</Badge>
-          </div>
-          <p className="text-xs text-slate-500 mb-4">NIT: {org.nit} · Solicitud: {org.fecha}</p>
-          <div className="flex gap-2 pt-2 border-t border-slate-100">
-            <button className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-semibold shadow-sm transition-colors">
-              <FiCheck size={14} /> Aprobar Organización
-            </button>
-            <button className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-medium transition-colors">
-              <FiX size={14} /> Rechazar
+            {toast.type === 'error' ? (
+              <FiAlertCircle className="text-rose-400 shrink-0" size={17} />
+            ) : (
+              <FiCheckCircle className="text-emerald-400 shrink-0" size={17} />
+            )}
+            <span>{toast.message}</span>
+            <button
+              type="button"
+              onClick={() => setToast(null)}
+              className="ml-2 text-slate-400 hover:text-white"
+            >
+              <FiX size={15} />
             </button>
           </div>
         </div>
-      ))}
-    </div>
-  );
-}
+      )}
 
-function SeccionMotivos({ searchTerm }) {
-  const motivos = [
-    { titulo: 'Información incompleta del lugar', desc: 'Falta dirección exacta, aforo o referencia territorial en el mapa.' },
-    { titulo: 'Precio de localidad inconsistente', desc: 'Los precios de las localidades no coinciden con la suma total del aforo.' },
-    { titulo: 'Falta documentación o permisos', desc: 'No se adjuntó el código PULEP o permisos municipales obligatorios.' },
-    { titulo: 'Imagen o contenido no permitido', desc: 'La fotografía no cumple con las directrices de calidad o resolución.' },
-    { titulo: 'Categoría inadecuada', desc: 'La temática del evento no se corresponde con la categoría seleccionada.' },
-    { titulo: 'Incumplimiento de términos', desc: 'El contenido infringe las políticas comunitarias de EventHive.' },
-  ];
+      {/* Vistas según la pestaña activa */}
+      {currentTab === 'resumen' && (
+        <ModeradorResumenView
+          stats={stats}
+          statsLoading={statsLoading}
+          pendientes={pendientes}
+          pendientesLoading={pendientesLoading}
+          totalPendientes={totalPendientesCount}
+          onNavigateTab={(tab) => setSearchParams({ tab })}
+          onInspect={setEventoModalDetalle}
+          onAprobar={handleAprobarEvento}
+          onSolicitarCorreccion={(evento) =>
+            setAccionModal({ evento, tipo: 'correccion' })
+          }
+          onRechazar={(evento) => setAccionModal({ evento, tipo: 'rechazo' })}
+        />
+      )}
 
-  const filtrados = useMemo(() => {
-    if (!searchTerm) return motivos;
-    return motivos.filter(
-      (m) =>
-        m.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.desc.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm]);
+      {currentTab === 'eventos' && (
+        <ModeradorPendientesView
+          pendientes={pendientes}
+          pagedData={pagedData}
+          loading={pendientesLoading}
+          page={page}
+          size={size}
+          onPageChange={setPage}
+          onPageSizeChange={(newSize) => {
+            setSize(newSize);
+            setPage(0);
+          }}
+          onInspect={setEventoModalDetalle}
+          onAprobar={handleAprobarEvento}
+          onSolicitarCorreccion={(evento) =>
+            setAccionModal({ evento, tipo: 'correccion' })
+          }
+          onRechazar={(evento) => setAccionModal({ evento, tipo: 'rechazo' })}
+        />
+      )}
 
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-4xl">
-      {filtrados.map((m) => (
-        <div
-          key={m.titulo}
-          className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:border-brand/40 hover:bg-brand-light/10 transition-all flex flex-col justify-between"
-        >
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-brand" />
-              <p className="font-semibold text-sm text-ink">{m.titulo}</p>
-            </div>
-            <p className="text-xs text-muted leading-relaxed">{m.desc}</p>
-          </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end">
-            <span className="text-[11px] font-semibold text-brand hover:underline cursor-pointer">
-              Configurar motivo →
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
+      {currentTab === 'historial' && (
+        <ModeradorHistorialView
+          onInspect={setEventoModalDetalle}
+          onAprobar={handleAprobarEvento}
+          onSolicitarCorreccion={(evento) =>
+            setAccionModal({ evento, tipo: 'correccion' })
+          }
+          onRechazar={(evento) => setAccionModal({ evento, tipo: 'rechazo' })}
+        />
+      )}
+
+      {currentTab === 'motivos' && (
+        <ModeradorMotivosView motivos={motivos} loading={motivosLoading} />
+      )}
+
+      {/* Modal de Detalle e Inspección Exhaustiva */}
+      {eventoModalDetalle && (
+        <ModalDetalleEventoModeracion
+          evento={eventoModalDetalle}
+          motivos={motivos}
+          isOpen={Boolean(eventoModalDetalle)}
+          onClose={() => setEventoModalDetalle(null)}
+          onAprobar={handleAprobarEvento}
+          onSolicitarCorreccion={handleSolicitarCorreccion}
+          onRechazar={handleRechazarEvento}
+          actionLoading={actionLoading}
+        />
+      )}
+
+      {/* Modal Rápido de Corrección o Rechazo */}
+      {accionModal && (
+        <ModalAccionModeracion
+          evento={accionModal.evento}
+          tipo={accionModal.tipo}
+          motivos={motivos}
+          isOpen={Boolean(accionModal)}
+          onClose={() => setAccionModal(null)}
+          onSubmit={({ motivo, observacion }) => {
+            if (accionModal.tipo === 'correccion') {
+              handleSolicitarCorreccion(accionModal.evento.id, {
+                motivo,
+                observacion,
+              });
+            } else {
+              handleRechazarEvento(accionModal.evento.id, {
+                motivo,
+                observacion,
+              });
+            }
+          }}
+          loading={actionLoading}
+        />
+      )}
+    </ModeradorLayout>
   );
 }

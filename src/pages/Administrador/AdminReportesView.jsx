@@ -30,30 +30,29 @@ export default function AdminReportesView({
       maximumFractionDigits: 0,
     }).format(val || 0);
 
-  // Extraer valores con defaults robustos
-  const ventasBrutas = commercialMetrics.ventasPeriodo || 485000000;
-  const comisionPlataforma = commercialMetrics.ingresosPlataforma || 43650000;
-  const ingresoOrgs = commercialMetrics.ingresoOrganizaciones || 441350000;
-  const ticketsVendidos = commercialMetrics.ticketsVendidos || 1960;
-  const ticketPromedio = ticketsVendidos > 0 ? Math.round(ventasBrutas / ticketsVendidos) : 247000;
+  // Extraer valores reales sin datos ficticios
+  const ventasBrutas = commercialMetrics?.ventasPeriodo || commercialMetrics?.ventasTotales || 0;
+  const comisionPlataforma = commercialMetrics?.ingresosPlataforma || (ventasBrutas > 0 ? Math.round(ventasBrutas * 0.09) : 0);
+  const ingresoOrgs = commercialMetrics?.ingresoOrganizaciones || (ventasBrutas > 0 ? ventasBrutas - comisionPlataforma : 0);
+  const ticketsVendidos = commercialMetrics?.ticketsVendidos || 0;
+  const ticketPromedio = ticketsVendidos > 0 ? Math.round(ventasBrutas / ticketsVendidos) : 0;
 
-  // Top 5 Eventos con mayores ventas
-  const topEventos = commercialMetrics.topEventos || [
-    { id: '1', titulo: 'Festival Internacional de Música Sacra', organizacion: 'Fundación Cultural Heredia', ticketsVendidos: 450, totalVentas: 157500000 },
-    { id: '2', titulo: 'Sunset Electronic Beach Cartagena', organizacion: 'Caribe Producciones SAS', ticketsVendidos: 320, totalVentas: 96000000 },
-    { id: '3', titulo: 'Cumbre Gastronómica del Caribe 2026', organizacion: 'Asociación Gastronómica Heroica', ticketsVendidos: 280, totalVentas: 56000000 },
-    { id: '4', titulo: 'Concierto Bajo las Estrellas Getsemaní', organizacion: 'Live Beats Cartagena', ticketsVendidos: 210, totalVentas: 42000000 },
-    { id: '5', titulo: 'Congreso Iberoamericano de Literatura', organizacion: 'Corporación Letras Vivas', ticketsVendidos: 190, totalVentas: 38000000 },
-  ];
+  // Derivar de datos reales en plataforma
+  const topEventos = commercialMetrics?.topEventos || eventos.slice(0, 5).map((e) => ({
+    id: String(e.id),
+    titulo: e.titulo,
+    organizacion: e.organizacion?.nombre || e.organizacion || 'Organización',
+    ticketsVendidos: e.ticketsVendidos || 0,
+    totalVentas: e.totalVentas || 0,
+  }));
 
-  // Top 5 Organizaciones con mayores ventas
-  const topOrgs = commercialMetrics.topOrganizaciones || [
-    { id: '1', nombre: 'Fundación Cultural Heredia', nit: '901.234.567-8', totalVentas: 175000000, eventosActivos: 2 },
-    { id: '2', nombre: 'Caribe Producciones SAS', nit: '900.876.543-2', totalVentas: 120000000, eventosActivos: 3 },
-    { id: '3', nombre: 'Asociación Gastronómica Heroica', nit: '800.123.456-1', totalVentas: 68000000, eventosActivos: 1 },
-    { id: '4', nombre: 'Live Beats Cartagena', nit: '901.999.888-0', totalVentas: 45000000, eventosActivos: 2 },
-    { id: '5', nombre: 'Corporación Letras Vivas', nit: '890.333.222-5', totalVentas: 41000000, eventosActivos: 1 },
-  ];
+  const topOrgs = commercialMetrics?.topOrganizaciones || organizaciones.slice(0, 5).map((o) => ({
+    id: String(o.id),
+    nombre: o.nombre,
+    nit: o.nit,
+    totalVentas: o.totalVentas || 0,
+    eventosActivos: o.eventosCount || 0,
+  }));
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">

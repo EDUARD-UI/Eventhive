@@ -1,4 +1,4 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { FiMail, FiLock } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import AuthLayout from '../components/auth/AuthLayout.jsx';
@@ -27,6 +27,8 @@ const validateLogin = (values) => {
 
 export default function InicioSesion() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionExpired = searchParams.get('session_expired') === 'true';
 
   const {
     values,
@@ -86,7 +88,12 @@ export default function InicioSesion() {
       topPromptText="¿Aún no tienes cuenta?"
       topActionText="Regístrate gratis"
       topActionHref="/registro"
-      errorBanner={submitError}
+      errorBanner={
+        submitError ||
+        (sessionExpired
+          ? 'Tu sesión ha expirado o el token ya no es válido. Por favor, ingresa tus credenciales nuevamente.'
+          : null)
+      }
     >
       <div className="space-y-4">
         <SocialAuthButton

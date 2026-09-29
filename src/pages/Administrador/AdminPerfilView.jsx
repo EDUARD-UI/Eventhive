@@ -23,10 +23,10 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
   const sessionUser = session.getUser();
 
   // Estados del perfil
-  const [nombre, setNombre] = useState(sessionUser?.name || 'Andrés Camilo Vergara');
-  const [email] = useState(sessionUser?.email || 'admin@eventhive.co');
-  const [telefono, setTelefono] = useState('+57 300 123 4567');
-  const [cargo, setCargo] = useState('Director General de Operaciones y Cumplimiento');
+  const [nombre, setNombre] = useState(sessionUser?.name || 'Administrador');
+  const [email] = useState(sessionUser?.email || 'admin@eventhive.com');
+  const [telefono, setTelefono] = useState(sessionUser?.telefono || '');
+  const [cargo, setCargo] = useState('Administrador de Plataforma');
   const [ubicacion, setUbicacion] = useState('Cartagena de Indias, Colombia');
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
 

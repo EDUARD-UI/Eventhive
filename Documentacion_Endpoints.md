@@ -161,7 +161,7 @@ En caso de error, la respuesta suele devolver:
 #### `POST /api/auth/registro-organizador`
 - Recibe: body JSON `SolicitudVerificacionRequest` con `nombreCompleto`, `correoUsuario`, `password`, `razonSocial`, `nit` y `correoEmpresarial`.
 - Devuelve: `ApiResponse<Void>`
-- Descripción: crea la cuenta del representante y la organización en estado de pre-registro. El RUT se carga posteriormente mediante `/api/verificacion/{solicitudId}/subir-rut`.
+- Descripción: crea la cuenta del representante y la organización en pre-registro. El alta no exige el RUT; el representante puede completar este paso después. Al cargarlo mediante `/api/verificacion/{solicitudId}/subir-rut`, la solicitud queda disponible para revisión del Administrador.
 - Permisos: público.
 - Ejemplo de respuesta:
 
@@ -1197,6 +1197,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/categorias`
 - Recibe: paginación.
 - Devuelve: `ApiResponse<PagedResponse<CategoriaDTO>>`
+- `totalEventos` cuenta todos los eventos asociados a la categoría, sin filtrar por estado.
 - Ejemplo de respuesta:
 
 ```json
@@ -1208,7 +1209,8 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 1,
         "nombre": "Música",
-        "descripcion": "Eventos musicales"
+        "urlFoto": "https://.../musica.jpg",
+        "totalEventos": 45
       }
     ],
     "pageNumber": 0,
@@ -1221,7 +1223,7 @@ En caso de error, la respuesta suele devolver:
 
 #### `GET /api/categorias/nombres`
 - Recibe: sin parámetros.
-- Devuelve: `ApiResponse<List<CategoriaDTO>>`
+- Devuelve: `ApiResponse<List<CategoriaNombreDTO>>`
 - Ejemplo de respuesta:
 
 ```json
@@ -1245,15 +1247,15 @@ En caso de error, la respuesta suele devolver:
   "success": true,
   "mensaje": "Categorías destacadas",
   "data": [
-    { "id": 1, "nombre": "Música" },
-    { "id": 3, "nombre": "Arte" }
+    { "id": 1, "nombre": "Música", "urlFoto": "https://.../musica.jpg", "totalEventos": 45 },
+    { "id": 3, "nombre": "Arte", "urlFoto": "https://.../arte.jpg", "totalEventos": 21 }
   ]
 }
 ```
 
 #### `GET /api/categorias/con-eventos`
 - Recibe: sin parámetros.
-- Devuelve: `ApiResponse<List<CategoriaEventosDTO>>`
+- Devuelve: `ApiResponse<List<CategoriaConteoDTO>>`
 - Ejemplo de respuesta:
 
 ```json
@@ -1264,7 +1266,7 @@ En caso de error, la respuesta suele devolver:
     {
       "id": 1,
       "nombre": "Música",
-      "cantidadEventos": 5
+      "totalEventos": 45
     }
   ]
 }
@@ -1272,7 +1274,7 @@ En caso de error, la respuesta suele devolver:
 
 #### `GET /api/categorias/{id}`
 - Recibe: `id` en path.
-- Devuelve: `ApiResponse<CategoriaDTO>`
+- Devuelve: `ApiResponse<CategoriaConteoDTO>`
 - Ejemplo de respuesta:
 
 ```json
@@ -1282,7 +1284,7 @@ En caso de error, la respuesta suele devolver:
   "data": {
     "id": 1,
     "nombre": "Música",
-    "descripcion": "Eventos musicales"
+    "totalEventos": 45
   }
 }
 ```
@@ -1893,6 +1895,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/verificacion/pendientes`
 - Recibe: paginación.
 - Devuelve: `ApiResponse<Page<SolicitudVerificacionDTO>>`
+- Descripción: lista las solicitudes con RUT enviado que esperan verificación administrativa.
 - Permisos: ADMINISTRADOR.
 - Ejemplo de respuesta:
 
@@ -1947,7 +1950,7 @@ En caso de error, la respuesta suele devolver:
 
 #### `POST /api/verificacion/registro-organizador`
 - Recibe: body JSON `SolicitudVerificacionRequest` con `nombreCompleto`, `correoUsuario`, `password`, `razonSocial`, `nit` y `correoEmpresarial`.
-- Devuelve: `ApiResponse<Void>`; crea la cuenta y la organización en pre-registro. Este flujo también está disponible en `POST /api/auth/registro-organizador`.
+- Devuelve: `ApiResponse<Void>`; crea la cuenta y la organización en pre-registro sin exigir el RUT en el alta. El representante puede cargar el documento después. Este flujo también está disponible en `POST /api/auth/registro-organizador`.
 - Permisos: público.
 - Ejemplo de respuesta:
 
@@ -1962,6 +1965,7 @@ En caso de error, la respuesta suele devolver:
 #### `PATCH /api/verificacion/{solicitudId}/subir-rut`
 - Recibe: `solicitudId` en path y archivo obligatorio `rut` como multipart/form-data.
 - Devuelve: `ApiResponse<Void>`
+- Descripción: carga el RUT de la organización y envía la solicitud a la cola de verificación del Administrador. El registro inicial puede existir sin este documento.
 - Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
@@ -1976,6 +1980,7 @@ En caso de error, la respuesta suele devolver:
 #### `PUT /api/verificacion/{solicitudId}/aprobar`
 - Recibe: `solicitudId` en path.
 - Devuelve: `ApiResponse<String>` (el endpoint actualmente deja `data` en `null`).
+- Descripción: aprueba la verificación de la organización después de revisar los datos y el RUT.
 - Permisos: ADMINISTRADOR.
 - Ejemplo de respuesta:
 
@@ -1990,6 +1995,7 @@ En caso de error, la respuesta suele devolver:
 #### `PUT /api/verificacion/{solicitudId}/rechazar`
 - Recibe: `solicitudId` en path y parámetro de query `motivo`.
 - Devuelve: `ApiResponse<Void>`
+- Descripción: rechaza la solicitud de verificación de la organización.
 - Permisos: ADMINISTRADOR.
 - Ejemplo de respuesta:
 
@@ -2004,6 +2010,7 @@ En caso de error, la respuesta suele devolver:
 #### `PATCH /api/verificacion/{solicitudId}/solicitar-correccion`
 - Recibe: `solicitudId` en path y parámetro de query `motivo`.
 - Devuelve: `ApiResponse<SolicitudVerificacionDTO>` (el endpoint actualmente deja `data` en `null`).
+- Descripción: solicita al Representante corregir la solicitud de verificación; luego podrá actualizar los datos y reenviarla.
 - Permisos: ADMINISTRADOR.
 - Ejemplo de respuesta:
 
@@ -2018,6 +2025,7 @@ En caso de error, la respuesta suele devolver:
 #### `PATCH /api/verificacion/{solicitudId}/reenviar`
 - Recibe: `solicitudId` en path y multipart/form-data con `datos` (`SolicitudVerificacionRequest`) obligatorio y `rut` opcional.
 - Devuelve: `ApiResponse<Void>`
+- Descripción: permite al Representante reenviar los datos corregidos y, opcionalmente, reemplazar el RUT.
 - Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
@@ -2103,6 +2111,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/moderaciones/eventos/pendientes`
 - Recibe: paginación.
 - Devuelve: `ApiResponse<PagedResponse<EventoDTO>>`
+- Descripción: lista exclusivamente los eventos que las reglas del sistema derivaron a revisión humana; no representa todos los eventos enviados para publicación.
 - Permisos: MODERADOR.
 - Ejemplo de respuesta:
 

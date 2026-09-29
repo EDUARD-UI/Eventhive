@@ -65,10 +65,53 @@ export const getDashboardPathForRole = (role) => {
   }
 };
 
-export const session = {
-  getToken: () => localStorage.getItem(TOKEN_KEY),
+export const parseJwtPayload = (token) => {
+  try {
+    if (!token || typeof token !== 'string') return null;
+    const clean = token.replace(/^Bearer\s+/i, '').replace(/^["']|["']$/g, '').trim();
+    const parts = clean.split('.');
+    if (parts.length < 2) return null;
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+};
 
-  getRefreshToken: () => localStorage.getItem(REFRESH_TOKEN_KEY),
+export const isTokenExpired = (token, thresholdSeconds = 15) => {
+  if (!token) return true;
+  if (token === 'dev-session-token') return false;
+  const payload = parseJwtPayload(token);
+  if (!payload || !payload.exp) return false;
+  const now = Math.floor(Date.now() / 1000);
+  return payload.exp <= now + thresholdSeconds;
+};
+
+export const session = {
+  getToken: () => {
+    const raw = localStorage.getItem(TOKEN_KEY);
+    if (!raw) return null;
+    const clean = String(raw).replace(/^Bearer\s+/i, '').replace(/^["']|["']$/g, '').trim();
+    return clean || null;
+  },
+
+  getRefreshToken: () => {
+    const raw = localStorage.getItem(REFRESH_TOKEN_KEY);
+    if (!raw) return null;
+    const clean = String(raw).replace(/^Bearer\s+/i, '').replace(/^["']|["']$/g, '').trim();
+    return clean || null;
+  },
+
+  isExpired: () => {
+    const token = session.getToken();
+    return isTokenExpired(token);
+  },
 
   getUser: () => {
     try {
@@ -141,10 +184,12 @@ export const session = {
 
     localStorage.removeItem(DEV_SESSION_KEY);
     if (authToken) {
-      localStorage.setItem(TOKEN_KEY, authToken);
+      const cleanToken = String(authToken).replace(/^Bearer\s+/i, '').replace(/^["']|["']$/g, '').trim();
+      localStorage.setItem(TOKEN_KEY, cleanToken);
     }
     if (refreshToken) {
-      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      const cleanRefresh = String(refreshToken).replace(/^Bearer\s+/i, '').replace(/^["']|["']$/g, '').trim();
+      localStorage.setItem(REFRESH_TOKEN_KEY, cleanRefresh);
     }
 
     const userData = {

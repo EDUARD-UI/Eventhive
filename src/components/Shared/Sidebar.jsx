@@ -8,14 +8,15 @@ export default function Sidebar({
   items = [],
   activeItem,
   onSelect,
-  variant = 'standard', // 'standard' | 'admin'
+  variant = 'standard', // 'standard' | 'admin' | 'moderator' | 'curved'
+  pageBg = '#f1f5f9',
   isOpen = false,
   onClose = () => {},
   isCollapsed: controlledCollapsed,
   onToggleCollapse,
 }) {
+  const isCurved = variant === 'admin' || variant === 'moderator' || variant === 'curved';
   const isAdmin = variant === 'admin';
-  const pageBg = '#f1f5f9';
 
   // Manejo de estado colapsado (con persistencia en localStorage para UX fluida)
   const [uncontrolledCollapsed, setUncontrolledCollapsed] = useState(() => {
@@ -145,10 +146,10 @@ export default function Sidebar({
                       }}
                       title={count ? `${label} (${count})` : label}
                       aria-label={label}
-                      className={`relative flex h-11 w-11 items-center justify-center rounded-xl text-sm transition-all group ${
+                      className={`relative flex h-11 w-11 items-center justify-center rounded-xl text-sm transition-all duration-200 group ${
                         active
-                          ? isAdmin
-                            ? 'bg-[#f1f5f9] text-slate-900 font-semibold shadow-md'
+                          ? isCurved
+                            ? 'bg-[#f1f5f9] text-slate-900 font-semibold shadow-md ring-2 ring-brand/20'
                             : 'bg-[#087fea] text-white font-semibold shadow-md shadow-[#087fea]/25'
                           : 'text-slate-300 hover:text-white hover:bg-white/10'
                       }`}
@@ -157,7 +158,7 @@ export default function Sidebar({
                         size={19}
                         className={`transition-transform duration-200 group-hover:scale-110 ${
                           active
-                            ? isAdmin
+                            ? isCurved
                               ? 'text-brand'
                               : 'text-white'
                             : 'text-slate-400 group-hover:text-white'
@@ -167,7 +168,7 @@ export default function Sidebar({
                         <span
                           className={`absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full text-[10px] font-bold ${
                             active
-                              ? isAdmin
+                              ? isCurved
                                 ? 'bg-brand text-white ring-2 ring-[#131b2e]'
                                 : 'bg-white text-[#087fea] ring-2 ring-[#131b2e]'
                               : 'bg-[#087fea] text-white ring-2 ring-[#131b2e]'
@@ -190,20 +191,25 @@ export default function Sidebar({
                       onSelect(id);
                       onClose();
                     }}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 text-sm transition-all text-left group ${
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 text-sm text-left group transition-all duration-200 ease-out ${
                       active
-                        ? isAdmin
-                          ? 'bg-[#f1f5f9] text-slate-900 font-semibold rounded-l-2xl relative z-10'
+                        ? isCurved
+                          ? 'bg-[#f1f5f9] text-slate-900 font-bold rounded-l-2xl relative z-10 shadow-sm'
                           : 'bg-[#087fea] text-white font-semibold rounded-xl mr-3 shadow-md shadow-[#087fea]/20'
-                        : 'text-slate-300 hover:text-white hover:bg-white/5 rounded-l-2xl mr-3'
+                        : isCurved
+                        ? 'text-slate-300 hover:text-white hover:bg-white/5 rounded-l-2xl mr-3 font-medium'
+                        : 'text-slate-300 hover:text-white hover:bg-white/5 rounded-xl mr-3 font-medium'
                     }`}
                   >
                     <span className="flex items-center gap-3 min-w-0">
+                      {active && isCurved && (
+                        <span className="w-1.5 h-4.5 rounded-full bg-brand shrink-0 animate-in fade-in zoom-in-75 duration-200" />
+                      )}
                       <Icon
                         size={18}
-                        className={`shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                        className={`shrink-0 transition-transform duration-200 group-hover:scale-110 ${
                           active
-                            ? isAdmin
+                            ? isCurved
                               ? 'text-brand'
                               : 'text-white'
                             : 'text-slate-400 group-hover:text-white'
@@ -213,10 +219,10 @@ export default function Sidebar({
                     </span>
                     {count && (
                       <span
-                        className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full transition-colors ${
                           active
-                            ? isAdmin
-                              ? 'bg-brand-light text-brand'
+                            ? isCurved
+                              ? 'bg-brand/10 text-brand border border-brand/20 font-bold'
                               : 'bg-white/20 text-white'
                             : 'bg-white/10 text-slate-300'
                         }`}
@@ -225,20 +231,35 @@ export default function Sidebar({
                       </span>
                     )}
                   </button>
-                  {active && isAdmin && !isDrawer && (
+                  {active && isCurved && !isDrawer && (
                     <>
-                      <span
-                        className="absolute -top-5 right-0 w-5 h-5 pointer-events-none z-10 hidden md:block"
-                        style={{
-                          background: `radial-gradient(circle at 0 0, transparent 19px, ${pageBg} 19.5px)`,
-                        }}
-                      />
-                      <span
-                        className="absolute -bottom-5 right-0 w-5 h-5 pointer-events-none z-10 hidden md:block"
-                        style={{
-                          background: `radial-gradient(circle at 0 100%, transparent 19px, ${pageBg} 19.5px)`,
-                        }}
-                      />
+                      {/* Curva superior invertida */}
+                      <div className="absolute -top-5 right-0 w-5 h-5 pointer-events-none z-10 hidden md:block overflow-hidden transition-opacity duration-300 animate-in fade-in">
+                        <svg
+                          viewBox="0 0 20 20"
+                          className="w-full h-full"
+                          style={{ color: pageBg }}
+                        >
+                          <path
+                            d="M20 20 H0 A 20 20 0 0 0 20 0 Z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                      </div>
+
+                      {/* Curva inferior invertida */}
+                      <div className="absolute -bottom-5 right-0 w-5 h-5 pointer-events-none z-10 hidden md:block overflow-hidden transition-opacity duration-300 animate-in fade-in">
+                        <svg
+                          viewBox="0 0 20 20"
+                          className="w-full h-full"
+                          style={{ color: pageBg }}
+                        >
+                          <path
+                            d="M20 0 H0 A 20 20 0 0 0 20 20 Z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                      </div>
                     </>
                   )}
                 </div>
