@@ -52,13 +52,13 @@ function SalesChart() {
   const [period, setPeriod] = useState('Este mes');
 
   return (
-    <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+    <section className="rounded-3xl border-2 border-amber-200/90 bg-white p-5 sm:p-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-100 pb-4">
         <div>
-          <h3 className="font-display text-base font-bold text-slate-900">
+          <h3 className="font-display text-base font-black text-[#0B1B3D]">
             Rendimiento de Ventas por Categoría
           </h3>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5 font-medium">
             Distribución de volumen transaccional en Cartagena de Indias
           </p>
         </div>
@@ -67,7 +67,7 @@ function SalesChart() {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="appearance-none rounded-xl border border-slate-200 bg-slate-50/70 py-1.5 pl-3 pr-8 text-xs font-bold text-slate-700 outline-none hover:border-slate-300 focus:border-brand cursor-pointer transition-colors"
+            className="appearance-none rounded-xl border border-amber-200 bg-[#FAF8F5] py-1.5 pl-3 pr-8 text-xs font-bold text-slate-800 outline-none hover:border-amber-400 focus:border-amber-500 cursor-pointer transition-colors shadow-2xs"
           >
             <option>Este mes</option>
             <option>Últimos 7 días</option>
@@ -89,17 +89,17 @@ function SalesChart() {
           >
             {/* Tooltip en hover */}
             <div className="absolute -top-8 hidden group-hover:flex flex-col items-center z-10">
-              <span className="rounded-lg bg-slate-900 px-2 py-1 text-[10px] font-bold text-white shadow-md whitespace-nowrap">
+              <span className="rounded-lg bg-[#0B1B3D] px-2 py-1 text-[10px] font-bold text-amber-300 shadow-md whitespace-nowrap border border-amber-400/30">
                 {amount}
               </span>
-              <div className="w-1.5 h-1.5 bg-slate-900 rotate-45 -mt-0.5" />
+              <div className="w-1.5 h-1.5 bg-[#0B1B3D] rotate-45 -mt-0.5" />
             </div>
 
             <div
-              className="w-full max-w-[56px] rounded-t-xl bg-gradient-to-t from-brand via-sky-500 to-sky-400 group-hover:from-brand-dark group-hover:to-brand transition-all duration-300 shadow-xs"
+              className="w-full max-w-[56px] rounded-t-xl bg-gradient-to-t from-amber-500 via-amber-400 to-yellow-300 group-hover:from-amber-600 group-hover:to-amber-400 transition-all duration-300 shadow-xs"
               style={{ height: `${value}%` }}
             />
-            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 text-center truncate w-full">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 text-center truncate w-full">
               {label}
             </span>
           </div>
@@ -282,39 +282,39 @@ export default function OrganizadorIndex() {
       case 'resumen':
         return (
           <div className="space-y-6">
-            {/* Banner de Bienvenida y Acceso Rápido */}
-            <div className="rounded-2xl bg-gradient-to-r from-[#0a1838] via-[#0d2352] to-[#007bff] p-6 sm:p-8 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Banner de Bienvenida y Acceso Rápido Colmena */}
+            <div className="rounded-3xl bg-[#0B1B3D] border border-amber-500/20 p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
               <div className="relative z-10 max-w-xl">
-                <span className="text-[#ffc107] font-bold text-xs uppercase tracking-widest block mb-1.5">
-                  PANEL DE ORGANIZACIÓN
+                <span className="text-amber-400 font-black text-xs uppercase tracking-widest flex items-center gap-1.5 mb-2">
+                  <span>⬡</span>
+                  <span>PANEL DE GESTIÓN CULTURAL</span>
                 </span>
-                <h2 className="text-xl sm:text-2xl font-black">
+                <h2 className="text-2xl sm:text-3xl font-black text-white">
                   {orgName}
                 </h2>
-                <p className="text-slate-200 text-xs sm:text-sm mt-1 leading-relaxed">
-                  Supervisa tus eventos culturales en Cartagena, administra tus entradas y acredita a tus asistentes en tiempo real.
+                <p className="text-slate-300 text-xs sm:text-sm mt-1.5 leading-relaxed font-normal">
+                  Supervisa tus experiencias culturales en Cartagena, administra tus entradas oficiales y valida accesos en tiempo real con QR.
                 </p>
               </div>
 
-              <div className="relative z-10 flex flex-wrap items-center gap-2.5">
+              <div className="relative z-10 flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setCreationView('wizard')}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#ffc107] hover:bg-[#e0a800] text-[#0a1838] font-bold text-xs uppercase tracking-wider shadow-md transition-all active:scale-95"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all cursor-pointer active:scale-95"
                 >
-                  <FiPlus size={15} /> Publicar Evento
+                  <FiPlus size={16} />
+                  <span>Publicar Evento</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveItem('asistentes')}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider transition-all"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer border border-white/15"
                 >
                   Validar Asistencia
                 </button>
               </div>
-
-              {/* Círculo decorativo */}
-              <div className="absolute -bottom-16 -right-16 w-60 h-60 bg-white/5 rounded-full blur-2xl pointer-events-none" />
             </div>
 
             {/* KPIs Principales con StatCard Refactorizado */}

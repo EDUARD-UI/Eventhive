@@ -48,11 +48,11 @@ const sortByNearestDate = (events) => {
   });
 };
 
-/** Eventos destacados: los 2 más próximos a la fecha actual (GET /eventos). */
+/** Eventos destacados: hasta 8 eventos más próximos a la fecha actual para el carrusel (GET /eventos). */
 export async function getFeaturedEvents() {
-  const data = await httpClient.get('/eventos', { page: 0, size: 8, sort: 'fecha,asc' });
+  const data = await httpClient.get('/eventos', { page: 0, size: 12, sort: 'fecha,asc' });
   const events = (data?.content || []).map(normalizeEvent);
-  return sortByNearestDate(events).slice(0, 2);
+  return sortByNearestDate(events).slice(0, 8);
 }
 
 /** Más eventos para la sección "Más eventos" (GET /eventos/proximos o GET /eventos). */

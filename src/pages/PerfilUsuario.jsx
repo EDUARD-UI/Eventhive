@@ -17,6 +17,7 @@ import {
   FiShoppingBag,
   FiArrowRight,
   FiKey,
+  FiShield,
 } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import Navbar from '../components/usersComponets/Navbar.jsx';
@@ -274,7 +275,7 @@ export default function PerfilUsuario() {
       Swal.fire({
         icon: 'success',
         title: '¡Perfil actualizado!',
-        text: 'Tus datos se guardaron correctamente.',
+        text: 'Tus datos se guardaron correctamente en la Colmena.',
         timer: 1800,
         showConfirmButton: false,
       });
@@ -336,67 +337,62 @@ export default function PerfilUsuario() {
       : [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-bg font-body selection:bg-brand-light selection:text-brand">
+    <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body">
       <Navbar />
 
-      {/* Banner de marca — FONDO AZUL ESTRICTAMENTE PRESERVADO */}
-      <div className="relative px-6 sm:px-10 pt-14 pb-24 text-white overflow-hidden bg-[radial-gradient(120%_140%_at_15%_-10%,#2b9dff_0%,#007BFF_45%,#0047a8_100%)]">
-        <p className="text-xs font-bold tracking-wide text-sky-100/90 mb-2 uppercase">
-          Tu Cuenta · EventHive
-        </p>
-        <h1 className="font-display font-bold text-4xl sm:text-[44px] leading-[1.05] tracking-tight max-w-lg">
-          Perfil de usuario
-        </h1>
-        <p className="text-sm text-sky-100 mt-3 max-w-sm leading-relaxed">
-          Tus eventos favoritos, boletos digitales y datos de cuenta en tiempo real.
-        </p>
+      {/* Header Colmena Cultural */}
+      <section className="relative w-full bg-[#0B1B3D] text-white pt-14 pb-20 px-6 sm:px-10 lg:px-16 overflow-hidden border-b border-amber-500/20">
+        <div className="absolute inset-0 bg-[radial-gradient(#F59E0B_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-10 -top-16 w-72 h-72 opacity-[0.15]"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle, transparent 20%, rgba(255,255,255,.6) 21%, rgba(255,255,255,.6) 22%, transparent 23%)',
-            backgroundSize: '26px 26px',
-          }}
-        />
+        <div className="max-w-6xl mx-auto relative z-10">
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-widest text-amber-300 bg-amber-500/10 border border-amber-400/30 mb-3">
+            <span>⬡</span>
+            <span>TU CUENTA · EVENTHIVE</span>
+          </span>
 
-        <div className="absolute left-0 right-0 -bottom-0.5 leading-[0]">
-          <svg viewBox="0 0 1440 70" preserveAspectRatio="none" className="w-full h-[64px] block">
-            <path
-              d="M0,40 C240,80 480,0 720,30 C960,60 1200,10 1440,40 L1440,70 L0,70 Z"
-              fill="#f5f7fa"
-            />
-          </svg>
+          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+            Panel de Usuario
+          </h1>
+
+          <p className="text-slate-300 text-sm sm:text-base mt-2 max-w-xl font-medium leading-relaxed">
+            Administra tus pases digitales con QR, eventos guardados en favoritos y configuración de cuenta.
+          </p>
         </div>
-      </div>
+      </section>
 
-      <main className="flex-1 px-6 sm:px-10 pb-16">
-        {/* Navegación de Tabs con Segmented Control Moderno */}
-        <div className="relative z-10 flex justify-center -mt-6 mb-8">
-          <div className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl shadow-md p-1.5 flex gap-1.5 w-fit max-w-full overflow-x-auto no-scrollbar">
+      {/* Contenedor Principal */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
+        
+        {/* Barra de Pestañas Flotante Estilo Cápsula */}
+        <div className="bg-white rounded-3xl border-2 border-amber-200/90 shadow-xl p-2 -mt-14 relative z-20 overflow-x-auto scrollbar-none">
+          <div className="flex items-center gap-1.5 min-w-max">
             {TABS.map((tab) => {
-              const active = activeTab === tab.id;
+              const isActive = activeTab === tab.id;
               let count = null;
               if (tab.id === 'guardados') count = guardados.length;
-              if (tab.id === 'entradas') count = boletosList.length;
               if (tab.id === 'proximos') count = eventosProximos.length;
+              if (tab.id === 'historial') count = eventosHistorial.length;
+              if (tab.id === 'entradas') count = boletosList.length;
 
               return (
                 <button
                   key={tab.id}
+                  type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap flex items-center gap-2 cursor-pointer ${
-                    active
-                      ? 'bg-brand text-white shadow-md shadow-brand/25 scale-[1.02]'
-                      : 'text-slate-600 hover:text-brand hover:bg-slate-50'
+                  className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                    isActive
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md'
+                      : 'text-slate-600 hover:text-[#0B1B3D] hover:bg-amber-50/60'
                   }`}
                 >
                   <span>{tab.label}</span>
                   {count !== null && count > 0 && (
                     <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
-                        active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
+                      className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                        isActive
+                          ? 'bg-slate-950 text-amber-300'
+                          : 'bg-amber-100 text-amber-950 border border-amber-300'
                       }`}
                     >
                       {count}
@@ -408,192 +404,219 @@ export default function PerfilUsuario() {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8 max-w-[1400px] mx-auto">
+        {/* Layout en 2 columnas: Sidebar Perfil + Contenido */}
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          
           {/* Sidebar de Usuario */}
-          <aside className="w-full lg:w-[320px] shrink-0 space-y-5">
-            <div className="bg-white border border-slate-200/90 rounded-2xl shadow-sm p-7 text-center card-interactive">
-              <div className="relative w-24 h-24 mx-auto">
-                <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-sky-500 ring-4 ring-white shadow-md flex items-center justify-center text-white text-2xl font-bold font-display select-none">
-                  {getInitials(usuario.nombreCompleto)}
+          <aside className="w-full lg:w-[320px] shrink-0 space-y-6">
+            
+            {/* Tarjeta Identidad */}
+            <div className="bg-white border-2 border-amber-200/90 rounded-3xl shadow-sm p-7 text-center relative overflow-hidden">
+              <div className="relative w-24 h-24 mx-auto mb-4">
+                <div className="w-full h-full clip-hexagon bg-gradient-to-b from-amber-400 to-amber-600 p-[3px] filter drop-shadow-md">
+                  <div className="w-full h-full clip-hexagon bg-[#0B172C] flex items-center justify-center text-amber-300 text-2xl font-black select-none">
+                    {getInitials(usuario.nombreCompleto)}
+                  </div>
                 </div>
               </div>
-              <h2 className="font-display font-bold text-xl mt-4 text-slate-900 truncate">
+
+              <h2 className="text-xl font-black text-[#0B1B3D] truncate">
                 {usuario.nombreCompleto || 'Usuario EventHive'}
               </h2>
-              <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500 mt-1.5 truncate">
-                <FiMail size={12} className="shrink-0 text-brand" /> {usuario.correo || 'correo@eventhive.com'}
-              </p>
-              {usuario.telefono && (
-                <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500 mt-1">
-                  <FiPhone size={12} className="shrink-0 text-brand" /> {usuario.telefono}
-                </p>
-              )}
-              <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500 mt-1">
-                <FiMapPin size={12} className="shrink-0 text-rose-500" /> {usuario.ciudad}
+              
+              <p className="flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 mt-2 truncate">
+                <FiMail size={13} className="text-amber-600 shrink-0" />
+                <span>{usuario.correo || 'correo@eventhive.com'}</span>
               </p>
 
-              <div className="mt-5 pt-4 border-t border-slate-100">
+              {usuario.telefono && (
+                <p className="flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 mt-1">
+                  <FiPhone size={13} className="text-amber-600 shrink-0" />
+                  <span>{usuario.telefono}</span>
+                </p>
+              )}
+
+              <p className="flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 mt-1">
+                <FiMapPin size={13} className="text-rose-500 shrink-0" />
+                <span>{usuario.ciudad}</span>
+              </p>
+
+              <div className="mt-6 pt-5 border-t border-amber-100">
                 <button
                   type="button"
                   onClick={() => setEditModal(true)}
-                  className="w-full py-2.5 px-3 rounded-xl border border-slate-200 hover:border-brand text-xs font-bold text-slate-700 hover:text-brand flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer active:scale-95"
+                  className="w-full py-2.5 px-4 rounded-xl border border-amber-300 hover:border-amber-500 bg-amber-50/50 hover:bg-amber-100 text-xs font-black uppercase tracking-wider text-amber-950 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
                 >
                   <FiEdit2 size={13} />
-                  <span>Editar datos de perfil</span>
+                  <span>Editar Perfil</span>
                 </button>
               </div>
             </div>
 
-            <div className="bg-white border border-borderc rounded-2xl shadow-sm p-6">
-              <p className="text-[11px] font-bold tracking-wider text-muted mb-4 uppercase">
-                Estadísticas de Actividad
-              </p>
+            {/* Tarjeta Estadísticas */}
+            <div className="bg-white border-2 border-amber-200/90 rounded-3xl shadow-sm p-6 space-y-4">
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block">
+                ACTIVIDAD EN LA COLMENA
+              </span>
 
-              <div className="flex items-center gap-3.5 text-sm text-slate-700 mb-4">
-                <span className="w-10 h-10 rounded-xl bg-brand-light text-brand flex items-center justify-center shrink-0">
-                  <FiBookmark size={17} />
-                </span>
+              <div className="flex items-center gap-3.5 text-sm">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
+                  <FiBookmark size={18} />
+                </div>
                 <div>
-                  <strong className="block font-display font-bold text-lg leading-none text-ink">
+                  <strong className="block text-lg font-black leading-none text-[#0B1B3D]">
                     {guardados.length}
                   </strong>
-                  <span className="text-xs text-muted">eventos guardados</span>
+                  <span className="text-xs font-medium text-slate-500">experiencias guardadas</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3.5 text-sm text-slate-700 mb-4">
-                <span className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
-                  <FiShoppingBag size={17} />
-                </span>
+              <div className="flex items-center gap-3.5 text-sm">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
+                  <FiShoppingBag size={18} />
+                </div>
                 <div>
-                  <strong className="block font-display font-bold text-lg leading-none text-ink">
+                  <strong className="block text-lg font-black leading-none text-[#0B1B3D]">
                     {boletosList.length}
                   </strong>
-                  <span className="text-xs text-muted">boletos adquiridos</span>
+                  <span className="text-xs font-medium text-slate-500">boletos adquiridos</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3.5 text-sm text-slate-700">
-                <span className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                  <FiCalendar size={17} />
-                </span>
+              <div className="flex items-center gap-3.5 text-sm">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
+                  <FiCalendar size={18} />
+                </div>
                 <div>
-                  <strong className="block font-display font-bold text-lg leading-none text-ink">
+                  <strong className="block text-lg font-black leading-none text-[#0B1B3D]">
                     {eventosProximos.length + eventosHistorial.length}
                   </strong>
-                  <span className="text-xs text-muted">eventos asistidos / próximos</span>
+                  <span className="text-xs font-medium text-slate-500">eventos confirmados</span>
                 </div>
               </div>
             </div>
           </aside>
 
           {/* Contenido Principal por Pestaña */}
-          <section className="flex-1 min-w-0">
+          <section className="flex-1 min-w-0 w-full">
             {loading ? (
-              <div className="bg-white rounded-2xl border border-borderc p-12 text-center shadow-sm">
-                <span className="w-8 h-8 border-3 border-brand border-t-transparent rounded-full animate-spin inline-block mb-3" />
-                <p className="text-sm font-semibold text-slate-700">Cargando tu información...</p>
+              <div className="bg-white rounded-3xl border-2 border-amber-200/90 p-14 text-center shadow-sm">
+                <div className="relative w-12 h-12 mx-auto flex items-center justify-center mb-3">
+                  <div className="absolute inset-0 clip-hexagon-horiz bg-gradient-to-r from-amber-400 to-amber-500 animate-spin" />
+                  <div className="absolute inset-[2.5px] clip-hexagon-horiz bg-white flex items-center justify-center">
+                    <span className="text-amber-500 text-sm">⬡</span>
+                  </div>
+                </div>
+                <p className="text-xs font-black uppercase tracking-wider text-[#0B1B3D]">
+                  Cargando información del usuario...
+                </p>
               </div>
             ) : (
               <>
-                {/* Pestaña: Mis Entradas con Código QR */}
+                {/* Pestaña: Mis Entradas / QR */}
                 {activeTab === 'entradas' && (
-                  <div className="space-y-4 animate-fade-in">
-                    <div className="bg-white p-5 rounded-2xl border border-borderc shadow-sm flex items-center justify-between">
+                  <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-3xl border-2 border-amber-200/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
-                        <h3 className="font-display font-bold text-lg text-ink">Mis Boletos Digitales</h3>
-                        <p className="text-xs text-muted mt-0.5">
-                          Muestra tu código QR en la entrada del evento para escanear y acceder.
+                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block mb-1">
+                          ⬡ PASES OFICIALES
+                        </span>
+                        <h3 className="text-xl font-black text-[#0B1B3D]">Mis Boletos Digitales</h3>
+                        <p className="text-xs text-slate-600 mt-0.5">
+                          Presenta tu código QR en el acceso del evento para validar tu entrada.
                         </p>
                       </div>
-                      <span className="text-xs font-semibold text-brand bg-brand-light px-3 py-1 rounded-full">
-                        {boletosList.length} {boletosList.length === 1 ? 'boleto' : 'boletos'}
+                      <span className="text-xs font-black text-amber-950 bg-amber-100 border border-amber-300 px-3.5 py-1.5 rounded-full shrink-0 self-start sm:self-auto">
+                        {boletosList.length} {boletosList.length === 1 ? 'boleto activo' : 'boletos activos'}
                       </span>
                     </div>
 
                     {boletosList.length === 0 ? (
-                      <div className="bg-white rounded-2xl border border-borderc p-12 text-center text-muted shadow-sm">
-                        <div className="w-14 h-14 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
-                          <FiShoppingBag size={24} />
+                      <div className="bg-white rounded-3xl border-2 border-dashed border-amber-300 p-14 text-center shadow-sm">
+                        <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 text-xl">
+                          ⬡
                         </div>
-                        <p className="font-semibold text-ink text-base">Aún no tienes boletos comprados</p>
-                        <p className="text-xs mt-1 max-w-sm mx-auto text-slate-500">
-                          Explora la cartelera de eventos en Cartagena de Indias y consigue tus entradas fácilmente.
+                        <h4 className="font-black text-lg text-[#0B1B3D] mb-1">Aún no tienes boletos adquiridos</h4>
+                        <p className="text-xs font-medium text-slate-600 max-w-sm mx-auto mb-6">
+                          Explora la cartelera cultural de Cartagena de Indias y adquiere tus entradas oficiales.
                         </p>
                         <Link
                           to="/buscar"
-                          className="mt-4 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-semibold shadow-sm transition-all"
+                          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95"
                         >
                           <span>Explorar Cartelera</span>
                           <FiArrowRight size={14} />
                         </Link>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {boletosList.map((ticket) => (
                           <article
                             key={ticket.id}
-                            className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative"
+                            className="bg-white border-2 border-amber-200/90 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
                           >
                             {/* Cabecera del Boleto */}
-                            <div className="p-5 bg-gradient-to-r from-brand to-sky-600 text-white relative">
-                              <div className="flex items-center justify-between text-[11px] font-semibold text-sky-100 mb-1">
-                                <span>{ticket.id}</span>
-                                <span className="bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full text-white">
+                            <div className="p-5 bg-[#0B1B3D] text-white relative border-b-2 border-amber-400">
+                              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider mb-2">
+                                <span className="text-amber-400">{ticket.id}</span>
+                                <span className="bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full font-black">
                                   {ticket.zona}
                                 </span>
                               </div>
-                              <h4 className="font-display font-bold text-lg leading-tight mt-1 line-clamp-1">
+                              <h4 className="text-lg font-black leading-tight text-white line-clamp-1">
                                 {ticket.evento}
                               </h4>
-                              <div className="mt-3 flex items-center gap-3 text-xs text-sky-100">
-                                <span className="flex items-center gap-1">
-                                  <FiCalendar size={13} /> {ticket.fecha}
+                              <div className="mt-3 flex items-center gap-3 text-xs text-slate-300 font-medium">
+                                <span className="flex items-center gap-1.5">
+                                  <FiCalendar size={13} className="text-amber-400" />
+                                  <span>{ticket.fecha}</span>
                                 </span>
                                 <span>·</span>
                                 <span>{ticket.hora}</span>
                               </div>
                             </div>
 
-                            {/* Cuerpo con detalles de acceso */}
-                            <div className="p-5 flex-1 flex flex-col justify-between">
-                              <div className="space-y-2 text-xs text-slate-600">
+                            {/* Detalles de Acceso */}
+                            <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                              <div className="space-y-2 text-xs text-slate-700 font-semibold">
                                 <p className="flex items-center gap-1.5 truncate">
-                                  <FiMapPin className="text-brand shrink-0" size={14} /> {ticket.lugar}
+                                  <FiMapPin className="text-amber-600 shrink-0" size={14} />
+                                  <span>{ticket.lugar}</span>
                                 </p>
                                 <p>
-                                  <strong>Ubicación:</strong> {ticket.asiento}
+                                  <strong className="text-[#0B1B3D]">Ubicación:</strong> {ticket.asiento}
                                 </p>
                                 <p>
-                                  <strong>Titular:</strong> {ticket.titular}
+                                  <strong className="text-[#0B1B3D]">Titular:</strong> {ticket.titular}
                                 </p>
                                 <p>
-                                  <strong>Precio:</strong> {ticket.precio}
+                                  <strong className="text-[#0B1B3D]">Precio:</strong> {ticket.precio}
                                 </p>
                               </div>
 
-                              {/* Código QR Miniatura y Acciones */}
-                              <div className="mt-5 pt-4 border-t border-dashed border-slate-200 flex items-center justify-between gap-3">
+                              {/* QR y Acciones */}
+                              <div className="pt-4 border-t border-dashed border-amber-200 flex items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
                                   <img
                                     src={ticket.codigoQR}
                                     alt="QR Boleto"
-                                    className="w-14 h-14 rounded-lg border p-1 bg-white shrink-0 shadow-sm"
+                                    className="w-14 h-14 rounded-xl border border-amber-200 p-1 bg-white shrink-0 shadow-xs"
                                   />
                                   <div>
-                                    <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
+                                    <p className="text-[11px] font-black text-emerald-700 flex items-center gap-1">
                                       <FiCheckCircle size={12} /> {ticket.estado}
                                     </p>
-                                    <p className="text-[10px] text-muted">ID: {ticket.id}</p>
+                                    <p className="text-[10px] text-slate-500 font-mono">ID: {ticket.id}</p>
                                   </div>
                                 </div>
 
                                 <button
                                   type="button"
                                   onClick={() => setTicketModal(ticket)}
-                                  className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-brand hover:text-white text-xs font-semibold text-ink transition-all flex items-center gap-1.5"
+                                  className="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-400 hover:text-slate-950 text-xs font-black uppercase tracking-wider text-amber-950 border border-amber-300 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
                                 >
-                                  <FiExternalLink size={13} /> Ver QR
+                                  <FiExternalLink size={13} />
+                                  <span>Ver QR</span>
                                 </button>
                               </div>
                             </div>
@@ -604,23 +627,26 @@ export default function PerfilUsuario() {
                   </div>
                 )}
 
-                {/* Pestaña: Seguridad y Cuenta */}
+                {/* Pestaña: Ajustes y Cuenta */}
                 {activeTab === 'seguridad' && (
-                  <div className="space-y-6 animate-fade-in">
-                    {/* Formulario de Información Personal */}
-                    <div className="bg-white border border-borderc rounded-2xl p-6 shadow-sm space-y-5">
+                  <div className="space-y-6">
+                    {/* Información Personal */}
+                    <div className="bg-white border-2 border-amber-200/90 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
                       <div>
-                        <h3 className="font-display font-bold text-lg text-ink">Información Personal</h3>
-                        <p className="text-xs text-muted mt-0.5">
-                          Actualiza tu nombre y número de teléfono de contacto.
+                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block mb-1">
+                          ⬡ DATOS DE CONTACTO
+                        </span>
+                        <h3 className="text-xl font-black text-[#0B1B3D]">Información Personal</h3>
+                        <p className="text-xs text-slate-600 mt-0.5 font-medium">
+                          Mantén actualizados tus datos para la emisión de tus boletos oficiales.
                         </p>
                       </div>
 
                       <form onSubmit={handleUpdatePerfil} className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-xs font-semibold text-ink mb-1.5">
-                              Nombre completo
+                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
+                              Nombre Completo
                             </label>
                             <input
                               type="text"
@@ -628,29 +654,26 @@ export default function PerfilUsuario() {
                               onChange={(e) =>
                                 setUsuario({ ...usuario, nombreCompleto: e.target.value })
                               }
-                              className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-borderc outline-none focus:border-brand"
+                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                               placeholder="Tu nombre completo"
                               required
                             />
                           </div>
 
                           <div>
-                            <label className="block text-xs font-semibold text-ink mb-1.5">
-                              Correo electrónico
+                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
+                              Correo Electrónico (Solo Lectura)
                             </label>
                             <input
                               type="email"
                               value={usuario.correo}
                               disabled
-                              className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed"
+                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
                             />
-                            <span className="text-[10px] text-slate-400 mt-1 block">
-                              El correo es el identificador principal de tu cuenta.
-                            </span>
                           </div>
 
                           <div>
-                            <label className="block text-xs font-semibold text-ink mb-1.5">
+                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
                               Teléfono / WhatsApp
                             </label>
                             <input
@@ -659,20 +682,20 @@ export default function PerfilUsuario() {
                               onChange={(e) =>
                                 setUsuario({ ...usuario, telefono: e.target.value })
                               }
-                              className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-borderc outline-none focus:border-brand"
+                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                               placeholder="+57 300 123 4567"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-xs font-semibold text-ink mb-1.5">
-                              Ciudad de residencia
+                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
+                              Ciudad de Residencia
                             </label>
                             <input
                               type="text"
                               value={usuario.ciudad}
                               onChange={(e) => setUsuario({ ...usuario, ciudad: e.target.value })}
-                              className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-borderc outline-none focus:border-brand"
+                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                             />
                           </div>
                         </div>
@@ -681,27 +704,29 @@ export default function PerfilUsuario() {
                           <button
                             type="submit"
                             disabled={isUpdating}
-                            className="px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-semibold shadow-sm hover:shadow-md transition-all disabled:opacity-60 flex items-center gap-2"
+                            className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md shadow-amber-500/20 transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
                           >
                             {isUpdating && (
-                              <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
                             )}
-                            <span>Guardar Datos Personales</span>
+                            <span>Guardar Datos</span>
                           </button>
                         </div>
                       </form>
                     </div>
 
-                    {/* Formulario de Cambio de Contraseña */}
-                    <div className="bg-white border border-borderc rounded-2xl p-6 shadow-sm space-y-5">
-                      <div className="flex items-center gap-2">
-                        <FiKey className="text-brand" size={18} />
+                    {/* Cambio de Contraseña */}
+                    <div className="bg-white border-2 border-amber-200/90 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
+                          <FiKey size={18} />
+                        </div>
                         <div>
-                          <h3 className="font-display font-bold text-lg text-ink">
-                            Cambiar Contraseña
+                          <h3 className="text-xl font-black text-[#0B1B3D]">
+                            Seguridad de la Cuenta
                           </h3>
-                          <p className="text-xs text-muted mt-0.5">
-                            Por tu seguridad, usa una contraseña que no utilices en otros sitios.
+                          <p className="text-xs text-slate-600 mt-0.5 font-medium">
+                            Actualiza tu contraseña periódicamente para proteger tus compras.
                           </p>
                         </div>
                       </div>
@@ -709,8 +734,8 @@ export default function PerfilUsuario() {
                       <form onSubmit={handleChangePassword} className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           <div>
-                            <label className="block text-xs font-semibold text-ink mb-1.5">
-                              Contraseña actual
+                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
+                              Contraseña Actual
                             </label>
                             <input
                               type="password"
@@ -719,14 +744,14 @@ export default function PerfilUsuario() {
                                 setPasswordForm({ ...passwordForm, claveActual: e.target.value })
                               }
                               placeholder="••••••••"
-                              className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-borderc outline-none focus:border-brand"
+                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                               required
                             />
                           </div>
 
                           <div>
-                            <label className="block text-xs font-semibold text-ink mb-1.5">
-                              Nueva contraseña
+                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
+                              Nueva Contraseña
                             </label>
                             <input
                               type="password"
@@ -735,14 +760,14 @@ export default function PerfilUsuario() {
                                 setPasswordForm({ ...passwordForm, claveNueva: e.target.value })
                               }
                               placeholder="Mínimo 6 caracteres"
-                              className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-borderc outline-none focus:border-brand"
+                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                               required
                             />
                           </div>
 
                           <div>
-                            <label className="block text-xs font-semibold text-ink mb-1.5">
-                              Confirmar nueva contraseña
+                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
+                              Confirmar Nueva Contraseña
                             </label>
                             <input
                               type="password"
@@ -751,10 +776,11 @@ export default function PerfilUsuario() {
                                 setPasswordForm({
                                   ...passwordForm,
                                   confirmarClave: e.target.value,
+                                handwriting: e.target.value,
                                 })
                               }
                               placeholder="Repite la contraseña"
-                              className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-borderc outline-none focus:border-brand"
+                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                               required
                             />
                           </div>
@@ -764,7 +790,7 @@ export default function PerfilUsuario() {
                           <button
                             type="submit"
                             disabled={isChangingPassword}
-                            className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm transition-all disabled:opacity-60 flex items-center gap-2"
+                            className="px-6 py-3 rounded-xl bg-[#0B1B3D] hover:bg-slate-900 text-white text-xs font-black uppercase tracking-wider shadow-md transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
                           >
                             {isChangingPassword && (
                               <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -781,74 +807,78 @@ export default function PerfilUsuario() {
                 {(activeTab === 'guardados' ||
                   activeTab === 'proximos' ||
                   activeTab === 'historial') && (
-                  <div className="space-y-4 animate-fade-in">
-                    <div className="bg-white p-5 rounded-2xl border border-borderc shadow-sm flex items-center justify-between">
+                  <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-3xl border-2 border-amber-200/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
-                        <h3 className="font-display font-bold text-lg text-ink">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block mb-1">
+                          ⬡ AGENDA PERSONAL
+                        </span>
+                        <h3 className="text-xl font-black text-[#0B1B3D]">
                           {activeTab === 'guardados'
                             ? 'Eventos Guardados en Favoritos'
                             : activeTab === 'proximos'
-                            ? 'Eventos Próximos'
-                            : 'Historial de Eventos'}
+                            ? 'Experiencias Próximas'
+                            : 'Historial de Eventos Asistidos'}
                         </h3>
-                        <p className="text-xs text-muted mt-0.5">
+                        <p className="text-xs text-slate-600 mt-0.5">
                           {activeTab === 'guardados'
-                            ? 'Eventos que has marcado como favoritos para no perderte ningún detalle.'
+                            ? 'Experiencias que te interesan y has añadido a tu lista de deseos.'
                             : activeTab === 'proximos'
-                            ? 'Eventos para los que tienes boletos vigentes.'
-                            : 'Eventos pasados a los que has asistido o compraste entradas.'}
+                            ? 'Eventos con boletos confirmados y pendientes por disfrutar.'
+                            : 'Historial de eventos pasados en Cartagena de Indias.'}
                         </p>
                       </div>
-                      <span className="text-xs font-semibold text-brand bg-brand-light px-3 py-1 rounded-full">
+                      <span className="text-xs font-black text-amber-950 bg-amber-100 border border-amber-300 px-3.5 py-1.5 rounded-full shrink-0 self-start sm:self-auto">
                         {eventosVisibles.length} {eventosVisibles.length === 1 ? 'evento' : 'eventos'}
                       </span>
                     </div>
 
                     {eventosVisibles.length === 0 ? (
-                      <div className="bg-white rounded-2xl border border-borderc p-12 text-center text-muted shadow-sm">
-                        <div className="w-14 h-14 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
-                          <FiBookmark size={24} />
+                      <div className="bg-white rounded-3xl border-2 border-dashed border-amber-300 p-14 text-center shadow-sm">
+                        <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 text-xl">
+                          ⬡
                         </div>
-                        <p className="font-semibold text-ink text-base">
+                        <h4 className="font-black text-lg text-[#0B1B3D] mb-1">
                           {activeTab === 'guardados'
-                            ? 'No tienes eventos guardados en favoritos.'
+                            ? 'No tienes eventos guardados en favoritos'
                             : activeTab === 'proximos'
-                            ? 'No tienes eventos próximos programados.'
-                            : 'Aún no registras historial de eventos.'}
-                        </p>
-                        <p className="text-xs mt-1 text-slate-500 max-w-sm mx-auto">
-                          Explora la cartelera en Cartagena de Indias y guarda tus favoritos.
+                            ? 'No tienes eventos próximos agendados'
+                            : 'Aún no registras historial de eventos'}
+                        </h4>
+                        <p className="text-xs font-medium text-slate-600 max-w-sm mx-auto mb-6">
+                          Explora la cartelera cultural de Cartagena de Indias y guarda tus favoritos.
                         </p>
                         <Link
                           to="/buscar"
-                          className="mt-4 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-semibold shadow-sm transition-all"
+                          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95"
                         >
-                          <span>Explorar Eventos</span>
+                          <span>Explorar Experiencias</span>
                           <FiArrowRight size={14} />
                         </Link>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         {eventosVisibles.map((evento) => (
                           <article
                             key={evento.id}
-                            className="bg-white border border-borderc rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all group flex flex-col justify-between"
+                            className="bg-white border-2 border-amber-200/90 hover:border-amber-400 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between"
                           >
-                            <div className="relative aspect-[16/9] overflow-hidden">
+                            <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
                               <ImageWithFallback
                                 src={evento.photo}
                                 alt={evento.title}
                                 className="h-full w-full"
-                                imgClassName="group-hover:scale-105 duration-500"
+                                imgClassName="group-hover:scale-105 duration-500 object-cover"
                                 fallbackClassName="h-full w-full"
                                 fallbackGradient={getCategoryGradient(evento.category)}
-                                fallbackText={evento.category || 'Sin imagen'}
-                                iconSize={24}
+                                fallbackText={evento.category || 'Evento'}
+                                iconSize={26}
                               >
-                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-60 pointer-events-none" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
 
-                                <span className="absolute left-3 top-3 text-[11px] font-bold bg-white/90 backdrop-blur-md text-ink px-2.5 py-1 rounded-lg shadow-sm z-10">
-                                  {evento.category}
+                                <span className="absolute left-3 top-3 text-[10px] font-black uppercase tracking-wider bg-[#0B172C] text-amber-300 border border-amber-400/40 px-2.5 py-1 rounded-lg shadow-xs z-10 flex items-center gap-1">
+                                  <span>⬡</span>
+                                  <span>{evento.category}</span>
                                 </span>
 
                                 {activeTab === 'guardados' && (
@@ -856,7 +886,7 @@ export default function PerfilUsuario() {
                                     type="button"
                                     onClick={(e) => handleRemoveDeseo(e, evento.id)}
                                     title="Quitar de favoritos"
-                                    className="absolute right-3 top-3 w-8 h-8 rounded-full bg-white/95 text-rose-500 hover:bg-rose-50 flex items-center justify-center shadow-sm z-10 transition-colors"
+                                    className="absolute right-3 top-3 w-8 h-8 rounded-full bg-white/95 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center shadow-md z-10 transition-colors cursor-pointer"
                                   >
                                     <FiTrash2 size={14} />
                                   </button>
@@ -864,37 +894,37 @@ export default function PerfilUsuario() {
                               </ImageWithFallback>
                             </div>
 
-                            <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                            <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                               <div>
-                                <p className="text-[11px] font-bold uppercase tracking-wide text-brand mb-1">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-amber-900 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md inline-block mb-1.5">
                                   {evento.category}
-                                </p>
-                                <h3 className="font-display text-[16px] font-bold leading-snug mb-2 text-slate-900 group-hover:text-brand transition-colors line-clamp-2">
+                                </span>
+                                <h3 className="text-base font-black leading-snug text-[#0B1B3D] group-hover:text-amber-700 transition-colors line-clamp-2">
                                   {evento.title}
                                 </h3>
 
-                                <div className="space-y-1 text-xs text-slate-600 mt-2">
-                                  <p className="flex items-center gap-1.5">
-                                    <FiCalendar className="text-brand shrink-0" size={13} />{' '}
-                                    {evento.date}
+                                <div className="space-y-1.5 text-xs text-slate-600 mt-2.5 font-medium">
+                                  <p className="flex items-center gap-2">
+                                    <FiCalendar className="text-amber-600 shrink-0" size={14} />
+                                    <span>{evento.date}</span>
                                   </p>
-                                  <p className="flex items-center gap-1.5 truncate">
-                                    <FiMapPin className="text-rose-500 shrink-0" size={13} />{' '}
-                                    {evento.location}
+                                  <p className="flex items-center gap-2 truncate">
+                                    <FiMapPin className="text-rose-500 shrink-0" size={14} />
+                                    <span className="truncate">{evento.location}</span>
                                   </p>
                                 </div>
                               </div>
 
-                              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                                <span className="text-xs font-bold text-slate-800">
+                              <div className="pt-3 border-t border-amber-100 flex items-center justify-between">
+                                <span className="text-xs font-black text-slate-900">
                                   {formatPrice(evento.price)}
                                 </span>
                                 <Link
                                   to={`/eventos/${evento.id}`}
-                                  className="text-xs font-semibold text-brand hover:text-brand-dark transition-colors inline-flex items-center gap-1"
+                                  className="text-xs font-black uppercase tracking-wider text-amber-700 hover:text-amber-800 transition-colors inline-flex items-center gap-1 group"
                                 >
-                                  <span>Ver evento</span>
-                                  <FiArrowRight size={13} />
+                                  <span>Ver detalle</span>
+                                  <FiArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
                                 </Link>
                               </div>
                             </div>
@@ -912,45 +942,45 @@ export default function PerfilUsuario() {
 
       {/* Modal Digital Ticket QR */}
       {ticketModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 text-center relative overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 sm:p-7 shadow-2xl border-2 border-amber-200/90 text-center relative overflow-hidden">
             <button
               onClick={() => setTicketModal(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-ink transition-colors p-1"
+              className="absolute top-4 right-4 text-slate-400 hover:text-[#0B1B3D] transition-colors p-1 cursor-pointer"
             >
               <FiX size={20} />
             </button>
 
-            <span className="text-[10px] font-bold uppercase tracking-wider text-brand bg-brand-light px-3 py-1 rounded-full">
-              Pase Digital de Acceso
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-950 bg-amber-100 border border-amber-300 px-3 py-1 rounded-full inline-block">
+              ⬡ Pase Digital Oficial
             </span>
 
-            <h3 className="font-display font-bold text-lg text-ink mt-3">{ticketModal.evento}</h3>
-            <p className="text-xs text-muted mt-0.5">
+            <h3 className="font-black text-lg text-[#0B1B3D] mt-3 leading-snug">{ticketModal.evento}</h3>
+            <p className="text-xs font-bold text-amber-800 mt-0.5">
               {ticketModal.zona} · {ticketModal.asiento}
             </p>
 
-            <div className="my-5 p-4 rounded-2xl bg-slate-50 border border-slate-200 inline-block shadow-inner">
+            <div className="my-5 p-4 rounded-2xl bg-amber-50/50 border border-amber-200 inline-block shadow-inner">
               <img
                 src={ticketModal.codigoQR}
                 alt="QR Code"
-                className="w-48 h-48 mx-auto object-contain"
+                className="w-48 h-48 mx-auto object-contain rounded-lg"
               />
-              <p className="font-mono text-xs text-slate-500 font-bold mt-2">{ticketModal.id}</p>
+              <p className="font-mono text-xs text-slate-600 font-bold mt-2">{ticketModal.id}</p>
             </div>
 
-            <div className="text-xs text-slate-600 text-left bg-slate-50 p-3.5 rounded-xl mb-4 space-y-1">
+            <div className="text-xs text-slate-700 text-left bg-[#FAF8F5] p-3.5 rounded-2xl mb-5 space-y-1 font-medium border border-amber-100">
               <p>
-                <strong>Fecha:</strong> {ticketModal.fecha} ({ticketModal.hora})
+                <strong className="text-[#0B1B3D]">Fecha:</strong> {ticketModal.fecha} ({ticketModal.hora})
               </p>
               <p className="truncate">
-                <strong>Lugar:</strong> {ticketModal.lugar}
+                <strong className="text-[#0B1B3D]">Lugar:</strong> {ticketModal.lugar}
               </p>
               <p>
-                <strong>Titular:</strong> {ticketModal.titular}
+                <strong className="text-[#0B1B3D]">Titular:</strong> {ticketModal.titular}
               </p>
               <p>
-                <strong>Precio:</strong> {ticketModal.precio}
+                <strong className="text-[#0B1B3D]">Precio:</strong> {ticketModal.precio}
               </p>
             </div>
 
@@ -959,58 +989,67 @@ export default function PerfilUsuario() {
               onClick={() => {
                 Swal.fire({
                   icon: 'info',
-                  title: 'Boleto Digital',
-                  text: 'Puedes guardar la imagen o presentar este código QR directamente desde tu dispositivo móvil.',
+                  title: 'Boleto Digital Verificado',
+                  text: 'Puedes presentar este código QR directamente en tu dispositivo o guardar una captura para ingresar.',
+                  confirmButtonColor: '#0B1B3D',
                 });
               }}
-              className="w-full py-2.5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-semibold shadow-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
             >
-              <FiDownload size={14} /> Guardar Boleto
+              <FiDownload size={14} />
+              <span>Guardar / Confirmar Pase</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Modal Editar Perfil Rápido */}
+      {/* Modal Editar Perfil */}
       {editModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display font-bold text-lg text-ink">
-                Editar Información del Perfil
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border-2 border-amber-200/90">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-amber-100">
+              <div className="flex items-center gap-2">
+                <span className="text-amber-500 text-lg">⬡</span>
+                <h3 className="text-lg font-black text-[#0B1B3D]">
+                  Editar Datos del Perfil
+                </h3>
+              </div>
               <button
                 onClick={() => setEditModal(false)}
-                className="text-slate-400 hover:text-ink p-1"
+                className="text-slate-400 hover:text-[#0B1B3D] p-1 cursor-pointer"
               >
                 <FiX size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleUpdatePerfil} className="space-y-3.5">
+            <form onSubmit={handleUpdatePerfil} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-ink mb-1">Nombre completo</label>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1">
+                  Nombre Completo
+                </label>
                 <input
                   type="text"
                   value={usuario.nombreCompleto}
                   onChange={(e) => setUsuario({ ...usuario, nombreCompleto: e.target.value })}
-                  className="w-full text-sm px-3.5 py-2 rounded-xl border border-borderc outline-none focus:border-brand"
+                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                   required
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-ink mb-1">
-                  Correo electrónico (Lectura)
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1">
+                  Correo Electrónico (Solo Lectura)
                 </label>
                 <input
                   type="email"
                   value={usuario.correo}
                   disabled
-                  className="w-full text-sm px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed"
+                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-ink mb-1">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1">
                   Teléfono / WhatsApp
                 </label>
                 <input
@@ -1018,35 +1057,39 @@ export default function PerfilUsuario() {
                   value={usuario.telefono}
                   onChange={(e) => setUsuario({ ...usuario, telefono: e.target.value })}
                   placeholder="+57 300 123 4567"
-                  className="w-full text-sm px-3.5 py-2 rounded-xl border border-borderc outline-none focus:border-brand"
+                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-ink mb-1">Ciudad</label>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1">
+                  Ciudad
+                </label>
                 <input
                   type="text"
                   value={usuario.ciudad}
                   onChange={(e) => setUsuario({ ...usuario, ciudad: e.target.value })}
-                  className="w-full text-sm px-3.5 py-2 rounded-xl border border-borderc outline-none focus:border-brand"
+                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                 />
               </div>
-              <div className="flex gap-2 pt-3">
+
+              <div className="flex gap-2.5 pt-3">
                 <button
                   type="button"
                   onClick={() => setEditModal(false)}
-                  className="flex-1 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-black uppercase tracking-wider text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="flex-1 py-2 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
                 >
                   {isUpdating && (
-                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
                   )}
-                  <span>Guardar Cambios</span>
+                  <span>Guardar</span>
                 </button>
               </div>
             </form>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiCalendar, FiClock, FiMapPin, FiEdit3, FiUsers, FiTag } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiMapPin, FiEdit3, FiUsers } from 'react-icons/fi';
 import Badge from '../Shared/Badge.jsx';
 
 export default function OrganizerEventCard({ event, onEdit, onManage }) {
@@ -40,7 +40,7 @@ export default function OrganizerEventCard({ event, onEdit, onManage }) {
   };
 
   return (
-    <article className="group bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+    <article className="group bg-white border border-amber-200/80 hover:border-amber-400 rounded-2xl overflow-hidden shadow-[0_8px_20px_-4px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_30px_-5px_rgba(245,158,11,0.15)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
       <div>
         {/* Cabecera con imagen y badges flotantes */}
         <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100">
@@ -53,8 +53,9 @@ export default function OrganizerEventCard({ event, onEdit, onManage }) {
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-black/20" />
 
           {/* Categoría Badge flotante */}
-          <span className="absolute left-3 top-3 text-[11px] font-bold bg-white/95 backdrop-blur-md text-slate-800 px-2.5 py-1 rounded-lg shadow-sm z-10">
-            {category}
+          <span className="absolute left-3 top-3 text-[10.5px] font-black uppercase tracking-wider bg-[#0B172C] text-amber-300 border border-amber-400/40 px-2.5 py-1 rounded-lg shadow-xs z-10 flex items-center gap-1">
+            <span>⬡</span>
+            <span>{category}</span>
           </span>
 
           {/* Badge de Estado flotante */}
@@ -64,7 +65,7 @@ export default function OrganizerEventCard({ event, onEdit, onManage }) {
 
           {/* Precio en la parte inferior de la imagen */}
           <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-white z-10">
-            <span className="text-xs font-semibold bg-slate-900/60 backdrop-blur-md px-2.5 py-0.5 rounded-md border border-white/10">
+            <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-black/80 backdrop-blur-md text-amber-300 border border-amber-400/30 shadow-xs">
               {formatPriceDisplay()}
             </span>
           </div>
@@ -72,17 +73,17 @@ export default function OrganizerEventCard({ event, onEdit, onManage }) {
 
         {/* Contenido principal */}
         <div className="p-4 sm:p-5">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-brand mb-1">
+          <span className="inline-block text-[10px] font-black uppercase tracking-widest text-amber-950 bg-amber-50 border border-amber-200/90 px-2 py-0.5 rounded-md mb-2">
             {category}
-          </p>
-          <h3 className="font-display text-base font-bold leading-snug text-slate-900 group-hover:text-brand transition-colors line-clamp-1 mb-2">
+          </span>
+          <h3 className="font-display text-[15px] sm:text-[16px] font-black leading-snug text-[#0B172C] group-hover:text-amber-700 transition-colors line-clamp-1 mb-2">
             {title}
           </h3>
 
-          <div className="space-y-1.5 text-xs text-slate-600 mb-4">
+          <div className="space-y-1.5 text-xs text-slate-600 mb-4 font-medium">
             <div className="flex items-center gap-2 text-slate-700">
-              <FiCalendar className="text-brand shrink-0" size={13} />
-              <span className="font-medium">{date}</span>
+              <FiCalendar className="text-amber-600 shrink-0" size={13} />
+              <span className="font-semibold">{date}</span>
               <span className="text-slate-300">•</span>
               <FiClock className="text-slate-400 shrink-0" size={13} />
               <span>{time}</span>
@@ -95,24 +96,24 @@ export default function OrganizerEventCard({ event, onEdit, onManage }) {
 
           {/* Barra de progreso de aforo / ventas */}
           {capacityNum > 0 && (
-            <div className="bg-slate-50 border border-slate-100 rounded-xl p-2.5">
+            <div className="bg-[#FAF8F5] border border-amber-200/70 rounded-xl p-2.5">
               <div className="flex items-center justify-between text-xs mb-1.5">
-                <span className="text-slate-500 font-medium flex items-center gap-1">
-                  <FiUsers size={12} className="text-slate-400" /> Aforo vendido
+                <span className="text-slate-600 font-semibold flex items-center gap-1">
+                  <FiUsers size={12} className="text-amber-600" /> Aforo vendido
                 </span>
-                <span className="font-bold text-slate-800">
+                <span className="font-black text-slate-900">
                   {soldNum} / {capacityNum}{' '}
-                  <span className="text-brand font-semibold text-[11px]">({percentage}%)</span>
+                  <span className="text-amber-700 font-black text-[11px]">({percentage}%)</span>
                 </span>
               </div>
-              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+              <div className="w-full bg-amber-100 h-2 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
                     percentage >= 90
                       ? 'bg-gradient-to-r from-emerald-500 to-emerald-600'
                       : percentage >= 50
-                      ? 'bg-gradient-to-r from-brand to-sky-400'
-                      : 'bg-gradient-to-r from-amber-400 to-amber-500'
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-600'
+                      : 'bg-gradient-to-r from-amber-300 to-amber-500'
                   }`}
                   style={{ width: `${percentage}%` }}
                 />
@@ -123,16 +124,16 @@ export default function OrganizerEventCard({ event, onEdit, onManage }) {
       </div>
 
       {/* Pie de acciones rápidas */}
-      <div className="px-4 sm:px-5 pb-4 pt-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-        <span className="text-[11px] font-semibold text-slate-500">
-          ID: #{id}
+      <div className="px-4 sm:px-5 pb-4 pt-3 border-t border-amber-100 flex items-center justify-between bg-[#FAF8F5]/50">
+        <span className="text-[11px] font-bold text-slate-500 font-mono">
+          #{id}
         </span>
 
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => onEdit && onEdit(event)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:border-brand hover:text-brand shadow-xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-200 bg-white text-xs font-bold text-slate-700 hover:border-amber-400 hover:text-amber-800 shadow-2xs transition-colors cursor-pointer"
           >
             <FiEdit3 size={12} />
             <span>Editar</span>
@@ -141,7 +142,7 @@ export default function OrganizerEventCard({ event, onEdit, onManage }) {
           <button
             type="button"
             onClick={() => onManage && onManage(event)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-brand-dark shadow-xs transition-all"
+            className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-xs transition-all cursor-pointer active:scale-95"
           >
             <span>Gestionar</span>
           </button>
