@@ -56,7 +56,7 @@ export default function RutaProtegida({ children, rolesPermitidos }) {
           if (activo && meData) {
             const userUpdated = session.updateUser({
               ...meData,
-              role: meData.rol || meData.role,
+              role: meData.rol || meData.role || meData.rolNombre,
             });
             setCurrentUser(userUpdated);
           }

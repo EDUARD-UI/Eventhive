@@ -37,17 +37,21 @@ export default function ImageWithFallback({
         <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
         <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-black/20 rounded-full blur-lg pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col items-center justify-center gap-1.5 p-3 text-center pointer-events-none">
-          <FiImage
-            size={iconSize}
-            className="text-white/80 drop-shadow transition-transform duration-300 group-hover:scale-110"
-          />
-          {showText && (
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/90 drop-shadow-sm">
-              {fallbackText}
-            </span>
-          )}
-        </div>
+        {(showText || (iconSize && iconSize > 0)) && (
+          <div className="relative z-10 flex flex-col items-center justify-center gap-1.5 p-3 text-center pointer-events-none">
+            {iconSize > 0 && (
+              <FiImage
+                size={iconSize}
+                className="text-white/80 drop-shadow transition-transform duration-300 group-hover:scale-110"
+              />
+            )}
+            {showText && fallbackText && (
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/90 drop-shadow-sm">
+                {fallbackText}
+              </span>
+            )}
+          </div>
+        )}
         {children}
       </div>
     );

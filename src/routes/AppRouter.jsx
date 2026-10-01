@@ -30,8 +30,8 @@ function HomeRoute() {
 
   if (token && user?.role) {
     const role = normalizeRole(user.role);
-    if (role === 'ADMIN') return <Navigate to="/admin" replace />;
-    if (role === 'ORGANIZADOR') return <Navigate to="/organizacion" replace />;
+    if (role === 'ADMINISTRADOR' || role === 'ADMIN') return <Navigate to="/admin" replace />;
+    if (role === 'REPRESENTANTE' || role === 'ORGANIZADOR' || role === 'OPERADOR') return <Navigate to="/organizacion" replace />;
     if (role === 'MODERADOR') return <Navigate to="/moderador" replace />;
   }
 
@@ -108,6 +108,8 @@ export default function AppRouter() {
         />
         <Route path="/organizador" element={<Navigate to="/organizacion" replace />} />
         <Route path="/organization" element={<Navigate to="/organizacion" replace />} />
+        <Route path="/organizador/dashboard" element={<Navigate to="/organizacion" replace />} />
+        <Route path="/organizacion/dashboard" element={<Navigate to="/organizacion" replace />} />
 
         {/* Autenticación protegida para usuarios ya logueados */}
         <Route

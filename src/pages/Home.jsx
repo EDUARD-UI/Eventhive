@@ -88,6 +88,7 @@ export default function Home() {
   const navigate = useNavigate();
   const [featuredEvents, setFeaturedEvents] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [mapEvents, setMapEvents] = useState([]);
   const [featuredOrganizations, setFeaturedOrganizations] = useState([]);
   const [featuredCategories, setFeaturedCategories] = useState([]);
@@ -98,32 +99,36 @@ export default function Home() {
   const [isLocating, setIsLocating] = useState(false);
 
   useEffect(() => {
-    getFeaturedEvents()
-      .then((data) => setFeaturedEvents(data || []))
-      .catch(() => setFeaturedEvents([]));
+    setIsLoadingEvents(true);
 
-    getUpcomingEvents()
-      .then((data) => setUpcomingEvents(data || []))
-      .catch(() => setUpcomingEvents([]));
-
-    getMapEvents()
-      .then((data) => setMapEvents(data || []))
-      .catch(() => setMapEvents([]));
-
-    organizationService
-      .listTopOrganizations({ page: 0, size: 4 })
-      .then(({ organizations }) => {
-        if (organizations?.length > 0) setFeaturedOrganizations(organizations.slice(0, 4));
-      })
-      .catch(() => {});
-
-    getFeaturedCategories()
-      .then((data) => setFeaturedCategories(data || []))
-      .catch(() => setFeaturedCategories([]));
-
-    getCategoryNames()
-      .then((data) => setCategoryList(data || []))
-      .catch(() => setCategoryList([]));
+    Promise.allSettled([
+      getFeaturedEvents(),
+      getUpcomingEvents(),
+      getMapEvents(),
+      organizationService.listTopOrganizations({ page: 0, size: 4 }),
+      getFeaturedCategories(),
+      getCategoryNames(),
+    ]).then(([featuredRes, upcomingRes, mapRes, orgsRes, featCatsRes, catNamesRes]) => {
+      if (featuredRes.status === 'fulfilled' && Array.isArray(featuredRes.value)) {
+        setFeaturedEvents(featuredRes.value);
+      }
+      if (upcomingRes.status === 'fulfilled' && Array.isArray(upcomingRes.value)) {
+        setUpcomingEvents(upcomingRes.value);
+      }
+      if (mapRes.status === 'fulfilled' && Array.isArray(mapRes.value)) {
+        setMapEvents(mapRes.value);
+      }
+      if (orgsRes.status === 'fulfilled' && orgsRes.value?.organizations?.length > 0) {
+        setFeaturedOrganizations(orgsRes.value.organizations.slice(0, 4));
+      }
+      if (featCatsRes.status === 'fulfilled' && Array.isArray(featCatsRes.value)) {
+        setFeaturedCategories(featCatsRes.value);
+      }
+      if (catNamesRes.status === 'fulfilled' && Array.isArray(catNamesRes.value)) {
+        setCategoryList(catNamesRes.value);
+      }
+      setIsLoadingEvents(false);
+    });
   }, []);
 
   const requestLocation = (targetDistance = null) => {
@@ -292,16 +297,30 @@ export default function Home() {
           </Link>
         </div>
 
-        {featuredEvents.length > 0 ? (
-          <FeaturedEventsCarousel events={featuredEvents} />
-        ) : (
-          <HiveEmptyState
-            title="Las abejas están preparando la agenda para este fin de semana en Cartagena."
-            subtitle="¡Vuelve pronto o sé el primero en publicar tu experiencia!"
-            showAction={true}
-            actionType="publish"
-          />
-        )}
+        {(() => {
+          const carouselEvents = featuredEvents.length > 0 ? featuredEvents : upcomingEvents;
+          if (carouselEvents.length > 0) {
+            return <FeaturedEventsCarousel events={carouselEvents} />;
+          }
+          if (isLoadingEvents) {
+            return (
+              <div className="w-full rounded-2xl sm:rounded-3xl h-[320px] sm:h-[420px] md:h-[480px] lg:h-[520px] bg-[#0D1527] border border-amber-200/50 animate-pulse relative overflow-hidden flex flex-col justify-end p-5 sm:p-8 md:p-10 lg:p-12 shadow-2xl">
+                <div className="w-28 h-6 bg-amber-400/30 rounded-md mb-4" />
+                <div className="w-2/3 h-8 sm:h-10 bg-white/20 rounded-lg mb-3" />
+                <div className="w-1/2 h-4 bg-white/10 rounded mb-6 hidden sm:block" />
+                <div className="w-36 h-10 bg-amber-400/40 rounded-xl" />
+              </div>
+            );
+          }
+          return (
+            <HiveEmptyState
+              title="Las abejas están preparando la agenda para este fin de semana en Cartagena."
+              subtitle="¡Vuelve pronto o sé el primero en publicar tu experiencia!"
+              showAction={true}
+              actionType="publish"
+            />
+          );
+        })()}
       </section>
 
       {/* ========================================================

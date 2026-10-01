@@ -35,9 +35,6 @@ export default function EventCard({ event }) {
         </div>
 
         <div className="p-4 sm:p-5">
-          <span className="inline-block text-[10px] font-black uppercase tracking-widest text-white bg-[#0D1527] border border-[#0D1527] px-2.5 py-1 rounded-md mb-2 shadow-xs">
-            {category}
-          </span>
           <h3 className="font-display text-[15px] sm:text-[16px] font-bold leading-snug mb-3 text-slate-900 line-clamp-2 group-hover:text-brand transition-colors duration-200">
             {title}
           </h3>

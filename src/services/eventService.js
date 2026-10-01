@@ -20,11 +20,14 @@ const formatDisplayDate = (dateString, timeString) => {
 export const normalizeEvent = (event) => ({
   ...event,
   id: String(event.id),
-  title: event.titulo,
-  description: event.descripcion,
-  category: typeof event.categoria === 'string' ? event.categoria : event.categoria?.nombre || event.nombreCategoria || 'Evento',
+  title: event.titulo || event.title || 'Evento sin título',
+  description: event.descripcion || event.description || '',
+  category:
+    typeof event.categoria === 'string'
+      ? event.categoria
+      : event.categoria?.nombre || event.nombreCategoria || event.category || 'Evento',
   categoriaId: event.categoria?.id || event.categoriaId || null,
-  location: event.ubicacion || event.lugar || '',
+  location: event.ubicacion || event.lugar || event.location || '',
   date: formatDisplayDate(event.fecha, event.hora),
   startsAt: event.fecha ? `${event.fecha}T${event.hora || '00:00:00'}` : null,
   lat: event.latitud,
@@ -32,7 +35,7 @@ export const normalizeEvent = (event) => ({
   price: event.precio ?? event.localidades?.[0]?.precio ?? 0,
   gradient: 'from-brand to-sky-300',
   favorite: false,
-  photo: event.foto || null,
+  photo: event.foto || event.fotoUrl || event.imagen || event.imagenUrl || event.banner || null,
   organization: event.organizacion || event.organizador,
   localidades: event.localidades || [],
 });
@@ -50,25 +53,36 @@ const sortByNearestDate = (events) => {
 
 /** Eventos destacados: hasta 8 eventos más próximos a la fecha actual para el carrusel (GET /eventos). */
 export async function getFeaturedEvents() {
-  const data = await httpClient.get('/eventos', { page: 0, size: 12, sort: 'fecha,asc' });
-  const events = (data?.content || []).map(normalizeEvent);
-  return sortByNearestDate(events).slice(0, 8);
+  try {
+    const data = await httpClient.get('/eventos', { page: 0, size: 12, sort: 'fecha,asc' });
+    const content = Array.isArray(data) ? data : data?.content || [];
+    const events = content.map(normalizeEvent);
+    return sortByNearestDate(events).slice(0, 8);
+  } catch (err) {
+    console.error('Error fetching featured events:', err);
+    return [];
+  }
 }
 
 /** Más eventos para la sección "Más eventos" (GET /eventos/proximos o GET /eventos). */
 export async function getUpcomingEvents() {
   try {
     const proximosData = await httpClient.get('/eventos/proximos', { page: 0, size: 8 });
-    const content = proximosData?.content || [];
+    const content = Array.isArray(proximosData) ? proximosData : proximosData?.content || [];
     if (content.length > 0) {
       return content.map(normalizeEvent).slice(0, 4);
     }
   } catch {
     // fallback a /eventos si /eventos/proximos no tiene datos
   }
-  const data = await httpClient.get('/eventos', { page: 0, size: 12, sort: 'fecha,asc' });
-  const events = (data?.content || []).map(normalizeEvent);
-  return sortByNearestDate(events).slice(0, 4);
+  try {
+    const data = await httpClient.get('/eventos', { page: 0, size: 12, sort: 'fecha,asc' });
+    const content = Array.isArray(data) ? data : data?.content || [];
+    const events = content.map(normalizeEvent);
+    return sortByNearestDate(events).slice(0, 4);
+  } catch {
+    return [];
+  }
 }
 
 /** Eventos paginados, con categoriaId opcional (GET /eventos). */

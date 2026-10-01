@@ -11,12 +11,12 @@ export const normalizeRole = (rawRole) => {
   if (Array.isArray(rawRole)) {
     const first = rawRole[0];
     if (typeof first === 'object' && first !== null) {
-      roleStr = first.nombre || first.authority || first.name || first.rol || '';
+      roleStr = first.nombre || first.authority || first.name || first.rol || first.rolNombre || '';
     } else {
       roleStr = String(first || '');
     }
   } else if (typeof rawRole === 'object' && rawRole !== null) {
-    roleStr = rawRole.nombre || rawRole.authority || rawRole.name || rawRole.rol || rawRole.codigo || '';
+    roleStr = rawRole.nombre || rawRole.authority || rawRole.name || rawRole.rol || rawRole.rolNombre || rawRole.codigo || '';
   } else {
     roleStr = String(rawRole);
   }
@@ -171,8 +171,10 @@ export const session = {
     const rawRole =
       data.rol ||
       data.role ||
+      data.rolNombre ||
       usuarioObj.rol ||
       usuarioObj.role ||
+      usuarioObj.rolNombre ||
       data.roles ||
       usuarioObj.roles ||
       data.authorities ||
@@ -213,6 +215,7 @@ export const session = {
       name,
       role: normalizedRole,
       rol: normalizedRole,
+      rolNombre: normalizedRole,
       fotoUrl,
       foto: fotoUrl,
     };
@@ -223,13 +226,14 @@ export const session = {
 
   updateUser: (fields = {}) => {
     const existing = session.getUser() || {};
-    const roleToNormalize = fields.role || fields.rol;
+    const roleToNormalize = fields.role || fields.rol || fields.rolNombre;
     const normalizedRole = roleToNormalize ? normalizeRole(roleToNormalize) : existing.role;
     const updated = {
       ...existing,
       ...fields,
       role: normalizedRole,
       rol: normalizedRole,
+      rolNombre: normalizedRole,
     };
     localStorage.setItem(USER_KEY, JSON.stringify(updated));
     return updated;

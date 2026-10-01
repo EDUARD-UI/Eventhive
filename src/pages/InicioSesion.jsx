@@ -65,13 +65,20 @@ export default function InicioSesion() {
     const userRole = normalizeRole(
       data?.rol ||
       data?.role ||
+      data?.rolNombre ||
       data?.usuario?.rol ||
       data?.usuario?.role ||
+      data?.usuario?.rolNombre ||
       user?.role ||
-      user?.rol
+      user?.rol ||
+      user?.rolNombre
     );
 
-    const destination = getDashboardPathForRole(userRole);
+    // Los organizadores entran con el rol REPRESENTANTE y se dirigen directamente a su dashboard (/organizacion)
+    const destination = userRole === 'REPRESENTANTE' || userRole === 'OPERADOR' || userRole === 'ORGANIZADOR'
+      ? '/organizacion'
+      : getDashboardPathForRole(userRole);
+
     navigate(destination, { replace: true });
   };
 

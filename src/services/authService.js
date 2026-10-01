@@ -1,4 +1,4 @@
-﻿import { httpClient } from './httpClient.js';
+import { httpClient } from './httpClient.js';
 import { session } from './session.js';
 
 const parseJwtPayload = (token) => {
@@ -30,14 +30,20 @@ export const authService = {
     session.save(data);
 
     // 2. Extraer rol disponible o consultar /auth/me inmediatamente
-    let detectedRole = data?.rol || data?.role || data?.usuario?.rol || data?.usuario?.role;
+    let detectedRole =
+      data?.rol ||
+      data?.role ||
+      data?.rolNombre ||
+      data?.usuario?.rol ||
+      data?.usuario?.role ||
+      data?.usuario?.rolNombre;
 
     // Si aún no tenemos rol, consultar el endpoint oficial /api/auth/me
     if (!detectedRole) {
       try {
         const meData = await httpClient.get('/auth/me');
-        if (meData?.rol || meData?.role) {
-          detectedRole = meData.rol || meData.role;
+        if (meData?.rol || meData?.role || meData?.rolNombre) {
+          detectedRole = meData.rol || meData.role || meData.rolNombre;
           session.updateUser({
             ...meData,
             role: detectedRole,
@@ -50,16 +56,19 @@ export const authService = {
             },
             rol: detectedRole,
             role: detectedRole,
+            rolNombre: detectedRole,
           };
         }
       } catch {
         // Fallback: intentar inspeccionar claims del accessToken
         const jwtData = parseJwtPayload(data?.accessToken);
-        if (jwtData?.rol || jwtData?.role || jwtData?.authorities) {
+        if (jwtData) {
           const jwtRole =
             jwtData.rol ||
             jwtData.role ||
-            (Array.isArray(jwtData.authorities) ? jwtData.authorities[0] : null);
+            jwtData.rolNombre ||
+            (Array.isArray(jwtData.authorities) ? jwtData.authorities[0] : null) ||
+            (Array.isArray(jwtData.roles) ? jwtData.roles[0] : null);
           if (jwtRole) {
             detectedRole = jwtRole;
             session.updateUser({ role: detectedRole });
@@ -74,6 +83,7 @@ export const authService = {
       ...data,
       rol: detectedRole,
       role: detectedRole,
+      rolNombre: detectedRole,
     };
   },
 
