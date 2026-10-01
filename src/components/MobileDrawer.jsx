@@ -11,14 +11,14 @@ export default function MobileDrawer({ isOpen, onClose, onHelpClick, currentUser
 
   return (
     <div
-      className="fixed inset-0 bg-ink/50 z-50"
+      className="fixed inset-0 bg-ink/60 z-[60] backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Menú de navegación"
-        className="absolute bottom-0 right-0 top-0 flex w-[82%] max-w-[360px] flex-col gap-1 overflow-y-auto bg-white p-5 shadow-xl"
+        className="absolute bottom-0 right-0 top-0 z-[70] flex w-[82%] max-w-[360px] flex-col gap-1 overflow-y-auto bg-white p-5 shadow-2xl"
       >
         <button
           type="button"

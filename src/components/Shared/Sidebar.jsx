@@ -191,14 +191,14 @@ export default function Sidebar({
                       onSelect(id);
                       onClose();
                     }}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 text-sm text-left group transition-all duration-200 ease-out ${
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 text-sm text-left group transition-all duration-200 ease-out rounded-xl mr-3 ${
                       active
                         ? isCurved
-                          ? 'bg-[#f1f5f9] text-slate-900 font-bold rounded-l-2xl relative z-10 shadow-sm'
-                          : 'bg-[#087fea] text-white font-semibold rounded-xl mr-3 shadow-md shadow-[#087fea]/20'
+                          ? 'bg-white/10 text-white font-bold shadow-sm ring-1 ring-white/15'
+                          : 'bg-[#087fea] text-white font-semibold shadow-md shadow-[#087fea]/20'
                         : isCurved
-                        ? 'text-slate-300 hover:text-white hover:bg-white/5 rounded-l-2xl mr-3 font-medium'
-                        : 'text-slate-300 hover:text-white hover:bg-white/5 rounded-xl mr-3 font-medium'
+                        ? 'text-slate-300 hover:text-white hover:bg-white/5 font-medium'
+                        : 'text-slate-300 hover:text-white hover:bg-white/5 font-medium'
                     }`}
                   >
                     <span className="flex items-center gap-3 min-w-0">
@@ -231,39 +231,9 @@ export default function Sidebar({
                       </span>
                     )}
                   </button>
-                  {active && isCurved && !isDrawer && (
-                    <>
-                      {/* Curva superior invertida */}
-                      <div className="absolute -top-5 right-0 w-5 h-5 pointer-events-none z-10 hidden md:block overflow-hidden transition-opacity duration-300 animate-in fade-in">
-                        <svg
-                          viewBox="0 0 20 20"
-                          className="w-full h-full"
-                          style={{ color: pageBg }}
-                        >
-                          <path
-                            d="M20 20 H0 A 20 20 0 0 0 20 0 Z"
-                            fill="currentColor"
-                          />
-                        </svg>
-                      </div>
-
-                      {/* Curva inferior invertida */}
-                      <div className="absolute -bottom-5 right-0 w-5 h-5 pointer-events-none z-10 hidden md:block overflow-hidden transition-opacity duration-300 animate-in fade-in">
-                        <svg
-                          viewBox="0 0 20 20"
-                          className="w-full h-full"
-                          style={{ color: pageBg }}
-                        >
-                          <path
-                            d="M20 0 H0 A 20 20 0 0 0 20 20 Z"
-                            fill="currentColor"
-                          />
-                        </svg>
-                      </div>
-                    </>
-                  )}
                 </div>
               );
+
             })}
           </nav>
         </div>
