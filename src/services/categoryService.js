@@ -5,23 +5,26 @@ export const normalizeCategory = (categoria) => {
     return {
       id: categoria,
       nombre: categoria,
+      imagenUrl: null,
       urlFoto: null,
       totalEventos: 0,
-      descripcion: '',
     };
   }
+
+  const backendImageUrl =
+    categoria.imagenUrl || categoria.foto || categoria.urlFoto || categoria.imagen || null;
 
   return {
     id: categoria.id,
     nombre: categoria.nombre || '',
-    urlFoto: categoria.urlFoto || categoria.foto || categoria.imagen || categoria.imagenUrl || null,
+    imagenUrl: backendImageUrl,
+    urlFoto: backendImageUrl,
     totalEventos:
       categoria.totalEventos ??
       categoria.eventosCount ??
       categoria.cantidadEventos ??
       categoria.numeroEventos ??
       (Array.isArray(categoria.eventos) ? categoria.eventos.length : 0),
-    descripcion: categoria.descripcion || '',
   };
 };
 

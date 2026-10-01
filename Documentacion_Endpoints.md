@@ -29,9 +29,9 @@ Ejemplo concreto de un objeto devuelto:
 }
 ```
 
-> Importante: `data` puede contener un objeto simple, un array, o un objeto paginado. Por ejemplo, un endpoint puede devolver un objeto como `{ "nombre": "C", "edad": 34 }` dentro de `data`, o una lista dentro de `content` cuando es paginado.
+> Importante: `data` puede contener un objeto simple, un array o un objeto paginado. Si su valor es `null` (por ejemplo, en respuestas `Void` y errores), `ApiResponse` lo omite del JSON. Algunos ejemplos `Void` muestran `data: null` solo como representación conceptual.
 
-Cuando la respuesta es paginada, la API usa `PagedResponse<T>`:
+La mayoría de respuestas paginadas usan `PagedResponse<T>`:
 
 ```json
 {
@@ -47,13 +47,14 @@ Cuando la respuesta es paginada, la API usa `PagedResponse<T>`:
 }
 ```
 
+Algunos endpoints devuelven directamente `Page<T>` de Spring Data; su estructura paginada puede incluir metadatos adicionales propios de Spring.
+
 En caso de error, la respuesta suele devolver:
 
 ```json
 {
   "success": false,
-  "mensaje": "Descripción del error",
-  "data": null
+  "mensaje": "Descripción del error"
 }
 ```
 
@@ -78,7 +79,8 @@ En caso de error, la respuesta suele devolver:
     "id": 7,
     "nombre": "Carlos",
     "correo": "carlos@email.com",
-    "rol": "CLIENTE"
+    "telefono": "+56912345678",
+    "rolNombre": "CLIENTE"
   }
 }
 ```
@@ -95,13 +97,12 @@ En caso de error, la respuesta suele devolver:
   "success": true,
   "mensaje": "Login exitoso",
   "data": {
+    "id": 7,
     "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
     "refreshToken": "eyJzdWIiOiJjYXJsb3NAY...",
-    "usuario": {
-      "id": 7,
-      "nombre": "Carlos",
-      "correo": "carlos@email.com"
-    }
+    "tipo": "Bearer",
+    "correo": "carlos@email.com",
+    "rol": "CLIENTE"
   }
 }
 ```
@@ -118,12 +119,12 @@ En caso de error, la respuesta suele devolver:
   "success": true,
   "mensaje": "Token renovado",
   "data": {
+    "id": 7,
     "accessToken": "newAccessToken123",
     "refreshToken": "refreshToken456",
-    "usuario": {
-      "id": 7,
-      "nombre": "Carlos"
-    }
+    "tipo": "Bearer",
+    "correo": "carlos@email.com",
+    "rol": "CLIENTE"
   }
 }
 ```
@@ -181,7 +182,7 @@ En caso de error, la respuesta suele devolver:
 
 #### `GET /api/usuarios`
 - Recibe: query params `page`, `size`, `sort` (paginación). Requiere rol ADMINISTRADOR.
-- Devuelve: `ApiResponse<PagedResponse<UsuarioDTO>>`
+- Devuelve: `ApiResponse<PagedResponse<UsuarioAdminDTO>>`; incluye teléfono, nombre del rol y resumen de organización, no correo.
 - Ejemplo de respuesta:
 
 ```json
@@ -193,8 +194,9 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 1,
         "nombre": "Ana",
-        "correo": "ana@email.com",
-        "rol": "CLIENTE"
+        "telefono": "+56912345678",
+        "rolNombre": "CLIENTE",
+        "organizacion": null
       }
     ],
     "pageNumber": 0,
@@ -209,7 +211,7 @@ En caso de error, la respuesta suele devolver:
 
 #### `GET /api/usuarios/buscar`
 - Recibe: `nombre`, `rolId`, y paginación.
-- Devuelve: `ApiResponse<PagedResponse<UsuarioDTO>>`
+- Devuelve: `ApiResponse<PagedResponse<UsuarioAdminDTO>>`
 - Permisos: ADMINISTRADOR.
 - Ejemplo de respuesta:
 
@@ -222,8 +224,12 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 2,
         "nombre": "Luis",
-        "correo": "luis@email.com",
-        "rol": "OPERADOR"
+        "telefono": "+56987654321",
+        "rolNombre": "OPERADOR",
+        "organizacion": {
+          "id": 10,
+          "razonSocial": "Eventica SpA"
+        }
       }
     ],
     "pageNumber": 0,
@@ -236,7 +242,7 @@ En caso de error, la respuesta suele devolver:
 
 #### `GET /api/usuarios/{id}`
 - Recibe: `id` en path.
-- Devuelve: `ApiResponse<UsuarioDTO>`
+- Devuelve: `ApiResponse<UsuarioAdminDTO>`
 - Permisos: ADMINISTRADOR.
 - Ejemplo de respuesta:
 
@@ -247,8 +253,12 @@ En caso de error, la respuesta suele devolver:
   "data": {
     "id": 3,
     "nombre": "María",
-    "correo": "maria@email.com",
-    "rol": "REPRESENTANTE"
+    "telefono": "+56911112222",
+    "rolNombre": "REPRESENTANTE",
+    "organizacion": {
+      "id": 10,
+      "razonSocial": "Eventica SpA"
+    }
   }
 }
 ```
@@ -267,8 +277,15 @@ En caso de error, la respuesta suele devolver:
     "content": [
       {
         "id": 10,
-        "nombre": "Eventica",
-        "descripcion": "Organización de eventos"
+        "razonSocial": "Eventica SpA",
+        "representante": "Carlos Pérez",
+        "fechaCreacion": "2026-09-01T09:00:00",
+        "promedioRating": 4.8,
+        "totalValoraciones": 25,
+        "totalSeguidores": 340,
+        "totalEventosCreados": 18,
+        "nivel": "NIVEL_2",
+        "estado": "APROBADA"
       }
     ],
     "pageNumber": 0,
@@ -308,7 +325,27 @@ En caso de error, la respuesta suele devolver:
     "nombre": "Carlos",
     "correo": "carlos@email.com",
     "telefono": "+56912345678",
-    "rol": "CLIENTE"
+    "rolNombre": "CLIENTE"
+  }
+}
+```
+
+#### `GET /api/usuarios/perfil/actividad`
+- Recibe: no body.
+- Devuelve: `ApiResponse<UsuarioActividadDTO>` con compras confirmadas, entradas y eventos comprados, favoritos y total gastado.
+- Permisos: autenticado (disponible para todos los roles).
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "Actividad obtenida",
+  "data": {
+    "comprasConfirmadas": 4,
+    "entradasCompradas": 7,
+    "eventosComprados": 3,
+    "favoritos": 5,
+    "totalGastado": 175000
   }
 }
 ```
@@ -628,6 +665,8 @@ En caso de error, la respuesta suele devolver:
     {
       "id": 15,
       "titulo": "Festival de Jazz",
+      "descripcion": "Evento musical con artistas locales",
+      "categoriaNombre": "Música",
       "latitud": -33.4489,
       "longitud": -70.6693
     }
@@ -923,7 +962,8 @@ En caso de error, la respuesta suele devolver:
       "id": 1,
       "nombre": "General",
       "precio": 25000,
-      "cantidad": 150
+      "capacidad": 150,
+      "disponibles": 120
     }
   ]
 }
@@ -943,7 +983,8 @@ En caso de error, la respuesta suele devolver:
     "id": 2,
     "nombre": "VIP",
     "precio": 60000,
-    "cantidad": 40
+    "capacidad": 40,
+    "disponibles": 40
   }
 }
 ```
@@ -962,7 +1003,8 @@ En caso de error, la respuesta suele devolver:
     "id": 2,
     "nombre": "VIP Premium",
     "precio": 65000,
-    "cantidad": 35
+    "capacidad": 35,
+    "disponibles": 35
   }
 }
 ```
@@ -1001,9 +1043,19 @@ En caso de error, la respuesta suele devolver:
     "content": [
       {
         "id": 101,
-        "evento": "Festival de Jazz",
+        "fechaCompra": "2026-09-20T14:30:00",
         "total": 50000,
-        "estado": "PAGADA"
+        "metodoPago": "TARJETA",
+        "items": [
+          {
+            "localidadId": 1,
+            "localidadNombre": "General",
+            "eventoNombre": "Festival de Jazz",
+            "cantidad": 2,
+            "precioUnitario": 25000,
+            "subtotal": 50000
+          }
+        ]
       }
     ],
     "pageNumber": 0,
@@ -1026,10 +1078,19 @@ En caso de error, la respuesta suele devolver:
   "mensaje": "Compra obtenida",
   "data": {
     "id": 101,
-    "evento": "Festival de Jazz",
-    "cantidadBoletos": 2,
+    "fechaCompra": "2026-09-20T14:30:00",
     "total": 50000,
-    "estado": "PAGADA"
+    "metodoPago": "TARJETA",
+    "items": [
+      {
+        "localidadId": 1,
+        "localidadNombre": "General",
+        "eventoNombre": "Festival de Jazz",
+        "cantidad": 2,
+        "precioUnitario": 25000,
+        "subtotal": 50000
+      }
+    ]
   }
 }
 ```
@@ -1046,10 +1107,19 @@ En caso de error, la respuesta suele devolver:
   "mensaje": "Compra realizada",
   "data": {
     "id": 102,
-    "evento": "Expo Creativa",
-    "cantidadBoletos": 1,
+    "fechaCompra": "2026-09-21T10:15:00",
     "total": 25000,
-    "estado": "PAGADA"
+    "metodoPago": "TARJETA",
+    "items": [
+      {
+        "localidadId": 2,
+        "localidadNombre": "General",
+        "eventoNombre": "Expo Creativa",
+        "cantidad": 1,
+        "precioUnitario": 25000,
+        "subtotal": 25000
+      }
+    ]
   }
 }
 ```
@@ -1085,12 +1155,29 @@ En caso de error, la respuesta suele devolver:
   "success": true,
   "mensaje": "boletos de Compra obtenida",
   "data": {
-    "compraId": 101,
-    "boletos": [
+    "id": 101,
+    "fechaCompra": "2026-09-20T14:30:00",
+    "total": 50000,
+    "metodoPago": "TARJETA",
+    "tiqueteCompras": [
       {
-        "codigoQR": "BOL-001-ABC",
-        "nombreLocalidad": "General",
-        "estado": "ACTIVO"
+        "id": 501,
+        "tiquete": {
+          "id": 501,
+          "codigoQR": "BOL-001-ABC",
+          "localidad": {
+            "id": 1,
+            "nombre": "General",
+            "precio": 25000,
+            "evento": {
+              "id": 15,
+              "titulo": "Festival de Jazz",
+              "fecha": "2026-10-14",
+              "hora": "19:30:00",
+              "lugar": "Parque Central, Santiago"
+            }
+          }
+        }
       }
     ]
   }
@@ -1133,7 +1220,8 @@ En caso de error, la respuesta suele devolver:
         "id": 20,
         "titulo": "Concierto Nocturno",
         "descripcion": "Concierto al aire libre",
-        "lugar": "Anfiteatro, Santiago",
+        "capacidad": 35,
+        "disponibles": 35
         "foto": "https://storage.example/eventos/concierto-nocturno.jpg",
         "fecha": "2026-11-12",
         "hora": "20:00:00",
@@ -1209,7 +1297,7 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 1,
         "nombre": "Música",
-        "urlFoto": "https://.../musica.jpg",
+        "imagenUrl": "https://.../musica.jpg",
         "totalEventos": 45
       }
     ],
@@ -1247,8 +1335,8 @@ En caso de error, la respuesta suele devolver:
   "success": true,
   "mensaje": "Categorías destacadas",
   "data": [
-    { "id": 1, "nombre": "Música", "urlFoto": "https://.../musica.jpg", "totalEventos": 45 },
-    { "id": 3, "nombre": "Arte", "urlFoto": "https://.../arte.jpg", "totalEventos": 21 }
+    { "id": 1, "nombre": "Música", "imagenUrl": "https://.../musica.jpg", "totalEventos": 45 },
+    { "id": 3, "nombre": "Arte", "imagenUrl": "https://.../arte.jpg", "totalEventos": 21 }
   ]
 }
 ```
@@ -1338,7 +1426,7 @@ En caso de error, la respuesta suele devolver:
 ### Base: `/api/organizaciones`
 
 #### `GET /api/organizaciones`
-- Recibe: paginación.
+- Recibe: parámetro opcional `estado` y paginación (`page`, `size`, `sort`).
 - Devuelve: `ApiResponse<PagedResponse<OrganizacionPublicaDTO>>`
 - Ejemplo de respuesta:
 
@@ -1350,8 +1438,15 @@ En caso de error, la respuesta suele devolver:
     "content": [
       {
         "id": 10,
-        "nombre": "Eventica",
-        "descripcion": "Organización de eventos"
+        "razonSocial": "Eventica SpA",
+        "representante": "Carlos Pérez",
+        "fechaCreacion": "2026-09-01T09:00:00",
+        "promedioRating": 4.8,
+        "totalValoraciones": 25,
+        "totalSeguidores": 340,
+        "totalEventosCreados": 18,
+        "nivel": "NIVEL_2",
+        "estado": "APROBADA"
       }
     ],
     "pageNumber": 0,
@@ -1363,7 +1458,7 @@ En caso de error, la respuesta suele devolver:
 ```
 
 #### `POST /api/organizaciones/buscar`
-- Recibe: body JSON `BuscarOrganizacionRequest` con `razonSocial` y parámetros de paginación (`page`, `size`, `sort`).
+- Recibe: body JSON `BuscarOrganizacionRequest` con `razonSocial`; parámetro opcional `estado` y parámetros de paginación (`page`, `size`, `sort`) en la query.
 - Devuelve: `ApiResponse<PagedResponse<OrganizacionPublicaDTO>>`
 - Descripción: busca organizaciones por razón social.
 - Permisos: público.
@@ -1375,7 +1470,18 @@ En caso de error, la respuesta suele devolver:
   "mensaje": "Organizaciones encontradas",
   "data": {
     "content": [
-      { "id": 10, "nombre": "Eventica", "descripcion": "Organización de eventos" }
+      {
+        "id": 10,
+        "razonSocial": "Eventica SpA",
+        "representante": "Carlos Pérez",
+        "fechaCreacion": "2026-09-01T09:00:00",
+        "promedioRating": 4.8,
+        "totalValoraciones": 25,
+        "totalSeguidores": 340,
+        "totalEventosCreados": 18,
+        "nivel": "NIVEL_2",
+        "estado": "APROBADA"
+      }
     ],
     "pageNumber": 0,
     "pageSize": 10,
@@ -1399,9 +1505,19 @@ En caso de error, la respuesta suele devolver:
   "mensaje": "Organización obtenida",
   "data": {
     "id": 10,
-    "nombre": "Eventica",
-    "rut": "76.123.456-7",
-    "estado": "VERIFICADA"
+    "representante": "Carlos Pérez",
+    "razonSocial": "Eventica SpA",
+    "nit": "76.123.456-7",
+    "correoContacto": "contacto@eventica.cl",
+    "fechaCreacion": "2026-09-01T09:00:00",
+    "promedioRating": 4.8,
+    "totalValoraciones": 25,
+    "totalSeguidores": 340,
+    "totalEventosCreados": 18,
+    "eventosFinalizados": 12,
+    "eventosRechazados": 1,
+    "nivel": "NIVEL_2",
+    "estado": "APROBADA"
   }
 }
 ```
@@ -1425,7 +1541,7 @@ En caso de error, la respuesta suele devolver:
 ```
 
 #### `GET /api/organizaciones/top`
-- Recibe: paginación.
+- Recibe: parámetro opcional `estado` y paginación (`page`, `size`, `sort`).
 - Devuelve: `ApiResponse<PagedResponse<OrganizacionPublicaDTO>>`
 - Ejemplo de respuesta:
 
@@ -1435,9 +1551,25 @@ En caso de error, la respuesta suele devolver:
   "mensaje": "Top de organizaciones",
   "data": {
     "content": [
-      { "id": 10, "nombre": "Eventica" },
-      { "id": 11, "nombre": "Arena Live" }
-    ]
+      {
+        "id": 10,
+        "razonSocial": "Eventica SpA",
+        "representante": "Carlos Pérez",
+        "fechaCreacion": "2026-09-01T09:00:00",
+        "promedioRating": 4.8,
+        "totalValoraciones": 25,
+        "totalSeguidores": 340,
+        "totalEventosCreados": 18,
+        "nivel": "NIVEL_2",
+        "estado": "APROBADA"
+      }
+    ],
+    "pageNumber": 0,
+    "pageSize": 10,
+    "totalElements": 1,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
   }
 }
 ```
@@ -1454,8 +1586,19 @@ En caso de error, la respuesta suele devolver:
   "mensaje": "Organización obtenida",
   "data": {
     "id": 10,
-    "nombre": "Eventica",
-    "estado": "VERIFICADA"
+    "representante": "Carlos Pérez",
+    "razonSocial": "Eventica SpA",
+    "nit": "76.123.456-7",
+    "correoContacto": "contacto@eventica.cl",
+    "fechaCreacion": "2026-09-01T09:00:00",
+    "promedioRating": 4.8,
+    "totalValoraciones": 25,
+    "totalSeguidores": 340,
+    "totalEventosCreados": 18,
+    "eventosFinalizados": 12,
+    "eventosRechazados": 1,
+    "nivel": "NIVEL_2",
+    "estado": "APROBADA"
   }
 }
 ```
@@ -1474,8 +1617,12 @@ En caso de error, la respuesta suele devolver:
     "content": [
       {
         "id": 3,
-        "organizacion": "Eventica",
-        "estado": "PENDIENTE"
+        "correoInvitado": "carlos@email.com",
+        "organizacionNombre": "Eventica SpA",
+        "invitadoPorNombre": "Ana Pérez",
+        "estado": "PENDIENTE",
+        "fechaInvitacion": "2026-09-26T10:30:00",
+        "fechaRespuesta": null
       }
     ]
   }
@@ -1496,8 +1643,12 @@ En caso de error, la respuesta suele devolver:
     "content": [
       {
         "id": 4,
-        "correo": "usuario@correo.com",
-        "estado": "ENVIADA"
+        "correoInvitado": "usuario@correo.com",
+        "organizacionNombre": "Eventica SpA",
+        "invitadoPorNombre": "Carlos Pérez",
+        "estado": "ENVIADA",
+        "fechaInvitacion": "2026-09-26T10:30:00",
+        "fechaRespuesta": null
       }
     ]
   }
@@ -1518,8 +1669,9 @@ En caso de error, la respuesta suele devolver:
     "content": [
       {
         "id": 12,
-        "nombre": "Luis",
-        "rol": "OPERADOR"
+        "nombreCompleto": "Luis González",
+        "correo": "luis@correo.com",
+        "permisosEvento": ["CREAR_EVENTO", "EDITAR_EVENTO"]
       }
     ]
   }
@@ -1538,7 +1690,13 @@ En caso de error, la respuesta suele devolver:
   "mensaje": "Seguidores de la organizacion obtenidos",
   "data": {
     "content": [
-      { "id": 7, "nombre": "Carlos" }
+      {
+        "id": 7,
+        "nombre": "Carlos",
+        "correo": "carlos@email.com",
+        "telefono": "+56912345678",
+        "rolNombre": "CLIENTE"
+      }
     ]
   }
 }
@@ -1628,9 +1786,13 @@ En caso de error, la respuesta suele devolver:
     "content": [
       {
         "id": 5,
-        "usuario": "Pedro",
-        "organizacion": "Eventica",
-        "estado": "PENDIENTE"
+        "organizacionId": 10,
+        "organizacionNombre": "Eventica SpA",
+        "nivelActual": "BRONCE",
+        "nivelSugerido": "PLATA",
+        "estado": "PENDIENTE",
+        "fechaGeneracion": "2026-09-26T10:30:00",
+        "fechaResolucion": null
       }
     ]
   }
@@ -1721,7 +1883,10 @@ En caso de error, la respuesta suele devolver:
         "id": 1,
         "comentario": "Excelente servicio",
         "calificacion": 5,
-        "usuario": "Carlos"
+        "organizacionId": 10,
+        "organizacionNombre": "Eventica SpA",
+        "clienteId": 7,
+        "clienteNombre": "Carlos"
       }
     ]
   }
@@ -1743,7 +1908,10 @@ En caso de error, la respuesta suele devolver:
         "id": 1,
         "comentario": "Muy buena atención",
         "calificacion": 4,
-        "usuario": "Ana"
+        "organizacionId": 10,
+        "organizacionNombre": "Eventica SpA",
+        "clienteId": 8,
+        "clienteNombre": "Ana"
       }
     ]
   }
@@ -1813,7 +1981,12 @@ En caso de error, la respuesta suele devolver:
       "id": "n1",
       "titulo": "Nuevo evento",
       "mensaje": "Se ha publicado un nuevo evento",
-      "leida": false
+      "tipoNotificacion": "NUEVO_EVENTO",
+      "organizacionId": 10,
+      "eventoId": 15,
+      "nombreEvento": "Festival de Jazz",
+      "leida": false,
+      "fechaCreacion": "2026-09-26T10:30:00"
     }
   ]
 }
@@ -1885,9 +2058,14 @@ En caso de error, la respuesta suele devolver:
     "representanteCorreo": "carlos@email.com",
     "razonSocial": "Eventica SpA",
     "nit": "76.123.456-7",
+    "representanteLegal": 7,
     "correoEmpresarial": "contacto@eventica.cl",
+    "mensaje": null,
     "estado": "PENDIENTE",
-    "fechaSolicitud": "2026-09-26T10:30:00"
+    "fechaSolicitud": "2026-09-26T10:30:00",
+    "fechaResolucion": null,
+    "administradorNombre": null,
+    "motivoRechazo": null
   }
 }
 ```
@@ -1908,10 +2086,19 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 5,
         "organizacionId": 10,
+        "representanteId": 7,
         "representanteNombre": "Carlos Pérez",
+        "representanteCorreo": "carlos@email.com",
         "razonSocial": "Eventica SpA",
+        "nit": "76.123.456-7",
+        "representanteLegal": 7,
+        "correoEmpresarial": "contacto@eventica.cl",
+        "mensaje": "Documento recibido",
         "estado": "PENDIENTE",
-        "fechaSolicitud": "2026-09-26T10:30:00"
+        "fechaSolicitud": "2026-09-26T10:30:00",
+        "fechaResolucion": null,
+        "administradorNombre": null,
+        "motivoRechazo": null
       }
     ]
   }
@@ -2074,7 +2261,13 @@ En caso de error, la respuesta suele devolver:
   "mensaje": "Moderadores obtenidos",
   "data": {
     "content": [
-      { "id": 22, "nombre": "Sofía", "rol": "MODERADOR" }
+      {
+        "id": 22,
+        "nombre": "Sofía",
+        "correo": "sofia@eventhive.com",
+        "telefono": "+56912345678",
+        "rolNombre": "MODERADOR"
+      }
     ]
   }
 }
@@ -2166,9 +2359,15 @@ En caso de error, la respuesta suele devolver:
     "content": [
       {
         "id": 1,
+        "accion": "CORRECCION_SOLICITADA",
+        "moderadorId": 22,
+        "moderadorNombre": "Sofía",
         "eventoId": 15,
-        "accion": "CORRECCION",
-        "observacion": "Falta información de ubicacion"
+        "eventoNombre": "Festival de Jazz",
+        "estadoResultante": "EN_CORRECCION",
+        "motivo": "INFORMACION_INSUFICIENTE",
+        "observacion": "Falta información de ubicación",
+        "fecha": "2026-09-26T10:30:00"
       }
     ]
   }
@@ -2361,7 +2560,11 @@ En caso de error, la respuesta suele devolver:
     "descripcion": "Descuento del 20%",
     "descuento": 20,
     "fechaInicio": "2026-09-01",
-    "fechaFin": "2026-09-30"
+    "fechaFinal": "2026-09-30",
+    "estado": "VIGENTE",
+    "eventoId": 15,
+    "eventoTitulo": "Festival de Jazz",
+    "eventoNombre": "Festival de Jazz"
   }
 }
 ```
@@ -2381,7 +2584,13 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 1,
         "descripcion": "Descuento del 20%",
-        "descuento": 20
+        "descuento": 20,
+        "fechaInicio": "2026-09-01",
+        "fechaFinal": "2026-09-30",
+        "estado": "VIGENTE",
+        "eventoId": 15,
+        "eventoTitulo": "Festival de Jazz",
+        "eventoNombre": "Festival de Jazz"
       }
     ]
   }
@@ -2403,7 +2612,13 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 1,
         "eventoId": 15,
-        "descripcion": "Descuento del 20%"
+        "descripcion": "Descuento del 20%",
+        "descuento": 20,
+        "fechaInicio": "2026-09-01",
+        "fechaFinal": "2026-09-30",
+        "estado": "VIGENTE",
+        "eventoTitulo": "Festival de Jazz",
+        "eventoNombre": "Festival de Jazz"
       }
     ]
   }
@@ -2460,7 +2675,7 @@ En caso de error, la respuesta suele devolver:
 
 #### `GET /api/roles`
 - Recibe: paginación.
-- Devuelve: `ApiResponse<PagedResponse<Rol>>`
+- Devuelve: `ApiResponse<PagedResponse<RolDTO>>`
 - Ejemplo de respuesta:
 
 ```json
@@ -2544,7 +2759,86 @@ En caso de error, la respuesta suele devolver:
 
 ---
 
-## 19. Palabras prohibidas
+## 19. Estadísticas de administración
+
+### Base: `/api/admin/estadisticas`
+
+Todos los endpoints son de solo lectura, no reciben parámetros y requieren rol ADMINISTRADOR.
+
+#### `GET /api/admin/estadisticas/organizaciones-por-validacion`
+- Devuelve: `ApiResponse<OrganizacionesPorValidacionDTO>` con conteos de organizaciones según el estado de validación del RUT.
+- Ejemplo de `data`:
+
+```json
+{
+  "pendientesValidacionRut": 3,
+  "sinRut": 2,
+  "total": 12,
+  "porEstado": [
+    { "estado": "APROBADA", "cantidad": 7 },
+    { "estado": "PENDIENTE_REVISION", "cantidad": 3 },
+    { "estado": "SUSPENDIDA", "cantidad": 2 }
+  ]
+}
+```
+
+#### `GET /api/admin/estadisticas/eventos-por-estado`
+- Devuelve: `ApiResponse<List<EventoEstadoConteoDTO>>`.
+- Ejemplo de `data`:
+
+```json
+[
+  { "estado": "PUBLICADO", "cantidad": 18 },
+  { "estado": "PENDIENTE_REVISION", "cantidad": 4 }
+]
+```
+
+#### `GET /api/admin/estadisticas/eventos-por-categoria`
+- Devuelve: `ApiResponse<List<EventosPorCategoriaDTO>>`.
+- Ejemplo de `data`:
+
+```json
+[
+  { "categoriaId": 1, "nombre": "Música", "cantidadEventos": 12 },
+  { "categoriaId": 3, "nombre": "Arte", "cantidadEventos": 6 }
+]
+```
+
+#### `GET /api/admin/estadisticas/top-eventos-ventas`
+- Devuelve: `ApiResponse<List<TopEventoVentasDTO>>` con los cinco eventos con más ventas.
+- Ejemplo de `data`:
+
+```json
+[
+  {
+    "eventoId": 15,
+    "nombre": "Festival de Jazz",
+    "organizacionId": 10,
+    "organizacion": "Eventica SpA",
+    "entradasVendidas": 240,
+    "totalVentas": 6000000
+  }
+]
+```
+
+#### `GET /api/admin/estadisticas/top-organizaciones-ventas`
+- Devuelve: `ApiResponse<List<TopOrganizacionVentasDTO>>` con las cinco organizaciones con más ventas.
+- Ejemplo de `data`:
+
+```json
+[
+  {
+    "organizacionId": 10,
+    "razonSocial": "Eventica SpA",
+    "entradasVendidas": 480,
+    "totalVentas": 12000000
+  }
+]
+```
+
+---
+
+## 20. Palabras prohibidas
 
 ### Base: `/api/administracion/palabras-prohibidas`
 
@@ -2615,7 +2909,7 @@ Todos los endpoints de este módulo requieren rol ADMINISTRADOR. `PalabraProhibi
 
 ---
 
-## 20. Resumen de permisos por rol
+## 21. Resumen de permisos por rol
 
 - Público: registro/login, consulta pública de eventos y organizaciones
 - Autenticado: perfil, compras, lista de deseos, notificaciones, seguimientos
@@ -2627,7 +2921,7 @@ Todos los endpoints de este módulo requieren rol ADMINISTRADOR. `PalabraProhibi
 
 ---
 
-## 21. Nota práctica
+## 22. Nota práctica
 
 Si quieres, este documento puede ampliarse con:
 

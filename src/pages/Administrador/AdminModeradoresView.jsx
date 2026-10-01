@@ -1,236 +1,304 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ShieldCheck,
   UserCheck,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  TrendingUp,
-  MapPin,
+  UserX,
   Mail,
-  Calendar,
-  Sliders,
-  Check,
-  Ban,
-  UserPlus,
+  Phone,
+  Search,
+  AlertCircle,
+  CheckCircle2,
+  Trash2,
+  Plus,
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
+import Pagination from '../../components/Shared/Pagination.jsx';
+import AdminInfoAlert from '../../components/componentsAdmin/AdminInfoAlert.jsx';
+import adminService from '../../features/admin/services/adminService.js';
 
 export default function AdminModeradoresView({
-  moderadores = [],
-  moderationStats = {},
+  moderadores: initialModeradores = [],
+  onRevocarModerador,
   onAsignarModerador,
-  onToggleEstadoModerador,
 }) {
-  const [filtroZona, setFiltroZona] = useState('TODAS');
+  const [moderadoresList, setModeradoresList] = useState(initialModeradores);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(initialModeradores.length || 0);
+  const [loading, setLoading] = useState(false);
+  const [modalRevocar, setModalRevocar] = useState(null); // moderador a revocar
+  const [actionLoading, setActionLoading] = useState(false);
+  const [feedbackMsg, setFeedbackMsg] = useState(null);
 
-  const filteredModeradores = moderadores.filter((m) => {
-    return filtroZona === 'TODAS' || m.zonaAsignada === filtroZona;
+  // Carga reactiva de moderadores desde el endpoint paginado GET /api/moderaciones/moderadores
+  const fetchModeradores = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await adminService.getModeradores({
+        page: currentPage - 1,
+        size: pageSize,
+      });
+      if (res.success) {
+        setModeradoresList(res.data);
+        setTotalItems(res.total);
+      }
+    } catch (err) {
+      console.warn('Error al cargar lista de moderadores:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, pageSize]);
+
+  useEffect(() => {
+    fetchModeradores();
+  }, [fetchModeradores]);
+
+  useEffect(() => {
+    if (initialModeradores && initialModeradores.length > 0 && !searchTerm) {
+      setModeradoresList(initialModeradores);
+      setTotalItems(initialModeradores.length);
+    }
+  }, [initialModeradores]);
+
+  // Filtrado local reactivo si hay término de búsqueda
+  const filteredModeradores = moderadoresList.filter((m) => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      m.nombre?.toLowerCase().includes(term) ||
+      m.correo?.toLowerCase().includes(term) ||
+      m.email?.toLowerCase().includes(term) ||
+      m.telefono?.toLowerCase().includes(term)
+    );
   });
 
+  const handleConfirmRevocar = async () => {
+    if (!modalRevocar) return;
+    try {
+      setActionLoading(true);
+      if (onRevocarModerador) {
+        await onRevocarModerador(modalRevocar.id);
+      } else {
+        await adminService.revocarModerador(modalRevocar.id);
+      }
+      setFeedbackMsg({
+        type: 'success',
+        text: `El rol de moderador fue revocado exitosamente a "${modalRevocar.nombre}".`,
+      });
+      setModalRevocar(null);
+      await fetchModeradores();
+    } catch (err) {
+      setFeedbackMsg({
+        type: 'error',
+        text: err.message || 'Error al revocar el rol de moderador.',
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      {/* SECCIÓN 9: Estadísticas de Moderación (Separadas de la bandeja de trabajo) */}
-      <div>
-        <div className="mb-4">
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Alerta Informativa Inicial (Requisito 10) */}
+      <AdminInfoAlert
+        id="moderadores"
+        title="Gestión de Moderadores Institucionales"
+        description="Esta sección se destina exclusivamente a listar el personal con rol de moderador y gestionar sus accesos cuando concluya su vinculación con la empresa. La supervisión técnica de eventos corresponde de forma privativa a la bandeja del Moderador."
+      />
+
+      {feedbackMsg && (
+        <div
+          className={`p-4 rounded-2xl flex items-center justify-between text-xs font-semibold ${
+            feedbackMsg.type === 'error'
+              ? 'bg-rose-50 text-rose-800 border border-rose-200'
+              : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+          }`}
+        >
+          <span>{feedbackMsg.text}</span>
+          <button
+            type="button"
+            onClick={() => setFeedbackMsg(null)}
+            className="text-slate-400 hover:text-slate-700 ml-3"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Encabezado y Buscador */}
+      <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
           <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-primary" strokeWidth={1.75} />
-            <span>Estadísticas de Rendimiento de Moderación</span>
+            <UserCheck className="w-5 h-5 text-primary" strokeWidth={1.75} />
+            <span>Directorio de Moderadores</span>
           </h2>
-          <p className="text-xs text-slate-500">
-            Métricas de auditoría de contenido y tiempos de respuesta según Sección 9 del módulo
+          <p className="text-xs text-slate-500 mt-0.5">
+            Usuarios activos con permisos de moderación de contenido en Eventhive
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-              Revisiones
-            </span>
-            <span className="text-2xl font-black text-slate-900 mt-1 block">
-              {moderationStats.revisionesRealizadas || 148}
-            </span>
-            <span className="text-[10px] text-slate-400">Total histórico</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100 shadow-xs">
-            <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider block">
-              Aprobaciones
-            </span>
-            <span className="text-2xl font-black text-emerald-800 mt-1 block">
-              {moderationStats.aprobacionesPorcentaje || 82}%
-            </span>
-            <span className="text-[10px] text-emerald-600">Conforme a norma</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-100 shadow-xs">
-            <span className="text-[11px] font-bold text-rose-700 uppercase tracking-wider block">
-              Rechazos
-            </span>
-            <span className="text-2xl font-black text-rose-800 mt-1 block">
-              {moderationStats.rechazosPorcentaje || 8}%
-            </span>
-            <span className="text-[10px] text-rose-600">Por PULEP / RUT</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-100 shadow-xs">
-            <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider block">
-              Correcciones
-            </span>
-            <span className="text-2xl font-black text-amber-800 mt-1 block">
-              {moderationStats.correccionesPorcentaje || 10}%
-            </span>
-            <span className="text-[10px] text-amber-600">Subsanables</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 shadow-xs">
-            <span className="text-[11px] font-bold text-indigo-700 uppercase tracking-wider block">
-              Tiempo Promedio
-            </span>
-            <span className="text-2xl font-black text-indigo-800 mt-1 block">
-              {moderationStats.tiempoPromedioRevision || '0h'}
-            </span>
-            <span className="text-[10px] text-indigo-600">SLA &lt; 4 horas</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs">
-            <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
-              Carga Promedio
-            </span>
-            <span className="text-2xl font-black text-slate-800 mt-1 block">
-              {moderationStats.cargaPorModerador || '0'}
-            </span>
-            <span className="text-[10px] text-slate-400">Casos activos/agente</span>
-          </div>
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" strokeWidth={1.75} />
+          <input
+            type="text"
+            placeholder="Buscar por nombre, correo o teléfono..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          />
         </div>
       </div>
 
-      {/* SECCIÓN 6: Gestión de Moderadores */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 mb-6">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <UserCheck className="w-4 h-4 text-primary" strokeWidth={1.75} />
-              <span>Equipo de Moderadores de la Plataforma</span>
-            </h3>
-            <p className="text-xs text-slate-500">
-              Control de acceso seguro y asignación de zonas en Cartagena de Indias
-            </p>
-          </div>
+      {/* Tabla de Moderadores */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                <th className="py-3.5 px-4">ID</th>
+                <th className="py-3.5 px-4">Nombre Completo</th>
+                <th className="py-3.5 px-4">Correo Electrónico</th>
+                <th className="py-3.5 px-4">Teléfono</th>
+                <th className="py-3.5 px-4 text-center">Rol en Sistema</th>
+                <th className="py-3.5 px-4 text-right">Acción Administrativa</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-xs">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    Cargando moderadores...
+                  </td>
+                </tr>
+              ) : filteredModeradores.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    No se encontraron usuarios con rol de moderador.
+                  </td>
+                </tr>
+              ) : (
+                filteredModeradores.map((mod) => (
+                  <tr key={mod.id} className="hover:bg-slate-50/60 transition-colors">
+                    {/* ID */}
+                    <td className="py-4 px-4 font-mono font-bold text-slate-400 text-[11px]">
+                      #{mod.id}
+                    </td>
 
-          <div className="flex items-center gap-3">
-            <select
-              value={filtroZona}
-              onChange={(e) => setFiltroZona(e.target.value)}
-              className="py-2 px-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="TODAS">Todas las Zonas</option>
-              <option value="Centro Histórico">Centro Histórico</option>
-              <option value="Bocagrande">Bocagrande</option>
-              <option value="Getsemaní">Getsemaní</option>
-              <option value="Zona Norte">Zona Norte</option>
-            </select>
-          </div>
+                    {/* Nombre */}
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center font-bold text-indigo-700 text-sm shrink-0">
+                          {mod.nombre?.charAt(0) || 'M'}
+                        </div>
+                        <span className="font-bold text-slate-900">{mod.nombre}</span>
+                      </div>
+                    </td>
+
+                    {/* Correo */}
+                    <td className="py-4 px-4 text-slate-600">
+                      <div className="flex items-center gap-1.5">
+                        <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate">{mod.correo || mod.email || '—'}</span>
+                      </div>
+                    </td>
+
+                    {/* Teléfono */}
+                    <td className="py-4 px-4 text-slate-600">
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{mod.telefono || '—'}</span>
+                      </div>
+                    </td>
+
+                    {/* Rol */}
+                    <td className="py-4 px-4 text-center">
+                      <Badge variant="primary" size="xs">
+                        {mod.rolNombre || 'MODERADOR'}
+                      </Badge>
+                    </td>
+
+                    {/* Botón Revocar Rol */}
+                    <td className="py-4 px-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setModalRevocar(mod)}
+                        className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-xl border border-rose-200 text-rose-700 bg-rose-50/60 hover:bg-rose-100 text-xs font-bold transition-all active:scale-95"
+                        title="Revocar permisos de moderador a este usuario"
+                      >
+                        <UserX className="w-3.5 h-3.5 text-rose-600" />
+                        <span>Revocar Rol</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
 
-        {/* Tarjetas de Moderadores */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredModeradores.map((mod) => (
-            <div
-              key={mod.id}
-              className={`p-4 rounded-2xl border transition-all ${
-                mod.activo
-                  ? 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-xs'
-                  : 'bg-slate-50 border-slate-200 opacity-60'
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center font-bold text-indigo-700 text-sm shrink-0">
-                    {mod.nombre?.charAt(0) || 'M'}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-slate-900 truncate">
-                      {mod.nombre}
-                    </p>
-                    <p className="text-[11px] text-slate-500 truncate flex items-center gap-1">
-                      <Mail className="w-3 h-3 text-slate-400" />
-                      <span>{mod.email}</span>
-                    </p>
-                  </div>
-                </div>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+          pageSizeOptions={[5, 10, 20]}
+        />
+      </div>
 
-                <Badge variant={mod.activo ? 'success' : 'danger'} size="xs">
-                  {mod.activo ? 'Activo' : 'Inactivo'}
-                </Badge>
+      {/* Modal Confirmar Revocación de Rol */}
+      {modalRevocar && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => setModalRevocar(null)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-slate-100">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-3">
+                <UserX className="w-6 h-6" strokeWidth={2} />
               </div>
+              <h3 className="font-display text-base font-bold text-slate-900">
+                ¿Revocar rol de moderador?
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Esta acción retirará de inmediato el rol de moderador a <strong>{modalRevocar.nombre}</strong> ({modalRevocar.correo || modalRevocar.email}).
+              </p>
+            </div>
 
-              {/* Métricas y Carga */}
-              <div className="grid grid-cols-2 gap-2 text-center p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs mb-3">
-                <div>
-                  <span className="text-[10px] text-slate-400 block font-semibold uppercase">
-                    Carga Activa
-                  </span>
-                  <span className="font-extrabold text-slate-800">
-                    {mod.cargaActual || 0} pendientes
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 block font-semibold uppercase">
-                    Efectividad
-                  </span>
-                  <span className="font-extrabold text-emerald-700">
-                    {mod.efectividad || '—'}
-                  </span>
-                </div>
-              </div>
+            <div className="p-6 space-y-4">
+              <p className="text-xs text-slate-600 leading-relaxed bg-amber-50/70 p-3 rounded-xl border border-amber-200 text-amber-900">
+                Utilice esta opción cuando el usuario ya no pertenezca a la empresa o no deba continuar ejerciendo labores de moderación.
+              </p>
 
-              {/* Zona Asignada */}
-              <div className="flex items-center justify-between text-xs mb-3">
-                <span className="text-slate-500 flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} />
-                  <span>Zona:</span>
-                </span>
-                <span className="font-bold text-slate-800">{mod.zonaAsignada}</span>
-              </div>
-
-              {/* Botones de Acción */}
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
-                  onClick={() => onAsignarModerador(mod)}
-                  className="flex-1 py-1.5 px-2.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1"
+                  type="button"
+                  onClick={() => setModalRevocar(null)}
+                  disabled={actionLoading}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
                 >
-                  <Sliders className="w-3 h-3 text-slate-500" />
-                  <span>Asignar Zona</span>
+                  Cancelar
                 </button>
-
                 <button
-                  onClick={() => onToggleEstadoModerador(mod.id, !mod.activo)}
-                  className={`py-1.5 px-2.5 rounded-xl text-[11px] font-bold transition-colors flex items-center justify-center gap-1 ${
-                    mod.activo
-                      ? 'border border-rose-200 text-rose-600 hover:bg-rose-50'
-                      : 'border border-emerald-200 text-emerald-600 hover:bg-emerald-50'
-                  }`}
-                  title={mod.activo ? 'Desactivar Acceso' : 'Activar Acceso'}
+                  type="button"
+                  onClick={handleConfirmRevocar}
+                  disabled={actionLoading}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-xs transition-all active:scale-95 disabled:opacity-50"
                 >
-                  {mod.activo ? (
-                    <>
-                      <Ban className="w-3 h-3" />
-                      <span>Desactivar</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-3 h-3" />
-                      <span>Activar</span>
-                    </>
-                  )}
+                  {actionLoading ? 'Procesando...' : 'Confirmar Revocación'}
                 </button>
               </div>
             </div>
-          ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   BarChart3,
   Users,
+  User,
   Tag,
   Percent,
   History,
@@ -21,7 +22,6 @@ import {
 // Vistas del Módulo de Administración
 import AdminResumenView from './AdminResumenView.jsx';
 import AdminOrganizacionesView from './AdminOrganizacionesView.jsx';
-import AdminEventosView from './AdminEventosView.jsx';
 import AdminModeradoresView from './AdminModeradoresView.jsx';
 import AdminReportesView from './AdminReportesView.jsx';
 import AdminUsuariosView from './AdminUsuariosView.jsx';
@@ -91,6 +91,11 @@ export default function AdminPanel() {
   const [promociones, setPromociones] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
 
+  // Estados de estadísticas agregadas desde backend
+  const [organizacionesPorValidacion, setOrganizacionesPorValidacion] = useState(null);
+  const [eventosPorEstado, setEventosPorEstado] = useState([]);
+  const [eventosPorCategoria, setEventosPorCategoria] = useState([]);
+
   // Estados de carga y feedback
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null); // { type: 'success'|'error'|'info', message: '' }
@@ -144,6 +149,15 @@ export default function AdminPanel() {
           if (dashRes.value.metrics) setMetrics(dashRes.value.metrics);
           if (dashRes.value.commercial) setCommercialMetrics(dashRes.value.commercial);
           if (dashRes.value.moderation) setModerationStats(dashRes.value.moderation);
+          if (dashRes.value.organizacionesPorValidacion) {
+            setOrganizacionesPorValidacion(dashRes.value.organizacionesPorValidacion);
+          }
+          if (dashRes.value.eventosPorEstado) {
+            setEventosPorEstado(dashRes.value.eventosPorEstado);
+          }
+          if (dashRes.value.eventosPorCategoria) {
+            setEventosPorCategoria(dashRes.value.eventosPorCategoria);
+          }
         }
 
         if (orgsRes.status === 'fulfilled' && orgsRes.value?.data) {
@@ -190,12 +204,8 @@ export default function AdminPanel() {
 
   // Contadores dinámicos para los ítems del menú lateral
   const orgsPendientesCount = useMemo(
-    () => organizaciones.filter((o) => o.estado === 'PENDIENTE').length,
+    () => organizaciones.filter((o) => o.estado === 'PENDIENTE' || o.estado === 'PENDIENTE_REVISION').length,
     [organizaciones]
-  );
-  const eventosPendientesCount = useMemo(
-    () => eventos.filter((e) => e.estado === 'EN_REVISION' || e.estado === 'PENDIENTE').length,
-    [eventos]
   );
 
   // Menú lateral configurado con Lucide Icons consistentes
@@ -209,25 +219,20 @@ export default function AdminPanel() {
         count: orgsPendientesCount > 0 ? orgsPendientesCount : null,
       },
       {
-        id: 'eventos',
-        label: 'Supervisión Eventos',
-        icon: Calendar,
-        count: eventosPendientesCount > 0 ? eventosPendientesCount : null,
+        id: 'solicitudes',
+        label: 'Organizaciones por validación',
+        icon: ClipboardList,
+        count: solicitudesVerificacion.length > 0 ? solicitudesVerificacion.length : null,
       },
-      { id: 'moderadores', label: 'Moderadores & SLA', icon: ShieldCheck },
+      { id: 'moderadores', label: 'Moderadores', icon: ShieldCheck },
       { id: 'reportes', label: 'Métricas Comerciales', icon: BarChart3 },
       { id: 'usuarios', label: 'Directorio Usuarios', icon: Users },
       { id: 'categorias', label: 'Categorías', icon: Tag },
       { id: 'promociones', label: 'Promociones & Banners', icon: Percent },
       { id: 'historial', label: 'Historial & Auditoría', icon: History },
-      {
-        id: 'solicitudes',
-        label: 'Verificación RUT',
-        icon: ClipboardList,
-        count: solicitudesVerificacion.length > 0 ? solicitudesVerificacion.length : null,
-      },
+      { id: 'perfil', label: 'Mi Perfil', icon: User },
     ],
-    [orgsPendientesCount, eventosPendientesCount, solicitudesVerificacion.length]
+    [orgsPendientesCount, solicitudesVerificacion.length]
   );
 
   // ==================== ACCIONES: VERIFICACIÓN DE ORGANIZACIONES (RUT) ====================
@@ -628,6 +633,9 @@ export default function AdminPanel() {
             metrics={metrics}
             commercialMetrics={commercialMetrics}
             organizaciones={organizaciones}
+            organizacionesPorValidacion={organizacionesPorValidacion}
+            eventosPorEstado={eventosPorEstado}
+            eventosPorCategoria={eventosPorCategoria}
             eventos={eventos}
             auditLogs={auditLogs}
             onNavigateTab={handleSelectTab}
@@ -644,17 +652,6 @@ export default function AdminPanel() {
             onVerHistorial={handleVerHistorialOrg}
             onSuspender={handleOpenSuspenderOrg}
             onReactivar={handleReactivarOrg}
-          />
-        );
-
-      case 'eventos':
-        return (
-          <AdminEventosView
-            eventos={eventos}
-            onVerDetalle={handleVerDetalleEvento}
-            onVerHistorial={handleVerHistorialEvento}
-            onSuspenderEvento={handleOpenSuspenderEvento}
-            onReactivarEvento={handleReactivarEvento}
           />
         );
 
@@ -735,6 +732,9 @@ export default function AdminPanel() {
             metrics={metrics}
             commercialMetrics={commercialMetrics}
             organizaciones={organizaciones}
+            organizacionesPorValidacion={organizacionesPorValidacion}
+            eventosPorEstado={eventosPorEstado}
+            eventosPorCategoria={eventosPorCategoria}
             eventos={eventos}
             auditLogs={auditLogs}
             onNavigateTab={handleSelectTab}

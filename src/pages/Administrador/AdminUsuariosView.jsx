@@ -1,56 +1,82 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Users,
   Search,
   Filter,
-  UserCheck,
-  UserX,
   Shield,
-  Edit,
-  Mail,
-  Calendar,
-  Lock,
-  Building,
+  Building2,
+  Phone,
+  User,
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
-import ModalEditarUsuario from '../../components/componentsAdmin/ModalEditarUsuario.jsx';
+import AdminInfoAlert from '../../components/componentsAdmin/AdminInfoAlert.jsx';
+import adminService from '../../features/admin/services/adminService.js';
 
 export default function AdminUsuariosView({
-  usuarios = [],
+  usuarios: initialUsuarios = [],
   onUpdateUsuario,
 }) {
+  const [usuariosList, setUsuariosList] = useState(initialUsuarios);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroRol, setFiltroRol] = useState('TODOS');
-  const [selectedUser, setSelectedUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(initialUsuarios.length || 0);
+  const [loading, setLoading] = useState(false);
 
-  const filteredUsers = useMemo(() => {
-    return usuarios.filter((user) => {
-      const matchSearch =
-        user.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.organizacion?.toLowerCase().includes(searchTerm.toLowerCase());
+  // Carga reactiva de usuarios desde endpoint paginado GET /api/usuarios o búsqueda
+  const fetchUsuarios = useCallback(async () => {
+    try {
+      setLoading(true);
+      if (searchTerm.trim()) {
+        const res = await adminService.buscarUsuarios({
+          nombre: searchTerm.trim(),
+          page: currentPage - 1,
+          size: pageSize,
+        });
+        if (res.success) {
+          setUsuariosList(res.data);
+          setTotalItems(res.total);
+        }
+      } else {
+        const res = await adminService.getUsuarios({
+          page: currentPage - 1,
+          size: pageSize,
+        });
+        if (res.success) {
+          setUsuariosList(res.data);
+          setTotalItems(res.total);
+        }
+      }
+    } catch (err) {
+      console.warn('Error al cargar lista paginada de usuarios:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, pageSize, searchTerm]);
 
-      const matchRol = filtroRol === 'TODOS' || user.rol === filtroRol;
+  useEffect(() => {
+    fetchUsuarios();
+  }, [fetchUsuarios]);
 
-      return matchSearch && matchRol;
-    });
-  }, [usuarios, searchTerm, filtroRol]);
+  useEffect(() => {
+    if (initialUsuarios && initialUsuarios.length > 0 && !searchTerm && filtroRol === 'TODOS') {
+      setUsuariosList(initialUsuarios);
+      setTotalItems(initialUsuarios.length);
+    }
+  }, [initialUsuarios]);
 
-  const paginatedUsers = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredUsers.slice(start, start + pageSize);
-  }, [filteredUsers, currentPage, pageSize]);
-
-  const handleSaveUsuario = (userId, updates) => {
-    onUpdateUsuario(userId, updates);
-    setSelectedUser(null);
-  };
+  // Filtrado reactivo por rol
+  const filteredUsers = usuariosList.filter((user) => {
+    const rol = (user.rolNombre || user.rol || '').toUpperCase();
+    if (filtroRol !== 'TODOS' && rol !== filtroRol) return false;
+    return true;
+  });
 
   const getRoleBadgeVariant = (rol) => {
-    switch (rol) {
+    const r = (rol || '').toUpperCase();
+    switch (r) {
       case 'ADMINISTRADOR':
         return 'danger';
       case 'MODERADOR':
@@ -67,18 +93,12 @@ export default function AdminUsuariosView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Banner Informativo sobre Roles del Dominio */}
-      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start gap-3">
-        <div className="p-2 rounded-xl bg-white text-slate-700 border border-slate-200 shrink-0">
-          <Shield className="w-5 h-5" strokeWidth={1.75} />
-        </div>
-        <div className="text-xs text-slate-600 leading-relaxed">
-          <span className="font-bold text-slate-900 block mb-0.5">
-            Directorio de Usuarios y Control de Autorización
-          </span>
-          Los roles del dominio corresponden estrictamente a <strong>ADMINISTRADOR</strong>, <strong>MODERADOR</strong>, <strong>REPRESENTANTE</strong>, <strong>OPERADOR</strong> y <strong>CLIENTE</strong>. Por seguridad y trazabilidad transaccional, se aplica <strong>desactivación lógica</strong> en lugar de borrado físico.
-        </div>
-      </div>
+      {/* Alerta Informativa Inicial (Requisito 10) */}
+      <AdminInfoAlert
+        id="usuarios"
+        title="Directorio Central de Usuarios"
+        description="Consulte la lista paginada de cuentas registradas en Eventhive, su rol asignado en la plataforma y la organización a la que están vinculados en caso de existir."
+      />
 
       {/* Filtros y Buscador */}
       <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
@@ -86,9 +106,12 @@ export default function AdminUsuariosView({
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" strokeWidth={1.75} />
           <input
             type="text"
-            placeholder="Buscar por nombre, correo o empresa..."
+            placeholder="Buscar por nombre de usuario..."
             value={searchTerm}
-            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
@@ -96,7 +119,10 @@ export default function AdminUsuariosView({
         <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
           <select
             value={filtroRol}
-            onChange={(e) => { setFiltroRol(e.target.value); setCurrentPage(1); }}
+            onChange={(e) => {
+              setFiltroRol(e.target.value);
+              setCurrentPage(1);
+            }}
             className="py-2.5 px-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
           >
             <option value="TODOS">Todos los Roles</option>
@@ -109,84 +135,103 @@ export default function AdminUsuariosView({
         </div>
       </div>
 
-      {/* Tabla de Usuarios */}
+      {/* Tabla de Usuarios (Requisito 5: NO mostrar Correo ni Estado) */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                <th className="py-3.5 px-4">Usuario</th>
-                <th className="py-3.5 px-4">Correo Electrónico</th>
-                <th className="py-3.5 px-4">Rol en Dominio</th>
+                <th className="py-3.5 px-4">ID</th>
+                <th className="py-3.5 px-4">Nombre de Usuario</th>
+                <th className="py-3.5 px-4">Teléfono</th>
+                <th className="py-3.5 px-4 text-center">Rol del Usuario</th>
                 <th className="py-3.5 px-4">Organización Vinculada</th>
-                <th className="py-3.5 px-4 text-center">Estado</th>
-                <th className="py-3.5 px-4 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
-              {paginatedUsers.length === 0 ? (
+              {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
-                    No se encontraron usuarios coincidentes.
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
+                    Cargando directorio de usuarios...
+                  </td>
+                </tr>
+              ) : filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
+                    No se encontraron usuarios con los criterios especificados.
                   </td>
                 </tr>
               ) : (
-                paginatedUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center shrink-0 border border-slate-200">
-                          {user.nombre?.charAt(0) || 'U'}
+                filteredUsers.map((user) => {
+                  const rolDisplay = user.rolNombre || user.rol || 'CLIENTE';
+                  const orgName =
+                    typeof user.organizacion === 'object' && user.organizacion !== null
+                      ? user.organizacion.razonSocial || user.organizacion.nombre
+                      : typeof user.organizacion === 'string' && user.organizacion.trim()
+                      ? user.organizacion
+                      : null;
+
+                  return (
+                    <tr key={user.id} className="hover:bg-slate-50/60 transition-colors">
+                      {/* ID */}
+                      <td className="py-4 px-4 font-mono font-bold text-slate-400 text-[11px]">
+                        #{user.id}
+                      </td>
+
+                      {/* Nombre de Usuario */}
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center shrink-0 border border-slate-200">
+                            {user.nombre?.charAt(0) || 'U'}
+                          </div>
+                          <span className="font-bold text-slate-900">{user.nombre}</span>
                         </div>
-                        <div>
-                          <div className="font-bold text-slate-900">{user.nombre}</div>
-                          <span className="text-[10px] text-slate-400">Registrado: {user.fechaRegistro}</span>
-                        </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td className="py-3.5 px-4 text-slate-600">
-                      {user.email}
-                    </td>
+                      {/* Teléfono */}
+                      <td className="py-4 px-4 text-slate-600">
+                        {user.telefono ? (
+                          <div className="flex items-center gap-1.5">
+                            <Phone className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{user.telefono}</span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                      </td>
 
-                    <td className="py-3.5 px-4">
-                      <Badge variant={getRoleBadgeVariant(user.rol)} size="xs">
-                        {user.rol}
-                      </Badge>
-                    </td>
+                      {/* Rol del Usuario */}
+                      <td className="py-4 px-4 text-center">
+                        <Badge variant={getRoleBadgeVariant(rolDisplay)} size="xs">
+                          {rolDisplay}
+                        </Badge>
+                      </td>
 
-                    <td className="py-3.5 px-4 text-slate-600">
-                      {user.organizacion ? (
-                        <span className="font-medium text-slate-800">{user.organizacion}</span>
-                      ) : (
-                        <span className="text-slate-400 italic">Sin organización</span>
-                      )}
-                    </td>
-
-                    <td className="py-3.5 px-4 text-center">
-                      <Badge variant={user.activo ? 'success' : 'danger'} size="xs">
-                        {user.activo ? 'Activo' : 'Bloqueado'}
-                      </Badge>
-                    </td>
-
-                    <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={() => setSelectedUser(user)}
-                        className="p-2 rounded-xl text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors"
-                        title="Editar Rol / Desactivación Lógica"
-                      >
-                        <Edit className="w-4 h-4" strokeWidth={1.75} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      {/* Organización Vinculada (Requisito 5) */}
+                      <td className="py-4 px-4">
+                        {orgName ? (
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-800 font-medium">
+                            <Building2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <span className="font-semibold">{orgName}</span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 font-medium italic">
+                            Sin organización
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
+
+        {/* Paginación */}
         <Pagination
           currentPage={currentPage}
-          totalItems={filteredUsers.length}
+          totalItems={totalItems}
           pageSize={pageSize}
           onPageChange={setCurrentPage}
           onPageSizeChange={(newSize) => {
@@ -196,15 +241,6 @@ export default function AdminUsuariosView({
           pageSizeOptions={[5, 10, 20]}
         />
       </div>
-
-      {/* Modal de Edición de Usuario */}
-      {selectedUser && (
-        <ModalEditarUsuario
-          usuario={selectedUser}
-          onClose={() => setSelectedUser(null)}
-          onSave={handleSaveUsuario}
-        />
-      )}
     </div>
   );
 }

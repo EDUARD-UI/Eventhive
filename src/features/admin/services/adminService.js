@@ -3,28 +3,110 @@ import { getCategoriesWithEvents } from '../../../services/categoryService.js';
 import { organizationService } from '../../../services/organizerService.js';
 
 export const adminService = {
-  // 1. DASHBOARD E INDICADORES AGREGADOS EN TIEMPO REAL (Sección 4 de Modulo_Administracion.md)
+  // 1. ESTADÍSTICAS Y DASHBOARD ADMINISTRATIVO (Sección 19 de Documentacion_Endpoints.md)
+  async getOrganizacionesPorValidacion() {
+    try {
+      const data = await httpClient.get('/admin/estadisticas/organizaciones-por-validacion');
+      return { success: true, data };
+    } catch (err) {
+      console.warn('Endpoint /admin/estadisticas/organizaciones-por-validacion fallback:', err);
+      return {
+        success: true,
+        data: {
+          pendientesValidacionRut: 0,
+          sinRut: 0,
+          total: 0,
+          porEstado: [],
+        },
+      };
+    }
+  },
+
+  async getEventosPorEstado() {
+    try {
+      const data = await httpClient.get('/admin/estadisticas/eventos-por-estado');
+      return { success: true, data: Array.isArray(data) ? data : [] };
+    } catch (err) {
+      console.warn('Endpoint /admin/estadisticas/eventos-por-estado fallback:', err);
+      return { success: true, data: [] };
+    }
+  },
+
+  async getEventosPorCategoria() {
+    try {
+      const data = await httpClient.get('/admin/estadisticas/eventos-por-categoria');
+      return { success: true, data: Array.isArray(data) ? data : [] };
+    } catch (err) {
+      console.warn('Endpoint /admin/estadisticas/eventos-por-categoria fallback:', err);
+      return { success: true, data: [] };
+    }
+  },
+
+  async getTopEventosVentas() {
+    try {
+      const data = await httpClient.get('/admin/estadisticas/top-eventos-ventas');
+      return { success: true, data: Array.isArray(data) ? data : [] };
+    } catch (err) {
+      console.warn('Endpoint /admin/estadisticas/top-eventos-ventas fallback:', err);
+      return { success: true, data: [] };
+    }
+  },
+
+  async getTopOrganizacionesVentas() {
+    try {
+      const data = await httpClient.get('/admin/estadisticas/top-organizaciones-ventas');
+      return { success: true, data: Array.isArray(data) ? data : [] };
+    } catch (err) {
+      console.warn('Endpoint /admin/estadisticas/top-organizaciones-ventas fallback:', err);
+      return { success: true, data: [] };
+    }
+  },
+
   async getDashboardMetrics() {
     try {
-      const [orgsRes, verifRes, usersRes, eventsRes, modsRes, catsRes, promosRes] =
-        await Promise.allSettled([
-          organizationService.listOrganizations({ page: 0, size: 1 }),
-          httpClient.get('/verificacion/pendientes', { page: 0, size: 1 }),
-          httpClient.get('/usuarios', { page: 0, size: 1 }),
-          httpClient.get('/eventos/admin/buscar', { page: 0, size: 1 }),
-          httpClient.get('/moderaciones/moderadores', { page: 0, size: 1 }),
-          httpClient.get('/categorias'),
-          httpClient.get('/promociones', { page: 0, size: 1 }),
-        ]);
+      const [
+        orgsRes,
+        verifRes,
+        usersRes,
+        eventsRes,
+        modsRes,
+        catsRes,
+        promosRes,
+        orgsValRes,
+        eventsEstadoRes,
+        catsEventsRes,
+        topEventsRes,
+        topOrgsRes,
+      ] = await Promise.allSettled([
+        organizationService.listOrganizations({ page: 0, size: 1 }),
+        httpClient.get('/verificacion/pendientes', { page: 0, size: 1 }),
+        httpClient.get('/usuarios', { page: 0, size: 1 }),
+        httpClient.get('/eventos', { page: 0, size: 1 }),
+        httpClient.get('/moderaciones/moderadores', { page: 0, size: 1 }),
+        httpClient.get('/categorias'),
+        httpClient.get('/promociones', { page: 0, size: 1 }),
+        httpClient.get('/admin/estadisticas/organizaciones-por-validacion'),
+        httpClient.get('/admin/estadisticas/eventos-por-estado'),
+        httpClient.get('/admin/estadisticas/eventos-por-categoria'),
+        httpClient.get('/admin/estadisticas/top-eventos-ventas'),
+        httpClient.get('/admin/estadisticas/top-organizaciones-ventas'),
+      ]);
+
+      const orgsValData = orgsValRes.status === 'fulfilled' ? orgsValRes.value : null;
+      const eventsEstadoData = eventsEstadoRes.status === 'fulfilled' && Array.isArray(eventsEstadoRes.value) ? eventsEstadoRes.value : [];
+      const catsEventsData = catsEventsRes.status === 'fulfilled' && Array.isArray(catsEventsRes.value) ? catsEventsRes.value : [];
+      const topEventsData = topEventsRes.status === 'fulfilled' && Array.isArray(topEventsRes.value) ? topEventsRes.value : [];
+      const topOrgsData = topOrgsRes.status === 'fulfilled' && Array.isArray(topOrgsRes.value) ? topOrgsRes.value : [];
 
       const totalOrganizaciones =
-        orgsRes.status === 'fulfilled' ? orgsRes.value?.total || 0 : 0;
+        orgsValData?.total ?? (orgsRes.status === 'fulfilled' ? orgsRes.value?.total || 0 : 0);
 
       const solicitudesPendientes =
-        verifRes.status === 'fulfilled'
+        orgsValData?.pendientesValidacionRut ??
+        (verifRes.status === 'fulfilled'
           ? verifRes.value?.totalElements ??
             (Array.isArray(verifRes.value?.content) ? verifRes.value.content.length : 0)
-          : 0;
+          : 0);
 
       const totalUsuarios =
         usersRes.status === 'fulfilled'
@@ -57,17 +139,32 @@ export const adminService = {
             (Array.isArray(promosRes.value?.content) ? promosRes.value.content.length : 0)
           : 0;
 
+      // Extraer conteos por estado de organización
+      const orgAprobadas = orgsValData?.porEstado?.find((e) => e.estado === 'APROBADA')?.cantidad ?? 0;
+      const orgSuspendidas = orgsValData?.porEstado?.find((e) => e.estado === 'SUSPENDIDA')?.cantidad ?? 0;
+      const orgPendientes = orgsValData?.porEstado?.find((e) => e.estado === 'PENDIENTE_REVISION' || e.estado === 'PENDIENTE')?.cantidad ?? solicitudesPendientes;
+
       return {
         success: true,
         metrics: {
           totalUsuarios,
           totalOrganizaciones,
           solicitudesVerificacionPendientes: solicitudesPendientes,
-          organizacionesAprobadas: totalOrganizaciones,
+          organizacionesAprobadas: orgAprobadas || totalOrganizaciones,
+          organizacionesPendientes: orgPendientes,
+          organizacionesSuspendidas: orgSuspendidas,
+          sinRut: orgsValData?.sinRut || 0,
           totalEventos,
           totalModeradores,
           totalCategorias,
           totalPromociones,
+        },
+        organizacionesPorValidacion: orgsValData,
+        eventosPorEstado: eventsEstadoData,
+        eventosPorCategoria: catsEventsData,
+        commercial: {
+          topEventos: topEventsData,
+          topOrganizaciones: topOrgsData,
         },
       };
     } catch (err) {
@@ -89,8 +186,8 @@ export const adminService = {
   },
 
   // 2. GESTIÓN DE ORGANIZACIONES Y VERIFICACIÓN TRAS CARGA DE RUT
-  async getOrganizaciones({ page = 0, size = 50 } = {}) {
-    const res = await organizationService.listOrganizations({ page, size });
+  async getOrganizaciones({ page = 0, size = 10, estado } = {}) {
+    const res = await organizationService.listOrganizations({ page, size, estado });
     return {
       success: true,
       data: res?.organizations || [],
@@ -296,12 +393,19 @@ export const adminService = {
   },
 
   async saveCategoria(catData) {
-    if (catData.id && !String(catData.id).startsWith('temp-')) {
-      await httpClient.put(`/categorias/${catData.id}`, catData);
+    const { id, nombre, fotoFile } = catData;
+    const formData = new FormData();
+    const datosObj = { nombre };
+    formData.append('datos', new Blob([JSON.stringify(datosObj)], { type: 'application/json' }));
+    if (fotoFile instanceof File) {
+      formData.append('foto', fotoFile);
+    }
+
+    if (id && !String(id).startsWith('temp-')) {
+      await httpClient.put(`/categorias/${id}`, formData, { isFormData: true });
       return { success: true, mensaje: 'Categoría actualizada correctamente.' };
     } else {
-      const { id, ...dataToCreate } = catData;
-      await httpClient.post('/categorias', dataToCreate);
+      await httpClient.post('/categorias', formData, { isFormData: true });
       return { success: true, mensaje: 'Categoría creada correctamente.' };
     }
   },
@@ -321,17 +425,27 @@ export const adminService = {
   },
 
   // 7. PROMOCIONES GLOBALES (GET /api/promociones, POST, PUT)
-  async getPromociones({ page = 0, size = 50 } = {}) {
+  async getPromociones({ page = 0, size = 10 } = {}) {
     try {
       const res = await httpClient.get('/promociones', { page, size });
       const content = res?.content || (Array.isArray(res) ? res : []);
       return {
         success: true,
         data: content,
-        total: res?.totalElements ?? content.length,
+        pageNumber: res?.pageNumber ?? page,
+        pageSize: res?.pageSize ?? size,
+        totalElements: res?.totalElements ?? content.length,
+        totalPages: res?.totalPages ?? Math.max(1, Math.ceil((res?.totalElements ?? content.length) / size)),
       };
     } catch {
-      return { success: true, data: [], total: 0 };
+      return {
+        success: true,
+        data: [],
+        pageNumber: 0,
+        pageSize: size,
+        totalElements: 0,
+        totalPages: 1,
+      };
     }
   },
 

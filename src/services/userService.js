@@ -22,6 +22,21 @@ export const userService = {
     });
   },
 
+  /** GET /api/usuarios/perfil/actividad — buyer activity for any authenticated user */
+  getActividad() {
+    return httpClient.get('/usuarios/perfil/actividad');
+  },
+
+  /** GET /api/compras — user's purchases (paginated) */
+  getCompras({ page = 0, size = 10 } = {}) {
+    return httpClient.get('/compras', { page, size });
+  },
+
+  /** GET /api/deseos — user's wishlist / favorites (paginated) */
+  getDeseos({ page = 0, size = 10 } = {}) {
+    return httpClient.get('/deseos', { page, size });
+  },
+
   /** GET /api/usuarios — list paginated users */
   listUsers({ page = 0, size = 10 } = {}) {
     return httpClient.get('/usuarios', { page, size });

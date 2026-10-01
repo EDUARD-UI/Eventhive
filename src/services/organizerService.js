@@ -26,8 +26,12 @@ const createOrganizerEvent = (formData) =>
   httpClient.post('/eventos', formData, { isFormData: true });
 
 export const organizationService = {
-  async listOrganizations({ page = 0, size = 12 } = {}) {
-    const data = await httpClient.get('/organizaciones', { page, size });
+  async listOrganizations({ page = 0, size = 12, estado } = {}) {
+    const params = { page, size };
+    if (estado && estado !== 'TODOS') {
+      params.estado = estado;
+    }
+    const data = await httpClient.get('/organizaciones', params);
     return { organizations: getPageContent(data), total: data?.totalElements ?? 0 };
   },
 

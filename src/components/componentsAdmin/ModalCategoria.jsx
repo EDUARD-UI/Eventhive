@@ -1,41 +1,59 @@
 import { createPortal } from 'react-dom';
 import React, { useState } from 'react';
-import { X, Layers, Sparkles } from 'lucide-react';
-
-const PRESETS = [
-  { label: 'Música & Conciertos', url: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=800&q=80' },
-  { label: 'Cultura & Patrimonio', url: 'https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?auto=format&fit=crop&w=800&q=80' },
-  { label: 'Gastronomía Caribeña', url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80' },
-  { label: 'Deportes de Playa', url: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80' },
-  { label: 'Congresos & Cátedras', url: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=800&q=80' },
-];
+import { X, Layers, Upload, Image as ImageIcon } from 'lucide-react';
 
 export default function ModalCategoria({ categoria, onClose, onSave }) {
   const [nombre, setNombre] = useState(categoria?.nombre || '');
-  const [desc, setDesc] = useState(categoria?.desc || '');
-  const [foto, setFoto] = useState(
-    categoria?.foto || 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=800&q=80'
+  const [fotoFile, setFotoFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(
+    categoria?.imagenUrl || categoria?.foto || categoria?.urlFoto || null
   );
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError('Por favor, selecciona un archivo de imagen válido (PNG, JPG, WEBP).');
+        return;
+      }
+      setError('');
+      setFotoFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!nombre.trim()) return;
-    onSave({
-      id: categoria?.id || Date.now(),
-      nombre,
-      desc: desc || 'Eventos y experiencias en Cartagena de Indias.',
-      foto,
-      eventos: categoria?.eventos || 0,
-      activa: categoria?.activa ?? true,
-    });
+    if (!nombre.trim()) {
+      setError('El nombre de la categoría es obligatorio.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError('');
+      await onSave({
+        id: categoria?.id,
+        nombre: nombre.trim(),
+        fotoFile,
+      });
+      onClose();
+    } catch (err) {
+      setError(err.message || 'Error al guardar la categoría.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 sm:p-6 overflow-y-auto no-scrollbar animate-in fade-in duration-200"
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 sm:p-6 overflow-y-auto no-scrollbar animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto no-scrollbar overflow-hidden"
+        className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -45,9 +63,9 @@ export default function ModalCategoria({ categoria, onClose, onSave }) {
             </div>
             <div>
               <h3 className="font-display font-bold text-base text-slate-900 leading-tight">
-                {categoria ? 'Editar Categoría' : 'Crear Nueva Categoría'}
+                {categoria ? 'Editar Categoría' : 'Nueva Categoría'}
               </h3>
-              <p className="text-xs text-slate-500">Catálogo temático de la plataforma</p>
+              <p className="text-xs text-slate-500">Catálogo temático oficial de Eventhive</p>
             </div>
           </div>
           <button
@@ -59,7 +77,14 @@ export default function ModalCategoria({ categoria, onClose, onSave }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-5 space-y-5">
+          {error && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700">
+              {error}
+            </div>
+          )}
+
+          {/* Nombre de la categoría (Sin campo de descripción) */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
               Nombre de la Categoría *
@@ -69,76 +94,81 @@ export default function ModalCategoria({ categoria, onClose, onSave }) {
               required
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              placeholder="Ej: Festivales Folclóricos"
+              placeholder="Ej: Festivales y Conciertos"
               className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 transition-all"
             />
           </div>
 
+          {/* Selector de Archivo para la Fotografía (Requisito 6) */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-              Descripción Breve
+              Fotografía de la Categoría
             </label>
-            <textarea
-              rows={2}
-              value={desc}
-              onChange={(e) => setDesc(e.target.value)}
-              placeholder="Breve reseña que aparecerá en el explorador de eventos..."
-              className="w-full text-xs text-slate-800 p-3 rounded-xl border border-slate-200 outline-none focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 transition-all resize-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-              URL de Foto de Portada
-            </label>
-            <input
-              type="url"
-              required
-              value={foto}
-              onChange={(e) => setFoto(e.target.value)}
-              placeholder="https://images.unsplash.com/..."
-              className="w-full text-xs font-mono px-3.5 py-2 rounded-xl border border-slate-200 outline-none focus:border-[#087fea] transition-all"
-            />
-
-            <p className="text-[11px] text-slate-400 font-semibold mt-2 mb-1 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-amber-500" />
-              Presets recomendados para Cartagena:
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {PRESETS.map((p) => (
-                <button
-                  key={p.label}
-                  type="button"
-                  onClick={() => setFoto(p.url)}
-                  className="text-[10px] font-semibold px-2 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-[#087fea] text-slate-600 transition-colors"
-                >
-                  {p.label}
-                </button>
-              ))}
+            <div className="relative border-2 border-dashed border-slate-200 hover:border-primary/50 rounded-2xl p-4 text-center transition-colors bg-slate-50/50">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
+              <div className="flex flex-col items-center justify-center gap-1.5 pointer-events-none">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-primary flex items-center justify-center">
+                  <Upload className="w-5 h-5" />
+                </div>
+                <p className="text-xs font-bold text-slate-800">
+                  {fotoFile ? fotoFile.name : 'Haz clic o arrastra una imagen aquí'}
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  PNG, JPG o WEBP (el almacenamiento y URL serán generados por el backend)
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="relative h-24 rounded-2xl overflow-hidden bg-slate-900 border border-slate-200">
-            <img src={foto} alt="Preview" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-            <span className="absolute bottom-2 left-3 text-white font-display font-bold text-xs truncate">
-              {nombre || 'Nombre de la categoría'}
-            </span>
-          </div>
+          {/* Previsualización de la Imagen */}
+          {previewUrl ? (
+            <div className="relative h-28 rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shadow-2xs">
+              <img
+                src={previewUrl}
+                alt="Vista previa"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
+              <div className="absolute bottom-2.5 left-3 text-white">
+                <span className="font-display font-bold text-xs block drop-shadow-md">
+                  {nombre || 'Nombre de la categoría'}
+                </span>
+                <span className="text-[10px] text-slate-300">
+                  {fotoFile ? 'Nueva imagen seleccionada' : 'Imagen actual proporcionada por backend'}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="h-20 rounded-2xl bg-slate-100 border border-dashed border-slate-200 flex items-center justify-center text-slate-400 text-xs gap-2">
+              <ImageIcon className="w-4 h-4 text-slate-400" />
+              <span>Sin fotografía seleccionada</span>
+            </div>
+          )}
 
-          <div className="flex items-center gap-2.5 pt-2">
+          <div className="flex items-center gap-2.5 pt-2 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
+              disabled={isSubmitting}
               className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 rounded-xl bg-[#087fea] hover:bg-[#0060cc] text-white text-xs font-bold shadow-md transition-all active:scale-95"
+              disabled={isSubmitting}
+              className="flex-1 py-2.5 rounded-xl bg-[#087fea] hover:bg-[#0060cc] text-white text-xs font-bold shadow-md transition-all active:scale-95 disabled:opacity-50"
             >
-              {categoria ? 'Actualizar Categoría' : 'Guardar Categoría'}
+              {isSubmitting
+                ? 'Guardando...'
+                : categoria
+                ? 'Actualizar Categoría'
+                : 'Guardar Categoría'}
             </button>
           </div>
         </form>

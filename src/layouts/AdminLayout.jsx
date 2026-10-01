@@ -37,6 +37,7 @@ export default function AdminLayout({
           searchPlaceholder="Buscar en el sistema..."
           userName="Administrador"
           userInitials="AD"
+          onProfileClick={() => onSelect && onSelect('perfil')}
           onMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
         />
 
