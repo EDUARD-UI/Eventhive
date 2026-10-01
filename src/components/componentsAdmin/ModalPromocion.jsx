@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom';
 import React, { useState } from 'react';
-import { X, Tag } from 'lucide-react';
+import { X, Tag, Calendar } from 'lucide-react';
 import BannerPreviewCard from './BannerPreviewCard.jsx';
 
 const GRADIENTS = [
@@ -10,35 +10,65 @@ const GRADIENTS = [
   { label: 'Esmeralda Caribeña', val: 'from-emerald-600 via-teal-600 to-cyan-700' },
 ];
 
-export default function ModalPromocion({ onClose, onSave }) {
-  const [codigo, setCodigo] = useState('');
-  const [tipo, setTipo] = useState('Porcentaje');
-  const [valor, setValor] = useState('20%');
-  const [limite, setLimite] = useState(250);
-  const [expira, setExpira] = useState('31 Dic 2026');
-  const [bannerTexto, setBannerTexto] = useState('¡Aprovecha hasta 20% de descuento en boletería!');
-  const [bannerColor, setBannerColor] = useState(GRADIENTS[0].val);
+export default function ModalPromocion({ onClose, onSave, promocion }) {
+  const isEditing = Boolean(promocion && promocion.id);
+
+  const [codigo, setCodigo] = useState(promocion?.codigo || '');
+  const [tipo, setTipo] = useState(promocion?.tipo || 'Porcentaje');
+  const [valor, setValor] = useState(
+    promocion?.valor ||
+      (promocion?.descuento != null ? `${promocion.descuento}%` : '20%')
+  );
+  const [limite, setLimite] = useState(promocion?.limite || 250);
+  const [expira, setExpira] = useState(
+    promocion?.expira ||
+      (promocion?.fechaFinal ? String(promocion.fechaFinal).split('T')[0] : '31 Dic 2026')
+  );
+  const [bannerTexto, setBannerTexto] = useState(
+    promocion?.bannerTexto ||
+      promocion?.descripcion ||
+      '¡Aprovecha descuentos en tu próxima experiencia!'
+  );
+  const [bannerColor, setBannerColor] = useState(
+    promocion?.bannerColor || GRADIENTS[0].val
+  );
+  const [eventoNombre, setEventoNombre] = useState(
+    promocion?.eventoTitulo || promocion?.eventoNombre || ''
+  );
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!codigo.trim()) return;
 
+    const numericDiscount =
+      tipo === 'Porcentaje'
+        ? parseInt(String(valor).replace('%', ''), 10) || 0
+        : undefined;
+
     onSave({
-      id: Date.now(),
+      ...(promocion || {}),
+      id: promocion?.id || Date.now(),
       codigo: codigo.toUpperCase().trim(),
       tipo,
       valor,
-      usados: 0,
+      descuento: numericDiscount,
+      usados: promocion?.usados || 0,
       limite: Number(limite) || 100,
       expira,
-      activa: true,
+      fechaFinal: expira,
+      activa: promocion?.activa !== undefined ? promocion.activa : true,
+      estado: promocion?.estado || 'VIGENTE',
       bannerTexto,
+      descripcion: bannerTexto,
       bannerColor,
+      eventoTitulo: eventoNombre || promocion?.eventoTitulo || 'Promoción General',
+      eventoNombre: eventoNombre || promocion?.eventoNombre || 'Promoción General',
     });
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 sm:p-6 overflow-y-auto no-scrollbar animate-in fade-in duration-200"
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 sm:p-6 overflow-y-auto no-scrollbar animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
@@ -52,9 +82,13 @@ export default function ModalPromocion({ onClose, onSave }) {
             </div>
             <div>
               <h3 className="font-display font-bold text-base text-slate-900 leading-tight">
-                Crear Campaña Promocional Global
+                {isEditing ? 'Editar Campaña Promocional' : 'Crear Campaña Promocional'}
               </h3>
-              <p className="text-xs text-slate-500">Configuración con simulación en tiempo real</p>
+              <p className="text-xs text-slate-500">
+                {isEditing
+                  ? `Modificando promoción ${promocion.codigo || ''}`
+                  : 'Configuración con simulación en tiempo real'}
+              </p>
             </div>
           </div>
           <button
@@ -80,6 +114,20 @@ export default function ModalPromocion({ onClose, onSave }) {
                   onChange={(e) => setCodigo(e.target.value.toUpperCase())}
                   placeholder="Ej: CARTAGENA20"
                   className="w-full text-xs font-mono uppercase font-bold px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-[#087fea]" />
+                  <span>Evento Asociado (Nombre o Título)</span>
+                </label>
+                <input
+                  type="text"
+                  value={eventoNombre}
+                  onChange={(e) => setEventoNombre(e.target.value)}
+                  placeholder="Ej: Festival de Jazz 2026 (o vacío para global)"
+                  className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 transition-all"
                 />
               </div>
 
@@ -152,7 +200,7 @@ export default function ModalPromocion({ onClose, onSave }) {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">
-                  Titular del Banner en Home
+                  Titular del Banner / Descripción
                 </label>
                 <input
                   type="text"
@@ -212,7 +260,7 @@ export default function ModalPromocion({ onClose, onSave }) {
               type="submit"
               className="py-2.5 px-6 rounded-xl bg-[#087fea] hover:bg-[#0060cc] text-white text-xs font-bold shadow-md transition-all active:scale-95"
             >
-              Publicar Promoción
+              {isEditing ? 'Guardar Cambios' : 'Publicar Promoción'}
             </button>
           </div>
         </form>

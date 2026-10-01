@@ -192,12 +192,29 @@ export const session = {
       localStorage.setItem(REFRESH_TOKEN_KEY, cleanRefresh);
     }
 
+    const fotoUrl =
+      data.fotoUrl ||
+      usuarioObj.fotoUrl ||
+      data.foto ||
+      usuarioObj.foto ||
+      data.imagenUrl ||
+      usuarioObj.imagenUrl ||
+      data.imagen ||
+      usuarioObj.imagen ||
+      data.avatar ||
+      usuarioObj.avatar ||
+      existing.fotoUrl ||
+      existing.foto ||
+      null;
+
     const userData = {
       id: usuarioObj.id || data.id || existing.id || null,
       email,
       name,
       role: normalizedRole,
       rol: normalizedRole,
+      fotoUrl,
+      foto: fotoUrl,
     };
 
     localStorage.setItem(USER_KEY, JSON.stringify(userData));

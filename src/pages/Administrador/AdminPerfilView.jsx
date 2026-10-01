@@ -36,6 +36,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
   const [email, setEmail] = useState(sessionUser?.email || 'admin@eventhive.com');
   const [telefono, setTelefono] = useState('');
   const [cargo, setCargo] = useState('Administrador General');
+  const [fotoUrl, setFotoUrl] = useState(sessionUser?.fotoUrl || sessionUser?.foto || '');
   const [saving, setSaving] = useState(false);
 
   // Estados de actividad de comprador (Punto 13)
@@ -82,6 +83,8 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
           if (p.nombre) setNombre(p.nombre);
           if (p.correo) setEmail(p.correo);
           if (p.telefono) setTelefono(p.telefono);
+          const photo = p.fotoUrl || p.foto || p.imagenUrl || p.imagen || p.avatarUrl || p.avatar || '';
+          if (photo) setFotoUrl(photo);
         }
 
         if (actRes.status === 'fulfilled' && actRes.value) {
@@ -177,10 +180,28 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
 
         <div className="relative pt-10 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            {/* Avatar con Insignia */}
-            <div className="relative">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-[#087fea] text-white flex items-center justify-center font-display font-black text-2xl sm:text-3xl shadow-xl ring-4 ring-white border-2 border-[#087fea]/20">
-                {nombre.substring(0, 2).toUpperCase()}
+            {/* Avatar con Foto del Backend o Iniciales */}
+            <div className="relative group">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-[#087fea] text-white flex items-center justify-center font-display font-black text-2xl sm:text-3xl shadow-xl ring-4 ring-white border-2 border-[#087fea]/20 overflow-hidden shrink-0">
+                {fotoUrl ? (
+                  <img
+                    src={fotoUrl}
+                    alt={nombre}
+                    className="w-full h-full object-cover object-center"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      if (e.currentTarget.nextSibling) {
+                        e.currentTarget.nextSibling.style.display = 'flex';
+                      }
+                    }}
+                  />
+                ) : null}
+                <span
+                  style={{ display: fotoUrl ? 'none' : 'flex' }}
+                  className="w-full h-full items-center justify-center"
+                >
+                  {nombre ? nombre.substring(0, 2).toUpperCase() : 'AD'}
+                </span>
               </div>
               <span
                 className="absolute -bottom-1 -right-1 p-1.5 rounded-xl bg-emerald-500 text-white ring-2 ring-white shadow-sm"
@@ -325,6 +346,20 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                     value={perfil?.rolNombre || 'ADMINISTRADOR'}
                     disabled
                     className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed outline-none uppercase font-mono"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                    Fotografía de Perfil (Enlace provisto por Backend)
+                  </label>
+                  <input
+                    type="text"
+                    value={fotoUrl || ''}
+                    readOnly
+                    placeholder="El backend suministrará el enlace público de la fotografía de perfil"
+                    className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed outline-none font-mono text-[11px] truncate"
+                    title="Este enlace es suministrado y gestionado por los servicios del backend de EventHive."
                   />
                 </div>
               </div>

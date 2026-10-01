@@ -9,6 +9,7 @@ import { Info, X, HelpCircle } from 'lucide-react';
  */
 export default function AdminInfoAlert({
   id,
+  alertId,
   title,
   description,
   icon: Icon = Info,
@@ -16,7 +17,8 @@ export default function AdminInfoAlert({
   children,
   className = '',
 }) {
-  const storageKey = `eventhive_admin_alert_dismissed_${id}`;
+  const effectiveId = id || alertId || 'default';
+  const storageKey = `eventhive_admin_alert_dismissed_${effectiveId}`;
   const [isOpen, setIsOpen] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -57,7 +59,7 @@ export default function AdminInfoAlert({
           className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold text-slate-500 bg-white hover:bg-slate-50 hover:text-slate-800 border border-slate-200/80 shadow-2xs transition-all active:scale-95"
           title="Ver explicación de este módulo"
         >
-          <HelpCircle className="w-3.5 h-3.5 text-primary" strokeWidth={2} />
+          <HelpCircle className="w-3.5 h-3.5 text-[#087fea]" strokeWidth={2} />
           <span>Guía de la sección</span>
         </button>
       </div>

@@ -469,6 +469,16 @@ export const adminService = {
     return { success: true, mensaje: 'Estado de promoción actualizado.' };
   },
 
+  async deletePromocion(promoId) {
+    try {
+      await httpClient.delete(`/promociones/${promoId}`);
+      return { success: true, mensaje: 'Promoción eliminada.' };
+    } catch (err) {
+      console.warn('Endpoint /promociones/{id} error:', err);
+      return { success: false, mensaje: err.message };
+    }
+  },
+
   // 8. PALABRAS PROHIBIDAS (GET /api/administracion/palabras-prohibidas)
   async getPalabrasProhibidas({ page = 0, size = 50 } = {}) {
     try {

@@ -80,7 +80,7 @@ export default function BannerPreviewCard({
                 {bannerTexto || '¡Aprovecha descuentos en tu próxima experiencia cultural!'}
               </h5>
               <p className="text-xs text-white/80 mt-1">
-                Válido hasta el <span className="font-semibold text-white">{expira}</span> en toda Cartagena.
+                Válido hasta el <span className="font-semibold text-white">{expira}</span> en toda la plataforma.
               </p>
             </div>
 

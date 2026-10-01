@@ -14,6 +14,7 @@ export default function Header({
   userName = 'Usuario',
   userInitials = 'EH',
   userEmail,
+  userPhoto,
   showSearch = false,
   showNotifications = true,
   onMenuToggle,
@@ -122,9 +123,10 @@ export default function Header({
     setNotifications((prev) => prev.filter((n) => !n.leida));
   };
 
-  // Obtener datos de sesión para complementar email/nombre si existen
+  // Obtener datos de sesión para complementar email/nombre/foto si existen
   const sessionUser = session.getUser();
   const displayEmail = userEmail || sessionUser?.email || 'Sesión activa';
+  const displayPhoto = userPhoto || sessionUser?.fotoUrl || sessionUser?.foto || sessionUser?.imagenUrl || sessionUser?.imagen || null;
 
   // Manejador de clics fuera del dropdown y tecla Escape
   useEffect(() => {
@@ -353,9 +355,27 @@ export default function Header({
             aria-haspopup="true"
             className="flex items-center gap-2 rounded-full p-0.5 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#087fea]/30 transition-all"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#087fea] text-xs font-bold text-white shadow-sm ring-2 ring-white hover:bg-[#076ecb] transition-colors shrink-0">
-              {userInitials}
-            </span>
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#087fea] text-xs font-bold text-white shadow-sm ring-2 ring-white hover:bg-[#076ecb] transition-colors shrink-0 overflow-hidden">
+              {displayPhoto ? (
+                <img
+                  src={displayPhoto}
+                  alt={userName}
+                  className="w-full h-full object-cover object-center"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    if (e.currentTarget.nextSibling) {
+                      e.currentTarget.nextSibling.style.display = 'flex';
+                    }
+                  }}
+                />
+              ) : null}
+              <span
+                style={{ display: displayPhoto ? 'none' : 'flex' }}
+                className="w-full h-full items-center justify-center"
+              >
+                {userInitials}
+              </span>
+            </div>
             {userName && (
               <span className="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-[#172033] max-w-[140px] truncate text-left">
                 <span className="truncate">{userName}</span>
@@ -377,13 +397,22 @@ export default function Header({
               aria-orientation="vertical"
             >
               {/* Información rápida del usuario */}
-              <div className="px-3 py-2.5 border-b border-slate-100 mb-1">
-                <p className="text-xs font-bold text-slate-800 truncate">
-                  {userName}
-                </p>
-                <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                  {displayEmail}
-                </p>
+              <div className="px-3 py-2.5 border-b border-slate-100 mb-1 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#087fea] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden ring-1 ring-slate-200">
+                  {displayPhoto ? (
+                    <img src={displayPhoto} alt={userName} className="w-full h-full object-cover" />
+                  ) : (
+                    userInitials
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-800 truncate">
+                    {userName}
+                  </p>
+                  <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                    {displayEmail}
+                  </p>
+                </div>
               </div>
 
               {/* Opción: Ver perfil */}
