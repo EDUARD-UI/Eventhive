@@ -3,7 +3,6 @@ import { FiMail, FiLock } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import AuthLayout from '../components/auth/AuthLayout.jsx';
 import InputField from '../components/common/InputField.jsx';
-import SocialAuthButton from '../components/common/SocialAuthButton.jsx';
 import useForm from '../hooks/useForm.js';
 import { authService } from '../services/authService.js';
 import { session, normalizeRole, getDashboardPathForRole } from '../services/session.js';
@@ -57,6 +56,9 @@ export default function InicioSesion() {
       text: 'Has iniciado sesión correctamente.',
       timer: 1200,
       showConfirmButton: false,
+      customClass: {
+        popup: 'rounded-3xl shadow-2xl border border-slate-100',
+      },
     });
 
     const user = session.getUser();
@@ -71,14 +73,6 @@ export default function InicioSesion() {
 
     const destination = getDashboardPathForRole(userRole);
     navigate(destination, { replace: true });
-  };
-
-  const handleGoogleLogin = () => {
-    Swal.fire({
-      icon: 'info',
-      title: 'Conexión con Google',
-      text: 'El proveedor de Google OAuth se vinculará con tu cuenta al completar la configuración.',
-    });
   };
 
   return (
@@ -96,18 +90,6 @@ export default function InicioSesion() {
       }
     >
       <div className="space-y-4">
-        <SocialAuthButton
-          onClick={handleGoogleLogin}
-          text="Continuar con Google"
-        />
-
-        <div className="relative flex items-center justify-center my-6">
-          <div className="border-t border-borderc w-full" />
-          <span className="bg-bg px-3 text-xs text-muted uppercase font-semibold">
-            o con tu correo
-          </span>
-        </div>
-
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <InputField
             id="email"

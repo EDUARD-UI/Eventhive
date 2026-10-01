@@ -3,7 +3,6 @@ import L from 'leaflet';
 import { Link, useNavigate } from 'react-router-dom';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import Swal from 'sweetalert2';
-import mascotaImg from '../assets/mascota.jpg';
 import { showLocationPromptAlert } from '../utils/alertUtils.js';
 import {
   FiArrowRight,
@@ -130,13 +129,13 @@ export default function Home() {
   const requestLocation = (targetDistance = null) => {
     if (!navigator.geolocation) {
       Swal.fire({
-        imageUrl: mascotaImg,
-        imageWidth: 120,
-        imageHeight: 140,
-        imageAlt: 'Mascota EventHive',
+        icon: 'warning',
         title: 'Geolocalización no soportada',
         text: 'Tu navegador no admite geolocalización para calcular distancias.',
-        confirmButtonColor: '#F59E0B',
+        confirmButtonColor: '#0D1527',
+        customClass: {
+          popup: 'rounded-3xl shadow-2xl border border-slate-100',
+        },
       });
       setSelectedDistance('all');
       return;
@@ -162,6 +161,9 @@ export default function Home() {
           text: 'El mapa ahora buscará los eventos según tu ubicación actual en Cartagena.',
           timer: 2000,
           showConfirmButton: false,
+          customClass: {
+            popup: 'rounded-3xl shadow-2xl border border-slate-100',
+          },
         });
       },
       (error) => {
@@ -176,14 +178,14 @@ export default function Home() {
         }
 
         Swal.fire({
-          imageUrl: mascotaImg,
-          imageWidth: 120,
-          imageHeight: 140,
-          imageAlt: 'Mascota EventHive',
+          icon: 'warning',
           title: 'Ubicación requerida',
           text: message,
-          confirmButtonColor: '#F59E0B',
+          confirmButtonColor: '#0D1527',
           confirmButtonText: 'Entendido',
+          customClass: {
+            popup: 'rounded-3xl shadow-2xl border border-slate-100',
+          },
         });
         setSelectedDistance('all');
       },
@@ -263,11 +265,10 @@ export default function Home() {
       </div>
 
       {/* ========================================================
-          2. AGENDA DESTACADA DE LA COLMENA (CARRUSEL DINÁMICO EN MOSAICO)
-          (Máximo 8 eventos con diseño original conservado y flechas de navegación)
+          2. AGENDA DESTACADA DE LA COLMENA (CARRUSEL PANORÁMICO)
           ======================================================== */}
-      <section className="w-full px-6 sm:px-12 lg:px-20 pt-16 sm:pt-20 pb-16 sm:pb-20 max-w-7xl mx-auto relative z-10">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-4">
+      <section className="w-full px-3 sm:px-6 md:px-8 lg:px-10 xl:px-12 pt-8 sm:pt-12 pb-12 sm:pb-16 max-w-[1850px] mx-auto relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-4 px-1 sm:px-2">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-amber-100 text-amber-950 border border-amber-300 shadow-xs">
@@ -306,7 +307,7 @@ export default function Home() {
       {/* ========================================================
           3. CARTELERA SEMANAL (PRÓXIMOS EVENTOS)
           ======================================================== */}
-      <section id="proximos" className="w-full px-6 sm:px-12 lg:px-20 py-16 sm:py-20 max-w-7xl mx-auto border-t border-amber-200/50">
+      <section id="proximos" className="w-full px-3 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-12 sm:py-16 max-w-[1850px] mx-auto border-t border-amber-200/50">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">

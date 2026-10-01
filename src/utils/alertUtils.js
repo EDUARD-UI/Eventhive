@@ -1,39 +1,57 @@
 import Swal from 'sweetalert2';
-import mascotaImg from '../assets/mascota.jpg';
 
 /**
- * Alerta reutilizable con la imagen de la mascota para solicitar inicio de sesión.
+ * Alerta profesional para solicitar inicio de sesión con icono SVG moderno y estilo EventHive.
  */
 export const showLoginAlert = ({
   title = 'Inicia sesión',
-  text = 'Inicia sesión para poder hacer esto.',
+  text = 'Inicia sesión para interactuar con eventos, guardar tus favoritos y adquirir entradas.',
   confirmButtonText = 'Iniciar sesión',
   cancelButtonText = 'Cancelar',
   showCancelButton = true,
   navigate = null,
 } = {}) => {
   return Swal.fire({
-    title,
-    text,
-    imageUrl: mascotaImg,
-    imageWidth: 160,
-    imageHeight: 185,
-    imageAlt: 'Mascota EventHive',
+    html: `
+      <div class="flex flex-col items-center text-center px-1 pt-1">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0D1527] to-[#1c2a4d] border border-amber-400/30 flex items-center justify-center text-amber-400 shadow-lg shadow-[#0D1527]/25 mb-4">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+            <polyline points="10 17 15 12 10 7" />
+            <line x1="15" y1="12" x2="3" y2="12" />
+          </svg>
+        </div>
+        <span class="inline-block text-[10px] font-black uppercase tracking-widest text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full mb-2">
+          Acceso Requerido
+        </span>
+        <h3 class="text-xl sm:text-2xl font-black text-[#0B172C] tracking-tight mb-2">
+          ${title}
+        </h3>
+        <p class="text-slate-600 text-sm leading-relaxed max-w-sm mb-1">
+          ${text}
+        </p>
+      </div>
+    `,
     showCancelButton,
-    confirmButtonText,
+    confirmButtonText: `
+      <span class="inline-flex items-center gap-2">
+        <span>${confirmButtonText}</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+        </svg>
+      </span>
+    `,
     cancelButtonText,
-    confirmButtonColor: '#007BFF',
-    cancelButtonColor: '#94a3b8',
     reverseButtons: true,
-    width: '460px',
+    width: '440px',
     padding: '2rem 1.75rem',
+    background: '#ffffff',
+    buttonsStyling: false,
     customClass: {
       popup: 'rounded-3xl shadow-2xl border border-slate-100',
-      title: 'text-[#0a1838] font-black text-2xl mb-2',
-      htmlContainer: 'text-slate-600 text-base leading-relaxed',
-      confirmButton: 'rounded-xl px-6 py-3 font-bold text-base shadow-md',
-      cancelButton: 'rounded-xl px-5 py-3 font-semibold text-base',
-      image: 'object-contain my-3 drop-shadow-md',
+      actions: 'flex items-center justify-center gap-3 mt-5 w-full',
+      confirmButton: 'inline-flex items-center justify-center py-2.5 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs uppercase tracking-wider shadow-sm hover:shadow-amber-500/25 active:scale-95 transition-all duration-200 cursor-pointer',
+      cancelButton: 'inline-flex items-center justify-center py-2.5 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider active:scale-95 transition-all duration-200 cursor-pointer',
     },
   }).then((result) => {
     if (result.isConfirmed) {
@@ -48,36 +66,47 @@ export const showLoginAlert = ({
 };
 
 /**
- * Alerta con la mascota para pedir activación de ubicación.
+ * Alerta profesional para solicitar activación de ubicación.
  */
 export const showLocationPromptAlert = ({
   title = 'Activa tu ubicación',
-  text = 'Para encontrar eventos cercanos a la distancia seleccionada, necesitamos acceder a tu ubicación actual.',
+  text = 'Para encontrar eventos cercanos a la distancia seleccionada, necesitamos acceder a tu ubicación actual en Cartagena.',
   confirmButtonText = 'Activar ubicación',
   cancelButtonText = 'Cancelar',
 } = {}) => {
   return Swal.fire({
-    title,
-    text,
-    imageUrl: mascotaImg,
-    imageWidth: 160,
-    imageHeight: 185,
-    imageAlt: 'Mascota EventHive',
+    html: `
+      <div class="flex flex-col items-center text-center px-1 pt-1">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0D1527] to-[#1c2a4d] border border-amber-400/30 flex items-center justify-center text-amber-400 shadow-lg shadow-[#0D1527]/25 mb-4">
+          <svg class="w-8 h-8 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+        </div>
+        <span class="inline-block text-[10px] font-black uppercase tracking-widest text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full mb-2">
+          Geolocalización
+        </span>
+        <h3 class="text-xl sm:text-2xl font-black text-[#0B172C] tracking-tight mb-2">
+          ${title}
+        </h3>
+        <p class="text-slate-600 text-sm leading-relaxed max-w-sm mb-1">
+          ${text}
+        </p>
+      </div>
+    `,
     showCancelButton: true,
     confirmButtonText,
     cancelButtonText,
-    confirmButtonColor: '#007BFF',
-    cancelButtonColor: '#94a3b8',
     reverseButtons: true,
-    width: '460px',
+    width: '440px',
     padding: '2rem 1.75rem',
+    background: '#ffffff',
+    buttonsStyling: false,
     customClass: {
       popup: 'rounded-3xl shadow-2xl border border-slate-100',
-      title: 'text-[#0a1838] font-black text-2xl mb-2',
-      htmlContainer: 'text-slate-600 text-base leading-relaxed',
-      confirmButton: 'rounded-xl px-6 py-3 font-bold text-base shadow-md',
-      cancelButton: 'rounded-xl px-5 py-3 font-semibold text-base',
-      image: 'object-contain my-3 drop-shadow-md',
+      actions: 'flex items-center justify-center gap-3 mt-5 w-full',
+      confirmButton: 'inline-flex items-center justify-center py-2.5 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs uppercase tracking-wider shadow-sm hover:shadow-amber-500/25 active:scale-95 transition-all duration-200 cursor-pointer',
+      cancelButton: 'inline-flex items-center justify-center py-2.5 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider active:scale-95 transition-all duration-200 cursor-pointer',
     },
   });
 };

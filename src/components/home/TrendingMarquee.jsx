@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FiCalendar, FiMapPin } from 'react-icons/fi';
 import { Flame } from 'lucide-react';
-import { formatPrice } from '../../utils/formatters.js';
 import ImageWithFallback from '../common/ImageWithFallback.jsx';
 
 /**
@@ -30,13 +29,9 @@ function TrendingMarqueeCard({ event }) {
           <span>Trending</span>
         </span>
 
-        {/* Precio sobre imagen */}
-        <span className="absolute bottom-2 right-2 px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-[#0B172C] text-amber-300 border border-amber-400/30">
-          {event.price === 0 ? 'Gratis' : formatPrice(event.price)}
-        </span>
       </div>
 
-      <span className="inline-block text-[10px] font-black uppercase tracking-widest text-amber-950 bg-amber-50 border border-amber-200/90 px-2 py-0.5 rounded-md mb-1.5">
+      <span className="inline-block text-[10px] font-black uppercase tracking-widest text-white bg-[#0D1527] border border-[#0D1527] px-2 py-0.5 rounded-md mb-1.5 shadow-xs">
         {event.category}
       </span>
       <h4 className="font-display text-sm font-black text-[#0B172C] group-hover:text-amber-700 transition-colors line-clamp-1 mb-2">

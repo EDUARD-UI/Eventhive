@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { FiCalendar, FiMapPin, FiArrowRight } from 'react-icons/fi';
 import FavoriteButton from '../FavoriteButton.jsx';
-import { formatPrice, getCategoryGradient } from '../../utils/formatters.js';
+import { getCategoryGradient } from '../../utils/formatters.js';
 import ImageWithFallback from '../common/ImageWithFallback.jsx';
 
 /**
@@ -34,7 +34,7 @@ function HoneycombDateBadge({ dateStr }) {
  * bordes ámbar-200, sombra suave, tags accesibles WCAG y celda de panal para la fecha.
  */
 export default function HiveFeaturedCard({ event }) {
-  const { id, category, title, date, location, price, photo, favorite } = event;
+  const { id, category, title, date, location, photo, favorite } = event;
 
   return (
     <article className="group relative flex flex-col md:flex-row flex-1 bg-white border border-amber-200/90 hover:border-amber-400 rounded-3xl overflow-hidden transition-all duration-300 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.07)] hover:shadow-[0_20px_35px_-5px_rgba(245,158,11,0.18)] hover:-translate-y-1">
@@ -69,8 +69,8 @@ export default function HiveFeaturedCard({ event }) {
       <div className="p-6 md:p-7 flex-1 flex flex-col justify-between relative z-10 bg-white">
         <div>
           <div className="flex items-center justify-between gap-3 mb-2.5">
-            {/* Tag accesible con fondo ámbar suave y texto de alto contraste */}
-            <span className="text-[10px] font-black uppercase tracking-widest text-amber-950 bg-amber-50 border border-amber-200/90 px-2 py-0.5 rounded-md flex items-center gap-1">
+            {/* Tag con fondo azul de la navbar */}
+            <span className="text-[10px] font-black uppercase tracking-widest text-white bg-[#0D1527] border border-[#0D1527] px-2.5 py-0.5 rounded-md flex items-center gap-1 shadow-xs">
               <span>●</span> {category}
             </span>
 
@@ -94,24 +94,11 @@ export default function HiveFeaturedCard({ event }) {
           </div>
         </div>
 
-        {/* Footer con precio y botón de acción */}
-        <div className="pt-4 border-t border-amber-100 flex items-center justify-between gap-4">
-          <div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-0.5">
-              Entrada
-            </span>
-            <span className="font-display font-extrabold text-lg sm:text-xl text-[#0B172C]">
-              {price === 0 ? (
-                <span className="text-emerald-700 font-black">Gratis</span>
-              ) : (
-                `Desde ${formatPrice(price)}`
-              )}
-            </span>
-          </div>
-
+        {/* Footer con botón de acción */}
+        <div className="pt-4 border-t border-amber-100 flex items-center justify-end">
           <Link
             to={`/eventos/${id}`}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 shadow-md shadow-amber-500/25 active:scale-95 transition-all duration-200"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 shadow-md shadow-amber-500/25 active:scale-95 transition-all duration-200"
           >
             <span>Ver detalles</span>
             <FiArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />

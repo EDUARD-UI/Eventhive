@@ -3,7 +3,6 @@ import { FiUser, FiMail, FiLock, FiBriefcase, FiPhone, FiFileText } from 'react-
 import Swal from 'sweetalert2';
 import AuthLayout from '../components/auth/AuthLayout.jsx';
 import InputField from '../components/common/InputField.jsx';
-import SocialAuthButton from '../components/common/SocialAuthButton.jsx';
 import useForm from '../hooks/useForm.js';
 import { authService } from '../services/authService.js';
 import { session, normalizeRole } from '../services/session.js';
@@ -131,6 +130,9 @@ export default function Registro() {
         : 'Bienvenido a EventHive Cartagena. Te redirigiremos a tu perfil.',
       timer: 2000,
       showConfirmButton: false,
+      customClass: {
+        popup: 'rounded-3xl shadow-2xl border border-slate-100',
+      },
     });
 
     if (isOrganizer || userRole === 'REPRESENTANTE' || userRole === 'OPERADOR') {
@@ -144,14 +146,6 @@ export default function Registro() {
     }
   };
 
-  const handleGoogleRegister = () => {
-    Swal.fire({
-      icon: 'info',
-      title: 'Registro con Google',
-      text: 'Se asociará tu cuenta de Google de forma automática.',
-    });
-  };
-
   return (
     <AuthLayout
       title="Crea tu cuenta en EventHive"
@@ -163,7 +157,7 @@ export default function Registro() {
     >
       <div className="space-y-4">
         {/* Selector de Rol Asistente vs Organización con Segmented Control */}
-        <div className="p-1.5 rounded-2xl bg-slate-200/80 border border-slate-200 shadow-inner flex gap-1.5">
+        <div className="p-1.5 rounded-2xl bg-slate-200/80 border border-slate-200 shadow-inner flex gap-1.5 mb-2">
           <button
             type="button"
             onClick={() => setFieldValue('role', 'usuario')}
@@ -186,18 +180,6 @@ export default function Registro() {
           >
             Organización de eventos
           </button>
-        </div>
-
-        <SocialAuthButton
-          onClick={handleGoogleRegister}
-          text="Registrarse con Google"
-        />
-
-        <div className="relative flex items-center justify-center my-5">
-          <div className="border-t border-borderc w-full" />
-          <span className="bg-bg px-3 text-xs text-muted uppercase font-semibold">
-            o completa tus datos
-          </span>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5" noValidate>
