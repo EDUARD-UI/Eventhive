@@ -240,7 +240,7 @@ export default function EventDetailPage() {
     if (!user) {
       showLoginAlert({
         title: 'Inicia sesión',
-        text: 'Debes iniciar sesión para adquirir tus entradas en la Colmena.',
+        text: 'Debes iniciar sesión para adquirir tus entradas.',
         navigate,
       });
       return;
@@ -310,7 +310,7 @@ export default function EventDetailPage() {
                 <span className="text-amber-500 text-lg">⬡</span>
               </div>
             </div>
-            <p className="text-sm font-black text-[#0B1B3D] tracking-wide">Cargando experiencia en la Colmena...</p>
+            <p className="text-sm font-black text-[#0B1B3D] tracking-wide">Cargando experiencia...</p>
           </div>
         </div>
         <Footer />
@@ -515,7 +515,7 @@ export default function EventDetailPage() {
                       <FiCheckCircle className="text-amber-500 shrink-0" size={16} title="Organizador Verificado" />
                     </div>
                     <span className="text-xs font-semibold text-slate-500 block">
-                      Miembro activo de la Colmena EventHive
+                      Miembro activo de EventHive
                     </span>
                   </div>
                 </div>
@@ -689,7 +689,7 @@ export default function EventDetailPage() {
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-amber-900 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-md">
-                  ⬡ MÁS EN LA COLMENA
+                   Mas en EventHive
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-black text-[#0B1B3D] tracking-tight mt-2">
                   Otras Experiencias Cercanas
@@ -734,7 +734,7 @@ export default function EventDetailPage() {
               to="/registro"
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all active:scale-95"
             >
-              Únete a la Colmena →
+              Únete a EventHive →
             </Link>
           </div>
         </div>

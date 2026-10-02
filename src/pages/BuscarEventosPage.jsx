@@ -206,7 +206,7 @@ export default function BuscarEventosPage() {
                 </>
               ) : (
                 <>
-                  EXPLORA LA <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500">COLMENA CULTURAL</span>
+                  EXPLORA LA <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500"> CULTURAL</span>
                 </>
               )}
             </h1>
@@ -299,7 +299,7 @@ export default function BuscarEventosPage() {
               <div className="flex items-center gap-2.5 text-slate-800 font-bold text-xs sm:text-sm">
                 <span className="text-amber-500 font-black text-lg">⬡</span>
                 <span>
-                  Explorando la colmena de: <strong className="text-[#0B1B3D] uppercase font-black">{categoriaParam || activeCategoryLabel || 'Categoría'}</strong>
+                  Explora: <strong className="text-[#0B1B3D] uppercase font-black">{categoriaParam || activeCategoryLabel || 'Categoría'}</strong>
                 </span>
               </div>
               <button
@@ -307,7 +307,7 @@ export default function BuscarEventosPage() {
                 onClick={handleClearFilters}
                 className="text-xs font-black text-amber-700 hover:text-amber-800 uppercase tracking-wider underline cursor-pointer"
               >
-                ✕ Ver toda la colmena
+                ✕ Ver todos los eventos
               </button>
             </div>
           )}
@@ -353,7 +353,7 @@ export default function BuscarEventosPage() {
               )}
             </div>
           ) : (
-            /* Estado Vacío Temático Colmena */
+            /* Estado Vacío Temático  */
             <div className="border-2 border-dashed border-amber-300 rounded-3xl bg-white p-12 sm:p-16 text-center max-w-2xl mx-auto shadow-sm my-6">
               <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto mb-5 text-2xl shadow-inner">
                 ⬡
@@ -365,7 +365,7 @@ export default function BuscarEventosPage() {
 
               <p className="text-slate-600 text-xs sm:text-sm max-w-md mx-auto mb-8 font-medium leading-relaxed">
                 {hasActiveFilters
-                  ? 'No encontramos eventos programados que coincidan con estos filtros en la colmena. Prueba limpiando los filtros o explorando otras fechas.'
+                  ? 'No encontramos eventos programados que coincidan con estos filtros. Prueba limpiando los filtros o explorando otras fechas.'
                   : 'Aún no hay eventos registrados en este momento. Vuelve pronto para descubrir la cartelera cultural.'}
               </p>
 

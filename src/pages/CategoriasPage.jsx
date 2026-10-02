@@ -243,7 +243,7 @@ export default function CategoriasPage() {
                 No hay categorías disponibles
               </p>
               <p className="text-slate-500 text-xs">
-                Pronto añadiremos nuevas temáticas culturales a la colmena.
+                Pronto añadiremos nuevas temáticas culturales.
               </p>
             </div>
           )}

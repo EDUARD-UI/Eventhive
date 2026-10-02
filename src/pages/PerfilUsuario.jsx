@@ -275,7 +275,7 @@ export default function PerfilUsuario() {
       Swal.fire({
         icon: 'success',
         title: '¡Perfil actualizado!',
-        text: 'Tus datos se guardaron correctamente en la Colmena.',
+        text: 'Tus datos se guardaron correctamente en EventHive.',
         timer: 1800,
         showConfirmButton: false,
       });
@@ -340,7 +340,7 @@ export default function PerfilUsuario() {
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body">
       <Navbar />
 
-      {/* Header Colmena Cultural */}
+      {/* Header  Cultural */}
       <section className="relative w-full bg-[#0B1B3D] text-white pt-14 pb-20 px-6 sm:px-10 lg:px-16 overflow-hidden border-b border-amber-500/20">
         <div className="absolute inset-0 bg-[radial-gradient(#F59E0B_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
@@ -456,7 +456,7 @@ export default function PerfilUsuario() {
             {/* Tarjeta Estadísticas */}
             <div className="bg-white border-2 border-amber-200/90 rounded-3xl shadow-sm p-6 space-y-4">
               <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block">
-                ACTIVIDAD EN LA COLMENA
+                ACTIVIDAD 
               </span>
 
               <div className="flex items-center gap-3.5 text-sm">

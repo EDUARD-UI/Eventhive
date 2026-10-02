@@ -66,7 +66,7 @@ export default function OrganizadoresPage() {
       <Navbar />
 
       <main className="flex-1">
-        {/* Header Colmena Cultural */}
+        {/* Header  Cultural */}
         <section className="w-full bg-[#0B1B3D] text-white pt-14 pb-18 px-6 sm:px-12 lg:px-20 relative overflow-hidden border-b border-amber-500/20">
           <div className="absolute inset-0 bg-[radial-gradient(#F59E0B_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
@@ -163,7 +163,7 @@ export default function OrganizadoresPage() {
                 <div className="flex items-center justify-between mb-7">
                   <div>
                     <span className="text-[10px] font-black uppercase tracking-widest text-amber-900 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-md inline-block mb-1.5">
-                      {searchTerm.trim() ? 'RESULTADOS DE BÚSQUEDA' : 'LÍDERES DE LA COLMENA'}
+                      {searchTerm.trim() ? 'RESULTADOS DE BÚSQUEDA' : 'LÍDERES DE CARTELERA'}
                     </span>
                     <h3 className="text-xl sm:text-2xl font-black text-[#0B1B3D]">
                       {searchTerm.trim()
@@ -270,7 +270,7 @@ export default function OrganizadoresPage() {
               </div>
             </div>
 
-            {/* Banner de Registro Colmena */}
+            {/* Banner de Registro  */}
             <div className="rounded-3xl bg-[#0B1B3D] p-8 sm:p-12 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 border border-amber-500/20 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
 

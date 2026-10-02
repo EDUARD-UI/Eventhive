@@ -258,7 +258,7 @@ export default function Home() {
       {/* Barra de Navegación */}
       <Navbar />
 
-      {/* Hero Principal Nocturno de la Colmena */}
+      {/* Hero Principal */}
       <Hero />
 
       {/* ========================================================
@@ -270,15 +270,13 @@ export default function Home() {
       </div>
 
       {/* ========================================================
-          2. AGENDA DESTACADA DE LA COLMENA (CARRUSEL PANORÁMICO)
+          2. AGENDA DESTACADA (CARRUSEL PANORÁMICO)
           ======================================================== */}
       <section className="w-full px-3 sm:px-6 md:px-8 lg:px-10 xl:px-12 pt-8 sm:pt-12 pb-12 sm:pb-16 max-w-[1850px] mx-auto relative z-10">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-4 px-1 sm:px-2">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-amber-100 text-amber-950 border border-amber-300 shadow-xs">
-                <span>⬡</span> AGENDA DE LA COLMENA
-              </span>
+              
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#0B172C] tracking-tight">
               Eventos Destacados
@@ -376,7 +374,7 @@ export default function Home() {
               <div className="flex items-center gap-2 mb-2">
               </div>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#0B172C] tracking-tight">
-                Mapa de la Colmena
+                Mapa de Eventos
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-xl leading-relaxed font-medium">
                 {userLocation
@@ -575,7 +573,7 @@ export default function Home() {
             <div>
               
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-[#0B172C]">
-                Categorías de la Colmena
+                Categorías Destacadas
               </h2>
               <p className="text-slate-600 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed font-medium">
                 Selecciona una celda para descubrir los eventos de tu temática favorita.

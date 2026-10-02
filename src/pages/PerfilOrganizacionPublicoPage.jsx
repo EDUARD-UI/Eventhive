@@ -160,7 +160,7 @@ export default function PerfilOrganizacionPublicoPage() {
           </div>
           <h2 className="text-2xl font-black text-[#0B1B3D] mb-2">Organización no encontrada</h2>
           <p className="text-slate-600 text-sm max-w-md mb-6 font-medium">
-            La organización solicitada no está disponible o no tiene un perfil público registrado en la Colmena.
+            La organización solicitada no está disponible o no tiene un perfil público registrado en EventHive.
           </p>
           <Link
             to="/organizaciones"
@@ -180,7 +180,7 @@ export default function PerfilOrganizacionPublicoPage() {
       <Navbar />
 
       <main className="flex-1">
-        {/* Banner de Cabecera Colmena */}
+        {/* Banner de Cabecera  */}
         <section className="w-full bg-[#0B1B3D] text-white pt-10 pb-16 px-6 sm:px-12 lg:px-20 border-b border-amber-500/20 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(#F59E0B_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />

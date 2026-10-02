@@ -282,7 +282,7 @@ export default function OrganizadorIndex() {
       case 'resumen':
         return (
           <div className="space-y-6">
-            {/* Banner de Bienvenida y Acceso Rápido Colmena */}
+            {/* Banner de Bienvenida y Acceso Rápido */}
             <div className="rounded-3xl bg-[#0B1B3D] border border-amber-500/20 p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="absolute top-0 right-0 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
               <div className="relative z-10 max-w-xl">

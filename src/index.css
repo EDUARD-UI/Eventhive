@@ -252,7 +252,7 @@ body::-webkit-scrollbar {
 }
 
 /* ==========================================================================
-   EVENTHIVE THEME: COLMENA, ABEJAS Y RESPLANDOR ÁMBAR
+   EVENTHIVE THEME: ABEJAS Y RESPLANDOR ÁMBAR
    ========================================================================== */
 
 /* Recorte hexagonal regular para celdas de panal */
@@ -379,4 +379,4 @@ body::-webkit-scrollbar {
 .animate-nectar-pulse {
   animation: nectarPulse 3.5s ease-in-out infinite;
 }
-
+

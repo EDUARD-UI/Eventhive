@@ -476,7 +476,7 @@ export default function CreateEventWizard({ onBack, onSave }) {
           <div className="flex items-center gap-2 border-b border-amber-100 pb-3">
             <span className="text-amber-500 font-black text-sm">⬡</span>
             <h4 className="text-xs font-black uppercase tracking-wider text-[#0B1B3D]">
-              Guía de la Colmena
+              Guía de creacion de eventos
             </h4>
           </div>
 
