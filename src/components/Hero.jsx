@@ -1,10 +1,10 @@
 import { useRef } from 'react';
 import { FiMapPin } from 'react-icons/fi';
-import { Sparkles } from 'lucide-react';
 import AppLogo from './common/AppLogo.jsx';
 import HoneycombCanvas from './home/HoneycombCanvas.jsx';
 import BeeParticles from './home/BeeParticles.jsx';
 import CartagenaHiveSkyline from './home/CartagenaHiveSkyline.jsx';
+import SearchCard from './SearchCard.jsx';
 import cartagenaHero from '../assets/cartagena-hero.jpg';
 
 export default function Hero() {
@@ -34,7 +34,7 @@ export default function Hero() {
       ref={heroRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative px-6 sm:px-10 pt-12 sm:pt-16 pb-16 sm:pb-20 text-white bg-[#0D1527] overflow-hidden"
+      className="relative px-6 sm:px-10 pt-16 sm:pt-24 pb-24 sm:pb-32 text-white bg-[#0D1527] overflow-hidden"
     >
       {/* 1. Malla Hexagonal Interactiva de Fondo (#0B1B3D con bordes ámbar y glowing honeycomb al hover) */}
       <HoneycombCanvas mousePos={mousePos} />
@@ -95,10 +95,10 @@ export default function Hero() {
           Tus Planes Favoritos en un Solo Lugar
         </h1>
 
-        <p className="mt-3.5 max-w-xl text-xs sm:text-base text-slate-300 leading-relaxed font-normal">
-          Descubre festivales, conciertos, arte, gastronomía y vida nocturna en la ciudad amurallada.
-          Siente el pulso vibrante de la colmena caribeña.
-        </p>
+        {/* Buscador Rápido integrado directamente en el Hero */}
+        <div className="w-full mt-8 sm:mt-10">
+          <SearchCard />
+        </div>
       </div>
 
       {/* Separador geométrico orgánico de panal en la base del Hero */}

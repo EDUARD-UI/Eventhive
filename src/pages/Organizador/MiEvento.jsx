@@ -5,55 +5,68 @@ import {
   FiClock,
   FiEdit3,
   FiEye,
-  FiFilter,
   FiPlus,
   FiSearch,
   FiTag,
-  FiUsers,
+  FiTrash2,
 } from 'react-icons/fi';
-import OrganizerEventCard from '../../components/componentsOrganizador/OrganizerEventCard.jsx';
-import ViewToggle from '../../components/componentsOrganizador/ViewToggle.jsx';
 import DataTable from '../../components/Shared/DataTable.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
 import StatCard from '../../components/Shared/StatCard.jsx';
-import Pagination from '../../components/Shared/Pagination.jsx';
 import { organizerService } from '../../services/organizerService.js';
 import { getCategoryNames } from '../../services/categoryService.js';
 
-export default function MiEvento({ onCreate, externalSearch = '' }) {
+const toneMap = {
+  PUBLICADO: 'active',
+  FINALIZADO: 'neutral',
+  BORRADOR: 'warning',
+  CANCELADO: 'danger',
+  SUSPENDIDO: 'danger',
+  PENDIENTE_REVISION: 'warning',
+  EN_CORRECCION: 'warning',
+  RECHAZADO: 'danger',
+};
+
+const labelMap = {
+  PUBLICADO: 'Activo',
+  FINALIZADO: 'Finalizado',
+  BORRADOR: 'Borrador',
+  CANCELADO: 'Cancelado',
+  SUSPENDIDO: 'Suspendido',
+  PENDIENTE_REVISION: 'En revisión',
+  EN_CORRECCION: 'En corrección',
+  RECHAZADO: 'Rechazado',
+};
+
+export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }) {
   const [organizerEvents, setOrganizerEvents] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
   const [category, setCategory] = useState('Todos');
   const [statusFilter, setStatusFilter] = useState('Todos');
   const [localSearch, setLocalSearch] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(6);
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
 
     Promise.all([
-      organizerService.getEventosOrganizador({ page: 0, size: 100 }),
+      organizerService.getEventosOrganizador({ page: 0, size: 200 }),
       getCategoryNames(),
     ])
       .then(([eventsData, categoriesData]) => {
         if (!isMounted) return;
         const normalized = (eventsData || []).map((e) => ({
           ...e,
-          id: String(e.id),
+          id: e.id,
           title: e.titulo || e.title || 'Sin título',
           category: typeof e.categoria === 'string' ? e.categoria : e.categoria?.nombre || e.nombreCategoria || 'Evento',
           date: e.fecha || e.date || 'Próximamente',
           time: e.hora || e.time || '7:00 PM',
-          location: e.lugar || e.ubicacion || e.location || 'Cartagena de Indias',
-          price: e.precio ?? e.localidades?.[0]?.precio ?? 0,
-          status: e.estado === 'PUBLICADO' ? 'Activo' : e.estado === 'FINALIZADO' ? 'Finalizado' : 'Borrador',
-          tone: e.estado === 'PUBLICADO' ? 'active' : e.estado === 'FINALIZADO' ? 'neutral' : 'warning',
-          sold: e.entradasVendidas ?? e.boletosVendidos ?? 0,
-          capacity: e.aforoMaximo ?? e.capacidad ?? 100,
+          location: e.lugar || e.ubicacion || e.location || '',
+          status: labelMap[e.estado] || e.estado || 'Borrador',
+          rawStatus: e.estado || 'BORRADOR',
+          tone: toneMap[e.estado] || 'warning',
           photo: e.foto || e.imagen || null,
         }));
         setOrganizerEvents(normalized);
@@ -87,38 +100,39 @@ export default function MiEvento({ onCreate, externalSearch = '' }) {
 
       return matchesCategory && matchesStatus && matchesSearch;
     });
-  }, [category, statusFilter, effectiveSearch]);
-
-  // Paginación para Grid
-  const paginatedGridEvents = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredEvents.slice(start, start + pageSize);
-  }, [filteredEvents, currentPage, pageSize]);
-
-  // Si cambia el filtro y la página queda fuera de rango
-  const totalPages = Math.max(1, Math.ceil(filteredEvents.length / pageSize));
-  if (currentPage > totalPages && currentPage !== 1) {
-    setCurrentPage(1);
-  }
+  }, [organizerEvents, category, statusFilter, effectiveSearch]);
 
   // Métricas calculadas dinámicamente
-  const activeCount = organizerEvents.filter((e) => e.status === 'Activo').length;
-  const draftCount = organizerEvents.filter((e) => e.status === 'Borrador').length;
-  const finishedCount = organizerEvents.filter((e) => e.status === 'Finalizado').length;
-  const totalCapacity = organizerEvents.reduce((acc, curr) => acc + (curr.capacity || 0), 0);
+  const activeCount = organizerEvents.filter((e) => e.rawStatus === 'PUBLICADO').length;
+  const draftCount = organizerEvents.filter((e) => e.rawStatus === 'BORRADOR' || e.rawStatus === 'EN_CORRECCION').length;
+  const finishedCount = organizerEvents.filter((e) => e.rawStatus === 'FINALIZADO').length;
 
-  // Columnas para la vista en tabla
+  const handleDelete = async (eventId, rawStatus) => {
+    // Item 4: Finalized events cannot be deleted
+    if (rawStatus === 'FINALIZADO') return;
+    if (!confirm('¿Estás seguro de que deseas eliminar este evento?')) return;
+    try {
+      await organizerService.eliminarEvento(eventId);
+      setOrganizerEvents((prev) => prev.filter((e) => e.id !== eventId));
+    } catch (err) {
+      alert(err.message || 'Error al eliminar el evento');
+    }
+  };
+
+  // Columnas para la vista en tabla — item 4: table only
   const eventTableColumns = [
     {
       header: 'Evento',
       key: 'title',
       render: (_, row) => (
         <div className="flex items-center gap-3">
-          <img
-            src={row.photo}
-            alt={row.title}
-            className="h-11 w-14 rounded-lg object-cover border border-slate-200 shadow-2xs shrink-0"
-          />
+          {row.photo && (
+            <img
+              src={row.photo}
+              alt={row.title}
+              className="h-11 w-14 rounded-lg object-cover border border-slate-200 shadow-2xs shrink-0"
+            />
+          )}
           <div className="min-w-0">
             <p className="font-display font-bold text-slate-900 truncate text-xs hover:text-brand transition-colors">
               {row.title}
@@ -150,40 +164,6 @@ export default function MiEvento({ onCreate, externalSearch = '' }) {
       render: (val, row) => <Badge tone={row.tone}>{val}</Badge>,
     },
     {
-      header: 'Aforo / Vendidas',
-      key: 'sold',
-      render: (_, row) => {
-        const percentage = row.capacity ? Math.round((row.sold / row.capacity) * 100) : 0;
-        return (
-          <div className="w-36">
-            <div className="flex items-center justify-between text-[11px] mb-1">
-              <span className="font-bold text-slate-800">
-                {row.sold} <span className="font-normal text-slate-400">/ {row.capacity}</span>
-              </span>
-              <span className="text-[10px] font-semibold text-brand">{percentage}%</span>
-            </div>
-            <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
-              <div
-                className={`h-full rounded-full ${
-                  percentage >= 90 ? 'bg-emerald-500' : 'bg-brand'
-                }`}
-                style={{ width: `${Math.min(100, percentage)}%` }}
-              />
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      header: 'Precio',
-      key: 'price',
-      render: (val) => (
-        <span className={`font-semibold ${val === 0 || val === 'Gratis' ? 'text-emerald-600' : 'text-slate-900'}`}>
-          {val === 0 ? 'Gratis' : val}
-        </span>
-      ),
-    },
-    {
       header: 'Acciones',
       key: 'actions',
       align: 'right',
@@ -191,18 +171,23 @@ export default function MiEvento({ onCreate, externalSearch = '' }) {
         <div className="flex items-center justify-end gap-1.5">
           <button
             type="button"
-            title="Editar evento"
-            className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-brand hover:border-brand transition-colors"
-          >
-            <FiEdit3 size={13} />
-          </button>
-          <button
-            type="button"
-            title="Ver detalles"
+            title="Ver detalle"
+            onClick={() => onViewDetail && onViewDetail(row.id)}
             className="p-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-brand hover:text-white transition-colors"
           >
             <FiEye size={13} />
           </button>
+          {/* Item 4: No delete button for finalized events */}
+          {row.rawStatus !== 'FINALIZADO' && (
+            <button
+              type="button"
+              title="Eliminar evento"
+              onClick={() => handleDelete(row.id, row.rawStatus)}
+              className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-rose-600 hover:border-rose-300 transition-colors"
+            >
+              <FiTrash2 size={13} />
+            </button>
+          )}
         </div>
       ),
     },
@@ -217,7 +202,7 @@ export default function MiEvento({ onCreate, externalSearch = '' }) {
             Gestión de Mis Eventos
           </h2>
           <p className="mt-1 text-xs text-slate-500 max-w-xl">
-            Controla tu cartelera en tiempo real, supervisa la venta de aforo, configura estados y publica nuevas experiencias en Cartagena.
+            Controla tu cartelera en tiempo real, supervisa la venta de aforo, configura estados y publica nuevas experiencias.
           </p>
         </div>
 
@@ -230,8 +215,8 @@ export default function MiEvento({ onCreate, externalSearch = '' }) {
         </button>
       </div>
 
-      {/* 2. KPIs y Métricas Rápidas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 2. KPIs — item 4: activos, borrador, finalizados (NO aforo total) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           label="Eventos Activos"
           value={String(activeCount)}
@@ -242,7 +227,7 @@ export default function MiEvento({ onCreate, externalSearch = '' }) {
           iconColor="text-emerald-600"
         />
         <StatCard
-          label="Borradores"
+          label="Eventos en Borrador"
           value={String(draftCount)}
           change="Pendientes por publicar"
           trend="up"
@@ -259,18 +244,9 @@ export default function MiEvento({ onCreate, externalSearch = '' }) {
           iconBg="bg-blue-50"
           iconColor="text-brand"
         />
-        <StatCard
-          label="Aforo Total Disponible"
-          value={totalCapacity.toLocaleString('es-CO')}
-          change="En todas las salas"
-          trend="up"
-          icon={FiUsers}
-          iconBg="bg-purple-50"
-          iconColor="text-purple-600"
-        />
       </div>
 
-      {/* 3. Barra de Filtros, Búsqueda y Switch de Vista (Grid vs Table) */}
+      {/* 3. Barra de Filtros — item 4: categoría, estado (org auto-detected) */}
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-sm">
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Filtro por Categoría */}
@@ -278,10 +254,7 @@ export default function MiEvento({ onCreate, externalSearch = '' }) {
             <span className="text-slate-400 font-medium">Categoría:</span>
             <select
               value={category}
-              onChange={(e) => {
-                setCategory(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(e) => setCategory(e.target.value)}
               className="bg-transparent font-bold text-slate-800 outline-none cursor-pointer"
             >
               <option value="Todos">Todas</option>
@@ -298,22 +271,21 @@ export default function MiEvento({ onCreate, externalSearch = '' }) {
             <span className="text-slate-400 font-medium">Estado:</span>
             <select
               value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(e) => setStatusFilter(e.target.value)}
               className="bg-transparent font-bold text-slate-800 outline-none cursor-pointer"
             >
               <option value="Todos">Todos</option>
               <option value="Activo">Activos</option>
               <option value="Borrador">Borradores</option>
               <option value="Finalizado">Finalizados</option>
+              <option value="En revisión">En revisión</option>
+              <option value="Suspendido">Suspendidos</option>
             </select>
           </div>
         </div>
 
         <div className="flex items-center justify-between lg:justify-end gap-3">
-          {/* Buscador interno si no viene del header */}
+          {/* Buscador interno */}
           {!externalSearch && (
             <div className="relative flex-1 sm:w-60">
               <FiSearch
@@ -323,88 +295,29 @@ export default function MiEvento({ onCreate, externalSearch = '' }) {
               <input
                 type="text"
                 value={localSearch}
-                onChange={(e) => {
-                  setLocalSearch(e.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => setLocalSearch(e.target.value)}
                 placeholder="Buscar por título o lugar..."
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-3 text-xs text-slate-700 outline-none focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/10 transition-all"
               />
             </div>
           )}
-
-          {/* Toggle de Vista Accesible: Grid vs Table */}
-          <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
         </div>
       </div>
 
-      {/* 4. Renderizado Condicional: Vista en Tarjetas vs Vista en Tabla */}
+      {/* 4. Vista en Tabla únicamente — item 4 */}
       {loading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-16 text-center shadow-sm">
           <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-xs text-slate-500 font-medium">Cargando eventos de tu organización...</p>
         </div>
-      ) : viewMode === 'grid' ? (
-        <div className="space-y-6">
-          {paginatedGridEvents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedGridEvents.map((event) => (
-                <OrganizerEventCard
-                  key={event.id}
-                  event={event}
-                  onEdit={() => onCreate()}
-                  onManage={() => alert(`Gestionando entradas y aforo para: ${event.title}`)}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center">
-              <p className="font-display text-base font-bold text-slate-800">
-                No se encontraron eventos con los filtros seleccionados
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                Prueba cambiando la categoría, el estado o limpiando el término de búsqueda.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setCategory('Todos');
-                  setStatusFilter('Todos');
-                  setLocalSearch('');
-                }}
-                className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-brand hover:underline"
-              >
-                Limpiar todos los filtros
-              </button>
-            </div>
-          )}
-
-          {/* Paginación para Grid */}
-          {filteredEvents.length > pageSize && (
-            <div className="rounded-2xl border border-slate-200/90 bg-white overflow-hidden shadow-sm">
-              <Pagination
-                currentPage={currentPage}
-                totalItems={filteredEvents.length}
-                pageSize={pageSize}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={(newSize) => {
-                  setPageSize(newSize);
-                  setCurrentPage(1);
-                }}
-                pageSizeOptions={[6, 9, 12]}
-              />
-            </div>
-          )}
-        </div>
       ) : (
-        /* Vista en Tabla con Paginación Integrada */
         <DataTable
-          title="Listado Detallado de Eventos"
-          subtitle={`Mostrando ${filteredEvents.length} eventos filtrados`}
+          title="Listado de Eventos"
+          subtitle={`Mostrando ${filteredEvents.length} eventos`}
           columns={eventTableColumns}
           data={filteredEvents}
           paginate={true}
-          initialPageSize={5}
+          initialPageSize={10}
           pageSizeOptions={[5, 10, 20]}
           emptyMessage="No se encontraron eventos"
           emptyDescription="Ajusta los filtros o agrega un nuevo evento a tu cartelera."

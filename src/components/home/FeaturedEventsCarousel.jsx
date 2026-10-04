@@ -7,16 +7,14 @@ import {
   FiChevronLeft,
   FiChevronRight,
 } from 'react-icons/fi';
-import { getCategoryGradient } from '../../utils/formatters.js';
 import ImageWithFallback from '../common/ImageWithFallback.jsx';
 
 /**
  * FeaturedEventsCarousel
- * Carrusel estilo banner/hero para la sección de Eventos Destacados.
- * - Deslizamiento automático que se detiene cuando el usuario hace clic en las flechas.
- * - Sin imagen de categoría en el banner: solo el nombre en una sección pequeña en amarillo arriba a la izquierda.
- * - Tipografía ajustada y equilibrada para no ocupar todo el espacio del slide.
- * - En móviles: solo muestra el título pequeño y el botón de dirección a detalle de evento.
+ * Carrusel panorámico refinado para Eventos Destacados:
+ * - Proporción visual limpia (aspect ratio panorámico y escalado proporcional sin deformar ni recortar).
+ * - Colores sobrios y bordes sutiles sin gradientes estridentes.
+ * - Deslizamiento suave y controles accesibles con transiciones de 200ms.
  */
 export default function FeaturedEventsCarousel({ events = [] }) {
   const displayEvents = events.slice(0, 8);
@@ -41,7 +39,6 @@ export default function FeaturedEventsCarousel({ events = [] }) {
     setCurrentIndex((prev) => (prev - 1 + total) % total);
   }, [total]);
 
-  // Si el usuario hace clic en las flechas o indicadores, se pausa el auto-deslizamiento
   const handleUserArrowClick = (direction) => {
     if (direction === 'next') {
       nextSlide();
@@ -65,7 +62,6 @@ export default function FeaturedEventsCarousel({ events = [] }) {
     }, 15000);
   };
 
-  // Se desliza solo en caso de que el usuario no de click en las flechas
   useEffect(() => {
     if (total <= 1 || isPaused || manualInteraction) return;
 
@@ -85,7 +81,6 @@ export default function FeaturedEventsCarousel({ events = [] }) {
     };
   }, []);
 
-  // Manejo de gestos táctiles (swipe)
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
   };
@@ -112,7 +107,7 @@ export default function FeaturedEventsCarousel({ events = [] }) {
 
   return (
     <div
-      className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-amber-200/80 bg-[#0D1527] select-none"
+      className="relative w-full rounded-3xl overflow-hidden shadow-xl border border-slate-800 bg-[#0B132B] select-none"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
@@ -127,72 +122,71 @@ export default function FeaturedEventsCarousel({ events = [] }) {
         {displayEvents.map((event, idx) => {
           const { id, category, title, description, date, location, photo } = event;
           const fallbackDesc =
-            'Vive esta experiencia cultural única en Cartagena de Indias. Conoce los detalles del programa, localidades y asegura tu entrada.';
+            'Vive esta experiencia cultural en Cartagena de Indias. Conoce los detalles de programación, localidades y asegura tu entrada.';
 
           return (
             <div
               key={id || idx}
-              className="w-full min-w-full flex-shrink-0 relative h-[320px] sm:h-[420px] md:h-[480px] lg:h-[520px] overflow-hidden bg-[#0D1527]"
+              className="w-full min-w-full flex-shrink-0 relative aspect-[16/9] sm:aspect-[21/9] min-h-[340px] max-h-[480px] overflow-hidden bg-[#0A1122]"
             >
               <Link
                 to={`/eventos/${id}`}
                 className="group block w-full h-full relative overflow-hidden"
               >
-                {/* Portada / Imagen con fallback limpio sin iconos superpuestos */}
+                {/* Portada / Imagen con object-cover centrado sin deformaciones */}
                 <ImageWithFallback
                   src={photo}
                   alt={title}
                   className="absolute inset-0 w-full h-full"
-                  imgClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                  fallbackClassName="absolute inset-0 w-full h-full"
-                  fallbackGradient={getCategoryGradient(category)}
-                  fallbackText=""
+                  imgClassName="w-full h-full object-cover object-center group-hover:scale-103 transition-transform duration-700 ease-out"
+                  fallbackClassName="absolute inset-0 w-full h-full bg-[#0B132B]"
+                  fallbackText={title}
                   showText={false}
                   iconSize={0}
                 />
 
-                {/* Overlays de gradiente para contraste impecable */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0B172C] via-[#0B172C]/65 to-transparent pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#0B172C]/90 via-[#0B172C]/40 to-transparent pointer-events-none hidden sm:block" />
+                {/* Overlays oscuros sobrios para legibilidad impecable */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#060B18]/95 via-[#060B18]/50 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#060B18]/85 via-transparent to-transparent pointer-events-none hidden sm:block" />
 
-                {/* Sección pequeña en amarillo arriba a la izquierda con solo el nombre de la categoría */}
-                <div className="absolute top-3.5 sm:top-6 left-3.5 sm:left-8 z-20">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-md text-[10px] sm:text-xs font-black uppercase tracking-wider bg-amber-400 text-slate-950 shadow-md">
+                {/* Badge de Categoría: solo en desktop */}
+                <div className="hidden lg:block absolute top-6 left-8 z-20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-slate-900/90 text-amber-400 border border-slate-700 backdrop-blur-sm shadow-sm">
                     <span>⬡</span>
                     <span>{category}</span>
                   </span>
                 </div>
 
                 {/* Contenido principal del slide */}
-                <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-8 md:p-10 lg:p-12 z-10 pb-10 sm:pb-12">
-                  <div className="max-w-xl md:max-w-2xl">
-                    {/* Título: tamaño equilibrado para no ocupar todo el slide */}
-                    <h3 className="font-display text-base sm:text-xl md:text-2xl lg:text-3xl font-black text-white leading-snug tracking-tight mb-1.5 sm:mb-2.5 drop-shadow-md group-hover:text-amber-300 transition-colors line-clamp-2">
+                <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8 md:p-10 lg:p-12 z-10 pb-8 sm:pb-10 lg:pb-14">
+                  <div className="max-w-xl md:max-w-2xl space-y-2">
+                    {/* Título: Siempre visible */}
+                    <h3 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white leading-snug tracking-tight drop-shadow-sm group-hover:text-amber-300 transition-colors duration-200 line-clamp-2 uppercase">
                       {title}
                     </h3>
 
-                    {/* Descripción: Oculta en teléfonos */}
-                    <p className="hidden sm:block text-slate-200 text-xs sm:text-sm leading-relaxed line-clamp-2 mb-3 max-w-xl font-normal drop-shadow-sm">
+                    {/* Descripción: Solo en desktop (oculta en tablets y móviles) */}
+                    <p className="hidden lg:block text-slate-300 text-xs sm:text-sm leading-relaxed line-clamp-2 max-w-xl font-normal">
                       {description || fallbackDesc}
                     </p>
 
-                    {/* Metadatos (Fecha y Ubicación): Ocultos en teléfonos */}
-                    <div className="hidden sm:flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-200 mb-4">
-                      <div className="flex items-center gap-1.5 bg-[#0D1527]/85 backdrop-blur-md px-3 py-1 rounded-lg border border-amber-400/20 shadow-sm">
+                    {/* Metadatos (Fecha y Ubicación): Solo en desktop (ocultos en tablets y móviles) */}
+                    <div className="hidden lg:flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-300 pt-1">
+                      <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-sm px-3 py-1 rounded-lg border border-slate-700">
                         <FiCalendar className="text-amber-400 shrink-0" size={13.5} />
-                        <span className="font-bold text-white">{date}</span>
+                        <span className="font-semibold text-white">{date}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 bg-[#0D1527]/85 backdrop-blur-md px-3 py-1 rounded-lg border border-amber-400/20 shadow-sm">
-                        <FiMapPin className="text-rose-400 shrink-0" size={13.5} />
-                        <span className="font-medium text-slate-100">{location}</span>
+                      <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-sm px-3 py-1 rounded-lg border border-slate-700">
+                        <FiMapPin className="text-slate-400 shrink-0" size={13.5} />
+                        <span className="font-medium text-slate-200">{location}</span>
                       </div>
                     </div>
 
-                    {/* Botón / Dirección a detalle de evento */}
-                    <div>
-                      <span className="inline-flex items-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 group-hover:from-amber-400 group-hover:to-yellow-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-md hover:shadow-amber-500/25 transition-all">
+                    {/* Botón: Siempre visible */}
+                    <div className="pt-2">
+                      <span className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-amber-500 group-hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 ease-out shadow-sm active:scale-95">
                         <span>Ver evento</span>
-                        <FiArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                        <FiArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
                       </span>
                     </div>
                   </div>
@@ -203,7 +197,7 @@ export default function FeaturedEventsCarousel({ events = [] }) {
         })}
       </div>
 
-      {/* Flechas de navegación izquierda y derecha */}
+      {/* Flechas de navegación */}
       {total > 1 && (
         <>
           <button
@@ -214,9 +208,9 @@ export default function FeaturedEventsCarousel({ events = [] }) {
               handleUserArrowClick('prev');
             }}
             aria-label="Evento anterior"
-            className="absolute left-2.5 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-black/45 hover:bg-[#0D1527] text-white hover:text-amber-300 border border-white/20 hover:border-amber-400/60 backdrop-blur-md flex items-center justify-center shadow-xl active:scale-95 transition-all cursor-pointer"
+            className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white hover:text-amber-400 border border-slate-700/80 backdrop-blur-sm flex items-center justify-center shadow-lg active:scale-95 transition-all duration-200 cursor-pointer"
           >
-            <FiChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            <FiChevronLeft className="w-5 h-5" />
           </button>
 
           <button
@@ -227,14 +221,14 @@ export default function FeaturedEventsCarousel({ events = [] }) {
               handleUserArrowClick('next');
             }}
             aria-label="Siguiente evento"
-            className="absolute right-2.5 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-black/45 hover:bg-[#0D1527] text-white hover:text-amber-300 border border-white/20 hover:border-amber-400/60 backdrop-blur-md flex items-center justify-center shadow-xl active:scale-95 transition-all cursor-pointer"
+            className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white hover:text-amber-400 border border-slate-700/80 backdrop-blur-sm flex items-center justify-center shadow-lg active:scale-95 transition-all duration-200 cursor-pointer"
           >
-            <FiChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+            <FiChevronRight className="w-5 h-5" />
           </button>
         </>
       )}
 
-      {/* Indicadores en barra/dash horizontales centrados en la parte inferior */}
+      {/* Indicadores horizontales */}
       {total > 1 && (
         <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2">
           {displayEvents.map((_, idx) => (
@@ -247,10 +241,10 @@ export default function FeaturedEventsCarousel({ events = [] }) {
                 handleUserIndicatorClick(idx);
               }}
               aria-label={`Ir al evento ${idx + 1}`}
-              className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 cursor-pointer ${
+              className={`h-1.5 sm:h-2 rounded-full transition-all duration-200 cursor-pointer ${
                 currentIndex === idx
-                  ? 'w-6 sm:w-10 bg-amber-400 shadow-md shadow-amber-400/50'
-                  : 'w-3 sm:w-5 bg-white/40 hover:bg-white/70'
+                  ? 'w-6 sm:w-9 bg-amber-400'
+                  : 'w-2.5 sm:w-4 bg-white/40 hover:bg-white/70'
               }`}
             />
           ))}

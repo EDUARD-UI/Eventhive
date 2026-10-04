@@ -4,8 +4,7 @@ import { Search, ArrowRight } from 'lucide-react';
 
 /**
  * SearchCard
- * Cápsula flotante minimalista para el Home.
- * Solo contiene el input para buscar eventos por nombre y el botón de búsqueda.
+ * Cápsula flotante blanca para el Home con alto contraste y legibilidad.
  */
 export default function SearchCard({ onInputFocus, onInputBlur }) {
   const navigate = useNavigate();
@@ -22,16 +21,16 @@ export default function SearchCard({ onInputFocus, onInputBlur }) {
 
   return (
     <div className="relative w-full group max-w-3xl mx-auto">
-      {/* Resplandor ambiental suave de miel/ámbar */}
+      {/* Resplandor suave */}
       <div
         aria-hidden="true"
-        className="absolute -inset-1 rounded-3xl sm:rounded-full bg-gradient-to-r from-amber-400/20 via-yellow-400/25 to-amber-400/20 blur-xl opacity-60 group-hover:opacity-90 transition-opacity duration-500 pointer-events-none"
+        className="absolute -inset-1 rounded-3xl sm:rounded-full bg-amber-400/20 blur-xl opacity-60 group-hover:opacity-90 transition-opacity duration-300 pointer-events-none"
       />
 
       {/* Cápsula Flotante Blanca */}
       <form
         onSubmit={handleSearch}
-        className="relative z-10 bg-white rounded-2xl sm:rounded-full border border-amber-200/90 hover:border-amber-300 p-2 sm:p-2.5 shadow-[0_20px_50px_rgba(11,25,44,0.12),0_0_20px_rgba(245,158,11,0.1)] transition-all duration-300 hover:shadow-[0_25px_60px_rgba(11,25,44,0.16)] flex flex-col sm:flex-row items-center gap-2"
+        className="relative z-10 bg-white rounded-2xl sm:rounded-full border border-slate-200/90 p-2 sm:p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] transition-all duration-200 ease-out flex flex-col sm:flex-row items-center gap-2"
       >
         <div className="relative flex-1 w-full flex items-center">
           <Search
@@ -52,11 +51,11 @@ export default function SearchCard({ onInputFocus, onInputBlur }) {
 
         <button
           type="submit"
-          className="group/btn relative w-full sm:w-auto h-[46px] px-8 rounded-xl sm:rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all duration-300 shadow-md shadow-amber-500/20 hover:shadow-amber-500/35 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shrink-0 overflow-hidden"
+          className="group/btn relative w-full sm:w-auto h-[46px] px-8 rounded-xl sm:rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all duration-200 active:scale-95 cursor-pointer shrink-0 shadow-sm"
         >
-          <span className="relative z-10 text-slate-950 font-black tracking-wide">Buscar</span>
-          <div className="relative z-10 w-6 h-6 rounded-full bg-[#0B1B3D] text-amber-400 flex items-center justify-center group-hover/btn:translate-x-1 transition-transform">
-            <ArrowRight size={13} strokeWidth={3} />
+          <span className="font-bold tracking-wide">Buscar</span>
+          <div className="w-5 h-5 rounded-full bg-slate-950 text-white flex items-center justify-center group-hover/btn:translate-x-0.5 transition-transform duration-200">
+            <ArrowRight size={12} strokeWidth={2.5} />
           </div>
         </button>
       </form>

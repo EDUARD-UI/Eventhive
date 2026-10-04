@@ -3,7 +3,6 @@ import ScrollToTop from './ScrollToTop.jsx';
 import Home from '../pages/Home.jsx';
 import EventDetailPage from '../pages/EventDetailPage.jsx';
 import BuscarEventosPage from '../pages/BuscarEventosPage.jsx';
-import CategoriasPage from '../pages/CategoriasPage.jsx';
 import OrganizadoresPage from '../pages/OrganizadoresPage.jsx';
 import PerfilOrganizacionPublicoPage from '../pages/PerfilOrganizacionPublicoPage.jsx';
 import AdminPanel from '../pages/Administrador/AdminPanel.jsx';
@@ -65,7 +64,7 @@ export default function AppRouter() {
         <Route path="/eventos/:id" element={<EventDetailPage />} />
         <Route path="/evento/:id" element={<EventDetailPage />} />
         <Route path="/buscar" element={<BuscarEventosPage />} />
-        <Route path="/categorias" element={<CategoriasPage />} />
+        <Route path="/categorias" element={<Navigate to="/buscar" replace />} />
         <Route path="/organizaciones" element={<OrganizadoresPage />} />
         <Route path="/organizaciones/:id" element={<PerfilOrganizacionPublicoPage />} />
         <Route path="/organizacion/perfil/:id" element={<PerfilOrganizacionPublicoPage />} />

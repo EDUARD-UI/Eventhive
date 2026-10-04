@@ -156,14 +156,25 @@ export const organizerService = {
     return httpClient.get('/organizaciones/mi-organizacion');
   },
 
-  /** PUT /api/organizaciones/mi-organizacion */
-  updateMiOrganizacion(data) {
-    return httpClient.put('/organizaciones/mi-organizacion', data);
+  /** PUT /api/organizaciones/mi-organizacion — multipart/form-data with optional image */
+  updateMiOrganizacion(formData) {
+    if (formData instanceof FormData) {
+      return httpClient.put('/organizaciones/mi-organizacion', formData, { isFormData: true });
+    }
+    // Legacy: plain JSON body (wrap in FormData with 'datos' part)
+    const fd = new FormData();
+    fd.append('datos', new Blob([JSON.stringify(formData)], { type: 'application/json' }));
+    return httpClient.put('/organizaciones/mi-organizacion', fd, { isFormData: true });
   },
 
-  /** GET /api/eventos/organizador — paginated list of organizer events */
+  /** GET /api/eventos/organizador — returns content array only (backwards compatible) */
   async getEventosOrganizador({ page = 0, size = 50 } = {}) {
     return getOrganizerEvents({ page, size });
+  },
+
+  /** GET /api/eventos/organizador — returns full paged response object */
+  async getEventosOrganizadorPaginated({ page = 0, size = 10 } = {}) {
+    return httpClient.get('/eventos/organizador', { page, size });
   },
 
   /** Alias en inglés para mantener compatibilidad con consumidores existentes. */
@@ -194,6 +205,21 @@ export const organizerService = {
   /** PATCH /api/eventos/{id}/cancelar */
   cancelarEvento(id) {
     return httpClient.patch(`/eventos/${id}/cancelar`);
+  },
+
+  /** PATCH /api/eventos/{id}/enviar-revision */
+  enviarRevision(id) {
+    return httpClient.patch(`/eventos/${id}/enviar-revision`);
+  },
+
+  /** PATCH /api/eventos/{id}/retirar */
+  retirarEvento(id) {
+    return httpClient.patch(`/eventos/${id}/retirar`);
+  },
+
+  /** PATCH /api/eventos/{id}/reabrir */
+  reabrirEvento(id) {
+    return httpClient.patch(`/eventos/${id}/reabrir`);
   },
 
   /** DELETE /api/eventos/{id} */

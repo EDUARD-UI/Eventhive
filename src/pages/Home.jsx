@@ -1,28 +1,27 @@
 import { useEffect, useMemo, useState } from 'react';
 import L from 'leaflet';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import Swal from 'sweetalert2';
 import { showLocationPromptAlert } from '../utils/alertUtils.js';
 import {
   FiArrowRight,
   FiMapPin,
-  FiPlusCircle,
   FiNavigation,
-  FiCompass,
 } from 'react-icons/fi';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import Hero from '../components/Hero.jsx';
-import SearchCard from '../components/SearchCard.jsx';
 import FeaturedEventsCarousel from '../components/home/FeaturedEventsCarousel.jsx';
 import HiveEventCard from '../components/home/HiveEventCard.jsx';
-import HexCategoryFilter from '../components/home/HexCategoryFilter.jsx';
-import HiveOrganizerCard from '../components/home/HiveOrganizerCard.jsx';
+import CategoryTickerCarousel from '../components/home/CategoryTickerCarousel.jsx';
 import HiveEmptyState from '../components/home/HiveEmptyState.jsx';
+import HomeBannersSection from '../components/home/HomeBannersSection.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
+import CustomSelect from '../components/common/CustomSelect.jsx';
+import EventListCard from '../components/common/EventListCard.jsx';
+import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
 import { getFeaturedEvents, getMapEvents, getUpcomingEvents } from '../services/eventService.js';
-import { organizationService } from '../services/organizerService.js';
-import { getFeaturedCategories, getCategoryNames } from '../services/categoryService.js';
+import { getCategoryNames } from '../services/categoryService.js';
 
 const DISTANCE_OPTIONS = [
   { value: 'all', label: 'Todas las distancias' },
@@ -51,8 +50,8 @@ const locationPinIcon = () =>
   L.divIcon({
     className: 'custom-map-pin-wrapper',
     html: `
-      <div class="custom-map-pin" style="background: #F59E0B; border-color: #ffffff;">
-        <span class="custom-map-pin__dot" style="background: #0B172C;"></span>
+      <div class="custom-map-pin" style="background: #F59E0B; border-color: #0B132B;">
+        <span class="custom-map-pin__dot" style="background: #0B132B;"></span>
       </div>
     `,
     iconSize: [20, 24],
@@ -66,7 +65,7 @@ const userLocationPinIcon = () =>
     html: `
       <div style="position: relative; display: flex; items-center justify-content: center; width: 30px; height: 30px;">
         <span style="position: absolute; width: 30px; height: 30px; border-radius: 9999px; background: rgba(245, 158, 11, 0.4); animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
-        <span style="position: relative; width: 15px; height: 15px; border-radius: 9999px; background: #F59E0B; border: 2.5px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.4);"></span>
+        <span style="position: relative; width: 15px; height: 15px; border-radius: 9999px; background: #F59E0B; border: 2.5px solid #0B132B; box-shadow: 0 2px 8px rgba(0,0,0,0.6);"></span>
       </div>
     `,
     iconSize: [30, 30],
@@ -85,13 +84,10 @@ function MapViewController({ center, zoom }) {
 }
 
 export default function Home() {
-  const navigate = useNavigate();
   const [featuredEvents, setFeaturedEvents] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [mapEvents, setMapEvents] = useState([]);
-  const [featuredOrganizations, setFeaturedOrganizations] = useState([]);
-  const [featuredCategories, setFeaturedCategories] = useState([]);
   const [categoryList, setCategoryList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDistance, setSelectedDistance] = useState('all');
@@ -105,10 +101,8 @@ export default function Home() {
       getFeaturedEvents(),
       getUpcomingEvents(),
       getMapEvents(),
-      organizationService.listTopOrganizations({ page: 0, size: 4 }),
-      getFeaturedCategories(),
       getCategoryNames(),
-    ]).then(([featuredRes, upcomingRes, mapRes, orgsRes, featCatsRes, catNamesRes]) => {
+    ]).then(([featuredRes, upcomingRes, mapRes, catNamesRes]) => {
       if (featuredRes.status === 'fulfilled' && Array.isArray(featuredRes.value)) {
         setFeaturedEvents(featuredRes.value);
       }
@@ -117,12 +111,6 @@ export default function Home() {
       }
       if (mapRes.status === 'fulfilled' && Array.isArray(mapRes.value)) {
         setMapEvents(mapRes.value);
-      }
-      if (orgsRes.status === 'fulfilled' && orgsRes.value?.organizations?.length > 0) {
-        setFeaturedOrganizations(orgsRes.value.organizations.slice(0, 4));
-      }
-      if (featCatsRes.status === 'fulfilled' && Array.isArray(featCatsRes.value)) {
-        setFeaturedCategories(featCatsRes.value);
       }
       if (catNamesRes.status === 'fulfilled' && Array.isArray(catNamesRes.value)) {
         setCategoryList(catNamesRes.value);
@@ -137,10 +125,7 @@ export default function Home() {
         icon: 'warning',
         title: 'Geolocalización no soportada',
         text: 'Tu navegador no admite geolocalización para calcular distancias.',
-        confirmButtonColor: '#0D1527',
-        customClass: {
-          popup: 'rounded-3xl shadow-2xl border border-slate-100',
-        },
+        confirmButtonColor: '#0B132B',
       });
       setSelectedDistance('all');
       return;
@@ -166,16 +151,14 @@ export default function Home() {
           text: 'El mapa ahora buscará los eventos según tu ubicación actual en Cartagena.',
           timer: 2000,
           showConfirmButton: false,
-          customClass: {
-            popup: 'rounded-3xl shadow-2xl border border-slate-100',
-          },
+          confirmButtonColor: '#0B132B',
         });
       },
       (error) => {
         setIsLocating(false);
         let message = 'No fue posible obtener tu ubicación.';
         if (error.code === error.PERMISSION_DENIED) {
-          message = 'Permiso denegado. Para buscar eventos por distancia cercana, permite el acceso a tu ubicación en tu navegador.';
+          message = 'Permiso denegado. Para buscar eventos cercanos, autoriza el acceso a tu ubicación en tu navegador.';
         } else if (error.code === error.POSITION_UNAVAILABLE) {
           message = 'La señal de tu ubicación no está disponible en este momento.';
         } else if (error.code === error.TIMEOUT) {
@@ -186,11 +169,8 @@ export default function Home() {
           icon: 'warning',
           title: 'Ubicación requerida',
           text: message,
-          confirmButtonColor: '#0D1527',
+          confirmButtonColor: '#0B132B',
           confirmButtonText: 'Entendido',
-          customClass: {
-            popup: 'rounded-3xl shadow-2xl border border-slate-100',
-          },
         });
         setSelectedDistance('all');
       },
@@ -253,48 +233,28 @@ export default function Home() {
     });
   }, [mapEvents, selectedCategory, selectedDistance, userLocation]);
 
+  const categoryOptions = useMemo(() => [
+    { value: 'all', label: 'Todas las categorías' },
+    ...categoryList.map((category) => ({
+      value: category.nombre,
+      label: category.nombre,
+    })),
+  ], [categoryList]);
+
   return (
-    <div className="w-full min-h-screen bg-[#FAF8F5] text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body">
-      {/* Barra de Navegación */}
+    <div className="w-full min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body">
+      {/* Barra de Navegación idéntica y sobria */}
       <Navbar />
 
-      {/* Hero Principal Nocturno de la Colmena */}
+      {/* Hero Principal con Buscador Integrado */}
       <Hero />
 
-      {/* ========================================================
-          1. BARRA FLOTANTE DE TRANSICIÓN: BUSCADOR DE EXPERIENCIAS
-          (Ubicado fuera del Hero, cápsula blanca limpia flotante con sombra 2xl)
-          ======================================================== */}
-      <div className="relative z-20 max-w-5xl mx-auto -mt-14 sm:-mt-16 px-4 sm:px-6">
-        <SearchCard />
-      </div>
-
-      {/* ========================================================
-          2. AGENDA DESTACADA DE LA COLMENA (CARRUSEL PANORÁMICO)
-          ======================================================== */}
-      <section className="w-full px-3 sm:px-6 md:px-8 lg:px-10 xl:px-12 pt-8 sm:pt-12 pb-12 sm:pb-16 max-w-[1850px] mx-auto relative z-10">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-4 px-1 sm:px-2">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-amber-100 text-amber-950 border border-amber-300 shadow-xs">
-                <span>⬡</span> AGENDA DE LA COLMENA
-              </span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#0B172C] tracking-tight">
-              Eventos Destacados
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-xl leading-relaxed font-medium">
-              Desliza para explorar las experiencias, festivales y conciertos más esperados en Cartagena.
-            </p>
-          </div>
-
-          <Link
-            to="/buscar"
-            className="inline-flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-wider text-amber-800 hover:text-amber-950 transition-colors group shrink-0"
-          >
-            <span>Ver cartelera completa</span>
-            <FiArrowRight size={15} className="transition-transform duration-200 group-hover:translate-x-1" />
-          </Link>
+      {/* 2. Eventos Destacados: Título centrado sin descripción ni badges */}
+      <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-10 sm:py-14 max-w-[1850px] mx-auto relative z-10">
+        <div className="flex flex-col items-center justify-center mb-8 text-center">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight uppercase">
+            Eventos Destacados
+          </h2>
         </div>
 
         {(() => {
@@ -304,97 +264,83 @@ export default function Home() {
           }
           if (isLoadingEvents) {
             return (
-              <div className="w-full rounded-2xl sm:rounded-3xl h-[320px] sm:h-[420px] md:h-[480px] lg:h-[520px] bg-[#0D1527] border border-amber-200/50 animate-pulse relative overflow-hidden flex flex-col justify-end p-5 sm:p-8 md:p-10 lg:p-12 shadow-2xl">
-                <div className="w-28 h-6 bg-amber-400/30 rounded-md mb-4" />
-                <div className="w-2/3 h-8 sm:h-10 bg-white/20 rounded-lg mb-3" />
-                <div className="w-1/2 h-4 bg-white/10 rounded mb-6 hidden sm:block" />
-                <div className="w-36 h-10 bg-amber-400/40 rounded-xl" />
+              <div className="w-full rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[340px] max-h-[480px] bg-slate-200 animate-pulse relative overflow-hidden flex flex-col justify-end p-6 sm:p-12 shadow-sm">
+                <div className="w-28 h-6 bg-slate-300 rounded-md mb-4" />
+                <div className="w-2/3 h-8 sm:h-10 bg-slate-300 rounded-lg mb-3" />
+                <div className="w-1/2 h-4 bg-slate-300 rounded mb-6 hidden sm:block" />
+                <div className="w-36 h-10 bg-slate-300 rounded-xl" />
               </div>
             );
           }
           return (
             <HiveEmptyState
-              title="Las abejas están preparando la agenda para este fin de semana en Cartagena."
-              subtitle="¡Vuelve pronto o sé el primero en publicar tu experiencia!"
-              showAction={true}
-              actionType="publish"
+              title="Estamos preparando la cartelera para este fin de semana en Cartagena."
+              subtitle="¡Vuelve pronto para conocer los eventos más esperados!"
+              showAction={false}
             />
           );
         })()}
       </section>
 
-      {/* ========================================================
-          3. CARTELERA SEMANAL (PRÓXIMOS EVENTOS)
-          ======================================================== */}
-      <section id="proximos" className="w-full px-3 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-12 sm:py-16 max-w-[1850px] mx-auto border-t border-amber-200/50">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              
-            </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#0B172C] tracking-tight">
+      {/* 3. Próximos Eventos: Título centrado y Grilla de Boletos Verticales */}
+      <section id="proximos" className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-14 sm:py-18 bg-white border-y border-slate-200">
+        <div className="max-w-[1850px] mx-auto">
+          <div className="flex flex-col items-center justify-center mb-10 text-center relative">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight uppercase">
               Próximos Eventos
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-xl leading-relaxed font-medium">
-              Descubre música, arte, gastronomía y cultura que suceden esta semana en Cartagena.
-            </p>
+
+            <div className="mt-3">
+              <Link
+                to="/buscar"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 hover:text-amber-600 transition-colors duration-200 group"
+              >
+                <span>Ver cartelera completa</span>
+                <FiArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-1" />
+              </Link>
+            </div>
           </div>
 
-          <Link
-            to="/buscar"
-            className="inline-flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-wider text-amber-800 hover:text-amber-950 transition-colors group shrink-0"
-          >
-            <span>Ver todos los eventos</span>
-            <FiArrowRight size={15} className="transition-transform duration-200 group-hover:translate-x-1" />
-          </Link>
+          {isLoadingEvents ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map((n) => (
+                <EventCardSkeleton key={n} notchBg="bg-white" />
+              ))}
+            </div>
+          ) : upcomingEvents.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {upcomingEvents.slice(0, 4).map((event) => (
+                <EventListCard key={event.id} event={event} notchBg="bg-white" />
+              ))}
+            </div>
+          ) : (
+            <HiveEmptyState
+              title="Pronto verás más eventos programados para los próximos días."
+              subtitle="Las organizaciones están afinando fechas y detalles."
+              showAction={false}
+            />
+          )}
         </div>
-
-        {upcomingEvents.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {upcomingEvents.slice(0, 4).map((event) => (
-              <HiveEventCard key={event.id} event={event} />
-            ))}
-          </div>
-        ) : (
-          <HiveEmptyState
-            title="Las abejas están preparando la agenda para este fin de semana en Cartagena."
-            subtitle="Pronto verás más eventos programados para los próximos días."
-            showAction={true}
-            actionType="explore"
-          />
-        )}
       </section>
 
-      {/* ========================================================
-          4. MAPA DE EVENTOS EN CARTAGENA
-          (Con aislamiento estricto de contexto z-0, isolate y overflow-hidden para neutralizar Leaflet)
-          ======================================================== */}
-      <section id="mapa" className="w-full bg-[#F3ECE1] border-y border-amber-200/60 px-6 sm:px-12 lg:px-20 py-16 sm:py-20 relative z-0 isolate overflow-hidden">
+      {/* 5. Mapa de Eventos en Cartagena */}
+      <section id="mapa" className="w-full bg-[#0A1325] border-y border-slate-800 px-6 sm:px-12 lg:px-20 py-16 sm:py-20 relative z-0 isolate overflow-hidden">
         <div className="max-w-7xl mx-auto relative z-0 isolate">
-          <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-              </div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#0B172C] tracking-tight">
-                Mapa de la Colmena
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-xl leading-relaxed font-medium">
-                {userLocation
-                  ? 'Mostrando eventos calculados a partir de tu ubicación actual en tiempo real.'
-                  : 'Explora y ubica visualmente las experiencias más cercanas a ti en Cartagena.'}
-              </p>
-            </div>
+          <div className="mb-8 flex flex-col items-center justify-center text-center">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight uppercase mb-6">
+              Mapa de Eventos
+            </h2>
 
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Botón interactivo de Geolocalización */}
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {/* Botón Geolocalización */}
               <button
                 type="button"
                 onClick={() => requestLocation(selectedDistance !== 'all' ? selectedDistance : null)}
                 disabled={isLocating}
-                className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm font-black transition-all shadow-md active:scale-95 ${
+                className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95 shadow-sm cursor-pointer ${
                   userLocation
                     ? 'border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-700'
-                    : 'border-amber-400 bg-amber-400 hover:bg-amber-300 text-slate-950'
+                    : 'border-amber-500 bg-amber-500 hover:bg-amber-400 text-slate-950'
                 }`}
                 title={userLocation ? 'Tu ubicación está activa' : 'Activar mi ubicación'}
               >
@@ -416,66 +362,32 @@ export default function Home() {
                 )}
               </button>
 
-              <div className="flex items-center gap-2 rounded-xl border border-amber-200/90 bg-white px-3.5 py-2 text-xs sm:text-sm shadow-sm">
-                <span className="text-slate-600 font-bold">Categoría:</span>
-                <select
+              {/* Selector Categoría con CustomSelect */}
+              <div className="w-48 sm:w-56">
+                <CustomSelect
                   value={selectedCategory}
                   onChange={(event) => setSelectedCategory(event.target.value)}
-                  className="bg-transparent text-[#0B172C] font-black outline-none cursor-pointer"
-                  aria-label="Filtrar eventos por categoría"
-                >
-                  <option value="all">Todas las categorías</option>
-                  {categoryList.map((category) => (
-                    <option key={category.id || category.nombre} value={category.nombre}>
-                      {category.nombre}
-                    </option>
-                  ))}
-                </select>
+                  options={categoryOptions}
+                  placeholder="Todas las categorías"
+                  variant="dark"
+                />
               </div>
 
-              <div className="flex items-center gap-2 rounded-xl border border-amber-200/90 bg-white px-3.5 py-2 text-xs sm:text-sm shadow-sm">
-                <span className="text-slate-600 font-bold">Distancia:</span>
-                <select
+              {/* Selector Distancia con CustomSelect */}
+              <div className="w-44 sm:w-52">
+                <CustomSelect
                   value={selectedDistance}
                   onChange={(event) => handleDistanceChange(event.target.value)}
-                  className="bg-transparent text-[#0B172C] font-black outline-none cursor-pointer"
-                  aria-label="Filtrar eventos por distancia"
-                >
-                  {DISTANCE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  options={DISTANCE_OPTIONS}
+                  placeholder="Distancia"
+                  variant="dark"
+                />
               </div>
             </div>
           </div>
 
-          {/* Mensaje informativo cuando el filtro de distancia no encuentra resultados */}
-          {selectedDistance !== 'all' && filteredMapEvents.length === 0 && (
-            <div className="mb-5 p-4 rounded-2xl bg-amber-100 border border-amber-300 text-amber-950 text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm font-medium">
-              <div className="flex items-center gap-2.5">
-                <FiMapPin className="text-amber-700 shrink-0" size={17} />
-                <span>
-                  No se encontraron eventos dentro de{' '}
-                  <strong>
-                    {DISTANCE_OPTIONS.find((o) => o.value === selectedDistance)?.label.toLowerCase()}
-                  </strong>{' '}
-                  de tu ubicación.
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedDistance('all')}
-                className="text-xs font-black uppercase tracking-wider text-amber-800 hover:text-amber-950 hover:underline shrink-0"
-              >
-                Ver todas las distancias →
-              </button>
-            </div>
-          )}
-
-          {/* Contenedor estricto con overflow-hidden, rounded-3xl, relative, z-0 e isolate */}
-          <div className="relative z-0 isolate overflow-hidden rounded-3xl border border-amber-200/90 shadow-xl h-[440px] sm:h-[500px] bg-white">
+          {/* Contenedor del Mapa */}
+          <div className="relative z-0 isolate overflow-hidden rounded-3xl border border-slate-800 shadow-2xl h-[440px] sm:h-[500px] bg-slate-900">
             <MapContainer
               center={userLocation ? [userLocation.lat, userLocation.lng] : [10.415, -75.54]}
               zoom={13}
@@ -499,7 +411,6 @@ export default function Home() {
                 zoom={13}
               />
 
-              {/* Marcador de la ubicación del usuario */}
               {userLocation && (
                 <Marker
                   position={[userLocation.lat, userLocation.lng]}
@@ -566,94 +477,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ========================================================
-          5. CATEGORÍAS DESTACADAS EN MOSAICO HEXAGONAL CON LLENADO DE MIEL
-          ======================================================== */}
-      <section className="w-full py-16 sm:py-24 px-6 sm:px-12 lg:px-20 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
-            <div>
-              
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-[#0B172C]">
-                Categorías de la Colmena
-              </h2>
-              <p className="text-slate-600 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed font-medium">
-                Selecciona una celda para descubrir los eventos de tu temática favorita.
-                Experimenta la microanimación de miel dorada al hacer clic.
-              </p>
-            </div>
-
-            <Link
-              to="/categorias"
-              className="inline-flex items-center gap-2 text-amber-800 hover:text-amber-950 text-xs sm:text-sm font-black uppercase tracking-wider transition-colors group shrink-0"
-            >
-              <span>Ver todas las categorías</span>
-              <FiArrowRight size={15} className="transition-transform duration-200 group-hover:translate-x-1" />
-            </Link>
-          </div>
-
-          {/* Mosaico de Hexágonos Regulares Grandes con imágenes y animación de miel */}
-          <HexCategoryFilter categories={featuredCategories} />
+      {/* 5. Carrusel de Categorías: Después del Mapa */}
+      <section className="w-full py-12 sm:py-16 bg-[#F8FAFC] border-b border-slate-200">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight uppercase">
+            Categorías
+          </h2>
         </div>
+        <CategoryTickerCarousel />
       </section>
 
-      {/* ========================================================
-          6. DIRECTORIO DE ORGANIZACION
-          ======================================================== */}
-      <section id="organizaciones" className="w-full bg-[#F3ECE1] py-16 sm:py-24 px-6 sm:px-12 lg:px-20 border-t border-amber-200/60">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
-            <div>
-              <span className="text-amber-800 font-black text-xs sm:text-sm tracking-widest uppercase block mb-2">
-                COMUNIDAD & PRODUCTORES
-              </span>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#0B172C] tracking-tight">
-                Organizaciones Destacadas
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-xl leading-relaxed font-medium">
-                Las mentes y colectivos detrás de los festivales, conciertos y experiencias culturales más vibrantes de Cartagena.
-              </p>
-            </div>
+      {/* 6. Bloque Asimétrico de Banners (/api/banners-home) */}
+      <HomeBannersSection />
 
-            <Link
-              to="/organizacion"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0a1838] hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-xs hover:shadow active:scale-95 shrink-0 self-start md:self-end"
-            >
-              <FiPlusCircle size={15} className="text-[#ffc107]" />
-              Publicar mi evento
-            </Link>
-          </div>
-
-          <div className="mt-12 rounded-3xl bg-gradient-to-r from-[#0a1838] via-[#0d2352] to-[#007bff] p-8 sm:p-12 text-white flex flex-col lg:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden">
-            <div className="relative z-10 max-w-2xl">
-              <span className="text-[#ffc107] font-bold text-xs uppercase tracking-widest block mb-2">
-                ¿ORGANIZAS EVENTOS EN CARTAGENA?
-              </span>
-              <h3 className="text-xl sm:text-2xl font-extrabold mb-2">
-                Conecta tu cartelera con miles de asistentes y turistas
-              </h3>
-              <p className="text-slate-200 text-xs sm:text-sm leading-relaxed">
-                Publica en minutos, administra localidades y entradas, genera códigos QR de acceso seguro y obtén métricas detalladas en tiempo real.
-              </p>
-            </div>
-
-            <div className="relative z-10 shrink-0">
-              <Link
-                to="/registro"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#ffc107] hover:bg-[#e0a800] text-[#0a1838] font-bold text-xs uppercase tracking-wider shadow-md transition-all active:scale-95 duration-200"
-              >
-                Únete como Organización
-                <FiArrowRight size={14} />
-              </Link>
-            </div>
-
-            {/* Decorative background circle */}
-            <div className="absolute -bottom-16 -right-16 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none" />
-          </div>           
-        </div>
-      </section>
-
-      {/* Pie de Página */}
+      {/* Pie de Página idéntico */}
       <Footer />
     </div>
   );

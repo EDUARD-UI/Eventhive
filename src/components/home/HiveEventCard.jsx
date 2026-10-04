@@ -1,30 +1,28 @@
 import { Link } from 'react-router-dom';
-import { FiCalendar, FiMapPin, FiArrowRight } from 'react-icons/fi';
+import { FiCalendar, FiMapPin, FiEye } from 'react-icons/fi';
 import FavoriteButton from '../FavoriteButton.jsx';
-import { getCategoryGradient } from '../../utils/formatters.js';
 import ImageWithFallback from '../common/ImageWithFallback.jsx';
 
 export default function HiveEventCard({ event }) {
+  if (!event) return null;
+
   const { id, category, title, date, location, favorite, photo } = event;
 
   return (
-    <article className="group bg-white border border-amber-200/80 hover:border-amber-400 rounded-2xl overflow-hidden transition-all duration-300 shadow-[0_8px_20px_-4px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_30px_-5px_rgba(245,158,11,0.15)] hover:-translate-y-1 flex flex-col justify-between">
+    <article className="group bg-[#0D182E] border border-slate-800/90 hover:border-slate-600 rounded-2xl overflow-hidden transition-all duration-200 ease-out shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex flex-col justify-between text-white">
       <div>
-        <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+        <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
           <ImageWithFallback
             src={photo}
             alt={title}
-            className="h-full w-full aspect-[4/3]"
-            imgClassName="group-hover:scale-105 transition-transform duration-500 ease-out"
-            fallbackClassName="h-full w-full aspect-[4/3]"
-            fallbackGradient={getCategoryGradient(category)}
-            fallbackText={category || 'Sin imagen'}
+            className="h-full w-full object-cover group-hover:scale-103 transition-transform duration-300 ease-out"
+            fallbackText={category || 'Evento'}
             iconSize={26}
           >
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-70 group-hover:opacity-50 transition-opacity duration-300 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0D182E] via-transparent to-transparent opacity-90 group-hover:opacity-75 transition-opacity duration-200 pointer-events-none" />
 
-            {/* Categoría Badge con alto contraste */}
-            <span className="absolute left-3 top-3 text-[10.5px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-[#0D1527] text-amber-300 border border-amber-400/40 shadow-xs z-10 flex items-center gap-1">
+            {/* Categoría Badge */}
+            <span className="absolute left-3 top-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-950/80 text-amber-400 border border-slate-700/80 shadow-xs z-10 flex items-center gap-1 backdrop-blur-sm">
               <span>⬡</span>
               <span>{category}</span>
             </span>
@@ -37,30 +35,32 @@ export default function HiveEventCard({ event }) {
         </div>
 
         <div className="p-4 sm:p-5">
-          <h3 className="font-display text-[15px] sm:text-[16px] font-black leading-snug mb-3 text-[#0B172C] line-clamp-2 group-hover:text-amber-700 transition-colors duration-200">
-            {title}
-          </h3>
+          <Link to={`/eventos/${id}`} className="block">
+            <h3 className="font-extrabold text-[15px] sm:text-[16px] leading-snug mb-2 text-white line-clamp-2 group-hover:text-amber-300 transition-colors duration-200 uppercase tracking-tight">
+              {title}
+            </h3>
+          </Link>
 
-          <div className="space-y-1.5 text-xs text-slate-600">
+          <div className="space-y-1.5 text-xs text-slate-400">
             <div className="flex items-center gap-2">
-              <FiCalendar className="text-amber-600 shrink-0" size={13.5} />
-              <span className="font-semibold text-slate-700 truncate">{date}</span>
+              <FiCalendar className="text-amber-400 shrink-0" size={13.5} />
+              <span className="font-medium text-slate-300 truncate">{date}</span>
             </div>
             <div className="flex items-center gap-2 truncate">
-              <FiMapPin className="text-rose-500 shrink-0" size={13.5} />
-              <span className="truncate text-slate-600">{location}</span>
+              <FiMapPin className="text-slate-400 shrink-0" size={13.5} />
+              <span className="truncate text-slate-300">{location}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="px-4 sm:px-5 pb-4 pt-3 border-t border-amber-100/70 bg-amber-50/20">
+      <div className="px-4 sm:px-5 pb-4 pt-2 border-t border-slate-800/80 bg-[#0A1325]">
         <Link
           to={`/eventos/${id}`}
-          className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-amber-500/25 transition-all duration-200 active:scale-[0.98]"
+          className="w-full inline-flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold uppercase tracking-wider transition-all duration-200 ease-out active:scale-95 shadow-xs border border-slate-700/80"
         >
+          <FiEye size={14} />
           <span>Ver evento</span>
-          <FiArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
     </article>

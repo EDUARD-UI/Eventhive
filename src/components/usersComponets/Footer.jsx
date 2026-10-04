@@ -4,16 +4,16 @@ import AppLogo from '../common/AppLogo.jsx';
 
 export default function Footer({ onHelpClick }) {
   return (
-    <footer className="w-full bg-[#081028] text-slate-300 pt-14 pb-8 border-t border-slate-800">
+    <footer className="w-full bg-[#081026] text-slate-300 pt-14 pb-8 border-t border-slate-800/80">
       <div className="max-w-6xl mx-auto px-6 sm:px-12 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-slate-800/80">
           {/* Brand Col */}
           <div className="md:col-span-2 space-y-4">
             <Link to="/" className="inline-block">
-              <AppLogo className="h-8 w-fit" textClassName="text-base" hiveClassName="text-brand" />
+              <AppLogo className="h-8 w-fit" textClassName="text-white" hiveClassName="text-amber-400" />
             </Link>
             <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-sm">
-              La mejor plataforma para descubrir y compartir eventos en Cartagena. Conectamos la cultura, el arte y el entretenimiento caribeño con la comunidad.
+              La plataforma de referencia para descubrir y compartir eventos en Cartagena. Conectamos la cultura, el arte y el entretenimiento caribeño con la comunidad.
             </p>
           </div>
 
@@ -24,18 +24,12 @@ export default function Footer({ onHelpClick }) {
             </h4>
             <ul className="space-y-2.5 text-xs sm:text-sm text-slate-400">
               <li>
-                <Link to="/buscar" className="hover:text-brand transition-colors">
+                <Link to="/buscar" className="hover:text-amber-400 transition-colors duration-200">
                   Todos los eventos
                 </Link>
               </li>
-              
               <li>
-                <Link to="/categorias" className="hover:text-brand transition-colors">
-                  Categorías
-                </Link>
-              </li>
-              <li>
-                <Link to="/perfil" className="hover:text-brand transition-colors">
+                <Link to="/perfil" className="hover:text-amber-400 transition-colors duration-200">
                   Mis favoritos
                 </Link>
               </li>
@@ -49,17 +43,17 @@ export default function Footer({ onHelpClick }) {
             </h4>
             <ul className="space-y-2.5 text-xs sm:text-sm text-slate-400">
               <li>
-                <Link to="/organizacion" className="hover:text-brand transition-colors">
-                  Crear evento
+                <Link to="/organizacion" className="hover:text-amber-400 transition-colors duration-200">
+                  Publicar evento
                 </Link>
               </li>
               <li>
-                <Link to="/organizaciones" className="hover:text-brand transition-colors">
+                <Link to="/organizaciones" className="hover:text-amber-400 transition-colors duration-200">
                   Directorio
                 </Link>
               </li>
               <li>
-                <Link to="/registro" className="hover:text-brand transition-colors">
+                <Link to="/registro" className="hover:text-amber-400 transition-colors duration-200">
                   Registrarse
                 </Link>
               </li>
@@ -67,7 +61,7 @@ export default function Footer({ onHelpClick }) {
                 <button
                   type="button"
                   onClick={onHelpClick}
-                  className="hover:text-brand transition-colors text-left"
+                  className="hover:text-amber-400 transition-colors duration-200 text-left cursor-pointer"
                 >
                   Centro de ayuda
                 </button>
@@ -75,29 +69,29 @@ export default function Footer({ onHelpClick }) {
             </ul>
           </div>
 
-          {/* Col 3: Sobre */}
+          {/* Col 3: Sobre Nosotros */}
           <div>
             <h4 className="text-white font-bold text-xs uppercase tracking-wider mb-4">
               Nosotros 
             </h4>
             <ul className="space-y-2.5 text-xs sm:text-sm text-slate-400">
               <li>
-                <Link to="/acerca-de" className="hover:text-brand transition-colors">
+                <Link to="/acerca-de" className="hover:text-amber-400 transition-colors duration-200">
                   Acerca de
                 </Link>
               </li>
               <li>
-                <Link to="/privacidad" className="hover:text-brand transition-colors">
+                <Link to="/privacidad" className="hover:text-amber-400 transition-colors duration-200">
                   Privacidad
                 </Link>
               </li>
               <li>
-                <Link to="/terminos" className="hover:text-brand transition-colors">
+                <Link to="/terminos" className="hover:text-amber-400 transition-colors duration-200">
                   Términos
                 </Link>
               </li>
               <li>
-                <Link to="/contacto" className="hover:text-brand transition-colors">
+                <Link to="/contacto" className="hover:text-amber-400 transition-colors duration-200">
                   Contacto
                 </Link>
               </li>
@@ -113,8 +107,8 @@ export default function Footer({ onHelpClick }) {
               href="https://cartagena.travel"
               target="_blank"
               rel="noreferrer"
-              aria-label="Sitio web"
-              className="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-brand hover:text-white flex items-center justify-center transition-colors"
+              aria-label="Sitio web de Cartagena"
+              className="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 hover:text-white flex items-center justify-center transition-colors duration-200"
             >
               <FiGlobe size={15} />
             </a>
@@ -122,7 +116,7 @@ export default function Footer({ onHelpClick }) {
               type="button"
               onClick={onHelpClick}
               aria-label="Chat de soporte"
-              className="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-brand hover:text-white flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 hover:text-white flex items-center justify-center transition-colors duration-200 cursor-pointer"
             >
               <FiMessageSquare size={15} />
             </button>
@@ -131,14 +125,14 @@ export default function Footer({ onHelpClick }) {
               target="_blank"
               rel="noreferrer"
               aria-label="Instagram"
-              className="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-brand hover:text-white flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 hover:text-white flex items-center justify-center transition-colors duration-200"
             >
               <FiInstagram size={15} />
             </a>
             <a
               href="mailto:contacto@eventhive.co"
-              aria-label="Correo"
-              className="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-brand hover:text-white flex items-center justify-center transition-colors"
+              aria-label="Correo de contacto"
+              className="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 hover:text-white flex items-center justify-center transition-colors duration-200"
             >
               <FiMail size={15} />
             </a>

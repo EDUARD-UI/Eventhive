@@ -30,21 +30,13 @@ export default function Navbar() {
   const role = normalizeRole(currentUser?.role || currentUser?.rol);
   const panelPath = getDashboardPathForRole(role);
 
-  const isHome = location.pathname === '/';
-
   return (
     <>
-      <header
-        className={`sticky top-0 z-30 flex w-full items-center justify-between gap-3 px-4 py-3.5 backdrop-blur-md transition-all sm:px-6 xl:px-10 ${
-          isHome
-            ? 'bg-[#0D1527]/90 text-white border-b border-amber-400/20 shadow-[0_4px_20px_rgba(0,0,0,0.4)]'
-            : 'bg-white/95 text-slate-900 border-b border-borderc shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
-        }`}
-      >
+      <header className="sticky top-0 z-40 flex w-full items-center justify-between gap-3 px-4 py-3.5 backdrop-blur-md bg-[#0B132B]/95 text-white border-b border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.35)] transition-colors sm:px-6 xl:px-10">
         <Link to="/" className="flex shrink-0 items-center group">
           <AppLogo
-            className="h-10 w-fit"
-            textClassName={isHome ? 'text-white' : 'text-slate-900'}
+            className="h-9 w-fit"
+            textClassName="text-white"
             hiveClassName="text-amber-400"
           />
         </Link>
@@ -56,9 +48,7 @@ export default function Navbar() {
                 key={link.label}
                 type="button"
                 onClick={openHelp}
-                className={`transition-colors ${
-                  isHome ? 'text-slate-300 hover:text-amber-400' : 'text-slate-600 hover:text-brand'
-                }`}
+                className="text-slate-300 hover:text-white transition-colors duration-200"
               >
                 {link.label}
               </button>
@@ -66,14 +56,10 @@ export default function Navbar() {
               <Link
                 key={link.label}
                 to={link.href}
-                className={`transition-colors ${
+                className={`transition-colors duration-200 ${
                   location.pathname === link.href
-                    ? isHome
-                      ? 'text-amber-400 font-bold'
-                      : 'text-brand font-semibold'
-                    : isHome
-                    ? 'text-slate-300 hover:text-amber-400'
-                    : 'text-slate-600 hover:text-brand'
+                    ? 'text-amber-400 font-bold'
+                    : 'text-slate-300 hover:text-white'
                 }`}
               >
                 {link.label}
@@ -82,16 +68,12 @@ export default function Navbar() {
           )}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2.5">
           {currentUser ? (
             <div className="hidden items-center gap-2 xl:flex">
               <Link
                 to={panelPath}
-                className={`flex max-w-[240px] items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
-                  isHome
-                    ? 'border border-amber-400/30 bg-[#131D36] text-white hover:border-amber-400 hover:text-amber-300'
-                    : 'border border-borderc bg-slate-50 text-ink hover:border-brand hover:text-brand'
-                }`}
+                className="flex max-w-[240px] items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold border border-slate-700/80 bg-[#131E3A] text-white hover:border-amber-400 hover:text-amber-300 transition-all duration-200"
               >
                 <span className="w-6 h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-[10px] font-black shrink-0">
                   {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
@@ -108,7 +90,7 @@ export default function Navbar() {
                 type="button"
                 onClick={handleLogout}
                 title="Cerrar sesión"
-                className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+                className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors duration-200"
               >
                 <FiLogOut size={16} />
               </button>
@@ -116,22 +98,16 @@ export default function Navbar() {
           ) : (
             <div className="hidden items-center gap-2.5 xl:flex">
               <button
+                type="button"
                 onClick={() => navigate("/iniciosesion")}
-                className={`inline-flex whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold transition-all active:scale-95 ${
-                  isHome
-                    ? 'border border-slate-700 bg-transparent text-slate-200 hover:border-amber-400 hover:text-amber-300'
-                    : 'border border-borderc hover:border-brand hover:text-brand'
-                }`}
+                className="inline-flex whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold border border-slate-700 text-slate-200 hover:border-slate-500 hover:text-white transition-all duration-200 active:scale-95"
               >
                 Iniciar sesión
               </button>
               <button
+                type="button"
                 onClick={() => navigate("/registro")}
-                className={`inline-flex whitespace-nowrap rounded-xl px-4 py-2 text-xs font-bold transition-all active:scale-95 ${
-                  isHome
-                    ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 hover:from-amber-400 hover:to-yellow-300 shadow-md shadow-amber-500/20'
-                    : 'bg-brand text-white shadow-sm hover:bg-brand-dark hover:shadow'
-                }`}
+                className="inline-flex whitespace-nowrap rounded-xl px-4 py-2 text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition-all duration-200 active:scale-95"
               >
                 Registrarse
               </button>
@@ -142,9 +118,7 @@ export default function Navbar() {
             onClick={open}
             aria-label="Abrir menú"
             aria-expanded={isOpen}
-            className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors xl:hidden ${
-              isHome ? 'text-slate-200 hover:bg-slate-800 hover:text-amber-400' : 'text-slate-700 hover:bg-slate-100 hover:text-brand'
-            }`}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-200 hover:bg-slate-800 hover:text-white transition-colors duration-200 xl:hidden"
           >
             <FiMenu size={22} />
           </button>

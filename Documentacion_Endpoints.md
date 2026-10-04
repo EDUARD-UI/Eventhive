@@ -80,6 +80,8 @@ En caso de error, la respuesta suele devolver:
     "nombre": "Carlos",
     "correo": "carlos@email.com",
     "telefono": "+56912345678",
+    "imagenPerfil": "https://storage.example/imagenPerfil/user_123.jpg",
+    "urlImagenPerfil": "https://storage.example/imagenPerfil/user_123.jpg",
     "rolNombre": "CLIENTE"
   }
 }
@@ -325,6 +327,8 @@ En caso de error, la respuesta suele devolver:
     "nombre": "Carlos",
     "correo": "carlos@email.com",
     "telefono": "+56912345678",
+    "imagenPerfil": "https://storage.example/imagenPerfil/user_123.jpg",
+    "urlImagenPerfil": "https://storage.example/imagenPerfil/user_123.jpg",
     "rolNombre": "CLIENTE"
   }
 }
@@ -352,8 +356,10 @@ En caso de error, la respuesta suele devolver:
 
 #### `PUT /api/usuarios/perfil`
 - Recibe: body `ActualizarPerfilRequest`.
+- Content-Type: `application/json`.
 - Devuelve: `ApiResponse<UsuarioDTO>`
 - Permisos: autenticado.
+- Este endpoint actualiza los datos de texto del perfil. Para reemplazar la imagen, usar `PUT /api/usuarios/perfil/imagen`.
 - Ejemplo de respuesta:
 
 ```json
@@ -363,10 +369,19 @@ En caso de error, la respuesta suele devolver:
   "data": {
     "id": 7,
     "nombre": "Carlos Vega",
-    "correo": "carlos@email.com"
+    "correo": "carlos@email.com",
+    "imagenPerfil": "https://storage.example/imagenPerfil/user_123.jpg",
+    "urlImagenPerfil": "https://storage.example/imagenPerfil/user_123.jpg"
   }
 }
 ```
+
+#### `PUT /api/usuarios/perfil/imagen`
+- Recibe: `multipart/form-data` con la parte `imagen` obligatoria (archivo PNG o JPG; máximo 5 MB).
+- Devuelve: `ApiResponse<UsuarioDTO>` con HTTP 200; incluye la URL actualizada en `imagenPerfil` y `urlImagenPerfil`.
+- Permisos: autenticado.
+- Descripción: reemplaza únicamente la imagen de perfil del usuario autenticado y la almacena en Supabase Storage.
+- Ejemplo de respuesta: misma estructura de `UsuarioDTO` que en `GET /api/usuarios/perfil`.
 
 #### `PUT /api/usuarios/perfil/cambiar-clave`
 - Recibe: body `EditarClaveRequest` con clave actual y nueva.
@@ -389,9 +404,10 @@ En caso de error, la respuesta suele devolver:
 ### Base: `/api/eventos`
 
 #### `GET /api/eventos`
-- Recibe: `categoriaId` opcional y paginación.
+- Recibe: `categoriaId` y `fecha` opcionales, y paginación (`page`, `size`, `sort`). La fecha debe enviarse en formato `yyyy-MM-dd` y filtra por ese día exacto.
 - Devuelve: `ApiResponse<PagedResponse<EventoDTO>>`
-- Descripción: lista eventos públicos.
+- Descripción: lista eventos públicos; permite combinar los filtros opcionales de categoría y fecha. El filtro de fecha se evalúa como fecha de calendario sin conversiones de zona horaria, evitando devolver eventos del día anterior. Los promocionados aparecen primero y el orden secundario predeterminado es por fecha, hora e ID ascendente.
+- Ejemplos: `/api/eventos?fecha=2026-10-14` o `/api/eventos?categoriaId=1&fecha=2026-10-14`
 - Ejemplo de respuesta:
 
 ```json
@@ -409,6 +425,7 @@ En caso de error, la respuesta suele devolver:
         "fecha": "2026-10-14",
         "hora": "19:30:00",
         "estado": "PUBLICADO",
+        "promocionado": true,
         "latitud": -33.4489,
         "longitud": -70.6693,
         "categoria": {
@@ -430,6 +447,12 @@ En caso de error, la respuesta suele devolver:
   }
 }
 ```
+
+#### `GET /api/eventos/destacados`
+- Recibe: paginación opcional (`page`, `size`, `sort`); `size` es 10 por defecto.
+- Devuelve: `ApiResponse<PagedResponse<EventoDTO>>`.
+- Descripción: lista únicamente eventos `PUBLICADO` con `promocionado: true`, ordenados por fecha, hora e ID ascendente.
+- Cada evento contiene el mismo `EventoDTO` usado por `GET /api/eventos`, incluidos `descripcion`, `lugar`, `foto`, `fecha`, `hora`, `estado`, `promocionado`, coordenadas, categoría y organización.
 
 #### `GET /api/eventos/proximos`
 - Recibe: paginación.
@@ -654,7 +677,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/eventos/mapa`
 - Recibe: `categoriaId`, `lat`, `lng`, `radioKm` opcionales.
 - Devuelve: `ApiResponse<List<EventoMapaDTO>>`
-- Descripción: eventos para renderizar en mapa.
+- Descripción: eventos para renderizar en mapa; los promocionados aparecen primero y luego se ordenan por fecha, hora e ID ascendente.
 - Ejemplo de respuesta:
 
 ```json
@@ -675,9 +698,10 @@ En caso de error, la respuesta suele devolver:
 ```
 
 #### `GET /api/eventos/buscar`
-- Recibe: `titulo` y/o `fecha` y paginación.
-- Devuelve: `ApiResponse<PagedResponse<EventoBusquedaDTO>>`
-- Descripción: búsqueda pública de eventos.
+- Recibe: `nombre` o `titulo` para buscar por coincidencia parcial y paginación (`page`, `size`, `sort`). Debe enviarse `nombre` o `titulo`.
+- Devuelve: `ApiResponse<PagedResponse<EventoDTO>>`, con los mismos campos de tarjeta que el listado público.
+- Descripción: búsqueda pública de eventos `PUBLICADO` por coincidencia parcial en el título. Los promocionados aparecen primero; el orden predeterminado secundario es por fecha, hora e ID ascendente. Para filtrar por categoría o fecha se utiliza `GET /api/eventos`.
+- Ejemplo: `/api/eventos/buscar?titulo=jazz`
 - Ejemplo de respuesta:
 
 ```json
@@ -689,8 +713,23 @@ En caso de error, la respuesta suele devolver:
       {
         "id": 15,
         "titulo": "Festival de Jazz",
-        "nombreCategoria": "Música",
-        "fecha": "2026-10-14"
+        "descripcion": "Evento musical con artistas locales",
+        "lugar": "Parque Central, Santiago",
+        "foto": "https://storage.example/eventos/festival-jazz.jpg",
+        "fecha": "2026-10-14",
+        "hora": "19:30:00",
+        "estado": "PUBLICADO",
+        "promocionado": true,
+        "latitud": -33.4489,
+        "longitud": -70.6693,
+        "categoria": {
+          "id": 1,
+          "nombre": "Música"
+        },
+        "organizacion": {
+          "id": 20,
+          "nombre": "Eventica"
+        }
       }
     ],
     "pageNumber": 0,
@@ -1509,6 +1548,7 @@ En caso de error, la respuesta suele devolver:
     "razonSocial": "Eventica SpA",
     "nit": "76.123.456-7",
     "correoContacto": "contacto@eventica.cl",
+    "urlLogo": "https://storage.example/perfilOrganizacion/org_123.jpg",
     "fechaCreacion": "2026-09-01T09:00:00",
     "promedioRating": 4.8,
     "totalValoraciones": 25,
@@ -1590,6 +1630,7 @@ En caso de error, la respuesta suele devolver:
     "razonSocial": "Eventica SpA",
     "nit": "76.123.456-7",
     "correoContacto": "contacto@eventica.cl",
+    "urlLogo": "https://storage.example/perfilOrganizacion/org_123.jpg",
     "fechaCreacion": "2026-09-01T09:00:00",
     "promedioRating": 4.8,
     "totalValoraciones": 25,
@@ -1602,6 +1643,12 @@ En caso de error, la respuesta suele devolver:
   }
 }
 ```
+
+#### `PUT /api/organizaciones/mi-organizacion`
+- Recibe: `multipart/form-data` con la parte `datos` obligatoria (JSON `ActualizarOrganizacionRequest`: `razonSocial`, `descripcion`, `correoContacto`) y la parte `imagen` opcional (archivo PNG o JPG; máximo 5 MB).
+- Devuelve: `ApiResponse<OrganizacionDTO>` con HTTP 200, incluyendo `urlLogo` si existe.
+- Permisos: REPRESENTANTE.
+- Descripción: actualiza los datos de la organización del representante autenticado y, si se envía `imagen`, reemplaza su logo en Supabase Storage. Si no se envía imagen, conserva el logo actual.
 
 #### `GET /api/organizaciones/mis-invitaciones`
 - Recibe: paginación.
@@ -2909,19 +2956,88 @@ Todos los endpoints de este módulo requieren rol ADMINISTRADOR. `PalabraProhibi
 
 ---
 
-## 21. Resumen de permisos por rol
+## 21. Banners del Home
 
-- Público: registro/login, consulta pública de eventos y organizaciones
+### Base: `/api/banners-home`
+
+Este módulo administra los dos espacios promocionales propios de Eventhive. No está relacionado con organizaciones, eventos ni con el módulo `/api/promociones`. Las únicas posiciones válidas son `1` y `2`.
+
+#### `GET /api/banners-home`
+- Público.
+- Devuelve: `ApiResponse<List<BannerHomeDTO>>` con los banners configurados, ordenados por posición. Los espacios vacíos no se incluyen.
+- Cada `BannerHomeDTO` contiene `id`, `titulo`, `imagenUrl`, `textoBoton`, `enlaceUrl` y `posicion`.
+- Respuesta: HTTP 200.
+
+```json
+{
+  "success": true,
+  "mensaje": "Banners del Home obtenidos",
+  "data": [
+    {
+      "id": 1,
+      "titulo": "Promociona tu evento en Eventhive",
+      "imagenUrl": "https://storage.example/banners-home/banner-1",
+      "textoBoton": "Conocer más",
+      "enlaceUrl": "https://eventhive.example/promociones",
+      "posicion": 1
+    }
+  ]
+}
+```
+
+#### `GET /api/banners-home/admin`
+- Requiere rol `ADMINISTRADOR`.
+- Devuelve: `ApiResponse<List<BannerHomeDTO>>` con exactamente los dos espacios administrativos (posiciones 1 y 2). Si un espacio no tiene banner, sus campos son `null`, excepto `posicion`.
+- Respuesta: HTTP 200.
+
+#### `POST /api/banners-home`
+- Requiere rol `ADMINISTRADOR`.
+- Content-Type: `multipart/form-data`.
+- Parámetros: `posicion` (int: 1 o 2), `titulo` (string), `textoBoton` (string), `enlaceUrl` (string), `imagen` (archivo obligatorio).
+- Devuelve: `ApiResponse<BannerHomeDTO>` con HTTP 201 Created.
+- Validaciones: posición válida, la posición debe estar vacía, los campos de texto no pueden estar vacíos y la imagen es obligatoria. No se puede crear un tercer espacio ni duplicar una posición.
+- Imagen: se carga a Supabase Storage (PNG, JPG o WebP, máximo 5 MB); la respuesta contiene `imagenUrl`, no el archivo.
+
+#### `POST /api/banners-home/{posicion}`
+- Requiere rol `ADMINISTRADOR`.
+- Content-Type: `multipart/form-data`.
+- Parámetros: `posicion` en el path (int: 1 o 2), `titulo`, `textoBoton`, `enlaceUrl` e `imagen` (archivo obligatorio).
+- Devuelve: `ApiResponse<BannerHomeDTO>` con HTTP 201 Created.
+- Aplica las mismas validaciones de creación; si la posición ya existe, devuelve error 400.
+
+#### `PUT /api/banners-home/{posicion}`
+- Requiere rol `ADMINISTRADOR`.
+- Content-Type: `multipart/form-data`.
+- Parámetros: `posicion` en el path (int: 1 o 2), `titulo`, `textoBoton`, `enlaceUrl` e `imagen` (archivo opcional; si se omite, se conserva la imagen actual).
+- Devuelve: `ApiResponse<BannerHomeDTO>` con HTTP 200.
+- Validaciones: los campos de texto no pueden estar vacíos y la posición debe tener un banner creado; si no existe, devuelve error 404.
+
+#### `DELETE /api/banners-home/{posicion}`
+- Requiere rol `ADMINISTRADOR`.
+- Parámetro: `posicion` en el path (int: 1 o 2).
+- Elimina el registro de la posición indicada y libera ese espacio. Si no existe, devuelve error 404.
+- Devuelve `ApiResponse<Void>` con HTTP 200 y el mensaje `Banner eliminado exitosamente`.
+
+#### Respuestas de error
+- Posición distinta de `1` o `2`, campos de texto vacíos, creación sobre una posición ocupada o imagen faltante al crear: HTTP 400.
+- Intentar actualizar o eliminar una posición sin banner: HTTP 404.
+- Usuario sin rol `ADMINISTRADOR`: HTTP 403.
+
+---
+
+## 22. Resumen de permisos por rol
+
+- Público: registro/login, consulta pública de eventos y organizaciones, banners del home
 - Autenticado: perfil, compras, lista de deseos, notificaciones, seguimientos
 - CLIENTE: compras, boletos, valoraciones
 - REPRESENTANTE: gestión de eventos, organización, promociones, verificación
 - OPERADOR: gestión de eventos y localidades
 - MODERADOR: revisión y moderación de eventos
-- ADMINISTRADOR: administración general, roles, moderadores, categorías, palabras prohibidas, promociones y verificación de organizaciones
+- ADMINISTRADOR: administración general, roles, moderadores, categorías, palabras prohibidas, promociones, verificación de organizaciones y banners del home
 
 ---
 
-## 22. Nota práctica
+## 23. Nota práctica
 
 Si quieres, este documento puede ampliarse con:
 
