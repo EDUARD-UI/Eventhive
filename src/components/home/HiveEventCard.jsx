@@ -9,7 +9,7 @@ export default function HiveEventCard({ event }) {
   const { id, category, title, date, location, favorite, photo } = event;
 
   return (
-    <article className="group bg-[#0D182E] border border-slate-800/90 hover:border-slate-600 rounded-2xl overflow-hidden transition-all duration-200 ease-out shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex flex-col justify-between text-white">
+    <article className="group h-full bg-[#0D182E] border border-slate-800/90 hover:border-slate-600 rounded-2xl overflow-hidden transition-all duration-200 ease-out shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex flex-col justify-between text-white">
       <div>
         <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
           <ImageWithFallback
@@ -36,7 +36,7 @@ export default function HiveEventCard({ event }) {
 
         <div className="p-4 sm:p-5">
           <Link to={`/eventos/${id}`} className="block">
-            <h3 className="font-extrabold text-[15px] sm:text-[16px] leading-snug mb-2 text-white line-clamp-2 group-hover:text-amber-300 transition-colors duration-200 uppercase tracking-tight">
+            <h3 className="font-extrabold text-[15px] sm:text-[16px] leading-snug mb-2 text-white line-clamp-2 min-h-[2.75rem] group-hover:text-amber-300 transition-colors duration-200 uppercase tracking-tight">
               {title}
             </h3>
           </Link>

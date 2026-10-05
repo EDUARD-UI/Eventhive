@@ -137,7 +137,7 @@ export default function InicioSesion() {
                 name="remember"
                 checked={values.remember}
                 onChange={handleChange}
-                className="w-4 h-4 rounded border-borderc text-brand focus:ring-brand/20 accent-brand rounded-sm cursor-pointer"
+                className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500/20 accent-amber-500 rounded-sm cursor-pointer"
               />
               <span>Recordar sesión</span>
             </label>
@@ -145,7 +145,7 @@ export default function InicioSesion() {
             <button
               type="button"
               onClick={() => Swal.fire('Recuperar contraseña', 'Te enviaremos un correo de restablecimiento.', 'info')}
-              className="text-xs font-semibold text-brand hover:text-brand-dark transition-colors"
+              className="text-xs font-semibold text-amber-600 hover:text-amber-700 transition-colors"
             >
               ¿Olvidaste tu contraseña?
             </button>
@@ -154,7 +154,7 @@ export default function InicioSesion() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-3 py-3.5 px-4 rounded-xl bg-brand hover:bg-brand-dark text-white font-bold text-sm shadow-md hover:shadow-lg shadow-brand/25 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full mt-3 py-3.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow-md shadow-amber-500/20 hover:shadow-amber-500/35 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
           >
             {isSubmitting ? (
               <>

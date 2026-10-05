@@ -32,27 +32,24 @@ function Stepper({ currentStep }) {
           <div key={label} className="flex flex-1 items-center last:flex-none">
             <div className="flex items-center gap-2">
               <span
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-all shadow-xs ${
-                  completed
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-all shadow-xs ${completed
                     ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-amber-500/20'
                     : 'bg-slate-100 text-slate-400'
-                }`}
+                  }`}
               >
                 {number < currentStep ? <FiCheck size={14} className="stroke-[3]" /> : number}
               </span>
               <span
-                className={`hidden xl:inline text-xs uppercase tracking-wider truncate font-black ${
-                  isCurrent ? 'text-[#0B1B3D]' : 'text-slate-400 font-semibold'
-                }`}
+                className={`hidden xl:inline text-xs uppercase tracking-wider truncate font-black ${isCurrent ? 'text-[#0B1B3D]' : 'text-slate-400 font-semibold'
+                  }`}
               >
                 {label}
               </span>
             </div>
             {number < steps.length && (
               <span
-                className={`mx-2 sm:mx-3 h-[2px] w-full rounded-full transition-all ${
-                  number < currentStep ? 'bg-amber-400' : 'bg-slate-200'
-                }`}
+                className={`mx-2 sm:mx-3 h-[2px] w-full rounded-full transition-all ${number < currentStep ? 'bg-amber-400' : 'bg-slate-200'
+                  }`}
               />
             )}
           </div>
@@ -473,12 +470,6 @@ export default function CreateEventWizard({ onBack, onSave }) {
 
         {/* Aside con Consejos */}
         <aside className="rounded-3xl border-2 border-amber-200/90 bg-white p-6 shadow-sm h-fit space-y-4">
-          <div className="flex items-center gap-2 border-b border-amber-100 pb-3">
-            <span className="text-amber-500 font-black text-sm">⬡</span>
-            <h4 className="text-xs font-black uppercase tracking-wider text-[#0B1B3D]">
-              Guía de la Colmena
-            </h4>
-          </div>
 
           <p className="text-xs text-slate-600 leading-relaxed font-medium">
             Los eventos con descripciones detalladas y fotos de alta calidad tienen un 64% más de reservas en Cartagena.

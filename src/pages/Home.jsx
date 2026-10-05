@@ -9,13 +9,13 @@ import {
   FiMapPin,
   FiNavigation,
 } from 'react-icons/fi';
-import Navbar from '../components/usersComponets/Navbar.jsx';
 import Hero from '../components/Hero.jsx';
 import FeaturedEventsCarousel from '../components/home/FeaturedEventsCarousel.jsx';
 import HiveEventCard from '../components/home/HiveEventCard.jsx';
 import CategoryTickerCarousel from '../components/home/CategoryTickerCarousel.jsx';
 import HiveEmptyState from '../components/home/HiveEmptyState.jsx';
-import HomeBannersSection from '../components/home/HomeBannersSection.jsx';
+import FeaturedEventBanner from '../components/home/FeaturedEventBanner.jsx';
+import OrganizerCtaSection from '../components/home/OrganizerCtaSection.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import CustomSelect from '../components/common/CustomSelect.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
@@ -39,9 +39,9 @@ const getDistanceKm = (lat1, lng1, lat2, lng2) => {
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLng / 2) *
+    Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return earthRadiusKm * c;
 };
@@ -243,11 +243,10 @@ export default function Home() {
 
   return (
     <div className="w-full min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body">
-      {/* Barra de Navegación idéntica y sobria */}
-      <Navbar />
 
       {/* Hero Principal con Buscador Integrado */}
       <Hero />
+      <br></br><br></br>
 
       {/* 2. Eventos Destacados: Título centrado sin descripción ni badges */}
       <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-10 sm:py-14 max-w-[1850px] mx-auto relative z-10">
@@ -337,11 +336,10 @@ export default function Home() {
                 type="button"
                 onClick={() => requestLocation(selectedDistance !== 'all' ? selectedDistance : null)}
                 disabled={isLocating}
-                className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95 shadow-sm cursor-pointer ${
-                  userLocation
+                className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95 shadow-sm cursor-pointer ${userLocation
                     ? 'border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-700'
                     : 'border-amber-500 bg-amber-500 hover:bg-amber-400 text-slate-950'
-                }`}
+                  }`}
                 title={userLocation ? 'Tu ubicación está activa' : 'Activar mi ubicación'}
               >
                 {isLocating ? (
@@ -487,8 +485,11 @@ export default function Home() {
         <CategoryTickerCarousel />
       </section>
 
-      {/* 6. Bloque Asimétrico de Banners (/api/banners-home) */}
-      <HomeBannersSection />
+      {/* 6. Evento Destacado: Banner Horizontal Full-Width */}
+      <FeaturedEventBanner />
+
+      {/* 7. Franja CTA para Organizadores: Justo encima del Footer */}
+      <OrganizerCtaSection />
 
       {/* Pie de Página idéntico */}
       <Footer />

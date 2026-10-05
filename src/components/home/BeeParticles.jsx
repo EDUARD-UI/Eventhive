@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 /**
- * BeeSvg: Vector minimalista estilizado de abeja EventHive
+ * BeeSvg: Vector realista y estilizado de abeja EventHive (dorado y negro)
  */
 export function BeeSvg({ size = 32, angle = 0, isLeader = false }) {
   return (
@@ -47,9 +47,9 @@ export function BeeSvg({ size = 32, angle = 0, isLeader = false }) {
         />
 
         {/* Aguijón sutil */}
-        <polygon points="24,42 22,37 26,37" fill="#1E293B" />
+        <polygon points="24,42 22,37 26,37" fill="#0F172A" />
 
-        {/* Cuerpo / Abdomen con franjas de colmena */}
+        {/* Cuerpo / Abdomen con franjas doradas y negras */}
         <ellipse cx="24" cy="28" rx="10" ry="12" fill="#F59E0B" />
         {/* Franjas oscuras */}
         <path d="M15 24 C19 26, 29 26, 33 24" stroke="#0F172A" strokeWidth="2.8" strokeLinecap="round" />
@@ -86,84 +86,32 @@ export function BeeSvg({ size = 32, angle = 0, isLeader = false }) {
 
 /**
  * BeeParticles
- * 3 abejas estilizadas con estela dorada (honey trail) y comportamiento interactivo con el cursor.
+ * Exactamente 5 abejas estilizadas con estela dorada (honey trail)
+ * y comportamiento interactivo con el cursor sobre fondo blanco.
  */
 export default function BeeParticles({ mousePos }) {
   const containerRef = useRef(null);
 
-  // Estado de las 3 abejas
+  // Estado inicial de las 5 abejas dispersas por el hero
   const [bees, setBees] = useState([
-    {
-      id: 1,
-      x: 180,
-      y: 120,
-      angle: 15,
-      size: 34,
-      isLeader: true,
-      trail: [],
-    },
-    {
-      id: 2,
-      x: 480,
-      y: 90,
-      angle: -20,
-      size: 26,
-      isLeader: false,
-      trail: [],
-    },
-    {
-      id: 3,
-      x: 780,
-      y: 160,
-      angle: 25,
-      size: 28,
-      isLeader: false,
-      trail: [],
-    },
+    { id: 1, x: 240, y: 130, angle: 15, size: 34, isLeader: true, trail: [] },
+    { id: 2, x: 750, y: 100, angle: -20, size: 26, isLeader: false, trail: [] },
+    { id: 3, x: 980, y: 160, angle: 25, size: 28, isLeader: false, trail: [] },
+    { id: 4, x: 420, y: 220, angle: -10, size: 24, isLeader: false, trail: [] },
+    { id: 5, x: 120, y: 80, angle: 30, size: 22, isLeader: false, trail: [] },
   ]);
 
   useEffect(() => {
     let animId;
     let t = 0;
 
-    // Física de simulación para cada abeja
+    // Física de simulación para cada una de las 5 abejas
     const state = [
-      {
-        x: 180,
-        y: 120,
-        vx: 0,
-        vy: 0,
-        baseX: 220,
-        baseY: 130,
-        speed: 0.015,
-        radiusX: 70,
-        radiusY: 45,
-        trail: [],
-      },
-      {
-        x: 520,
-        y: 90,
-        vx: 0,
-        vy: 0,
-        baseX: 580,
-        baseY: 100,
-        speed: 0.02,
-        radiusX: 50,
-        radiusY: 35,
-        trail: [],
-      },
-      {
-        x: 760,
-        y: 150,
-        vx: 0,
-        vy: 0,
-        baseX: 750,
-        baseY: 160,
-        speed: 0.017,
-        radiusX: 65,
-        radiusY: 40,
-        trail: [],
-      },
+      { x: 240, y: 130, vx: 0, vy: 0, baseX: 260, baseY: 130, speed: 0.015, radiusX: 75, radiusY: 45, size: 34, trail: [] },
+      { x: 750, y: 100, vx: 0, vy: 0, baseX: 780, baseY: 100, speed: 0.020, radiusX: 55, radiusY: 35, size: 26, trail: [] },
+      { x: 980, y: 160, vx: 0, vy: 0, baseX: 960, baseY: 160, speed: 0.017, radiusX: 65, radiusY: 40, size: 28, trail: [] },
+      { x: 420, y: 220, vx: 0, vy: 0, baseX: 440, baseY: 210, speed: 0.019, radiusX: 55, radiusY: 35, size: 24, trail: [] },
+      { x: 120, y: 80, vx: 0, vy: 0, baseX: 140, baseY: 85, speed: 0.022, radiusX: 45, radiusY: 30, size: 22, trail: [] },
     ];
 
     const loop = () => {
@@ -172,37 +120,41 @@ export default function BeeParticles({ mousePos }) {
       const hasMouse = targetMouse && targetMouse.x > 0 && targetMouse.y > 0;
 
       const updated = state.map((b, idx) => {
-        // Movimiento natural orbital en 8 (lemniscata)
-        const orbitX = b.baseX + Math.sin(t * b.speed + idx * 2) * b.radiusX;
-        const orbitY = b.baseY + Math.cos(t * b.speed * 1.5 + idx) * b.radiusY;
+        // Movimiento natural orbital en lemniscata (8 suave)
+        const orbitX = b.baseX + Math.sin(t * b.speed + idx * 1.8) * b.radiusX;
+        const orbitY = b.baseY + Math.cos(t * b.speed * 1.5 + idx * 1.2) * b.radiusY;
 
         let destX = orbitX;
         let destY = orbitY;
 
-        // Si el mouse está dentro del hero:
+        // Si el cursor interactúa en el hero:
         if (hasMouse) {
           if (idx === 0) {
-            // La abeja líder se acerca activamente con curiosidad al cursor
+            // Líder: curiosidad directa hacia el cursor
             destX = orbitX * 0.45 + targetMouse.x * 0.55;
-            destY = orbitY * 0.45 + targetMouse.y * 0.55 - 45; // sobrevuela ligeramente arriba
+            destY = orbitY * 0.45 + targetMouse.y * 0.55 - 45;
           } else if (idx === 1) {
-            // La segunda abeja orbita a un lado del cursor
-            destX = orbitX * 0.65 + (targetMouse.x + 80) * 0.35;
-            destY = orbitY * 0.65 + (targetMouse.y - 20) * 0.35;
+            destX = orbitX * 0.65 + (targetMouse.x + 90) * 0.35;
+            destY = orbitY * 0.65 + (targetMouse.y - 25) * 0.35;
+          } else if (idx === 2) {
+            destX = orbitX * 0.70 + (targetMouse.x + 130) * 0.30;
+            destY = orbitY * 0.70 + (targetMouse.y + 35) * 0.30;
+          } else if (idx === 3) {
+            destX = orbitX * 0.75 + (targetMouse.x - 85) * 0.25;
+            destY = orbitY * 0.75 + (targetMouse.y + 45) * 0.25;
           } else {
-            // La tercera abeja mantiene vigilia cerca del buscador
-            destX = orbitX * 0.75 + (targetMouse.x - 70) * 0.25;
-            destY = orbitY * 0.75 + (targetMouse.y + 30) * 0.25;
+            destX = orbitX * 0.80 + (targetMouse.x - 120) * 0.20;
+            destY = orbitY * 0.80 + (targetMouse.y - 40) * 0.20;
           }
         }
 
         // Amortiguación / física suave
-        b.vx = (destX - b.x) * 0.06;
-        b.vy = (destY - b.y) * 0.06;
+        b.vx = (destX - b.x) * 0.055;
+        b.vy = (destY - b.y) * 0.055;
         b.x += b.vx;
         b.y += b.vy;
 
-        // Calcular ángulo de orientación hacia la dirección del movimiento o hacia el cursor
+        // Ángulo de orientación hacia la dirección del movimiento
         let targetAngle = 0;
         if (hasMouse && idx === 0) {
           const dx = targetMouse.x - b.x;
@@ -212,13 +164,12 @@ export default function BeeParticles({ mousePos }) {
           targetAngle = Math.atan2(b.vy, b.vx) * (180 / Math.PI) + 90;
         }
 
-        // Guardar puntos en la estela de miel (honey trail) cada 3 frames
+        // Estela dorada de miel
         if (t % 3 === 0) {
-          b.trail.unshift({ x: b.x, y: b.y + 12, alpha: 0.9, size: idx === 0 ? 5 : 3.5 });
+          b.trail.unshift({ x: b.x, y: b.y + 10, alpha: 0.85, size: idx === 0 ? 5 : 3.5 });
           if (b.trail.length > 7) b.trail.pop();
         }
 
-        // Desvanecer puntos de la estela
         b.trail.forEach((p) => {
           p.alpha *= 0.88;
         });
@@ -228,7 +179,7 @@ export default function BeeParticles({ mousePos }) {
           x: b.x,
           y: b.y,
           angle: targetAngle,
-          size: idx === 0 ? 36 : idx === 1 ? 28 : 30,
+          size: b.size,
           isLeader: idx === 0,
           trail: [...b.trail],
         };
@@ -247,7 +198,7 @@ export default function BeeParticles({ mousePos }) {
       ref={containerRef}
       className="absolute inset-0 pointer-events-none z-10 overflow-hidden select-none"
     >
-      {/* Estelas de miel (Honey trails) con puntos dorados punteados */}
+      {/* Estelas de miel (Honey trails) */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none">
         <defs>
           <filter id="honeyGlow" x="-20%" y="-20%" width="140%" height="140%">
@@ -271,7 +222,7 @@ export default function BeeParticles({ mousePos }) {
         )}
       </svg>
 
-      {/* Abejas renderizadas en sus coordenadas calculadas */}
+      {/* 5 Abejas renderizadas en sus coordenadas calculadas */}
       {bees.map((bee) => (
         <div
           key={bee.id}

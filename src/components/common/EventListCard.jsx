@@ -29,7 +29,7 @@ export default function EventListCard({ event, notchBg = 'bg-[#F8FAFC]' }) {
   const displayTime = formattedTime || (event.hora ? event.hora.slice(0, 5) : null);
 
   return (
-    <article className="group relative bg-white rounded-3xl border border-slate-200/90 hover:border-slate-400/80 transition-all duration-300 ease-out shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.09)] hover:-translate-y-1 flex flex-col justify-between overflow-hidden">
+    <article className="group relative h-full bg-white rounded-3xl border border-slate-200/90 hover:border-slate-400/80 transition-all duration-300 ease-out shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.09)] hover:-translate-y-1 flex flex-col justify-between overflow-hidden">
       
       {/* SECCIÓN SUPERIOR: Portada + Título */}
       <div>
@@ -62,7 +62,7 @@ export default function EventListCard({ event, notchBg = 'bg-[#F8FAFC]' }) {
         {/* Título del evento */}
         <div className="px-5 pt-1 pb-2">
           <Link to={`/eventos/${id}`} className="block group-hover:text-amber-600 transition-colors duration-200">
-            <h3 className="font-extrabold text-slate-950 text-base sm:text-[17px] tracking-tight uppercase leading-snug line-clamp-2">
+            <h3 className="font-extrabold text-slate-950 text-base sm:text-[17px] tracking-tight uppercase leading-snug line-clamp-2 min-h-[2.75rem]">
               {title}
             </h3>
           </Link>

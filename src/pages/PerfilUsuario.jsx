@@ -275,7 +275,7 @@ export default function PerfilUsuario() {
       Swal.fire({
         icon: 'success',
         title: '¡Perfil actualizado!',
-        text: 'Tus datos se guardaron correctamente en la Colmena.',
+        text: 'Tus datos se guardaron correctamente.',
         timer: 1800,
         showConfirmButton: false,
       });
@@ -331,10 +331,10 @@ export default function PerfilUsuario() {
     activeTab === 'guardados'
       ? guardados
       : activeTab === 'proximos'
-      ? eventosProximos
-      : activeTab === 'historial'
-      ? eventosHistorial
-      : [];
+        ? eventosProximos
+        : activeTab === 'historial'
+          ? eventosHistorial
+          : [];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body">
@@ -363,7 +363,7 @@ export default function PerfilUsuario() {
 
       {/* Contenedor Principal */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
-        
+
         {/* Barra de Pestañas Flotante Estilo Cápsula */}
         <div className="bg-white rounded-3xl border-2 border-amber-200/90 shadow-xl p-2 -mt-14 relative z-20 overflow-x-auto scrollbar-none">
           <div className="flex items-center gap-1.5 min-w-max">
@@ -380,20 +380,18 @@ export default function PerfilUsuario() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                    isActive
+                  className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${isActive
                       ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md'
                       : 'text-slate-600 hover:text-[#0B1B3D] hover:bg-amber-50/60'
-                  }`}
+                    }`}
                 >
                   <span>{tab.label}</span>
                   {count !== null && count > 0 && (
                     <span
-                      className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                        isActive
+                      className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isActive
                           ? 'bg-slate-950 text-amber-300'
                           : 'bg-amber-100 text-amber-950 border border-amber-300'
-                      }`}
+                        }`}
                     >
                       {count}
                     </span>
@@ -406,10 +404,10 @@ export default function PerfilUsuario() {
 
         {/* Layout en 2 columnas: Sidebar Perfil + Contenido */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          
+
           {/* Sidebar de Usuario */}
           <aside className="w-full lg:w-[320px] shrink-0 space-y-6">
-            
+
             {/* Tarjeta Identidad */}
             <div className="bg-white border-2 border-amber-200/90 rounded-3xl shadow-sm p-7 text-center relative overflow-hidden">
               <div className="relative w-24 h-24 mx-auto mb-4">
@@ -423,7 +421,7 @@ export default function PerfilUsuario() {
               <h2 className="text-xl font-black text-[#0B1B3D] truncate">
                 {usuario.nombreCompleto || 'Usuario EventHive'}
               </h2>
-              
+
               <p className="flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 mt-2 truncate">
                 <FiMail size={13} className="text-amber-600 shrink-0" />
                 <span>{usuario.correo || 'correo@eventhive.com'}</span>
@@ -456,7 +454,7 @@ export default function PerfilUsuario() {
             {/* Tarjeta Estadísticas */}
             <div className="bg-white border-2 border-amber-200/90 rounded-3xl shadow-sm p-6 space-y-4">
               <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block">
-                ACTIVIDAD EN LA COLMENA
+                ACTIVIDAD
               </span>
 
               <div className="flex items-center gap-3.5 text-sm">
@@ -776,7 +774,7 @@ export default function PerfilUsuario() {
                                 setPasswordForm({
                                   ...passwordForm,
                                   confirmarClave: e.target.value,
-                                handwriting: e.target.value,
+                                  handwriting: e.target.value,
                                 })
                               }
                               placeholder="Repite la contraseña"
@@ -807,133 +805,133 @@ export default function PerfilUsuario() {
                 {(activeTab === 'guardados' ||
                   activeTab === 'proximos' ||
                   activeTab === 'historial') && (
-                  <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-3xl border-2 border-amber-200/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block mb-1">
-                          ⬡ AGENDA PERSONAL
-                        </span>
-                        <h3 className="text-xl font-black text-[#0B1B3D]">
-                          {activeTab === 'guardados'
-                            ? 'Eventos Guardados en Favoritos'
-                            : activeTab === 'proximos'
-                            ? 'Experiencias Próximas'
-                            : 'Historial de Eventos Asistidos'}
-                        </h3>
-                        <p className="text-xs text-slate-600 mt-0.5">
-                          {activeTab === 'guardados'
-                            ? 'Experiencias que te interesan y has añadido a tu lista de deseos.'
-                            : activeTab === 'proximos'
-                            ? 'Eventos con boletos confirmados y pendientes por disfrutar.'
-                            : 'Historial de eventos pasados en Cartagena de Indias.'}
-                        </p>
-                      </div>
-                      <span className="text-xs font-black text-amber-950 bg-amber-100 border border-amber-300 px-3.5 py-1.5 rounded-full shrink-0 self-start sm:self-auto">
-                        {eventosVisibles.length} {eventosVisibles.length === 1 ? 'evento' : 'eventos'}
-                      </span>
-                    </div>
-
-                    {eventosVisibles.length === 0 ? (
-                      <div className="bg-white rounded-3xl border-2 border-dashed border-amber-300 p-14 text-center shadow-sm">
-                        <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 text-xl">
-                          ⬡
+                    <div className="space-y-6">
+                      <div className="bg-white p-6 rounded-3xl border-2 border-amber-200/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block mb-1">
+                            ⬡ AGENDA PERSONAL
+                          </span>
+                          <h3 className="text-xl font-black text-[#0B1B3D]">
+                            {activeTab === 'guardados'
+                              ? 'Eventos Guardados en Favoritos'
+                              : activeTab === 'proximos'
+                                ? 'Experiencias Próximas'
+                                : 'Historial de Eventos Asistidos'}
+                          </h3>
+                          <p className="text-xs text-slate-600 mt-0.5">
+                            {activeTab === 'guardados'
+                              ? 'Experiencias que te interesan y has añadido a tu lista de deseos.'
+                              : activeTab === 'proximos'
+                                ? 'Eventos con boletos confirmados y pendientes por disfrutar.'
+                                : 'Historial de eventos pasados en Cartagena de Indias.'}
+                          </p>
                         </div>
-                        <h4 className="font-black text-lg text-[#0B1B3D] mb-1">
-                          {activeTab === 'guardados'
-                            ? 'No tienes eventos guardados en favoritos'
-                            : activeTab === 'proximos'
-                            ? 'No tienes eventos próximos agendados'
-                            : 'Aún no registras historial de eventos'}
-                        </h4>
-                        <p className="text-xs font-medium text-slate-600 max-w-sm mx-auto mb-6">
-                          Explora la cartelera cultural de Cartagena de Indias y guarda tus favoritos.
-                        </p>
-                        <Link
-                          to="/buscar"
-                          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95"
-                        >
-                          <span>Explorar Experiencias</span>
-                          <FiArrowRight size={14} />
-                        </Link>
+                        <span className="text-xs font-black text-amber-950 bg-amber-100 border border-amber-300 px-3.5 py-1.5 rounded-full shrink-0 self-start sm:self-auto">
+                          {eventosVisibles.length} {eventosVisibles.length === 1 ? 'evento' : 'eventos'}
+                        </span>
                       </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {eventosVisibles.map((evento) => (
-                          <article
-                            key={evento.id}
-                            className="bg-white border-2 border-amber-200/90 hover:border-amber-400 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between"
+
+                      {eventosVisibles.length === 0 ? (
+                        <div className="bg-white rounded-3xl border-2 border-dashed border-amber-300 p-14 text-center shadow-sm">
+                          <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 text-xl">
+                            ⬡
+                          </div>
+                          <h4 className="font-black text-lg text-[#0B1B3D] mb-1">
+                            {activeTab === 'guardados'
+                              ? 'No tienes eventos guardados en favoritos'
+                              : activeTab === 'proximos'
+                                ? 'No tienes eventos próximos agendados'
+                                : 'Aún no registras historial de eventos'}
+                          </h4>
+                          <p className="text-xs font-medium text-slate-600 max-w-sm mx-auto mb-6">
+                            Explora la cartelera cultural de Cartagena de Indias y guarda tus favoritos.
+                          </p>
+                          <Link
+                            to="/buscar"
+                            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95"
                           >
-                            <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
-                              <ImageWithFallback
-                                src={evento.photo}
-                                alt={evento.title}
-                                className="h-full w-full"
-                                imgClassName="group-hover:scale-105 duration-500 object-cover"
-                                fallbackClassName="h-full w-full"
-                                fallbackGradient={getCategoryGradient(evento.category)}
-                                fallbackText={evento.category || 'Evento'}
-                                iconSize={26}
-                              >
-                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
+                            <span>Explorar Experiencias</span>
+                            <FiArrowRight size={14} />
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          {eventosVisibles.map((evento) => (
+                            <article
+                              key={evento.id}
+                              className="bg-white border-2 border-amber-200/90 hover:border-amber-400 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between"
+                            >
+                              <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
+                                <ImageWithFallback
+                                  src={evento.photo}
+                                  alt={evento.title}
+                                  className="h-full w-full"
+                                  imgClassName="group-hover:scale-105 duration-500 object-cover"
+                                  fallbackClassName="h-full w-full"
+                                  fallbackGradient={getCategoryGradient(evento.category)}
+                                  fallbackText={evento.category || 'Evento'}
+                                  iconSize={26}
+                                >
+                                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
 
-                                <span className="absolute left-3 top-3 text-[10px] font-black uppercase tracking-wider bg-[#0B172C] text-amber-300 border border-amber-400/40 px-2.5 py-1 rounded-lg shadow-xs z-10 flex items-center gap-1">
-                                  <span>⬡</span>
-                                  <span>{evento.category}</span>
-                                </span>
+                                  <span className="absolute left-3 top-3 text-[10px] font-black uppercase tracking-wider bg-[#0B172C] text-amber-300 border border-amber-400/40 px-2.5 py-1 rounded-lg shadow-xs z-10 flex items-center gap-1">
+                                    <span>⬡</span>
+                                    <span>{evento.category}</span>
+                                  </span>
 
-                                {activeTab === 'guardados' && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => handleRemoveDeseo(e, evento.id)}
-                                    title="Quitar de favoritos"
-                                    className="absolute right-3 top-3 w-8 h-8 rounded-full bg-white/95 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center shadow-md z-10 transition-colors cursor-pointer"
+                                  {activeTab === 'guardados' && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => handleRemoveDeseo(e, evento.id)}
+                                      title="Quitar de favoritos"
+                                      className="absolute right-3 top-3 w-8 h-8 rounded-full bg-white/95 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center shadow-md z-10 transition-colors cursor-pointer"
+                                    >
+                                      <FiTrash2 size={14} />
+                                    </button>
+                                  )}
+                                </ImageWithFallback>
+                              </div>
+
+                              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                                <div>
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-900 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md inline-block mb-1.5">
+                                    {evento.category}
+                                  </span>
+                                  <h3 className="text-base font-black leading-snug text-[#0B1B3D] group-hover:text-amber-700 transition-colors line-clamp-2">
+                                    {evento.title}
+                                  </h3>
+
+                                  <div className="space-y-1.5 text-xs text-slate-600 mt-2.5 font-medium">
+                                    <p className="flex items-center gap-2">
+                                      <FiCalendar className="text-amber-600 shrink-0" size={14} />
+                                      <span>{evento.date}</span>
+                                    </p>
+                                    <p className="flex items-center gap-2 truncate">
+                                      <FiMapPin className="text-rose-500 shrink-0" size={14} />
+                                      <span className="truncate">{evento.location}</span>
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="pt-3 border-t border-amber-100 flex items-center justify-between">
+                                  <span className="text-xs font-black text-slate-900">
+                                    {formatPrice(evento.price)}
+                                  </span>
+                                  <Link
+                                    to={`/eventos/${evento.id}`}
+                                    className="text-xs font-black uppercase tracking-wider text-amber-700 hover:text-amber-800 transition-colors inline-flex items-center gap-1 group"
                                   >
-                                    <FiTrash2 size={14} />
-                                  </button>
-                                )}
-                              </ImageWithFallback>
-                            </div>
-
-                            <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                              <div>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-amber-900 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md inline-block mb-1.5">
-                                  {evento.category}
-                                </span>
-                                <h3 className="text-base font-black leading-snug text-[#0B1B3D] group-hover:text-amber-700 transition-colors line-clamp-2">
-                                  {evento.title}
-                                </h3>
-
-                                <div className="space-y-1.5 text-xs text-slate-600 mt-2.5 font-medium">
-                                  <p className="flex items-center gap-2">
-                                    <FiCalendar className="text-amber-600 shrink-0" size={14} />
-                                    <span>{evento.date}</span>
-                                  </p>
-                                  <p className="flex items-center gap-2 truncate">
-                                    <FiMapPin className="text-rose-500 shrink-0" size={14} />
-                                    <span className="truncate">{evento.location}</span>
-                                  </p>
+                                    <span>Ver detalle</span>
+                                    <FiArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                                  </Link>
                                 </div>
                               </div>
-
-                              <div className="pt-3 border-t border-amber-100 flex items-center justify-between">
-                                <span className="text-xs font-black text-slate-900">
-                                  {formatPrice(evento.price)}
-                                </span>
-                                <Link
-                                  to={`/eventos/${evento.id}`}
-                                  className="text-xs font-black uppercase tracking-wider text-amber-700 hover:text-amber-800 transition-colors inline-flex items-center gap-1 group"
-                                >
-                                  <span>Ver detalle</span>
-                                  <FiArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
-                                </Link>
-                              </div>
-                            </div>
-                          </article>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                            </article>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
               </>
             )}
           </section>

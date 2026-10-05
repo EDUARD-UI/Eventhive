@@ -97,7 +97,7 @@ export default function EventDetailPage() {
         if (isMounted) setLoading(false);
       });
 
-    // Cargar eventos similares para la colmena
+    // Cargar eventos similares 
     getUpcomingEvents()
       .then((upcoming) => {
         if (!isMounted) return;
@@ -241,7 +241,7 @@ export default function EventDetailPage() {
     if (!user) {
       showLoginAlert({
         title: 'Inicia sesión',
-        text: 'Debes iniciar sesión para adquirir tus entradas en la Colmena.',
+        text: 'Debes iniciar sesión para adquirir tus entradas.',
         navigate,
       });
       return;
@@ -351,9 +351,9 @@ export default function EventDetailPage() {
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body">
       <Navbar />
 
-      {/* Franja de navegación superior / Breadcrumbs */}
-      <div className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        {/* Enlace discreto de retorno */}
+        <div>
           <button
             type="button"
             onClick={() => {
@@ -363,57 +363,59 @@ export default function EventDetailPage() {
                 navigate('/buscar');
               }
             }}
-            className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-700 hover:text-slate-950 transition-colors group cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors cursor-pointer group"
           >
-            <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shadow-xs group-hover:border-slate-400 transition-all">
-              <FiArrowLeft className="transition-transform group-hover:-translate-x-0.5 text-slate-800" size={15} />
-            </div>
-            <span className="hidden sm:inline">Volver a eventos</span>
-            <span className="sm:hidden">Volver</span>
+            <FiArrowLeft className="transition-transform group-hover:-translate-x-1" size={16} />
+            <span>Volver a eventos</span>
           </button>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleShare}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:text-slate-950 hover:border-slate-400 shadow-xs transition-all cursor-pointer"
-              title="Compartir evento"
-            >
-              <FiShare2 size={13} className="text-amber-500" />
-              <span className="hidden sm:inline">Compartir</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleToggleFavorite}
-              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border text-xs font-bold shadow-xs transition-all cursor-pointer ${
-                isFavorite
-                  ? 'bg-amber-500 text-slate-950 border-amber-500 font-extrabold'
-                  : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400 hover:text-slate-950'
-              }`}
-            >
-              <FiHeart size={13} className={isFavorite ? 'fill-slate-950 text-slate-950' : 'text-slate-500'} />
-              <span>{isFavorite ? 'Guardado' : 'Guardar'}</span>
-            </button>
-          </div>
         </div>
-      </div>
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-10">
-        
         {/* Encabezado Principal del Evento */}
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2.5">
-            {event.category && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-slate-900 text-amber-400 border border-slate-800 shadow-xs">
-                <span>{event.category}</span>
-              </span>
-            )}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Badges de Categoría y Cartelera Oficial */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              {event.category && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-slate-900 text-amber-400 border border-slate-800 shadow-xs">
+                  <span>{event.category}</span>
+                </span>
+              )}
 
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-bold text-slate-700 bg-white border border-slate-200 shadow-xs">
-              <FiShield className="text-amber-500" size={13} />
-              <span>Cartelera Oficial Cartagena</span>
-            </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-bold text-slate-700 bg-white border border-slate-200 shadow-xs">
+                <FiShield className="text-amber-500" size={13} />
+                <span>Cartelera Oficial Cartagena</span>
+              </span>
+            </div>
+
+            {/* Acciones del evento: Compartir y Guardar */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleShare}
+                className="inline-flex items-center gap-1.5 border border-gray-200 rounded-full px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all cursor-pointer shadow-2xs"
+                title="Compartir evento"
+              >
+                <FiShare2 size={13} className="text-amber-500" />
+                <span>Compartir</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleToggleFavorite}
+                className={`inline-flex items-center gap-1.5 border rounded-full px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer shadow-2xs ${
+                  isFavorite
+                    ? 'bg-amber-50 text-amber-900 border-amber-300 font-bold'
+                    : 'border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300'
+                }`}
+                title={isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+              >
+                <FiHeart
+                  size={13}
+                  className={isFavorite ? 'fill-amber-500 text-amber-500' : 'text-gray-400'}
+                />
+                <span>{isFavorite ? 'Guardado' : 'Guardar'}</span>
+              </button>
+            </div>
           </div>
 
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-950 tracking-tight uppercase leading-tight">
@@ -440,10 +442,10 @@ export default function EventDetailPage() {
 
         {/* Rejilla de contenido principal: Columna izquierda (Detalles) + Columna derecha (Aside Ticket Compra) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-          
+
           {/* Contenido izquierdo */}
           <div className="lg:col-span-8 space-y-8">
-            
+
             {/* Imagen Principal del Evento con encaje impecable */}
             <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md group">
               <ImageWithFallback
@@ -532,11 +534,10 @@ export default function EventDetailPage() {
                 <button
                   type="button"
                   onClick={handleToggleFollow}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${
-                    isFollowing
+                  className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${isFollowing
                       ? 'bg-slate-200 hover:bg-slate-300 text-slate-800 border border-slate-300'
                       : 'bg-slate-950 hover:bg-amber-500 hover:text-slate-950 text-white font-black shadow-sm active:scale-95'
-                  }`}
+                    }`}
                 >
                   {isFollowing ? '✓ Siguiendo' : 'Seguir'}
                 </button>
@@ -584,7 +585,7 @@ export default function EventDetailPage() {
           {/* Columna Derecha: Aside Flotante de Compra en formato BOLETO BLANCO */}
           <aside className="lg:col-span-4 lg:sticky lg:top-20">
             <div className="relative rounded-3xl border border-slate-200 bg-white text-slate-900 p-6 sm:p-7 shadow-xl space-y-6 overflow-hidden">
-              
+
               {/* Muescas semicirculares de boleto en los laterales alineadas con el fondo claro */}
               <div className="absolute -left-3 top-28 w-6 h-6 rounded-full bg-[#F8FAFC] border-r border-slate-200 shadow-[inset_-2px_0_4px_rgba(0,0,0,0.03)] pointer-events-none" />
               <div className="absolute -right-3 top-28 w-6 h-6 rounded-full bg-[#F8FAFC] border-l border-slate-200 shadow-[inset_2px_0_4px_rgba(0,0,0,0.03)] pointer-events-none" />
@@ -599,7 +600,7 @@ export default function EventDetailPage() {
                     #EH-{String(event.id).padStart(8, '0')}
                   </span>
                 </div>
-                
+
                 <div className="flex items-baseline gap-2 mt-2">
                   <span className="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight">
                     ${displayedPrice.toLocaleString('es-CO')}
@@ -633,11 +634,10 @@ export default function EventDetailPage() {
                         <label
                           key={loc.id}
                           onClick={() => setSelectedLocalidad(loc)}
-                          className={`flex items-center justify-between p-3.5 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
-                            isSelected
+                          className={`flex items-center justify-between p-3.5 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${isSelected
                               ? 'border-amber-500 bg-amber-50/60 shadow-xs'
                               : 'border-slate-200 hover:border-slate-300 bg-slate-50/60'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center gap-3">
                             <input
@@ -675,11 +675,10 @@ export default function EventDetailPage() {
                 <button
                   type="button"
                   onClick={handleToggleFavorite}
-                  className={`w-full py-2.5 px-4 rounded-xl border text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] ${
-                    isFavorite
+                  className={`w-full py-2.5 px-4 rounded-xl border text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] ${isFavorite
                       ? 'border-amber-500 bg-amber-50 text-amber-900'
                       : 'border-slate-300 hover:border-slate-400 text-slate-700 bg-white'
-                  }`}
+                    }`}
                 >
                   <FiHeart className={isFavorite ? 'fill-amber-600 text-amber-600' : 'text-slate-500'} size={15} />
                   <span>{isFavorite ? 'Guardado en favoritos' : 'Guardar en favoritos'}</span>

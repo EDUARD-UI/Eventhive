@@ -163,8 +163,8 @@ export default function Registro() {
             onClick={() => setFieldValue('role', 'usuario')}
             className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
               !isOrganizer
-                ? 'bg-white text-[#0a1838] shadow-sm'
-                : 'text-slate-600 hover:text-[#0a1838]'
+                ? 'bg-[#0B132B] text-white shadow-sm font-bold'
+                : 'text-slate-600 hover:text-[#0B132B] font-semibold'
             }`}
           >
             Quiero asistir a eventos
@@ -174,8 +174,8 @@ export default function Registro() {
             onClick={() => setFieldValue('role', 'organizador')}
             className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
               isOrganizer
-                ? 'bg-[#0a1838] text-white shadow-sm'
-                : 'text-slate-600 hover:text-[#0a1838]'
+                ? 'bg-[#0B132B] text-white shadow-sm font-bold'
+                : 'text-slate-600 hover:text-[#0B132B] font-semibold'
             }`}
           >
             Organización de eventos
@@ -186,7 +186,7 @@ export default function Registro() {
           {isOrganizer ? (
             <div className="space-y-3.5 animate-fade-in">
               <div className="flex items-center gap-2 pt-1 pb-1 text-xs font-bold text-slate-700 uppercase tracking-wide border-b border-borderc">
-                <FiBriefcase className="text-brand" size={14} />
+                <FiBriefcase className="text-amber-500" size={14} />
                 <span>Datos de la Organización</span>
               </div>
 
@@ -238,7 +238,7 @@ export default function Registro() {
               </div>
 
               <div className="flex items-center gap-2 pt-3 pb-1 text-xs font-bold text-slate-700 uppercase tracking-wide border-b border-borderc">
-                <FiUser className="text-brand" size={14} />
+                <FiUser className="text-amber-500" size={14} />
                 <span>Datos del Representante (Acceso al Dashboard)</span>
               </div>
 
@@ -364,7 +364,7 @@ export default function Registro() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-4 py-3.5 px-4 rounded-xl bg-brand hover:bg-brand-dark text-white font-bold text-sm shadow-md hover:shadow-lg shadow-brand/25 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full mt-4 py-3.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow-md shadow-amber-500/20 hover:shadow-amber-500/35 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
           >
             {isSubmitting ? (
               <>

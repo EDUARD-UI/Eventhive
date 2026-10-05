@@ -160,7 +160,7 @@ export default function PerfilOrganizacionPublicoPage() {
           </div>
           <h2 className="text-2xl font-black text-[#0B1B3D] mb-2">Organización no encontrada</h2>
           <p className="text-slate-600 text-sm max-w-md mb-6 font-medium">
-            La organización solicitada no está disponible o no tiene un perfil público registrado en la Colmena.
+            La organización solicitada no está disponible o no tiene un perfil público registrado.
           </p>
           <Link
             to="/organizaciones"
@@ -265,11 +265,10 @@ export default function PerfilOrganizacionPublicoPage() {
                 <button
                   type="button"
                   onClick={handleToggleFollow}
-                  className={`px-6 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all shadow-md active:scale-95 flex items-center gap-2 cursor-pointer ${
-                    isFollowing
+                  className={`px-6 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all shadow-md active:scale-95 flex items-center gap-2 cursor-pointer ${isFollowing
                       ? 'bg-white/20 text-white border border-white/30 hover:bg-white/30'
                       : 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 shadow-amber-500/25'
-                  }`}
+                    }`}
                 >
                   <FiUsers size={16} />
                   <span>{isFollowing ? '✓ Siguiendo' : '+ Seguir Organización'}</span>
@@ -288,7 +287,7 @@ export default function PerfilOrganizacionPublicoPage() {
 
         {/* Sección de Eventos de la Organización */}
         <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-          
+
           {/* Barra de pestañas por estado: Todos, Publicados, Finalizados */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-amber-200/80 pb-5">
             <div>
@@ -305,33 +304,30 @@ export default function PerfilOrganizacionPublicoPage() {
               <button
                 type="button"
                 onClick={() => handleTabChange('todos')}
-                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                  activeTab === 'todos'
+                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${activeTab === 'todos'
                     ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm'
                     : 'text-slate-600 hover:text-[#0B1B3D]'
-                }`}
+                  }`}
               >
                 Todos ({counts.todos})
               </button>
               <button
                 type="button"
                 onClick={() => handleTabChange('publicados')}
-                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                  activeTab === 'publicados'
+                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${activeTab === 'publicados'
                     ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm'
                     : 'text-slate-600 hover:text-[#0B1B3D]'
-                }`}
+                  }`}
               >
                 Activos ({counts.publicados})
               </button>
               <button
                 type="button"
                 onClick={() => handleTabChange('finalizados')}
-                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                  activeTab === 'finalizados'
+                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${activeTab === 'finalizados'
                     ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm'
                     : 'text-slate-600 hover:text-[#0B1B3D]'
-                }`}
+                  }`}
               >
                 Finalizados ({counts.finalizados})
               </button>
@@ -350,11 +346,10 @@ export default function PerfilOrganizacionPublicoPage() {
                     <div key={event.id} className="relative flex flex-col">
                       <div className="mb-2 flex items-center justify-between">
                         <span
-                          className={`text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${
-                            estado === 'FINALIZADO'
+                          className={`text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${estado === 'FINALIZADO'
                               ? 'bg-slate-100 text-slate-600 border-slate-300'
                               : 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                          }`}
+                            }`}
                         >
                           {estado === 'FINALIZADO' ? '● Finalizado' : '● Activo en Cartelera'}
                         </span>

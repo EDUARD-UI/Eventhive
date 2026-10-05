@@ -60,7 +60,7 @@ export default function InputField({
             ${
               hasError
                 ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                : 'border-borderc hover:border-slate-300 focus:border-brand focus:ring-2 focus:ring-brand/15'
+                : 'border-borderc hover:border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20'
             }
             ${disabled ? 'bg-slate-100 opacity-60 cursor-not-allowed' : ''}
           `}

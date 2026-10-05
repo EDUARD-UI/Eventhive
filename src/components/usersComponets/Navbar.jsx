@@ -8,7 +8,11 @@ import { useDisclosure } from "../../hooks/useDisclosure.js";
 import AppLogo from "../common/AppLogo.jsx";
 import { session, normalizeRole, getDashboardPathForRole } from "../../services/session.js";
 
-export default function Navbar() {
+/**
+ * Navbar Global de EventHive
+ * Soporta variante "light", "dark" y modo "embedded" (integrado dentro del Hero sin divisiones).
+ */
+export default function Navbar({ variant = 'light', embedded = false }) {
   const { isOpen, open, close } = useDisclosure(false);
   const { isOpen: isHelpOpen, open: openHelp, close: closeHelp } = useDisclosure(false);
   const navigate = useNavigate();
@@ -29,26 +33,44 @@ export default function Navbar() {
 
   const role = normalizeRole(currentUser?.role || currentUser?.rol);
   const panelPath = getDashboardPathForRole(role);
+  const isLight = variant === 'light';
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex w-full items-center justify-between gap-3 px-4 py-3.5 backdrop-blur-md bg-[#0B132B]/95 text-white border-b border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.35)] transition-colors sm:px-6 xl:px-10">
+      <header
+        className={`w-full transition-all ${
+          embedded
+            ? 'relative z-30 flex items-center justify-between gap-4 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 xl:px-12 py-4 sm:py-5 bg-transparent text-slate-800 border-none shadow-none'
+            : `sticky top-0 z-40 flex items-center justify-between gap-3 px-4 py-3.5 backdrop-blur-md sm:px-6 xl:px-10 ${
+                isLight
+                  ? 'bg-white/95 text-slate-800 border-b border-slate-200/80 shadow-[0_2px_12px_rgba(15,23,42,0.04)]'
+                  : 'bg-[#0B132B]/95 text-white border-b border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.35)]'
+              }`
+        }`}
+      >
+        {/* Logo de Marca */}
         <Link to="/" className="flex shrink-0 items-center group">
           <AppLogo
             className="h-9 w-fit"
-            textClassName="text-white"
-            hiveClassName="text-amber-400"
+            textClassName={isLight ? 'text-[#0B132B]' : 'text-white'}
+            hiveClassName="text-amber-500"
           />
         </Link>
 
-        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-5 text-sm font-medium 2xl:gap-7 xl:flex">
-          {NAV_LINKS.map((link) =>
-            link.label === "Ayuda" ? (
+        {/* Menú de Navegación Central */}
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-6 text-sm font-medium 2xl:gap-8 xl:flex">
+          {NAV_LINKS.map((link) => {
+            const isActive = location.pathname === link.href;
+            return link.label === "Ayuda" ? (
               <button
                 key={link.label}
                 type="button"
                 onClick={openHelp}
-                className="text-slate-300 hover:text-white transition-colors duration-200"
+                className={`transition-colors duration-200 cursor-pointer font-medium ${
+                  isLight
+                    ? 'text-slate-600 hover:text-[#0B132B]'
+                    : 'text-slate-300 hover:text-white'
+                }`}
               >
                 {link.label}
               </button>
@@ -56,31 +78,40 @@ export default function Navbar() {
               <Link
                 key={link.label}
                 to={link.href}
-                className={`transition-colors duration-200 ${
-                  location.pathname === link.href
-                    ? 'text-amber-400 font-bold'
+                className={`transition-all duration-200 py-1 ${
+                  isActive
+                    ? isLight
+                      ? 'text-[#0B132B] font-bold border-b-2 border-amber-500'
+                      : 'text-amber-400 font-bold border-b-2 border-amber-400'
+                    : isLight
+                    ? 'text-slate-600 hover:text-[#0B132B]'
                     : 'text-slate-300 hover:text-white'
                 }`}
               >
                 {link.label}
               </Link>
-            )
-          )}
+            );
+          })}
         </nav>
 
+        {/* Acciones y Autenticación */}
         <div className="flex shrink-0 items-center gap-2.5">
           {currentUser ? (
             <div className="hidden items-center gap-2 xl:flex">
               <Link
                 to={panelPath}
-                className="flex max-w-[240px] items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold border border-slate-700/80 bg-[#131E3A] text-white hover:border-amber-400 hover:text-amber-300 transition-all duration-200"
+                className={`flex max-w-[240px] items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 shadow-xs ${
+                  isLight
+                    ? 'border border-slate-200 bg-slate-50/90 text-[#0B132B] hover:border-amber-400 hover:text-amber-700'
+                    : 'border border-slate-700/80 bg-[#131E3A] text-white hover:border-amber-400 hover:text-amber-300'
+                }`}
               >
-                <span className="w-6 h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-[10px] font-black shrink-0">
+                <span className="w-6 h-6 rounded-full bg-amber-500 text-[#0B132B] flex items-center justify-center text-[10px] font-black shrink-0">
                   {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                 </span>
                 <span className="truncate">{currentUser.name || 'Mi Cuenta'}</span>
                 {role && role !== 'CLIENTE' && (
-                  <span className="ml-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                  <span className="ml-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-700 border border-amber-400/40">
                     {role}
                   </span>
                 )}
@@ -90,7 +121,11 @@ export default function Navbar() {
                 type="button"
                 onClick={handleLogout}
                 title="Cerrar sesión"
-                className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors duration-200"
+                className={`p-2 rounded-full transition-colors duration-200 cursor-pointer ${
+                  isLight
+                    ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                    : 'text-slate-400 hover:text-rose-400 hover:bg-rose-500/10'
+                }`}
               >
                 <FiLogOut size={16} />
               </button>
@@ -100,25 +135,35 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => navigate("/iniciosesion")}
-                className="inline-flex whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold border border-slate-700 text-slate-200 hover:border-slate-500 hover:text-white transition-all duration-200 active:scale-95"
+                className={`inline-flex whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-all duration-200 active:scale-95 cursor-pointer ${
+                  isLight
+                    ? 'border border-slate-300 text-[#0B132B] hover:border-slate-500 hover:bg-slate-50'
+                    : 'border border-slate-700 text-slate-200 hover:border-slate-500 hover:text-white'
+                }`}
               >
                 Iniciar sesión
               </button>
               <button
                 type="button"
                 onClick={() => navigate("/registro")}
-                className="inline-flex whitespace-nowrap rounded-xl px-4 py-2 text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition-all duration-200 active:scale-95"
+                className="inline-flex whitespace-nowrap rounded-full px-5 py-2 text-xs font-bold bg-amber-500 hover:bg-amber-400 text-[#0B132B] shadow-sm transition-all duration-200 active:scale-95 cursor-pointer"
               >
                 Registrarse
               </button>
             </div>
           )}
+
+          {/* Botón de Menú Móvil */}
           <button
             type="button"
             onClick={open}
             aria-label="Abrir menú"
             aria-expanded={isOpen}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-200 hover:bg-slate-800 hover:text-white transition-colors duration-200 xl:hidden"
+            className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors duration-200 cursor-pointer xl:hidden ${
+              isLight
+                ? 'text-[#0B132B] hover:bg-slate-100'
+                : 'text-slate-200 hover:bg-slate-800 hover:text-white'
+            }`}
           >
             <FiMenu size={22} />
           </button>

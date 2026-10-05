@@ -11,6 +11,7 @@ import {
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import { organizationService } from '../services/organizerService.js';
+import { session, normalizeRole } from '../services/session.js';
 import OrganizationListCard from '../components/common/OrganizationListCard.jsx';
 import OrganizationCardSkeleton from '../components/common/OrganizationCardSkeleton.jsx';
 import Pagination from '../components/Shared/Pagination.jsx';
@@ -24,6 +25,11 @@ export default function OrganizadoresPage() {
   const [organizations, setOrganizations] = useState([]);
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // Determinar rol para el botón de acción principal
+  const currentUser = session.getUser();
+  const userRole = normalizeRole(currentUser?.rol || currentUser?.role);
+  const isOrganizer = ['REPRESENTANTE', 'OPERADOR', 'ADMINISTRADOR'].includes(userRole);
 
   useEffect(() => {
     let isMounted = true;
@@ -77,35 +83,42 @@ export default function OrganizadoresPage() {
       <Navbar />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Cabecera / Título de la sección */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight uppercase">
-              Organizaciones y Productores{' '}
-              <span className="font-semibold text-slate-500">
-                ({loading ? '...' : totalElements})
+        {/* Cabecera / Título de la sección + Buscador integrado */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 pb-6 border-b border-slate-200/80">
+          <div className="space-y-1.5 max-w-xl">
+            <div className="flex items-center flex-wrap gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight uppercase">
+                Organizaciones y Productores
+              </h1>
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/80 shadow-2xs">
+                {loading ? (
+                  <span className="inline-block animate-pulse">Cargando...</span>
+                ) : (
+                  `${totalElements} ${totalElements === 1 ? 'registrado' : 'registrados'}`
+                )}
               </span>
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1 font-normal">
+            </div>
+            <p className="text-xs sm:text-sm text-slate-600 font-normal leading-relaxed">
               Directorio oficial de colectivos, promotores y productores culturales en Cartagena.
             </p>
           </div>
 
-          {/* Buscador Rápido en blanco con alto contraste */}
-          <div className="relative w-full sm:w-80">
+          {/* Buscador Rápido con ancho óptimo y sin truncamiento */}
+          <div className="relative w-full md:w-84 lg:w-96 shrink-0">
             <input
               type="text"
               value={searchTerm}
               onChange={handleSearchChange}
               placeholder="Buscar organización por nombre..."
-              className="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-9 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-800 transition-colors shadow-sm"
+              className="w-full h-11 bg-white border border-slate-300 hover:border-slate-400 focus:border-amber-500 rounded-xl pl-10 pr-9 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all shadow-xs"
             />
-            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none" />
             {searchTerm && (
               <button
                 type="button"
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-xs font-bold"
+                aria-label="Limpiar búsqueda"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
               >
                 ✕
               </button>
@@ -113,16 +126,16 @@ export default function OrganizadoresPage() {
           </div>
         </div>
 
-        {/* Barra de Filtros / Tabs Sobrios */}
-        <div className="mb-8 flex items-center justify-between border-b border-slate-200 pb-3">
-          <div className="inline-flex gap-2">
+        {/* Barra de Filtros: Tabs segmentados a la izquierda y Botón de Acción destacado a la derecha */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 mb-8">
+          <div className="inline-flex p-1 bg-slate-200/70 rounded-2xl border border-slate-200/80 gap-1 self-start sm:self-auto">
             <button
               type="button"
               onClick={() => setActiveTab('directorio')}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
                 activeTab === 'directorio'
-                  ? 'bg-slate-950 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-[#0B132B] text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
               Directorio
@@ -132,21 +145,26 @@ export default function OrganizadoresPage() {
               onClick={() => setActiveTab('informacion')}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
                 activeTab === 'informacion'
-                  ? 'bg-slate-950 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-[#0B132B] text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
               Información para Productores
             </button>
           </div>
 
-          <Link
-            to="/organizacion"
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors duration-200"
-          >
-            <span>Crear evento</span>
-            <FiArrowRight size={13} />
-          </Link>
+          <div className="self-end sm:self-auto">
+            <Link
+              to={isOrganizer ? '/organizacion' : '/registro'}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm tracking-wide shadow-sm hover:shadow transition-all duration-200 active:scale-95 group"
+            >
+              <span>{isOrganizer ? 'Crear evento' : 'Registrar organización'}</span>
+              <FiArrowRight
+                size={15}
+                className="transition-transform duration-200 group-hover:translate-x-0.5"
+              />
+            </Link>
+          </div>
         </div>
 
         {/* Tab Directorio: Grilla de Credenciales / Boletos Verticales */}

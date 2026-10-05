@@ -99,9 +99,14 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
     if (sesionRenovada) {
       token = session.getToken();
     } else {
-      // El refresh token también expiró o es inválido: cerrar sesión limpia
-      cerrarSesionYRedirigir();
-      throw new Error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+      // Si el refresh token falló, limpiamos la sesión
+      session.clear();
+      token = null;
+      // Solo lanzamos error bloqueante si es una petición privada que modifica datos
+      if (method !== 'GET') {
+        cerrarSesionYRedirigir();
+        throw new Error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+      }
     }
   }
 
@@ -115,7 +120,7 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     response = await fetch(buildUrl(path, params), {
       method,

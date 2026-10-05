@@ -69,18 +69,57 @@ export default function BuscarEventosPage() {
 
     const loadData = async () => {
       try {
-        if (tituloParam.trim()) {
-          return await searchEvents({
+        const hasTitle = Boolean(tituloParam.trim());
+        const hasDate = Boolean(fechaParam.trim());
+        const hasCategory = Boolean(categoriaIdParam);
+
+        // Caso 1: Búsqueda por título textual
+        if (hasTitle) {
+          // Si el usuario combinó búsqueda por texto con fecha o categoría,
+          // consultamos un lote amplio de coincidencias de título para filtrar exactamente en cliente
+          const size = (hasDate || hasCategory) ? 60 : 10;
+          const result = await searchEvents({
             titulo: tituloParam.trim(),
-            page: pageParam,
-            size: 10,
+            page: (hasDate || hasCategory) ? 0 : pageParam,
+            size,
             sort: sortParam,
           });
+
+          let filtered = result.events || [];
+
+          if (hasDate) {
+            filtered = filtered.filter((ev) => {
+              const evDate = ev.fecha || (ev.startsAt ? String(ev.startsAt).slice(0, 10) : '');
+              return evDate === fechaParam.trim();
+            });
+          }
+
+          if (hasCategory) {
+            filtered = filtered.filter((ev) => {
+              const catId = ev.categoriaId ?? ev.categoria?.id;
+              return String(catId) === String(categoriaIdParam);
+            });
+          }
+
+          if (hasDate || hasCategory) {
+            const pageSize = 10;
+            const start = pageParam * pageSize;
+            const paginated = filtered.slice(start, start + pageSize);
+            return {
+              events: paginated,
+              total: filtered.length,
+              totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
+              currentPage: pageParam,
+            };
+          }
+
+          return result;
         }
 
+        // Caso 2: Sin término textual -> consulta nativa con filtros directos al backend /api/eventos
         return await getEvents({
-          categoriaId: categoriaIdParam ? Number(categoriaIdParam) : undefined,
-          fecha: fechaParam || undefined,
+          categoriaId: hasCategory ? Number(categoriaIdParam) : undefined,
+          fecha: hasDate ? fechaParam.trim() : undefined,
           page: pageParam,
           size: 10,
           sort: sortParam,
@@ -181,30 +220,32 @@ export default function BuscarEventosPage() {
       <Navbar />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Cabecera / Título Principal */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight uppercase">
-              Todos los eventos en Cartagena{' '}
-              <span className="font-semibold text-slate-500">
-                ({loading ? '...' : totalElements})
+        {/* Cabecera / Título Principal Refactorizada (Opción 1 Directa + Flex Balanceado) */}
+        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-5 pb-3 border-b border-slate-200/70">
+          <div className="max-w-2xl">
+            <div className="flex flex-wrap items-center gap-3 mb-1.5">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B132B] tracking-tight">
+                Eventos en Cartagena
+              </h1>
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/80 shadow-2xs">
+                {loading ? 'Cargando...' : `${totalElements} disponibles`}
               </span>
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1 font-normal">
-              Conoce la programación oficial, festivales, conciertos y experiencias en La Heroica.
+            </div>
+            <p className="text-xs sm:text-sm text-slate-600 font-normal leading-relaxed">
+              Descubre conciertos, festivales, experiencias culturales y deportivas en La Heroica.
             </p>
           </div>
 
-          {/* Buscador Rápido por Título en cápsula blanca con alto contraste */}
-          <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-72">
+          {/* Buscador Rápido por Título alineado limpiamente a la derecha */}
+          <form onSubmit={handleSearchSubmit} className="relative w-full md:w-80 shrink-0">
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Busca tu evento..."
-              className="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-9 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-800 transition-colors shadow-sm"
+              className="w-full h-11 bg-white border border-slate-300 hover:border-slate-400 focus:border-[#0B132B] rounded-xl pl-10 pr-9 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B132B]/10 transition-all shadow-xs"
             />
-            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none" />
             {searchInput && (
               <button
                 type="button"
@@ -214,7 +255,8 @@ export default function BuscarEventosPage() {
                   next.delete('titulo');
                   setSearchParams(next);
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-xs font-bold"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-xs font-bold cursor-pointer p-1"
+                title="Limpiar búsqueda"
               >
                 ✕
               </button>
