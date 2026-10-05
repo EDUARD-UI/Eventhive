@@ -331,10 +331,10 @@ export default function PerfilUsuario() {
     activeTab === 'guardados'
       ? guardados
       : activeTab === 'proximos'
-      ? eventosProximos
-      : activeTab === 'historial'
-      ? eventosHistorial
-      : [];
+        ? eventosProximos
+        : activeTab === 'historial'
+          ? eventosHistorial
+          : [];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body">
@@ -346,24 +346,19 @@ export default function PerfilUsuario() {
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-6xl mx-auto relative z-10">
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-widest text-amber-300 bg-amber-500/10 border border-amber-400/30 mb-3">
-            <span>⬡</span>
-            <span>TU CUENTA · EVENTHIVE</span>
-          </span>
-
           <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
             Panel de Usuario
           </h1>
 
           <p className="text-slate-300 text-sm sm:text-base mt-2 max-w-xl font-medium leading-relaxed">
-            Administra tus pases digitales con QR, eventos guardados en favoritos y configuración de cuenta.
+            Administra tus tiquetes digitales con QR, eventos guardados en favoritos y configuración de cuenta.
           </p>
         </div>
       </section>
 
       {/* Contenedor Principal */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
-        
+
         {/* Barra de Pestañas Flotante Estilo Cápsula */}
         <div className="bg-white rounded-3xl border-2 border-amber-200/90 shadow-xl p-2 -mt-14 relative z-20 overflow-x-auto scrollbar-none">
           <div className="flex items-center gap-1.5 min-w-max">
@@ -380,20 +375,18 @@ export default function PerfilUsuario() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                    isActive
-                      ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md'
-                      : 'text-slate-600 hover:text-[#0B1B3D] hover:bg-amber-50/60'
-                  }`}
+                  className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${isActive
+                    ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md'
+                    : 'text-slate-600 hover:text-[#0B1B3D] hover:bg-amber-50/60'
+                    }`}
                 >
                   <span>{tab.label}</span>
                   {count !== null && count > 0 && (
                     <span
-                      className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                        isActive
-                          ? 'bg-slate-950 text-amber-300'
-                          : 'bg-amber-100 text-amber-950 border border-amber-300'
-                      }`}
+                      className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isActive
+                        ? 'bg-slate-950 text-amber-300'
+                        : 'bg-amber-100 text-amber-950 border border-amber-300'
+                        }`}
                     >
                       {count}
                     </span>
@@ -406,49 +399,86 @@ export default function PerfilUsuario() {
 
         {/* Layout en 2 columnas: Sidebar Perfil + Contenido */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          
-          {/* Sidebar de Usuario */}
-          <aside className="w-full lg:w-[320px] shrink-0 space-y-6">
-            
-            {/* Tarjeta Identidad */}
-            <div className="bg-white border-2 border-amber-200/90 rounded-3xl shadow-sm p-7 text-center relative overflow-hidden">
-              <div className="relative w-24 h-24 mx-auto mb-4">
-                <div className="w-full h-full clip-hexagon bg-gradient-to-b from-amber-400 to-amber-600 p-[3px] filter drop-shadow-md">
-                  <div className="w-full h-full clip-hexagon bg-[#0B172C] flex items-center justify-center text-amber-300 text-2xl font-black select-none">
-                    {getInitials(usuario.nombreCompleto)}
+
+          {/* Sidebar de Usuario — Guía Tarjeta Imagen 1 */}
+          <aside className="w-full lg:w-[340px] shrink-0 space-y-6">
+
+            {/* Tarjeta Identidad (Basada en Imagen 1) */}
+            <div className="bg-white border border-amber-200/80 rounded-[28px] shadow-sm p-6 relative overflow-hidden transition-all duration-300 hover:shadow-md">
+              {/* Botón de editar arriba a la derecha (estilo icono de la imagen 1) */}
+              <button
+                type="button"
+                onClick={() => setEditModal(true)}
+                title="Editar información de perfil"
+                className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-amber-600 hover:bg-amber-50/80 transition-colors cursor-pointer"
+              >
+                <FiEdit2 size={16} />
+              </button>
+
+              <div className="flex flex-col items-center text-center">
+                {/* Avatar circular limpio con iniciales */}
+                <div className="relative mb-4">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-200 p-[3px] shadow-md">
+                    <div className="w-full h-full rounded-full bg-[#0B1B3D] flex items-center justify-center text-amber-300 text-2xl font-black select-none">
+                      {getInitials(usuario.nombreCompleto)}
+                    </div>
                   </div>
+                  <span
+                    className="absolute bottom-0 right-0 p-1.5 rounded-full bg-emerald-500 text-white ring-2 ring-white shadow-xs"
+                    title="Usuario Verificado"
+                  >
+                    <FiCheckCircle size={13} />
+                  </span>
                 </div>
+
+                {/* Nombre del Usuario */}
+                <h2 className="text-xl font-bold font-display text-[#0B1B3D] truncate max-w-[260px]">
+                  {usuario.nombreCompleto || 'Usuario EventHive'}
+                </h2>
+
+                {/* Rol Badge */}
+                <span className="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-amber-500/10 text-amber-700 border border-amber-300/40">
+                  <FiShield size={11} />
+                  <span>{usuario.rol || 'CLIENTE'}</span>
+                </span>
               </div>
 
-              <h2 className="text-xl font-black text-[#0B1B3D] truncate">
-                {usuario.nombreCompleto || 'Usuario EventHive'}
-              </h2>
-              
-              <p className="flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 mt-2 truncate">
-                <FiMail size={13} className="text-amber-600 shrink-0" />
-                <span>{usuario.correo || 'correo@eventhive.com'}</span>
-              </p>
+              {/* Lista de Datos Proporcionados por el Endpoint */}
+              <div className="mt-6 pt-5 border-t border-slate-100 space-y-3 text-xs">
+                {/* E-mail */}
+                <div className="flex items-center justify-between gap-2 py-1">
+                  <span className="text-slate-400 font-medium shrink-0 flex items-center gap-1.5">
+                    <FiMail size={13} className="text-amber-500" />
+                    <span>E-mail:</span>
+                  </span>
+                  <span className="font-semibold text-slate-800 truncate text-right max-w-[190px]" title={usuario.correo}>
+                    {usuario.correo || '—'}
+                  </span>
+                </div>
 
-              {usuario.telefono && (
-                <p className="flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 mt-1">
-                  <FiPhone size={13} className="text-amber-600 shrink-0" />
-                  <span>{usuario.telefono}</span>
-                </p>
-              )}
+                {/* Teléfono (si existe en el endpoint) */}
+                {usuario.telefono && (
+                  <div className="flex items-center justify-between gap-2 py-1">
+                    <span className="text-slate-400 font-medium shrink-0 flex items-center gap-1.5">
+                      <FiPhone size={13} className="text-amber-500" />
+                      <span>Teléfono:</span>
+                    </span>
+                    <span className="font-semibold text-slate-800 truncate text-right">
+                      {usuario.telefono}
+                    </span>
+                  </div>
+                )}
+              </div>
 
-              <p className="flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 mt-1">
-                <FiMapPin size={13} className="text-rose-500 shrink-0" />
-                <span>{usuario.ciudad}</span>
-              </p>
-
-              <div className="mt-6 pt-5 border-t border-amber-100">
+              {/* Botón de acción */}
+              <div className="mt-6 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setEditModal(true)}
-                  className="w-full py-2.5 px-4 rounded-xl border border-amber-300 hover:border-amber-500 bg-amber-50/50 hover:bg-amber-100 text-xs font-black uppercase tracking-wider text-amber-950 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+                  className="w-full py-2.5 px-4 rounded-xl border border-amber-300 hover:border-amber-400 bg-amber-50/50 hover:bg-amber-100/70 text-xs font-black uppercase tracking-wider text-amber-950 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-xs"
                 >
                   <FiEdit2 size={13} />
-                  <span>Editar Perfil</span>
+                  <span>Editar Datos</span>
                 </button>
               </div>
             </div>
@@ -456,7 +486,7 @@ export default function PerfilUsuario() {
             {/* Tarjeta Estadísticas */}
             <div className="bg-white border-2 border-amber-200/90 rounded-3xl shadow-sm p-6 space-y-4">
               <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block">
-                ACTIVIDAD EN LA COLMENA
+                ACTIVIDAD EN LA APLICACION
               </span>
 
               <div className="flex items-center gap-3.5 text-sm">
@@ -500,13 +530,8 @@ export default function PerfilUsuario() {
           {/* Contenido Principal por Pestaña */}
           <section className="flex-1 min-w-0 w-full">
             {loading ? (
-              <div className="bg-white rounded-3xl border-2 border-amber-200/90 p-14 text-center shadow-sm">
-                <div className="relative w-12 h-12 mx-auto flex items-center justify-center mb-3">
-                  <div className="absolute inset-0 clip-hexagon-horiz bg-gradient-to-r from-amber-400 to-amber-500 animate-spin" />
-                  <div className="absolute inset-[2.5px] clip-hexagon-horiz bg-white flex items-center justify-center">
-                    <span className="text-amber-500 text-sm">⬡</span>
-                  </div>
-                </div>
+              <div className="bg-white rounded-3xl border border-amber-200/90 p-14 text-center shadow-sm">
+                <div className="w-10 h-10 mx-auto mb-3 border-3 border-amber-400 border-t-[#0B1B3D] rounded-full animate-spin" />
                 <p className="text-xs font-black uppercase tracking-wider text-[#0B1B3D]">
                   Cargando información del usuario...
                 </p>
@@ -516,10 +541,10 @@ export default function PerfilUsuario() {
                 {/* Pestaña: Mis Entradas / QR */}
                 {activeTab === 'entradas' && (
                   <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-3xl border-2 border-amber-200/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="bg-white p-6 rounded-3xl border border-amber-200/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block mb-1">
-                          ⬡ PASES OFICIALES
+                          PASES OFICIALES
                         </span>
                         <h3 className="text-xl font-black text-[#0B1B3D]">Mis Boletos Digitales</h3>
                         <p className="text-xs text-slate-600 mt-0.5">
@@ -534,7 +559,7 @@ export default function PerfilUsuario() {
                     {boletosList.length === 0 ? (
                       <div className="bg-white rounded-3xl border-2 border-dashed border-amber-300 p-14 text-center shadow-sm">
                         <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 text-xl">
-                          ⬡
+                          <FiShoppingBag size={24} />
                         </div>
                         <h4 className="font-black text-lg text-[#0B1B3D] mb-1">Aún no tienes boletos adquiridos</h4>
                         <p className="text-xs font-medium text-slate-600 max-w-sm mx-auto mb-6">
@@ -634,7 +659,7 @@ export default function PerfilUsuario() {
                     <div className="bg-white border-2 border-amber-200/90 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
                       <div>
                         <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block mb-1">
-                          ⬡ DATOS DE CONTACTO
+                          DATOS DE CONTACTO
                         </span>
                         <h3 className="text-xl font-black text-[#0B1B3D]">Información Personal</h3>
                         <p className="text-xs text-slate-600 mt-0.5 font-medium">
@@ -662,7 +687,7 @@ export default function PerfilUsuario() {
 
                           <div>
                             <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
-                              Correo Electrónico (Solo Lectura)
+                              Correo Electrónico
                             </label>
                             <input
                               type="email"
@@ -672,9 +697,9 @@ export default function PerfilUsuario() {
                             />
                           </div>
 
-                          <div>
+                          <div className="sm:col-span-2">
                             <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
-                              Teléfono / WhatsApp
+                              Teléfono
                             </label>
                             <input
                               type="tel"
@@ -684,18 +709,6 @@ export default function PerfilUsuario() {
                               }
                               className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                               placeholder="+57 300 123 4567"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
-                              Ciudad de Residencia
-                            </label>
-                            <input
-                              type="text"
-                              value={usuario.ciudad}
-                              onChange={(e) => setUsuario({ ...usuario, ciudad: e.target.value })}
-                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                             />
                           </div>
                         </div>
@@ -776,7 +789,6 @@ export default function PerfilUsuario() {
                                 setPasswordForm({
                                   ...passwordForm,
                                   confirmarClave: e.target.value,
-                                handwriting: e.target.value,
                                 })
                               }
                               placeholder="Repite la contraseña"
@@ -807,133 +819,133 @@ export default function PerfilUsuario() {
                 {(activeTab === 'guardados' ||
                   activeTab === 'proximos' ||
                   activeTab === 'historial') && (
-                  <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-3xl border-2 border-amber-200/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block mb-1">
-                          ⬡ AGENDA PERSONAL
-                        </span>
-                        <h3 className="text-xl font-black text-[#0B1B3D]">
-                          {activeTab === 'guardados'
-                            ? 'Eventos Guardados en Favoritos'
-                            : activeTab === 'proximos'
-                            ? 'Experiencias Próximas'
-                            : 'Historial de Eventos Asistidos'}
-                        </h3>
-                        <p className="text-xs text-slate-600 mt-0.5">
-                          {activeTab === 'guardados'
-                            ? 'Experiencias que te interesan y has añadido a tu lista de deseos.'
-                            : activeTab === 'proximos'
-                            ? 'Eventos con boletos confirmados y pendientes por disfrutar.'
-                            : 'Historial de eventos pasados en Cartagena de Indias.'}
-                        </p>
-                      </div>
-                      <span className="text-xs font-black text-amber-950 bg-amber-100 border border-amber-300 px-3.5 py-1.5 rounded-full shrink-0 self-start sm:self-auto">
-                        {eventosVisibles.length} {eventosVisibles.length === 1 ? 'evento' : 'eventos'}
-                      </span>
-                    </div>
-
-                    {eventosVisibles.length === 0 ? (
-                      <div className="bg-white rounded-3xl border-2 border-dashed border-amber-300 p-14 text-center shadow-sm">
-                        <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 text-xl">
-                          ⬡
+                    <div className="space-y-6">
+                      <div className="bg-white p-6 rounded-3xl border-2 border-amber-200/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block mb-1">
+                            AGENDA PERSONAL
+                          </span>
+                          <h3 className="text-xl font-black text-[#0B1B3D]">
+                            {activeTab === 'guardados'
+                              ? 'Eventos Guardados en Favoritos'
+                              : activeTab === 'proximos'
+                                ? 'Experiencias Próximas'
+                                : 'Historial de Eventos Asistidos'}
+                          </h3>
+                          <p className="text-xs text-slate-600 mt-0.5">
+                            {activeTab === 'guardados'
+                              ? 'Experiencias que te interesan y has añadido a tu lista de deseos.'
+                              : activeTab === 'proximos'
+                                ? 'Eventos con boletos confirmados y pendientes por disfrutar.'
+                                : 'Historial de eventos pasados en Cartagena de Indias.'}
+                          </p>
                         </div>
-                        <h4 className="font-black text-lg text-[#0B1B3D] mb-1">
-                          {activeTab === 'guardados'
-                            ? 'No tienes eventos guardados en favoritos'
-                            : activeTab === 'proximos'
-                            ? 'No tienes eventos próximos agendados'
-                            : 'Aún no registras historial de eventos'}
-                        </h4>
-                        <p className="text-xs font-medium text-slate-600 max-w-sm mx-auto mb-6">
-                          Explora la cartelera cultural de Cartagena de Indias y guarda tus favoritos.
-                        </p>
-                        <Link
-                          to="/buscar"
-                          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95"
-                        >
-                          <span>Explorar Experiencias</span>
-                          <FiArrowRight size={14} />
-                        </Link>
+                        <span className="text-xs font-black text-amber-950 bg-amber-100 border border-amber-300 px-3.5 py-1.5 rounded-full shrink-0 self-start sm:self-auto">
+                          {eventosVisibles.length} {eventosVisibles.length === 1 ? 'evento' : 'eventos'}
+                        </span>
                       </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {eventosVisibles.map((evento) => (
-                          <article
-                            key={evento.id}
-                            className="bg-white border-2 border-amber-200/90 hover:border-amber-400 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between"
+
+                      {eventosVisibles.length === 0 ? (
+                        <div className="bg-white rounded-3xl border-2 border-dashed border-amber-300 p-14 text-center shadow-sm">
+                          <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 text-xl">
+
+                          </div>
+                          <h4 className="font-black text-lg text-[#0B1B3D] mb-1">
+                            {activeTab === 'guardados'
+                              ? 'No tienes eventos guardados en favoritos'
+                              : activeTab === 'proximos'
+                                ? 'No tienes eventos próximos agendados'
+                                : 'Aún no registras historial de eventos'}
+                          </h4>
+                          <p className="text-xs font-medium text-slate-600 max-w-sm mx-auto mb-6">
+                            Explora la cartelera cultural de Cartagena de Indias y guarda tus favoritos.
+                          </p>
+                          <Link
+                            to="/buscar"
+                            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95"
                           >
-                            <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
-                              <ImageWithFallback
-                                src={evento.photo}
-                                alt={evento.title}
-                                className="h-full w-full"
-                                imgClassName="group-hover:scale-105 duration-500 object-cover"
-                                fallbackClassName="h-full w-full"
-                                fallbackGradient={getCategoryGradient(evento.category)}
-                                fallbackText={evento.category || 'Evento'}
-                                iconSize={26}
-                              >
-                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
+                            <span>Explorar Experiencias</span>
+                            <FiArrowRight size={14} />
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          {eventosVisibles.map((evento) => (
+                            <article
+                              key={evento.id}
+                              className="bg-white border-2 border-amber-200/90 hover:border-amber-400 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between"
+                            >
+                              <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
+                                <ImageWithFallback
+                                  src={evento.photo}
+                                  alt={evento.title}
+                                  className="h-full w-full"
+                                  imgClassName="group-hover:scale-105 duration-500 object-cover"
+                                  fallbackClassName="h-full w-full"
+                                  fallbackGradient={getCategoryGradient(evento.category)}
+                                  fallbackText={evento.category || 'Evento'}
+                                  iconSize={26}
+                                >
+                                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
 
-                                <span className="absolute left-3 top-3 text-[10px] font-black uppercase tracking-wider bg-[#0B172C] text-amber-300 border border-amber-400/40 px-2.5 py-1 rounded-lg shadow-xs z-10 flex items-center gap-1">
-                                  <span>⬡</span>
-                                  <span>{evento.category}</span>
-                                </span>
+                                  <span className="absolute left-3 top-3 text-[10px] font-black uppercase tracking-wider bg-[#0B172C] text-amber-300 border border-amber-400/40 px-2.5 py-1 rounded-lg shadow-xs z-10 flex items-center gap-1">
+                                    <span>⬡</span>
+                                    <span>{evento.category}</span>
+                                  </span>
 
-                                {activeTab === 'guardados' && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => handleRemoveDeseo(e, evento.id)}
-                                    title="Quitar de favoritos"
-                                    className="absolute right-3 top-3 w-8 h-8 rounded-full bg-white/95 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center shadow-md z-10 transition-colors cursor-pointer"
+                                  {activeTab === 'guardados' && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => handleRemoveDeseo(e, evento.id)}
+                                      title="Quitar de favoritos"
+                                      className="absolute right-3 top-3 w-8 h-8 rounded-full bg-white/95 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center shadow-md z-10 transition-colors cursor-pointer"
+                                    >
+                                      <FiTrash2 size={14} />
+                                    </button>
+                                  )}
+                                </ImageWithFallback>
+                              </div>
+
+                              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                                <div>
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-900 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md inline-block mb-1.5">
+                                    {evento.category}
+                                  </span>
+                                  <h3 className="text-base font-black leading-snug text-[#0B1B3D] group-hover:text-amber-700 transition-colors line-clamp-2">
+                                    {evento.title}
+                                  </h3>
+
+                                  <div className="space-y-1.5 text-xs text-slate-600 mt-2.5 font-medium">
+                                    <p className="flex items-center gap-2">
+                                      <FiCalendar className="text-amber-600 shrink-0" size={14} />
+                                      <span>{evento.date}</span>
+                                    </p>
+                                    <p className="flex items-center gap-2 truncate">
+                                      <FiMapPin className="text-rose-500 shrink-0" size={14} />
+                                      <span className="truncate">{evento.location}</span>
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="pt-3 border-t border-amber-100 flex items-center justify-between">
+                                  <span className="text-xs font-black text-slate-900">
+                                    {formatPrice(evento.price)}
+                                  </span>
+                                  <Link
+                                    to={`/eventos/${evento.id}`}
+                                    className="text-xs font-black uppercase tracking-wider text-amber-700 hover:text-amber-800 transition-colors inline-flex items-center gap-1 group"
                                   >
-                                    <FiTrash2 size={14} />
-                                  </button>
-                                )}
-                              </ImageWithFallback>
-                            </div>
-
-                            <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                              <div>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-amber-900 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md inline-block mb-1.5">
-                                  {evento.category}
-                                </span>
-                                <h3 className="text-base font-black leading-snug text-[#0B1B3D] group-hover:text-amber-700 transition-colors line-clamp-2">
-                                  {evento.title}
-                                </h3>
-
-                                <div className="space-y-1.5 text-xs text-slate-600 mt-2.5 font-medium">
-                                  <p className="flex items-center gap-2">
-                                    <FiCalendar className="text-amber-600 shrink-0" size={14} />
-                                    <span>{evento.date}</span>
-                                  </p>
-                                  <p className="flex items-center gap-2 truncate">
-                                    <FiMapPin className="text-rose-500 shrink-0" size={14} />
-                                    <span className="truncate">{evento.location}</span>
-                                  </p>
+                                    <span>Ver detalle</span>
+                                    <FiArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                                  </Link>
                                 </div>
                               </div>
-
-                              <div className="pt-3 border-t border-amber-100 flex items-center justify-between">
-                                <span className="text-xs font-black text-slate-900">
-                                  {formatPrice(evento.price)}
-                                </span>
-                                <Link
-                                  to={`/eventos/${evento.id}`}
-                                  className="text-xs font-black uppercase tracking-wider text-amber-700 hover:text-amber-800 transition-colors inline-flex items-center gap-1 group"
-                                >
-                                  <span>Ver detalle</span>
-                                  <FiArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
-                                </Link>
-                              </div>
-                            </div>
-                          </article>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                            </article>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
               </>
             )}
           </section>
@@ -952,7 +964,7 @@ export default function PerfilUsuario() {
             </button>
 
             <span className="text-[10px] font-black uppercase tracking-wider text-amber-950 bg-amber-100 border border-amber-300 px-3 py-1 rounded-full inline-block">
-              ⬡ Pase Digital Oficial
+              Pase Digital Oficial
             </span>
 
             <h3 className="font-black text-lg text-[#0B1B3D] mt-3 leading-snug">{ticketModal.evento}</h3>
@@ -1050,25 +1062,13 @@ export default function PerfilUsuario() {
 
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1">
-                  Teléfono / WhatsApp
+                  Teléfono
                 </label>
                 <input
                   type="tel"
                   value={usuario.telefono}
                   onChange={(e) => setUsuario({ ...usuario, telefono: e.target.value })}
                   placeholder="+57 300 123 4567"
-                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1">
-                  Ciudad
-                </label>
-                <input
-                  type="text"
-                  value={usuario.ciudad}
-                  onChange={(e) => setUsuario({ ...usuario, ciudad: e.target.value })}
                   className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                 />
               </div>
