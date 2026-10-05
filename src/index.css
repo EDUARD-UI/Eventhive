@@ -252,7 +252,7 @@ body::-webkit-scrollbar {
 }
 
 /* ==========================================================================
-   EVENTHIVE THEME: COLMENA, ABEJAS Y RESPLANDOR ÁMBAR
+   EVENTHIVE THEME:, ABEJAS Y RESPLANDOR ÁMBAR
    ========================================================================== */
 
 /* Recorte hexagonal regular para celdas de panal */
@@ -264,7 +264,7 @@ body::-webkit-scrollbar {
   clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
 }
 
-/* Glassmorphism temático colmena */
+/* Glassmorphism temático */
 .hive-glass {
   background: rgba(13, 21, 39, 0.72);
   backdrop-filter: blur(16px);
@@ -379,4 +379,4 @@ body::-webkit-scrollbar {
 .animate-nectar-pulse {
   animation: nectarPulse 3.5s ease-in-out infinite;
 }
-
+

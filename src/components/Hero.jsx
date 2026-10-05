@@ -1,23 +1,20 @@
 import { useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { FiMapPin, FiArrowRight } from 'react-icons/fi';
-import Navbar from './usersComponets/Navbar.jsx';
-import SearchCard from './SearchCard.jsx';
+import { FiMapPin } from 'react-icons/fi';
+import AppLogo from './common/AppLogo.jsx';
+import HoneycombCanvas from './home/HoneycombCanvas.jsx';
 import BeeParticles from './home/BeeParticles.jsx';
+import CartagenaHiveSkyline from './home/CartagenaHiveSkyline.jsx';
+import SearchCard from './SearchCard.jsx';
+import Navbar from './usersComponets/Navbar.jsx';
+import cartagenaHero from '../assets/cartagena-hero.jpg';
 
-/**
- * Hero Principal de EventHive
- * - Header de Navegación integrado limpiamente en la parte superior sin divisiones ni barras cortadas.
- * - 100% Full-Width, plano y blanco puro (#ffffff), sin bordes perimetrales ni fondos oscuros.
- * - Malla de hexágonos y detalles dorados que inician sutiles y se "encienden" luminosos al hover.
- * - 5 abejas realistas animadas con estela de miel.
- * - Textos originales de image_0.png y botones [EXPLORAR AHORA] y [Ver Cartelera].
- * - Buscador sobresaliendo semi-fuera sobre el separador dentado inferior de panal.
- */
 export default function Hero() {
   const heroRef = useRef(null);
   const mousePos = useRef({ x: -9999, y: -9999 });
 
+  const heroBackground =
+    cartagenaHero ||
+    'https://images.unsplash.com/photo-1583531352515-8884af319dc1?auto=format&fit=crop&w=2000&q=85';
 
   const handleMouseMove = (e) => {
     if (!heroRef.current) return;
@@ -38,93 +35,63 @@ export default function Hero() {
       ref={heroRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="group/hero relative w-full bg-[#ffffff] overflow-visible select-none transition-colors duration-500"
+      className="relative text-white bg-[#0D1527] overflow-visible select-none"
     >
-      {/* 1. Malla Hexagonal de Panal interactiva: sutil al inicio, encendida luminosa al hover */}
-      <div aria-hidden="true" className="absolute inset-0 pointer-events-none select-none overflow-hidden">
-        <svg
-          className="absolute inset-0 w-full h-full opacity-10 group-hover/hero:opacity-85 transition-opacity duration-700 pointer-events-none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <defs>
-            <pattern
-              id="hero-honeycomb-pattern"
-              width="64"
-              height="110.85"
-              patternUnits="userSpaceOnUse"
-            >
-              <path
-                d="M32 0 L64 18.475 L64 55.425 L32 73.9 L0 55.425 L0 18.475 Z M32 110.85 L64 92.375 L64 55.425 L32 73.9 L0 55.425 L0 92.375 Z"
-                fill="none"
-                stroke="#F59E0B"
-                strokeWidth="0.8"
-                strokeOpacity="0.4"
-                className="group-hover/hero:stroke-opacity-95 transition-all duration-700"
-              />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#hero-honeycomb-pattern)" />
-        </svg>
+      {/* Contenedor aislado de efectos y partículas para evitar overflow horizontal */}
+      <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* 1. Malla Hexagonal Interactiva de Fondo (#0B1B3D con bordes ámbar y glowing honeycomb al hover) */}
+        <HoneycombCanvas mousePos={mousePos} />
 
-        {/* Destellos dorados suaves que se intensifican al pasar el cursor */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-amber-400/5 group-hover/hero:bg-amber-400/20 rounded-full blur-3xl transition-all duration-700 pointer-events-none" />
-        <div className="absolute top-1/3 -right-24 w-[32rem] h-[32rem] bg-amber-300/5 group-hover/hero:bg-amber-300/20 rounded-full blur-3xl transition-all duration-700 pointer-events-none" />
+        {/* 2. Partículas de Abejas Minimalistas con Estela Dorada de Miel (Honey Trail) e Interacción con Cursor */}
+        <BeeParticles mousePos={mousePos} />
+
+        {/* 3. Capa Fotográfica de Cartagena Colonial fusionada con mix-blend-mode y opacidad sutil */}
+        <div
+          className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 mix-blend-overlay opacity-25"
+          style={{ backgroundImage: `url('${heroBackground}')` }}
+        />
+
+        {/* Gradientes ambientales nocturnos para contraste elegante de evento */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#080E1D]/80 via-transparent to-[#0D1527]" />
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
+        <div className="absolute -top-32 -right-32 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl" />
+
+        {/* 4. Siluetas Arquitectónicas de Cartagena: Torre del Reloj + Murallas fusionadas con la geometría */}
+        <CartagenaHiveSkyline className="z-5 opacity-90" />
+
+        {/* Marca de agua EventHive */}
+        <div className="hidden lg:block absolute -right-6 top-1/2 -translate-y-1/2 w-[340px] h-[340px] opacity-[0.06] select-none">
+          <AppLogo showName={false} className="h-full w-full" />
+        </div>
       </div>
 
-      {/* 2. Cinco Abejas Realistas Doradas y Negras con física natural */}
-      <BeeParticles mousePos={mousePos} />
-
-      {/* 3. Header de Navegación Integrado Dentro del Hero (Estilo Seamless / Sin Divisiones) */}
-      <div className="relative z-30 w-full pointer-events-auto">
-        <Navbar embedded={true} />
+      {/* Header de Navegación Integrado Dentro del Hero (Estilo Seamless / Sin Divisiones) */}
+      <div className="relative z-30 w-full pointer-events-auto border-b border-amber-400/10">
+        <Navbar embedded={true} variant="dark" />
       </div>
 
-      {/* 4. Contenido Central del Hero */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pt-8 sm:pt-12 md:pt-14 pb-16 sm:pb-20 flex flex-col items-start text-left">
-
-        {/* Ubicación: pin dorado que se enciende al hover */}
+      {/* Contenido Principal */}
+      <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-start text-left px-4 sm:px-6 md:px-8 pt-8 sm:pt-12 md:pt-14 pb-16 sm:pb-20">
+        {/* Ubicación y Badge Temático  */}
         <div className="flex flex-wrap items-center gap-3 mb-4">
-          <div className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-500 group-hover/hero:text-slate-800 transition-colors">
-            <FiMapPin
-              className="text-amber-400/60 group-hover/hero:text-amber-500 group-hover/hero:drop-shadow-[0_0_8px_rgba(245,158,11,0.65)] transition-all duration-300"
-              size={16}
-            />
+          <div className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-300">
+            <FiMapPin className="text-amber-400" size={15} />
             <span>Cartagena de Indias, Colombia</span>
           </div>
         </div>
 
-        {/* Título Principal original de image_0.png con encendido dorado al hover */}
-        <h1 className="max-w-4xl font-display text-[32px] sm:text-[48px] lg:text-[56px] font-black leading-[1.1] tracking-tight text-slate-900">
-          Vive la Magia de{' '}
-          <span className="text-amber-500/80 group-hover/hero:text-amber-500 group-hover/hero:drop-shadow-[0_0_14px_rgba(245,158,11,0.45)] transition-all duration-500">
+        <h1 className="max-w-3xl font-display text-[34px] sm:text-[50px] lg:text-[56px] font-black leading-[1.08] tracking-tight text-white drop-shadow-lg">
+          Vive la magia de{' '}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-300">
             Cartagena
-          </span> :
+          </span>
           <br />
-          Tus Eventos Favoritos te Esperan
+          Tus Eventos Favoritos en un Solo Lugar
         </h1>
 
-        {/* Subtítulo Descriptivo original de image_0.png */}
-        <p className="mt-4 max-w-2xl text-xs sm:text-base text-slate-600 leading-relaxed font-normal">
-          Descubre música, cultura, gastronomía y deporte en la ciudad amurallada — y más allá.
+        <p className="mt-3.5 max-w-xl text-xs sm:text-base text-slate-300 leading-relaxed font-normal">
+          Descubre festivales, conciertos, arte, gastronomía y vida nocturna en la ciudad amurallada.
         </p>
-
-        {/* Botones originales de image_0.png: [EXPLORAR AHORA] y [Ver Cartelera] */}
-        <div className="mt-7 sm:mt-8 flex flex-wrap items-center gap-3.5 sm:gap-4">
-          <Link
-            to="/buscar"
-            className="inline-flex items-center gap-2 px-7 sm:px-8 py-3.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95 group cursor-pointer"
-          >
-            <span>EXPLORAR AHORA</span>
-            <FiArrowRight size={15} className="group-hover:translate-x-1 text-slate-950 transition-transform" />
-          </Link>
-
-          <a
-            href="#proximos"
-            className="inline-flex items-center gap-2 px-6 sm:px-7 py-3.5 rounded-full border border-slate-300 hover:border-amber-400 hover:bg-amber-50/50 text-slate-800 text-xs sm:text-sm font-bold transition-all cursor-pointer"
-          >
-            Ver Cartelera
-          </a>
-        </div>
       </div>
 
       {/* 5. Buscador Sobresaliendo Semi-Fuera sobre el límite inferior del Hero */}
@@ -132,9 +99,9 @@ export default function Hero() {
         <SearchCard />
       </div>
 
-      {/* 6. Patrón Amarillo ambar de colmena de la imagen image_1.png */}
+      {/* Línea dorada en la base del Hero */}
       <div className="relative left-0 right-0 bottom-0 z-10 pointer-events-none select-none w-full">
-        <div className="h-[2px] w-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 shadow-[0_0_16px_rgba(245,158,11,0.6)]" />
+        <div className="h-[5px] w-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.9)]" />
       </div>
     </section>
   );

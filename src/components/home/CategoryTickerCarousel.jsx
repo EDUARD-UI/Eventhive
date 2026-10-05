@@ -7,7 +7,7 @@ import ImageWithFallback from '../common/ImageWithFallback.jsx';
  * CategoryTickerCarousel
  * Carrusel continuo de ancho completo ("full-width") con cards más grandes:
  * - Fotografía amplia y claramente visible.
- * - Sin logo de colmena.
+ * 
  * - Solo muestra el título y el número de eventos.
  * - Se mueve de manera continua automática (auto-scroll) con pausa suave al hover.
  */
@@ -82,7 +82,7 @@ export default function CategoryTickerCarousel() {
               {/* Degradado inferior para legibilidad del texto */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
 
-              {/* Contenido: Solo título y número de eventos (sin logo de colmena) */}
+              {/* Contenido: Solo título y número de eventos (sin logo) */}
               <div className="relative z-10 w-full min-w-0">
                 <h4 className="text-base sm:text-lg font-extrabold uppercase text-white truncate tracking-tight group-hover/item:text-amber-300 transition-colors duration-200">
                   {cat.nombre}

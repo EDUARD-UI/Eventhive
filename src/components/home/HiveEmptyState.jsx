@@ -80,7 +80,7 @@ export default function HiveEmptyState({
         {/* Badge Temático */}
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-amber-100 text-amber-900 border border-amber-300 mb-3 shadow-xs">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-          Colmena en Actividad
+          En Actividad
         </span>
 
         {/* Título y Mensaje */}

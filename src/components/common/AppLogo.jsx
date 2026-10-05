@@ -5,11 +5,14 @@ export default function AppLogo({
   textClassName = '',
   hiveClassName = 'text-[#087fea]',
   showName = true,
+  showImage = true,
   alt = 'EventHive',
 }) {
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
-      <img src={logoImage} alt={showName ? '' : alt} className="h-full w-auto shrink-0 object-contain" />
+      {showImage && (
+        <img src={logoImage} alt={showName ? '' : alt} className="h-full w-auto shrink-0 object-contain" />
+      )}
       {showName && (
         <span className={`font-display text-xl font-bold leading-none whitespace-nowrap ${textClassName}`}>
           <span>Event</span><span className={hiveClassName}>Hive</span>

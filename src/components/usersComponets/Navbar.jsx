@@ -40,7 +40,9 @@ export default function Navbar({ variant = 'light', embedded = false }) {
       <header
         className={`w-full transition-all ${
           embedded
-            ? 'relative z-30 flex items-center justify-between gap-4 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 xl:px-12 py-4 sm:py-5 bg-transparent text-slate-800 border-none shadow-none'
+            ? `relative z-30 flex items-center justify-between gap-4 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 xl:px-12 py-4 sm:py-5 bg-transparent border-none shadow-none ${
+                isLight ? 'text-slate-800' : 'text-white'
+              }`
             : `sticky top-0 z-40 flex items-center justify-between gap-3 px-4 py-3.5 backdrop-blur-md sm:px-6 xl:px-10 ${
                 isLight
                   ? 'bg-white/95 text-slate-800 border-b border-slate-200/80 shadow-[0_2px_12px_rgba(15,23,42,0.04)]'
@@ -54,11 +56,12 @@ export default function Navbar({ variant = 'light', embedded = false }) {
             className="h-9 w-fit"
             textClassName={isLight ? 'text-[#0B132B]' : 'text-white'}
             hiveClassName="text-amber-500"
+            showImage={false}
           />
         </Link>
 
         {/* Menú de Navegación Central */}
-        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-6 text-sm font-medium 2xl:gap-8 xl:flex">
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-6 text-sm font-medium 2xl:gap-8 lg:flex">
           {NAV_LINKS.map((link) => {
             const isActive = location.pathname === link.href;
             return link.label === "Ayuda" ? (
@@ -97,7 +100,7 @@ export default function Navbar({ variant = 'light', embedded = false }) {
         {/* Acciones y Autenticación */}
         <div className="flex shrink-0 items-center gap-2.5">
           {currentUser ? (
-            <div className="hidden items-center gap-2 xl:flex">
+            <div className="hidden items-center gap-2 lg:flex">
               <Link
                 to={panelPath}
                 className={`flex max-w-[240px] items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 shadow-xs ${
@@ -131,14 +134,14 @@ export default function Navbar({ variant = 'light', embedded = false }) {
               </button>
             </div>
           ) : (
-            <div className="hidden items-center gap-2.5 xl:flex">
+            <div className="hidden items-center gap-2.5 lg:flex">
               <button
                 type="button"
                 onClick={() => navigate("/iniciosesion")}
                 className={`inline-flex whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-all duration-200 active:scale-95 cursor-pointer ${
                   isLight
                     ? 'border border-slate-300 text-[#0B132B] hover:border-slate-500 hover:bg-slate-50'
-                    : 'border border-slate-700 text-slate-200 hover:border-slate-500 hover:text-white'
+                    : 'border border-slate-600/80 bg-white/5 text-white hover:border-amber-400 hover:bg-white/10'
                 }`}
               >
                 Iniciar sesión
@@ -159,7 +162,7 @@ export default function Navbar({ variant = 'light', embedded = false }) {
             onClick={open}
             aria-label="Abrir menú"
             aria-expanded={isOpen}
-            className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors duration-200 cursor-pointer xl:hidden ${
+            className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors duration-200 cursor-pointer lg:hidden ${
               isLight
                 ? 'text-[#0B132B] hover:bg-slate-100'
                 : 'text-slate-200 hover:bg-slate-800 hover:text-white'
