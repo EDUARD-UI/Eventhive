@@ -142,7 +142,7 @@ export default function Registro() {
     } else if (userRole === 'MODERADOR') {
       navigate('/moderador');
     } else {
-      navigate('/perfil');
+      navigate('/');
     }
   };
 

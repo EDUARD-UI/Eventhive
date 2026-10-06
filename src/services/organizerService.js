@@ -132,9 +132,18 @@ export const organizationService = {
   eliminarDeseo(eventoId) {
     return organizerService.eliminarDeseo(eventoId);
   },
+
+  getCategorias() {
+    return organizerService.getCategorias();
+  },
 };
 
 export const organizerService = {
+  /** GET /api/categorias */
+  getCategorias() {
+    return httpClient.get('/categorias');
+  },
+
   async getDashboardSummary() {
     try {
       const data = await httpClient.get('/eventos/organizador', { page: 0, size: 100 });

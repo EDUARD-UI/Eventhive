@@ -101,20 +101,43 @@ export default function CreateEventWizard({ onBack, onSave, isDrawer = false }) 
     { nombre: 'General', precio: 50000, capacidad: 100 },
   ]);
 
+const DEFAULT_CATEGORIES = [
+  { id: 1, nombre: 'Música y Conciertos' },
+  { id: 2, nombre: 'Arte y Cultura' },
+  { id: 3, nombre: 'Gastronomía y Sabores' },
+  { id: 4, nombre: 'Deportes y Bienestar' },
+  { id: 5, nombre: 'Festivales y Tradición' },
+  { id: 6, nombre: 'Teatro y Espectáculos' },
+  { id: 7, nombre: 'Tecnología y Ferias' },
+];
+
   // Cargar categorías
   useEffect(() => {
-    organizerService
-      .getCategorias()
-      .then((res) => {
+    const fetchCategorias = async () => {
+      try {
+        const res = typeof organizerService?.getCategorias === 'function'
+          ? await organizerService.getCategorias()
+          : null;
         const cats = Array.isArray(res) ? res : res?.content || res?.data || [];
-        setCategories(cats);
-        if (cats.length > 0 && !form.categoriaId) {
-          setForm((prev) => ({ ...prev, categoriaId: String(cats[0].id) }));
+        if (cats && cats.length > 0) {
+          setCategories(cats);
+          if (!form.categoriaId) {
+            setForm((prev) => ({ ...prev, categoriaId: String(cats[0].id) }));
+          }
+          return;
         }
-      })
-      .catch((err) => {
-        console.warn('Error cargando categorías:', err);
-      });
+      } catch (err) {
+        console.warn('Error cargando categorías del servidor:', err);
+      }
+      // Fallback si la API no responde o tarda demasiado
+      setCategories(DEFAULT_CATEGORIES);
+      setForm((prev) => ({
+        ...prev,
+        categoriaId: prev.categoriaId || String(DEFAULT_CATEGORIES[0].id),
+      }));
+    };
+
+    fetchCategorias();
   }, []);
 
   const updateForm = (key, value) => {

@@ -14,7 +14,6 @@ import { session } from '../services/session.js';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import HiveEventCard from '../components/home/HiveEventCard.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
-import PasarelaPagoSimuladaModal from '../components/common/PasarelaPagoSimuladaModal.jsx';
 import { getCategoryGradient } from '../utils/formatters.js';
 
 /**
@@ -78,7 +77,6 @@ export default function EventDetailPage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [similarEvents, setSimilarEvents] = useState([]);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -250,7 +248,14 @@ export default function EventDetailPage() {
       return;
     }
 
-    setShowPaymentModal(true);
+    // Redirigir a la interfaz dedicada de pasarela de pago minimalista
+    navigate(`/pago/${event.id}`, {
+      state: {
+        event,
+        localidad: selectedLocalidad,
+        cantidad: ticketQuantity,
+      },
+    });
   };
 
   if (loading) {
@@ -724,16 +729,6 @@ export default function EventDetailPage() {
           </section>
         )}
       </main>
-
-      {/* Pasarela de Pagos Simulada (Requerimiento 12) */}
-      <PasarelaPagoSimuladaModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        event={event}
-        localidad={selectedLocalidad}
-        initialQuantity={ticketQuantity}
-        onSuccess={() => {}}
-      />
 
       <Footer />
     </div>

@@ -12,6 +12,7 @@ import InicioSesion from '../pages/InicioSesion.jsx';
 import Registro from '../pages/Registro.jsx';
 import RutaProtegida from './RutaProtegida.jsx';
 import PerfilRouteGuard from './PerfilRouteGuard.jsx';
+import PasarelaPagoPage from '../pages/PasarelaPagoPage.jsx';
 import { session, normalizeRole, getDashboardPathForRole } from '../services/session.js';
 import AcercaDe from '../pages/SobreNosotros/AcercaDe.jsx';
 import Privacidad from '../pages/SobreNosotros/Privacidad.jsx';
@@ -20,13 +21,17 @@ import Contacto from '../pages/SobreNosotros/Contacto.jsx';
 
 /**
  * Si el usuario ya está autenticado e intenta ir a /iniciosesion o /registro,
- * lo enviamos directamente a su panel correspondiente en vez de pedirle login de nuevo.
+ * lo enviamos directamente a su panel correspondiente (o home para cliente).
  */
 function GuestOnlyRoute({ children }) {
   const token = session.getToken();
   const user = session.getUser();
 
   if (token && user?.role) {
+    const role = normalizeRole(user.role);
+    if (role === 'CLIENTE') {
+      return <Navigate to="/" replace />;
+    }
     return <Navigate to={getDashboardPathForRole(user.role)} replace />;
   }
 
@@ -115,6 +120,40 @@ export default function AppRouter() {
           element={
             <RutaProtegida>
               <PerfilRouteGuard />
+            </RutaProtegida>
+          }
+        />
+
+        {/* Pasarela de Pago Minimalista (Interfaz nueva dedicada) */}
+        <Route
+          path="/pago/:id"
+          element={
+            <RutaProtegida>
+              <PasarelaPagoPage />
+            </RutaProtegida>
+          }
+        />
+        <Route
+          path="/pago"
+          element={
+            <RutaProtegida>
+              <PasarelaPagoPage />
+            </RutaProtegida>
+          }
+        />
+        <Route
+          path="/checkout/:id"
+          element={
+            <RutaProtegida>
+              <PasarelaPagoPage />
+            </RutaProtegida>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <RutaProtegida>
+              <PasarelaPagoPage />
             </RutaProtegida>
           }
         />

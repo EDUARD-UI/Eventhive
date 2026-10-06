@@ -74,10 +74,18 @@ export default function InicioSesion() {
       user?.rolNombre
     );
 
-    // Los organizadores entran con el rol REPRESENTANTE y se dirigen directamente a su dashboard (/organizacion)
-    const destination = userRole === 'REPRESENTANTE' || userRole === 'OPERADOR' || userRole === 'ORGANIZADOR'
-      ? '/organizacion'
-      : getDashboardPathForRole(userRole);
+    // Redirección por rol: Clientes van a Home (/), Organizadores a /organizacion, etc.
+    let destination = '/';
+    if (userRole === 'REPRESENTANTE' || userRole === 'OPERADOR' || userRole === 'ORGANIZADOR') {
+      destination = '/organizacion';
+    } else if (userRole === 'ADMINISTRADOR' || userRole === 'ADMIN') {
+      destination = '/admin';
+    } else if (userRole === 'MODERADOR') {
+      destination = '/moderador';
+    } else {
+      // Cliente se direcciona a home
+      destination = '/';
+    }
 
     navigate(destination, { replace: true });
   };
