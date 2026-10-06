@@ -17,7 +17,13 @@ export default function AdminLayout({
   const sessionUser = session.getUser();
   const userName = sessionUser?.name || 'Administrador';
   const userInitials = userName ? userName.substring(0, 2).toUpperCase() : 'AD';
-  const userPhoto = sessionUser?.fotoUrl || sessionUser?.foto || sessionUser?.imagenUrl || null;
+  const userPhoto =
+    sessionUser?.urlImagenPerfil ||
+    sessionUser?.imagenPerfil ||
+    sessionUser?.fotoUrl ||
+    sessionUser?.foto ||
+    sessionUser?.imagenUrl ||
+    null;
 
   return (
     <div className="admin-theme flex min-h-screen bg-[#f1f5f9] font-body text-slate-800">

@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fi';
 import Badge from '../../components/Shared/Badge.jsx';
 import { organizerService } from '../../services/organizerService.js';
+import Swal from 'sweetalert2';
 
 const toneMap = {
   PUBLICADO: 'active',
@@ -63,8 +64,21 @@ export default function EventDetailView({ eventId, onBack, onEdit }) {
       // Reload event detail
       const updated = await organizerService.getEventoDetalle(eventId);
       if (updated) setEvent(updated);
+      if (successMsg) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Acción realizada',
+          text: successMsg,
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
     } catch (err) {
-      alert(err.message || 'Error al realizar la acción');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message || 'Error al realizar la acción.',
+      });
     } finally {
       setActionLoading(false);
     }
@@ -119,7 +133,7 @@ export default function EventDetailView({ eventId, onBack, onEdit }) {
               {event.titulo}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Detalle del evento · ID #{event.id}
+              Detalle de la publicación cultural
             </p>
           </div>
         </div>
@@ -305,7 +319,7 @@ export default function EventDetailView({ eventId, onBack, onEdit }) {
                 Organización
               </h4>
               <p className="text-xs font-bold text-slate-800">{event.organizacion.nombre}</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">ID: #{event.organizacion.id}</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Organizador Oficial</p>
             </div>
           )}
         </aside>

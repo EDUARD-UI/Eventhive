@@ -125,8 +125,8 @@ export default function OrganizerEventCard({ event, onEdit, onManage }) {
 
       {/* Pie de acciones rápidas */}
       <div className="px-4 sm:px-5 pb-4 pt-3 border-t border-amber-100 flex items-center justify-between bg-[#FAF8F5]/50">
-        <span className="text-[11px] font-bold text-slate-500 font-mono">
-          #{id}
+        <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">
+          Cartelera
         </span>
 
         <div className="flex items-center gap-2">

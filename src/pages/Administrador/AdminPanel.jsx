@@ -28,6 +28,7 @@ import AdminUsuariosView from './AdminUsuariosView.jsx';
 import AdminCategoriasView from './AdminCategoriasView.jsx';
 import AdminPromocionesView from './AdminPromocionesView.jsx';
 import AdminHistorialView from './AdminHistorialView.jsx';
+import Swal from 'sweetalert2';
 import AdminSolicitudesView from './AdminSolicitudesView.jsx';
 import AdminPerfilView from './AdminPerfilView.jsx';
 
@@ -563,15 +564,25 @@ export default function AdminPanel() {
     if (!cat) return;
 
     if (cat.eventosAsociados > 0) {
-      alert(
-        `Salvaguarda de Integridad (Sección 7): La categoría "${cat.nombre}" tiene ${cat.eventosAsociados} eventos vinculados. Por favor, desactívela en lugar de eliminarla para preservar los tiquetes y publicaciones.`
-      );
+      Swal.fire({
+        icon: 'warning',
+        title: 'Salvaguarda de Integridad',
+        text: `La categoría "${cat.nombre}" tiene ${cat.eventosAsociados} eventos vinculados. Por favor, desactívela en lugar de eliminarla para preservar los tiquetes y publicaciones.`,
+      });
       return;
     }
 
-    if (!window.confirm(`¿Eliminar definitivamente la categoría "${cat.nombre}"?`)) {
-      return;
-    }
+    const confirmRes = await Swal.fire({
+      icon: 'warning',
+      title: '¿Eliminar categoría?',
+      text: `¿Eliminar definitivamente la categoría "${cat.nombre}"?`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#e11d48',
+    });
+
+    if (!confirmRes.isConfirmed) return;
 
     try {
       const res = await adminService.deleteCategoria(catId);

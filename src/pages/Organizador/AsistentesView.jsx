@@ -16,6 +16,7 @@ import {
 import StatCard from '../../components/Shared/StatCard.jsx';
 import DataTable from '../../components/Shared/DataTable.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
+import Swal from 'sweetalert2';
 
 const asistentesPorEvento = [
   {
@@ -245,7 +246,15 @@ export default function AsistentesView() {
         <div className="flex items-center gap-2.5">
           <button
             type="button"
-            onClick={() => alert('Exportando lista de asistentes en formato CSV/Excel...')}
+            onClick={() =>
+              Swal.fire({
+                icon: 'info',
+                title: 'Exportando lista',
+                text: 'Generando archivo de asistentes en formato CSV/Excel...',
+                timer: 2000,
+                showConfirmButton: false,
+              })
+            }
             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm transition-all"
           >
             <FiDownload size={14} /> Exportar lista

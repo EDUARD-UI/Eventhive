@@ -126,7 +126,17 @@ export default function Header({
   // Obtener datos de sesión para complementar email/nombre/foto si existen
   const sessionUser = session.getUser();
   const displayEmail = userEmail || sessionUser?.email || 'Sesión activa';
-  const displayPhoto = userPhoto || sessionUser?.fotoUrl || sessionUser?.foto || sessionUser?.imagenUrl || sessionUser?.imagen || null;
+  const displayPhoto =
+    userPhoto ||
+    sessionUser?.urlImagenPerfil ||
+    sessionUser?.imagenPerfil ||
+    sessionUser?.urlLogo ||
+    sessionUser?.logo ||
+    sessionUser?.fotoUrl ||
+    sessionUser?.foto ||
+    sessionUser?.imagenUrl ||
+    sessionUser?.imagen ||
+    null;
 
   // Manejador de clics fuera del dropdown y tecla Escape
   useEffect(() => {

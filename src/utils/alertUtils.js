@@ -1,5 +1,116 @@
 import Swal from 'sweetalert2';
 
+const defaultCustomClass = {
+  popup: 'rounded-3xl shadow-2xl border border-slate-100',
+  actions: 'flex items-center justify-center gap-3 mt-4 w-full',
+  confirmButton: 'inline-flex items-center justify-center py-2.5 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs uppercase tracking-wider shadow-sm hover:shadow-amber-500/25 active:scale-95 transition-all duration-200 cursor-pointer',
+  cancelButton: 'inline-flex items-center justify-center py-2.5 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider active:scale-95 transition-all duration-200 cursor-pointer',
+};
+
+/**
+ * Alerta de éxito con SweetAlert2
+ */
+export const showSuccessAlert = (title = '¡Éxito!', text = '') => {
+  return Swal.fire({
+    icon: 'success',
+    title,
+    text,
+    confirmButtonText: 'Aceptar',
+    confirmButtonColor: '#F59E0B',
+    customClass: defaultCustomClass,
+    buttonsStyling: false,
+  });
+};
+
+/**
+ * Alerta de error con SweetAlert2
+ */
+export const showErrorAlert = (title = 'Error', text = 'Ocurrió un error inesperado.') => {
+  return Swal.fire({
+    icon: 'error',
+    title,
+    text,
+    confirmButtonText: 'Entendido',
+    confirmButtonColor: '#0B1B3D',
+    customClass: defaultCustomClass,
+    buttonsStyling: false,
+  });
+};
+
+/**
+ * Alerta de advertencia con SweetAlert2
+ */
+export const showWarningAlert = (title = 'Atención', text = '') => {
+  return Swal.fire({
+    icon: 'warning',
+    title,
+    text,
+    confirmButtonText: 'Aceptar',
+    confirmButtonColor: '#F59E0B',
+    customClass: defaultCustomClass,
+    buttonsStyling: false,
+  });
+};
+
+/**
+ * Alerta informativa con SweetAlert2
+ */
+export const showInfoAlert = (title = 'Información', text = '') => {
+  return Swal.fire({
+    icon: 'info',
+    title,
+    text,
+    confirmButtonText: 'Entendido',
+    confirmButtonColor: '#0B1B3D',
+    customClass: defaultCustomClass,
+    buttonsStyling: false,
+  });
+};
+
+/**
+ * Alerta de confirmación con SweetAlert2 (devuelve Promise que resuelve { isConfirmed })
+ */
+export const showConfirmAlert = ({
+  title = '¿Estás seguro?',
+  text = 'Esta acción no se puede deshacer.',
+  confirmButtonText = 'Confirmar',
+  cancelButtonText = 'Cancelar',
+  isDanger = false,
+} = {}) => {
+  return Swal.fire({
+    icon: isDanger ? 'warning' : 'question',
+    title,
+    text,
+    showCancelButton: true,
+    confirmButtonText,
+    cancelButtonText,
+    reverseButtons: true,
+    customClass: {
+      ...defaultCustomClass,
+      confirmButton: isDanger
+        ? 'inline-flex items-center justify-center py-2.5 px-6 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-wider shadow-sm active:scale-95 transition-all duration-200 cursor-pointer'
+        : defaultCustomClass.confirmButton,
+    },
+    buttonsStyling: false,
+  });
+};
+
+/**
+ * Mensaje exacto requerido según Requisito 5 cuando la organización está en PENDIENTE_REVISION:
+ * "Su evento ha sido creado como borrador, por favor adjunte su RUT para verificación de su organización."
+ */
+export const showPendingRutAlert = () => {
+  return Swal.fire({
+    icon: 'info',
+    title: 'Organización en revisión',
+    text: 'Su evento ha sido creado como borrador, por favor adjunte su RUT para verificación de su organización.',
+    confirmButtonText: 'Entendido',
+    confirmButtonColor: '#0B1B3D',
+    customClass: defaultCustomClass,
+    buttonsStyling: false,
+  });
+};
+
 /**
  * Alerta profesional para solicitar inicio de sesión con icono SVG moderno y estilo EventHive.
  */
@@ -47,12 +158,7 @@ export const showLoginAlert = ({
     padding: '2rem 1.75rem',
     background: '#ffffff',
     buttonsStyling: false,
-    customClass: {
-      popup: 'rounded-3xl shadow-2xl border border-slate-100',
-      actions: 'flex items-center justify-center gap-3 mt-5 w-full',
-      confirmButton: 'inline-flex items-center justify-center py-2.5 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs uppercase tracking-wider shadow-sm hover:shadow-amber-500/25 active:scale-95 transition-all duration-200 cursor-pointer',
-      cancelButton: 'inline-flex items-center justify-center py-2.5 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider active:scale-95 transition-all duration-200 cursor-pointer',
-    },
+    customClass: defaultCustomClass,
   }).then((result) => {
     if (result.isConfirmed) {
       if (typeof navigate === 'function') {
@@ -102,16 +208,18 @@ export const showLocationPromptAlert = ({
     padding: '2rem 1.75rem',
     background: '#ffffff',
     buttonsStyling: false,
-    customClass: {
-      popup: 'rounded-3xl shadow-2xl border border-slate-100',
-      actions: 'flex items-center justify-center gap-3 mt-5 w-full',
-      confirmButton: 'inline-flex items-center justify-center py-2.5 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs uppercase tracking-wider shadow-sm hover:shadow-amber-500/25 active:scale-95 transition-all duration-200 cursor-pointer',
-      cancelButton: 'inline-flex items-center justify-center py-2.5 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider active:scale-95 transition-all duration-200 cursor-pointer',
-    },
+    customClass: defaultCustomClass,
   });
 };
 
 export default {
+  showAlert: Swal.fire,
+  showSuccessAlert,
+  showErrorAlert,
+  showWarningAlert,
+  showInfoAlert,
+  showConfirmAlert,
+  showPendingRutAlert,
   showLoginAlert,
   showLocationPromptAlert,
 };

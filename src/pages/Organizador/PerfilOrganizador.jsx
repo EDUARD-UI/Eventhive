@@ -16,6 +16,7 @@ import { organizerService } from '../../services/organizerService.js';
 import { userService } from '../../services/userService.js';
 import { httpClient } from '../../services/httpClient.js';
 import { session } from '../../services/session.js';
+import { showSuccessAlert, showErrorAlert, showWarningAlert } from '../../utils/alertUtils.js';
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/10';
@@ -139,11 +140,11 @@ export default function PerfilOrganizador() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!ALLOWED_TYPES.includes(file.type)) {
-      alert('Solo se permiten archivos PNG o JPEG.');
+      showWarningAlert('Formato no permitido', 'Solo se permiten archivos PNG o JPEG.');
       return;
     }
     if (file.size > MAX_IMAGE_SIZE) {
-      alert('La imagen no puede superar los 5 MB.');
+      showWarningAlert('Archivo pesado', 'La imagen no puede superar los 5 MB.');
       return;
     }
     setOrgImageFile(file);
@@ -170,9 +171,10 @@ export default function PerfilOrganizador() {
         setOrgImageFile(null);
       }
       setOrgSaved(true);
+      showSuccessAlert('Perfil actualizado', 'La información de tu organización ha sido guardada correctamente.');
       setTimeout(() => setOrgSaved(false), 4000);
     } catch (err) {
-      alert(err.message || 'Error al guardar perfil de organización');
+      showErrorAlert('Error al guardar', err.message || 'Error al guardar perfil de organización');
     }
   };
 
@@ -181,11 +183,11 @@ export default function PerfilOrganizador() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!ALLOWED_TYPES.includes(file.type)) {
-      alert('Solo se permiten archivos PNG o JPEG.');
+      showWarningAlert('Formato no permitido', 'Solo se permiten archivos PNG o JPEG.');
       return;
     }
     if (file.size > MAX_IMAGE_SIZE) {
-      alert('La imagen no puede superar los 5 MB.');
+      showWarningAlert('Archivo pesado', 'La imagen no puede superar los 5 MB.');
       return;
     }
     setRepImageFile(file);
@@ -218,9 +220,10 @@ export default function PerfilOrganizador() {
       }
 
       setRepSaved(true);
+      showSuccessAlert('Datos guardados', 'Tu perfil de representante ha sido actualizado.');
       setTimeout(() => setRepSaved(false), 4000);
     } catch (err) {
-      alert(err.message || 'Error al guardar perfil del representante');
+      showErrorAlert('Error al guardar', err.message || 'Error al guardar perfil del representante');
     }
   };
 
@@ -354,7 +357,8 @@ export default function PerfilOrganizador() {
                 <Field label="Descripción pública" className="md:col-span-2">
                   <textarea
                     rows="4"
-                    value={orgProfile.descripcion}
+                    value={orgProfile.descripcion || ''}
+                    placeholder="Añade una descripción para describir tu organización"
                     onChange={(e) => setOrgProfile((p) => ({ ...p, descripcion: e.target.value }))}
                     className={`${inputClass} resize-none leading-relaxed`}
                   />

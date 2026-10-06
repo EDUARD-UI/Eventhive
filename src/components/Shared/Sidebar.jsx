@@ -238,7 +238,7 @@ export default function Sidebar({
           </nav>
         </div>
 
-        {/* Pie del Sidebar: Volver a la plataforma */}
+        {/* Pie del Sidebar: IR AL INICIO */}
         <div
           className={`shrink-0 border-t border-white/10 pt-4 transition-all ${
             collapsed ? 'flex justify-center' : 'mr-3'
@@ -247,19 +247,19 @@ export default function Sidebar({
           {collapsed ? (
             <Link
               to="/"
-              title="Volver a la plataforma"
-              aria-label="Volver a la plataforma"
-              className="flex h-10 w-10 items-center justify-center text-slate-400 hover:text-white transition-colors rounded-xl hover:bg-white/5 active:scale-95"
+              title="IR AL INICIO"
+              aria-label="IR AL INICIO"
+              className="flex h-10 w-10 items-center justify-center text-amber-400 hover:text-white transition-colors rounded-xl hover:bg-white/5 active:scale-95 font-bold"
             >
               <FiArrowLeft size={18} />
             </Link>
           ) : (
             <Link
               to="/"
-              className="mt-1 flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors rounded-xl hover:bg-white/5"
+              className="mt-1 flex items-center gap-2.5 px-3 py-2 text-xs font-bold uppercase tracking-wider text-amber-400 hover:text-white transition-colors rounded-xl hover:bg-white/5"
             >
               <FiArrowLeft size={16} className="shrink-0" />
-              <span className="truncate">Volver a la plataforma</span>
+              <span className="truncate">IR AL INICIO</span>
             </Link>
           )}
         </div>

@@ -19,25 +19,6 @@ import Terminos from '../pages/SobreNosotros/Terminos.jsx';
 import Contacto from '../pages/SobreNosotros/Contacto.jsx';
 
 /**
- * Si un Administrador, Organizador o Moderador ingresa a la raíz (/),
- * se le redirige automáticamente a su panel de control para que no navegue
- * en vistas públicas de cliente.
- */
-function HomeRoute() {
-  const user = session.getUser();
-  const token = session.getToken();
-
-  if (token && user?.role) {
-    const role = normalizeRole(user.role);
-    if (role === 'ADMINISTRADOR' || role === 'ADMIN') return <Navigate to="/admin" replace />;
-    if (role === 'REPRESENTANTE' || role === 'ORGANIZADOR' || role === 'OPERADOR') return <Navigate to="/organizacion" replace />;
-    if (role === 'MODERADOR') return <Navigate to="/moderador" replace />;
-  }
-
-  return <Home />;
-}
-
-/**
  * Si el usuario ya está autenticado e intenta ir a /iniciosesion o /registro,
  * lo enviamos directamente a su panel correspondiente en vez de pedirle login de nuevo.
  */
@@ -57,8 +38,8 @@ export default function AppRouter() {
     <BrowserRouter>
       <ScrollToTop />
       <Routes>
-        {/* Ruta principal: con redirección inteligente si es Admin/Organizador */}
-        <Route path="/" element={<HomeRoute />} />
+        {/* Ruta principal: visible para todos los usuarios, incluidos los roles con dashboard */}
+        <Route path="/" element={<Home />} />
 
         {/* Rutas públicas */}
         <Route path="/eventos/:id" element={<EventDetailPage />} />

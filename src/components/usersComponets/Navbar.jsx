@@ -12,7 +12,7 @@ import { session, normalizeRole, getDashboardPathForRole } from "../../services/
  * Navbar Global de EventHive
  * Soporta variante "light", "dark" y modo "embedded" (integrado dentro del Hero sin divisiones).
  */
-export default function Navbar({ variant = 'light', embedded = false }) {
+export default function Navbar({ variant = 'dark', embedded = false }) {
   const { isOpen, open, close } = useDisclosure(false);
   const { isOpen: isHelpOpen, open: openHelp, close: closeHelp } = useDisclosure(false);
   const navigate = useNavigate();
@@ -43,7 +43,7 @@ export default function Navbar({ variant = 'light', embedded = false }) {
             ? `relative z-30 flex items-center justify-between gap-4 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 xl:px-12 py-4 sm:py-5 bg-transparent border-none shadow-none ${
                 isLight ? 'text-slate-800' : 'text-white'
               }`
-            : `sticky top-0 z-40 flex items-center justify-between gap-3 px-4 py-3.5 backdrop-blur-md sm:px-6 xl:px-10 ${
+            : `sticky top-0 z-50 flex items-center justify-between gap-3 px-4 py-3.5 backdrop-blur-md sm:px-6 xl:px-10 ${
                 isLight
                   ? 'bg-white/95 text-slate-800 border-b border-slate-200/80 shadow-[0_2px_12px_rgba(15,23,42,0.04)]'
                   : 'bg-[#0B132B]/95 text-white border-b border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.35)]'

@@ -53,6 +53,14 @@ export default function ModeradorLayout({
           userName={userName}
           userInitials={userInitials}
           userEmail={currentUser?.email}
+          userPhoto={
+            currentUser?.urlImagenPerfil ||
+            currentUser?.imagenPerfil ||
+            currentUser?.fotoUrl ||
+            currentUser?.foto ||
+            currentUser?.imagenUrl ||
+            null
+          }
           onMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
         />
 

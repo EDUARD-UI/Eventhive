@@ -154,7 +154,17 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
   const payload = await response.json().catch(() => null);
 
   if (!response.ok || payload?.success === false) {
-    throw new Error(payload?.mensaje || 'Ocurrió un error al procesar la solicitud.');
+    const error = new Error(payload?.mensaje || 'Ocurrió un error al procesar la solicitud.');
+    error.status = response.status;
+    error.payload = payload;
+    throw error;
+  }
+
+  // Si data es un objeto, adjuntamos el mensaje original del backend
+  if (payload?.data && typeof payload.data === 'object' && !Array.isArray(payload.data) && payload.mensaje) {
+    if (!payload.data.mensaje) {
+      payload.data._mensaje = payload.mensaje;
+    }
   }
 
   return payload?.data;

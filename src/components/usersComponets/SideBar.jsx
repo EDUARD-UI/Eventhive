@@ -47,7 +47,7 @@ export default function SideBar({ role, items, activeItem, onSelect, variant = '
             </div>
             <div className="shrink-0 border-t border-white/10 pt-4 mr-4">
                 <button type="button" className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors rounded-xl hover:bg-white/5"><FiSettings size={15} /> Configuración</button>
-                <Link to="/" className="mt-1 flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors rounded-xl hover:bg-white/5"><FiArrowLeft size={15} /> Volver a la plataforma</Link>
+                <Link to="/" className="mt-1 flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase tracking-wider text-amber-400 hover:text-white transition-colors rounded-xl hover:bg-white/5"><FiArrowLeft size={15} /> IR AL INICIO</Link>
             </div>
         </aside>
     );

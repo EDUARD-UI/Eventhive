@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   FiMapPin,
   FiCalendar,
@@ -18,11 +18,15 @@ import {
   FiArrowRight,
   FiKey,
   FiShield,
+  FiCamera,
+  FiUpload,
+  FiCheck,
 } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
+import EventListCard from '../components/common/EventListCard.jsx';
 import { userService } from '../services/userService.js';
 import { organizerService } from '../services/organizerService.js';
 import { normalizeEvent } from '../services/eventService.js';
@@ -46,7 +50,20 @@ const getInitials = (name = '') => {
 
 export default function PerfilUsuario() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('guardados');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') || 'guardados';
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const targetTab = params.get('tab') || location.state?.activeTab;
+    if (targetTab) {
+      setActiveTab(targetTab);
+    }
+  }, [location]);
+
   const [ticketModal, setTicketModal] = useState(null);
   const [editModal, setEditModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -61,9 +78,16 @@ export default function PerfilUsuario() {
     telefono: '',
     ciudad: 'Cartagena de Indias',
     rol: 'CLIENTE',
+    urlImagenPerfil: null,
     notifEmail: true,
     notifWhatsapp: true,
   });
+
+  // Estado para carga de foto de perfil
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Datos reales de listas
   const [guardados, setGuardados] = useState([]);
@@ -97,6 +121,13 @@ export default function PerfilUsuario() {
               telefono: perfilData.telefono || '',
               ciudad: perfilData.ciudad || 'Cartagena de Indias',
               rol: perfilData.rol || sessionUser.role || 'CLIENTE',
+              urlImagenPerfil:
+                perfilData.urlImagenPerfil ||
+                perfilData.imagen ||
+                perfilData.foto ||
+                sessionUser.urlImagenPerfil ||
+                sessionUser.avatar ||
+                null,
             }));
           }
         } catch (err) {
@@ -106,6 +137,7 @@ export default function PerfilUsuario() {
               ...prev,
               nombreCompleto: sessionUser.name || 'Usuario',
               correo: sessionUser.email || '',
+              urlImagenPerfil: sessionUser.urlImagenPerfil || sessionUser.avatar || null,
             }));
           }
         }
@@ -248,6 +280,72 @@ export default function PerfilUsuario() {
         text: 'No se pudo eliminar el evento de tus favoritos.',
       });
     }
+  };
+
+  // Manejo de selección de foto
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Archivo no válido',
+        text: 'Por favor selecciona un archivo de imagen válido (JPG, PNG, WebP).',
+      });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Imagen muy pesada',
+        text: 'El tamaño de la imagen no debe superar los 5MB.',
+      });
+      return;
+    }
+    setSelectedPhotoFile(file);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPhotoPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Subir foto de perfil (PUT /api/usuarios/perfil/imagen)
+  const handleUploadPhoto = async () => {
+    if (!selectedPhotoFile) return;
+    setIsUploadingPhoto(true);
+    try {
+      const res = await userService.uploadFotoPerfil(selectedPhotoFile);
+      const newUrl = res?.urlImagenPerfil || res?.url || res?.data?.urlImagenPerfil || photoPreview;
+      setUsuario((prev) => ({
+        ...prev,
+        urlImagenPerfil: newUrl,
+      }));
+      session.updateUser({ urlImagenPerfil: newUrl });
+      setSelectedPhotoFile(null);
+      setPhotoPreview(null);
+      Swal.fire({
+        icon: 'success',
+        title: 'Foto actualizada',
+        text: 'Tu foto de perfil ha sido actualizada exitosamente.',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al subir foto',
+        text: err.message || 'No se pudo actualizar tu foto de perfil. Intenta de nuevo.',
+      });
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleCancelPhoto = () => {
+    setSelectedPhotoFile(null);
+    setPhotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   // Guardar datos de perfil (PUT /usuarios/perfil)
@@ -416,20 +514,74 @@ export default function PerfilUsuario() {
               </button>
 
               <div className="flex flex-col items-center text-center">
-                {/* Avatar circular limpio con iniciales */}
-                <div className="relative mb-4">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-200 p-[3px] shadow-md">
-                    <div className="w-full h-full rounded-full bg-[#0B1B3D] flex items-center justify-center text-amber-300 text-2xl font-black select-none">
-                      {getInitials(usuario.nombreCompleto)}
-                    </div>
+                {/* Input de archivo oculto */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoSelect}
+                  className="hidden"
+                />
+
+                {/* Avatar circular limpio con iniciales o foto */}
+                <div className="relative mb-4 group">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-200 p-[3px] shadow-md overflow-hidden relative">
+                    {photoPreview || usuario.urlImagenPerfil ? (
+                      <img
+                        src={photoPreview || usuario.urlImagenPerfil}
+                        alt={usuario.nombreCompleto}
+                        className="w-full h-full rounded-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-full bg-[#0B1B3D] flex items-center justify-center text-amber-300 text-2xl font-black select-none">
+                        {getInitials(usuario.nombreCompleto)}
+                      </div>
+                    )}
                   </div>
-                  <span
-                    className="absolute bottom-0 right-0 p-1.5 rounded-full bg-emerald-500 text-white ring-2 ring-white shadow-xs"
-                    title="Usuario Verificado"
+
+                  {/* Botón para cambiar foto */}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Cambiar foto de perfil"
+                    disabled={isUploadingPhoto}
+                    className="absolute bottom-0 right-0 p-2 rounded-full bg-[#0B1B3D] text-amber-400 hover:text-white hover:bg-amber-600 transition-colors shadow-md border-2 border-white cursor-pointer"
                   >
-                    <FiCheckCircle size={13} />
-                  </span>
+                    <FiCamera size={14} />
+                  </button>
                 </div>
+
+                {/* Botones de acción si hay foto seleccionada pendiente de subir */}
+                {selectedPhotoFile && (
+                  <div className="mb-4 flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleUploadPhoto}
+                      disabled={isUploadingPhoto}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm transition-all cursor-pointer disabled:opacity-60"
+                    >
+                      {isUploadingPhoto ? (
+                        <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <FiUpload size={12} />
+                      )}
+                      <span>{isUploadingPhoto ? 'Subiendo...' : 'Guardar Foto'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelPhoto}
+                      disabled={isUploadingPhoto}
+                      className="px-2.5 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-[11px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer"
+                    >
+                      <FiX size={12} />
+                      <span>Cancelar</span>
+                    </button>
+                  </div>
+                )}
 
                 {/* Nombre del Usuario */}
                 <h2 className="text-xl font-bold font-display text-[#0B1B3D] truncate max-w-[260px]">
@@ -583,7 +735,7 @@ export default function PerfilUsuario() {
                             {/* Cabecera del Boleto */}
                             <div className="p-5 bg-[#0B1B3D] text-white relative border-b-2 border-amber-400">
                               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider mb-2">
-                                <span className="text-amber-400">{ticket.id}</span>
+                                <span className="text-amber-400 font-bold tracking-wider">Boleto Digital</span>
                                 <span className="bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full font-black">
                                   {ticket.zona}
                                 </span>
@@ -631,7 +783,7 @@ export default function PerfilUsuario() {
                                     <p className="text-[11px] font-black text-emerald-700 flex items-center gap-1">
                                       <FiCheckCircle size={12} /> {ticket.estado}
                                     </p>
-                                    <p className="text-[10px] text-slate-500 font-mono">ID: {ticket.id}</p>
+                                    <p className="text-[10px] text-slate-500 font-medium">Acceso Oficial</p>
                                   </div>
                                 </div>
 
@@ -871,76 +1023,19 @@ export default function PerfilUsuario() {
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           {eventosVisibles.map((evento) => (
-                            <article
-                              key={evento.id}
-                              className="bg-white border-2 border-amber-200/90 hover:border-amber-400 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between"
-                            >
-                              <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
-                                <ImageWithFallback
-                                  src={evento.photo}
-                                  alt={evento.title}
-                                  className="h-full w-full"
-                                  imgClassName="group-hover:scale-105 duration-500 object-cover"
-                                  fallbackClassName="h-full w-full"
-                                  fallbackGradient={getCategoryGradient(evento.category)}
-                                  fallbackText={evento.category || 'Evento'}
-                                  iconSize={26}
+                            <div key={evento.id} className="relative group">
+                              <EventListCard event={evento} />
+                              {activeTab === 'guardados' && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleRemoveDeseo(e, evento.id)}
+                                  title="Quitar de favoritos"
+                                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/95 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center shadow-md z-20 transition-colors cursor-pointer"
                                 >
-                                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
-
-                                  <span className="absolute left-3 top-3 text-[10px] font-black uppercase tracking-wider bg-[#0B172C] text-amber-300 border border-amber-400/40 px-2.5 py-1 rounded-lg shadow-xs z-10 flex items-center gap-1">
-                                    <span>⬡</span>
-                                    <span>{evento.category}</span>
-                                  </span>
-
-                                  {activeTab === 'guardados' && (
-                                    <button
-                                      type="button"
-                                      onClick={(e) => handleRemoveDeseo(e, evento.id)}
-                                      title="Quitar de favoritos"
-                                      className="absolute right-3 top-3 w-8 h-8 rounded-full bg-white/95 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center shadow-md z-10 transition-colors cursor-pointer"
-                                    >
-                                      <FiTrash2 size={14} />
-                                    </button>
-                                  )}
-                                </ImageWithFallback>
-                              </div>
-
-                              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                                <div>
-                                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-900 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md inline-block mb-1.5">
-                                    {evento.category}
-                                  </span>
-                                  <h3 className="text-base font-black leading-snug text-[#0B1B3D] group-hover:text-amber-700 transition-colors line-clamp-2">
-                                    {evento.title}
-                                  </h3>
-
-                                  <div className="space-y-1.5 text-xs text-slate-600 mt-2.5 font-medium">
-                                    <p className="flex items-center gap-2">
-                                      <FiCalendar className="text-amber-600 shrink-0" size={14} />
-                                      <span>{evento.date}</span>
-                                    </p>
-                                    <p className="flex items-center gap-2 truncate">
-                                      <FiMapPin className="text-rose-500 shrink-0" size={14} />
-                                      <span className="truncate">{evento.location}</span>
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="pt-3 border-t border-amber-100 flex items-center justify-between">
-                                  <span className="text-xs font-black text-slate-900">
-                                    {formatPrice(evento.price)}
-                                  </span>
-                                  <Link
-                                    to={`/eventos/${evento.id}`}
-                                    className="text-xs font-black uppercase tracking-wider text-amber-700 hover:text-amber-800 transition-colors inline-flex items-center gap-1 group"
-                                  >
-                                    <span>Ver detalle</span>
-                                    <FiArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
-                                  </Link>
-                                </div>
-                              </div>
-                            </article>
+                                  <FiTrash2 size={14} />
+                                </button>
+                              )}
+                            </div>
                           ))}
                         </div>
                       )}
@@ -978,7 +1073,9 @@ export default function PerfilUsuario() {
                 alt="QR Code"
                 className="w-48 h-48 mx-auto object-contain rounded-lg"
               />
-              <p className="font-mono text-xs text-slate-600 font-bold mt-2">{ticketModal.id}</p>
+              <p className="font-mono text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-widest">
+                Código de Acceso Oficial
+              </p>
             </div>
 
             <div className="text-xs text-slate-700 text-left bg-[#FAF8F5] p-3.5 rounded-2xl mb-5 space-y-1 font-medium border border-amber-100">

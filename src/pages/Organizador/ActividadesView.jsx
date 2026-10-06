@@ -18,6 +18,7 @@ import StatCard from '../../components/Shared/StatCard.jsx';
 import DataTable from '../../components/Shared/DataTable.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
+import Swal from 'sweetalert2';
 
 const ACTIVIDADES_SEED = [
   {
@@ -298,8 +299,16 @@ export default function ActividadesView() {
 
           <button
             type="button"
-            onClick={() => alert('Descargando bitácora de auditoría en formato CSV certificado...')}
-            className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:border-brand hover:text-brand shadow-sm transition-all shrink-0"
+            onClick={() =>
+              Swal.fire({
+                icon: 'info',
+                title: 'Exportando bitácora',
+                text: 'Descargando bitácora de auditoría en formato CSV certificado...',
+                timer: 2000,
+                showConfirmButton: false,
+              })
+            }
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:border-brand hover:text-brand shadow-sm transition-all shrink-0 cursor-pointer"
           >
             <FiDownload size={14} /> Exportar
           </button>

@@ -216,19 +216,6 @@ export default function AdminCategoriasView({
 
                           <button
                             type="button"
-                            onClick={() => onToggleEstadoCategoria(cat.id, cat.activa === false)}
-                            className={`py-1.5 px-2.5 rounded-xl text-[11px] font-bold transition-colors ${
-                              cat.activa !== false
-                                ? 'text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200'
-                                : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200'
-                            }`}
-                            title={cat.activa !== false ? 'Desactivar Categoría' : 'Activar Categoría'}
-                          >
-                            {cat.activa !== false ? 'Desactivar' : 'Activar'}
-                          </button>
-
-                          <button
-                            type="button"
                             onClick={() => onEliminarCategoria(cat.id)}
                             className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-colors"
                             title={tieneEventos ? 'Desactivación sugerida (tiene eventos asociados)' : 'Eliminar categoría'}

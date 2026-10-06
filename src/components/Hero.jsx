@@ -5,7 +5,6 @@ import HoneycombCanvas from './home/HoneycombCanvas.jsx';
 import BeeParticles from './home/BeeParticles.jsx';
 import CartagenaHiveSkyline from './home/CartagenaHiveSkyline.jsx';
 import SearchCard from './SearchCard.jsx';
-import Navbar from './usersComponets/Navbar.jsx';
 import cartagenaHero from '../assets/cartagena-hero.jpg';
 
 export default function Hero() {
@@ -63,11 +62,6 @@ export default function Hero() {
         <div className="hidden lg:block absolute -right-6 top-1/2 -translate-y-1/2 w-[340px] h-[340px] opacity-[0.06] select-none">
           <AppLogo showName={false} className="h-full w-full" />
         </div>
-      </div>
-
-      {/* Header de Navegación Integrado Dentro del Hero (Estilo Seamless / Sin Divisiones) */}
-      <div className="relative z-30 w-full pointer-events-auto border-b border-amber-400/10">
-        <Navbar embedded={true} variant="dark" />
       </div>
 
       {/* Contenido Principal */}

@@ -232,6 +232,73 @@ export const organizerService = {
     return httpClient.get(`/eventos/organizador/${id}`);
   },
 
+  /** POST /api/eventos/{eventoId}/localidades */
+  agregarLocalidad(eventoId, localidadData) {
+    return httpClient.post(`/eventos/${eventoId}/localidades`, localidadData);
+  },
+
+  /** GET /api/organizaciones/mi-organizacion/estadisticas */
+  getEstadisticasMiOrganizacion({ page = 0, size = 10 } = {}) {
+    return httpClient.get('/organizaciones/mi-organizacion/estadisticas', { page, size });
+  },
+
+  /** GET /api/organizaciones/mis-operadores */
+  getMisOperadores({ page = 0, size = 10 } = {}) {
+    return httpClient.get('/organizaciones/mis-operadores', { page, size });
+  },
+
+  /** GET /api/organizaciones/invitaciones-enviadas */
+  getInvitacionesEnviadas({ page = 0, size = 10 } = {}) {
+    return httpClient.get('/organizaciones/invitaciones-enviadas', { page, size });
+  },
+
+  /** POST /api/organizaciones/invitar?correo=... */
+  invitarOperador(correo) {
+    return httpClient.post('/organizaciones/invitar', null, { params: { correo } });
+  },
+
+  /** DELETE /api/organizaciones/expulsar-operador/{operadorId} */
+  expulsarOperador(operadorId) {
+    return httpClient.delete(`/organizaciones/expulsar-operador/${operadorId}`);
+  },
+
+  /** PATCH /api/organizaciones/operadores/{operadorId}/actualizar-permisos */
+  actualizarPermisosOperador(operadorId, permisos) {
+    return httpClient.patch(`/organizaciones/operadores/${operadorId}/actualizar-permisos`, {
+      permisos: Array.isArray(permisos) ? permisos : Array.from(permisos || []),
+    });
+  },
+
+  /** POST /api/compras/eventos/{eventoId}/posicionamiento/pagos */
+  iniciarPagoPosicionamiento(eventoId) {
+    return httpClient.post(`/compras/eventos/${eventoId}/posicionamiento/pagos`);
+  },
+
+  /** GET /api/compras/posicionamiento/pagos/{pagoId} */
+  getPagoPosicionamiento(pagoId) {
+    return httpClient.get(`/compras/posicionamiento/pagos/${pagoId}`);
+  },
+
+  /** PATCH /api/compras/posicionamiento/pagos/{pagoId}/confirmar-simulado */
+  confirmarPagoSimulado(pagoId) {
+    return httpClient.patch(`/compras/posicionamiento/pagos/${pagoId}/confirmar-simulado`);
+  },
+
+  /** POST /api/promociones/eventos/{eventoId}/posicionar */
+  posicionarEvento(eventoId, urlImagenDestacado) {
+    return httpClient.post(`/promociones/eventos/${eventoId}/posicionar`, { urlImagenDestacado });
+  },
+
+  /** DELETE /api/promociones/eventos/{eventoId}/posicionar */
+  quitarPosicionamiento(eventoId) {
+    return httpClient.delete(`/promociones/eventos/${eventoId}/posicionar`);
+  },
+
+  /** POST /api/compras — crear compra con idempotencyKey e items */
+  crearCompra(compraData) {
+    return httpClient.post('/compras', compraData);
+  },
+
   /** GET /api/compras — mis compras paginadas */
   getMisCompras({ page = 0, size = 10 } = {}) {
     return httpClient.get('/compras', { page, size });

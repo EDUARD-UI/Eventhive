@@ -15,6 +15,7 @@ import Badge from '../../components/Shared/Badge.jsx';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import { organizerService } from '../../services/organizerService.js';
 import { getCategoryNames } from '../../services/categoryService.js';
+import Swal from 'sweetalert2';
 
 const toneMap = {
   PUBLICADO: 'active',
@@ -64,7 +65,7 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
           date: e.fecha || e.date || 'Próximamente',
           time: e.hora || e.time || '7:00 PM',
           location: e.lugar || e.ubicacion || e.location || '',
-          status: labelMap[e.estado] || e.estado || 'Borrador',
+          status: e.estado || 'BORRADOR',
           rawStatus: e.estado || 'BORRADOR',
           tone: toneMap[e.estado] || 'warning',
           photo: e.foto || e.imagen || null,
@@ -110,12 +111,32 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
   const handleDelete = async (eventId, rawStatus) => {
     // Item 4: Finalized events cannot be deleted
     if (rawStatus === 'FINALIZADO') return;
-    if (!confirm('¿Estás seguro de que deseas eliminar este evento?')) return;
+    const confirmRes = await Swal.fire({
+      icon: 'warning',
+      title: '¿Eliminar evento?',
+      text: '¿Estás seguro de que deseas eliminar este evento? Esta acción no se puede deshacer.',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#e11d48',
+    });
+    if (!confirmRes.isConfirmed) return;
     try {
       await organizerService.eliminarEvento(eventId);
       setOrganizerEvents((prev) => prev.filter((e) => e.id !== eventId));
+      Swal.fire({
+        icon: 'success',
+        title: 'Evento eliminado',
+        text: 'El evento ha sido eliminado correctamente.',
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } catch (err) {
-      alert(err.message || 'Error al eliminar el evento');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al eliminar',
+        text: err.message || 'No se pudo eliminar el evento.',
+      });
     }
   };
 

@@ -16,6 +16,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import Badge from '../Shared/Badge.jsx';
+import Swal from 'sweetalert2';
 
 export default function ModalPerfilOrganizacionAdmin({
   organizacion,
@@ -163,8 +164,16 @@ export default function ModalPerfilOrganizacionAdmin({
 
               <button
                 type="button"
-                onClick={() => alert('Abriendo visor seguro del documento RUT privado...')}
-                className="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-[#087fea] hover:text-white text-slate-700 text-xs font-bold transition-all inline-flex items-center gap-1"
+                onClick={() =>
+                  Swal.fire({
+                    icon: 'info',
+                    title: 'Documento Tributario RUT',
+                    text: 'Abriendo visor seguro del documento RUT privado...',
+                    timer: 2000,
+                    showConfirmButton: false,
+                  })
+                }
+                className="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-[#087fea] hover:text-white text-slate-700 text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer"
               >
                 <span>Ver RUT</span>
                 <ExternalLink className="w-3 h-3" strokeWidth={1.75} />

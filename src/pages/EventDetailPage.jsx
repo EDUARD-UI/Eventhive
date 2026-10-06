@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { FiCalendar, FiMapPin, FiArrowLeft, FiHeart, FiShare2, FiShield, FiTag, FiClock, FiCheckCircle } from 'react-icons/fi';
+import { FiCalendar, FiMapPin, FiArrowLeft, FiHeart, FiShare2, FiShield, FiTag, FiClock, FiCheckCircle, FiPlus, FiMinus } from 'react-icons/fi';
 import { Sparkles } from 'lucide-react';
 import L from 'leaflet';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';
@@ -14,6 +14,7 @@ import { session } from '../services/session.js';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import HiveEventCard from '../components/home/HiveEventCard.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
+import PasarelaPagoSimuladaModal from '../components/common/PasarelaPagoSimuladaModal.jsx';
 import { getCategoryGradient } from '../utils/formatters.js';
 
 /**
@@ -73,9 +74,11 @@ export default function EventDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedLocalidad, setSelectedLocalidad] = useState(null);
+  const [ticketQuantity, setTicketQuantity] = useState(1);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [similarEvents, setSimilarEvents] = useState([]);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -236,7 +239,7 @@ export default function EventDetailPage() {
     }
   };
 
-  const handlePurchase = async () => {
+  const handlePurchase = () => {
     const user = session.getUser();
     if (!user) {
       showLoginAlert({
@@ -247,56 +250,7 @@ export default function EventDetailPage() {
       return;
     }
 
-    const { value: cantidad } = await Swal.fire({
-      title: 'Comprar Entradas',
-      html: `
-        <div style="text-align: left; font-size: 14px; background: #FAF8F5; padding: 16px; border-radius: 16px; border: 1px solid #FDE68A;">
-          <p style="margin-bottom: 6px; color: #0B1B3D;"><strong>⬡ Evento:</strong> ${event.title}</p>
-          <p style="margin-bottom: 6px; color: #0B1B3D;"><strong>⬡ Localidad:</strong> ${selectedLocalidad?.nombre || 'General'}</p>
-          <p style="color: #B45309;"><strong>⬡ Precio unitario:</strong> $${displayedPrice.toLocaleString('es-CO')} COP</p>
-        </div>
-      `,
-      input: 'number',
-      inputValue: 1,
-      inputAttributes: {
-        min: '1',
-        max: '10',
-        step: '1',
-      },
-      showCancelButton: true,
-      confirmButtonText: 'Confirmar y Proceder',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#F59E0B',
-      cancelButtonColor: '#64748B',
-      inputValidator: (val) => {
-        if (!val || val < 1) return 'Ingresa una cantidad válida.';
-        return null;
-      },
-    });
-
-    if (cantidad) {
-      try {
-        const payload = {
-          eventoId: Number(event.id),
-          localidadId: selectedLocalidad?.id && typeof selectedLocalidad.id === 'number' ? selectedLocalidad.id : undefined,
-          cantidad: Number(cantidad),
-        };
-        await httpClient.post('/compras', payload);
-        Swal.fire({
-          icon: 'success',
-          title: '¡Compra confirmada!',
-          html: `Has adquirido <strong>${cantidad}</strong> entrada(s) para <strong>${event.title}</strong>.<br/><br/><span style="color:#D97706; font-size:13px;">Revisa tu panel de usuario para ver tus tickets y código QR de acceso.</span>`,
-          confirmButtonColor: '#0B1B3D',
-        });
-      } catch (err) {
-        Swal.fire({
-          icon: 'error',
-          title: 'No se pudo procesar la compra',
-          text: err.message || 'Ocurrió un error al procesar la transacción.',
-          confirmButtonColor: '#0B1B3D',
-        });
-      }
-    }
+    setShowPaymentModal(true);
   };
 
   if (loading) {
@@ -506,16 +460,20 @@ export default function EventDetailPage() {
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="relative w-14 h-14 shrink-0 rounded-2xl overflow-hidden bg-white border border-slate-200 flex items-center justify-center">
-                    <ImageWithFallback
-                      src={orgAvatar}
-                      alt={orgName}
-                      showText={false}
-                      className="w-full h-full object-cover"
-                      imgClassName="w-full h-full object-cover"
-                      fallbackClassName="w-full h-full"
-                      iconSize={20}
-                    />
+                  <div className="relative w-14 h-14 shrink-0 rounded-2xl overflow-hidden bg-[#087fea] text-white border border-slate-200 flex items-center justify-center font-black text-lg shadow-xs">
+                    {orgAvatar ? (
+                      <img
+                        src={orgAvatar}
+                        alt={orgName}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <span>{orgName ? orgName.slice(0, 2).toUpperCase() : 'EH'}</span>
+                    )}
                   </div>
 
                   <div className="min-w-0">
@@ -596,8 +554,8 @@ export default function EventDetailPage() {
                   <span className="text-[10px] font-mono font-black uppercase tracking-widest text-slate-500 bg-slate-100 px-2.5 py-1 rounded">
                     BOLETO OFICIAL
                   </span>
-                  <span className="text-[11px] font-mono font-bold text-slate-400">
-                    #EH-{String(event.id).padStart(8, '0')}
+                  <span className="text-[11px] font-mono font-bold text-amber-500 uppercase tracking-widest">
+                    Acceso Oficial
                   </span>
                 </div>
 
@@ -661,6 +619,50 @@ export default function EventDetailPage() {
                 </div>
               )}
 
+              {/* Selector de Cantidad de Boletas (Requerimiento: Mínimo 1, Máximo 5) */}
+              <div className="space-y-2 p-3.5 bg-slate-50 border border-slate-200/90 rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-black text-slate-900 uppercase tracking-wider block">
+                      Cantidad de Boletas
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-medium">
+                      Mínimo 1 · Máximo 5
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => setTicketQuantity((q) => Math.max(1, q - 1))}
+                      disabled={ticketQuantity <= 1}
+                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      title="Disminuir boletas"
+                    >
+                      <FiMinus size={12} />
+                    </button>
+                    <span className="w-6 text-center font-black text-sm text-slate-950">
+                      {ticketQuantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setTicketQuantity((q) => Math.min(5, q + 1))}
+                      disabled={ticketQuantity >= 5}
+                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      title="Aumentar boletas"
+                    >
+                      <FiPlus size={12} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between text-xs">
+                  <span className="text-slate-600 font-semibold">Subtotal estimado:</span>
+                  <span className="font-extrabold text-[#0B1B3D]">
+                    ${(displayedPrice * ticketQuantity).toLocaleString('es-CO')} COP
+                  </span>
+                </div>
+              </div>
+
               {/* Botones de Acción */}
               <div className="space-y-3 pt-2">
                 <button
@@ -722,6 +724,16 @@ export default function EventDetailPage() {
           </section>
         )}
       </main>
+
+      {/* Pasarela de Pagos Simulada (Requerimiento 12) */}
+      <PasarelaPagoSimuladaModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        event={event}
+        localidad={selectedLocalidad}
+        initialQuantity={ticketQuantity}
+        onSuccess={() => {}}
+      />
 
       <Footer />
     </div>

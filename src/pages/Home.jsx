@@ -14,9 +14,10 @@ import FeaturedEventsCarousel from '../components/home/FeaturedEventsCarousel.js
 import HiveEventCard from '../components/home/HiveEventCard.jsx';
 import CategoryTickerCarousel from '../components/home/CategoryTickerCarousel.jsx';
 import HiveEmptyState from '../components/home/HiveEmptyState.jsx';
-import FeaturedEventBanner from '../components/home/FeaturedEventBanner.jsx';
+import HomeBannersSection from '../components/home/HomeBannersSection.jsx';
 import OrganizerCtaSection from '../components/home/OrganizerCtaSection.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
+import Navbar from '../components/usersComponets/Navbar.jsx';
 import CustomSelect from '../components/common/CustomSelect.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
 import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
@@ -243,6 +244,9 @@ export default function Home() {
 
   return (
     <div className="w-full min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body">
+
+      {/* Navbar Superior Fijo / Sticky */}
+      <Navbar variant="dark" />
 
       {/* Hero Principal con Buscador Integrado */}
       <Hero />
@@ -485,8 +489,8 @@ export default function Home() {
         <CategoryTickerCarousel />
       </section>
 
-      {/* 6. Evento Destacado: Banner Horizontal Full-Width */}
-      <FeaturedEventBanner />
+      {/* 6. Banners Asimétricos (/api/banners-home) */}
+      <HomeBannersSection />
 
       {/* 7. Franja CTA para Organizadores: Justo encima del Footer */}
       <OrganizerCtaSection />

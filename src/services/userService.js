@@ -14,6 +14,13 @@ export const userService = {
     });
   },
 
+  /** PUT /api/usuarios/perfil/imagen — multipart/form-data with part 'imagen' */
+  uploadFotoPerfil(file) {
+    const formData = new FormData();
+    formData.append('imagen', file);
+    return httpClient.put('/usuarios/perfil/imagen', formData, { isFormData: true });
+  },
+
   /** PUT /api/usuarios/perfil/cambiar-clave */
   changePassword(claveActual, claveNueva) {
     return httpClient.put('/usuarios/perfil/cambiar-clave', {

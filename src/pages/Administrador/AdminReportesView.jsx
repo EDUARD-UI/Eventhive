@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import AdminInfoAlert from '../../components/componentsAdmin/AdminInfoAlert.jsx';
 import adminService from '../../features/admin/services/adminService.js';
+import Swal from 'sweetalert2';
 
 export default function AdminReportesView({
   commercialMetrics = {},
@@ -111,8 +112,16 @@ export default function AdminReportesView({
 
           <button
             type="button"
-            onClick={() => alert('Generando informe consolidado de ventas...')}
-            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
+            onClick={() =>
+              Swal.fire({
+                icon: 'info',
+                title: 'Generando informe',
+                text: 'Generando informe consolidado de ventas...',
+                timer: 2000,
+                showConfirmButton: false,
+              })
+            }
+            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
             <span>Exportar Informe</span>
