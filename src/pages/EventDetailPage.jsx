@@ -14,6 +14,8 @@ import { session } from '../services/session.js';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import HiveEventCard from '../components/home/HiveEventCard.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
+import PasarelaPagoSimuladaModal from '../components/common/PasarelaPagoSimuladaModal.jsx';
+import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 import { getCategoryGradient } from '../utils/formatters.js';
 
 /**
@@ -305,12 +307,13 @@ export default function EventDetailPage() {
       </div>
     );
   }
-
+  
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body">
+    <div className="min-h-screen flex flex-col text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body relative">
+      <FloatingDotsBackground />
       <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 relative z-10">
         {/* Enlace discreto de retorno */}
         <div>
           <button
@@ -550,8 +553,8 @@ export default function EventDetailPage() {
             <div className="relative rounded-3xl border border-slate-200 bg-white text-slate-900 p-6 sm:p-7 shadow-xl space-y-6 overflow-hidden">
 
               {/* Muescas semicirculares de boleto en los laterales alineadas con el fondo claro */}
-              <div className="absolute -left-3 top-28 w-6 h-6 rounded-full bg-[#F8FAFC] border-r border-slate-200 shadow-[inset_-2px_0_4px_rgba(0,0,0,0.03)] pointer-events-none" />
-              <div className="absolute -right-3 top-28 w-6 h-6 rounded-full bg-[#F8FAFC] border-l border-slate-200 shadow-[inset_2px_0_4px_rgba(0,0,0,0.03)] pointer-events-none" />
+              <div className="absolute -left-3 top-28 w-6 h-6 rounded-full bg-white border-r border-slate-200 shadow-[inset_-2px_0_4px_rgba(0,0,0,0.03)] pointer-events-none" />
+              <div className="absolute -right-3 top-28 w-6 h-6 rounded-full bg-white border-l border-slate-200 shadow-[inset_2px_0_4px_rgba(0,0,0,0.03)] pointer-events-none" />
 
               {/* Encabezado del Boleto */}
               <div className="border-b border-slate-100 pb-5">
@@ -723,7 +726,7 @@ export default function EventDetailPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {similarEvents.map((simEvent) => (
-                <EventListCard key={simEvent.id} event={simEvent} notchBg="bg-[#F8FAFC]" />
+                <EventListCard key={simEvent.id} event={simEvent} notchBg="bg-white" />
               ))}
             </div>
           </section>

@@ -16,6 +16,7 @@ import { httpClient } from '../services/httpClient.js';
 import { session } from '../services/session.js';
 import { showLoginAlert } from '../utils/alertUtils.js';
 import Pagination from '../components/Shared/Pagination.jsx';
+import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 
 const EVENTS_PAGE_SIZE = 8;
 
@@ -132,12 +133,13 @@ export default function PerfilOrganizacionPublicoPage() {
 
   if (loading) {
     return (
-      <div className="w-full min-h-screen bg-[#FAF8F5] text-slate-900 flex flex-col justify-between">
+      <div className="w-full min-h-screen bg-white text-slate-900 flex flex-col justify-between relative">
+        <FloatingDotsBackground />
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center py-24 gap-3">
           <div className="relative w-14 h-14 flex items-center justify-center">
             <div className="absolute inset-0 clip-hexagon-horiz bg-gradient-to-r from-amber-400 to-amber-500 animate-spin" />
-            <div className="absolute inset-[3px] clip-hexagon-horiz bg-[#FAF8F5] flex items-center justify-center">
+            <div className="absolute inset-[3px] clip-hexagon-horiz bg-white flex items-center justify-center">
               <span className="text-amber-500 text-base">⬡</span>
             </div>
           </div>
@@ -152,7 +154,8 @@ export default function PerfilOrganizacionPublicoPage() {
 
   if (!organization) {
     return (
-      <div className="w-full min-h-screen bg-[#FAF8F5] text-slate-900 flex flex-col justify-between">
+      <div className="w-full min-h-screen bg-white text-slate-900 flex flex-col justify-between relative">
+        <FloatingDotsBackground />
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center py-24 px-6 text-center">
           <div className="w-16 h-16 rounded-3xl bg-amber-100 text-amber-600 flex items-center justify-center mb-4 text-2xl shadow-inner">
@@ -176,10 +179,11 @@ export default function PerfilOrganizacionPublicoPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-[#FAF8F5] text-slate-900 flex flex-col justify-between selection:bg-amber-400 selection:text-slate-950">
+    <div className="w-full min-h-screen text-slate-900 flex flex-col justify-between selection:bg-amber-400 selection:text-slate-950 relative">
+      <FloatingDotsBackground />
       <Navbar />
 
-      <main className="flex-1">
+      <main className="flex-1 relative z-10">
         {/* Banner de Cabecera Colmena */}
         <section className="w-full bg-[#0B1B3D] text-white pt-10 pb-16 px-6 sm:px-12 lg:px-20 border-b border-amber-500/20 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(#F59E0B_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
@@ -351,7 +355,7 @@ export default function PerfilOrganizacionPublicoPage() {
                               : 'bg-emerald-50 text-emerald-800 border-emerald-300'
                             }`}
                         >
-                          {estado === 'FINALIZADO' ? '● Finalizado' : '● Activo en Cartelera'}
+                         
                         </span>
                       </div>
 

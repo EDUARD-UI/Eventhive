@@ -4,7 +4,7 @@ import AppLogo from '../common/AppLogo.jsx';
 
 export default function Footer({ onHelpClick }) {
   return (
-    <footer className="w-full bg-[#081026] text-slate-300 pt-14 pb-8 border-t border-slate-800/80">
+    <footer className="relative z-10 w-full bg-[#081026] text-slate-300 pt-14 pb-8 border-t border-slate-800/80">
       <div className="max-w-6xl mx-auto px-6 sm:px-12 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-slate-800/80">
           {/* Brand Col */}

@@ -168,12 +168,68 @@ export async function getMapEvents({ categoriaId, lat, lng, radioKm } = {}) {
   return events.map(normalizeEvent);
 }
 
+export const COACHELLA_HEROICA_EVENT = {
+  id: 'coachella',
+  titulo: 'La Versión del Coachella en la Heroica',
+  descripcion: 'El festival de música y arte más esperado del Caribe colombiano llega a Cartagena de Indias. Vive una jornada legendaria con artistas estelares en vivo, múltiples escenarios, experiencias inmersivas, gastronomía de autor y la mejor vibra festivalera frente a la Heroica.',
+  lugar: 'Plaza de Toros Monumental, Cartagena de Indias',
+  foto: 'https://jcigroanxweuzbkmqbib.supabase.co/storage/v1/object/public/banners-home/coachela.jpeg',
+  fecha: '2026-12-18',
+  hora: '17:00:00',
+  estado: 'PUBLICADO',
+  promocionado: true,
+  latitud: 10.40701,
+  longitud: -75.50567,
+  categoria: {
+    id: 1,
+    nombre: 'Conciertos',
+  },
+  organizacion: {
+    id: 15,
+    nombre: 'Passa Passa Music Publishing & Entertainment S.A.S',
+  },
+  localidades: [
+    {
+      id: 101,
+      nombre: 'General Early Bird',
+      precio: 150000.0,
+      capacidad: 3000,
+      disponibles: 1250,
+    },
+    {
+      id: 102,
+      nombre: 'VIP Coachella Experience',
+      precio: 350000.0,
+      capacidad: 1000,
+      disponibles: 420,
+    },
+    {
+      id: 103,
+      nombre: 'Palcos Exclusivos',
+      precio: 850000.0,
+      capacidad: 200,
+      disponibles: 45,
+    },
+  ],
+};
+
 /**
  * Detalle público de un evento (GET /api/eventos/{id}).
  */
 export async function getEventById(eventId) {
-  const data = await httpClient.get(`/eventos/${eventId}`);
-  return data ? normalizeEvent(data) : null;
+  if (String(eventId).toLowerCase() === 'coachella') {
+    return normalizeEvent(COACHELLA_HEROICA_EVENT);
+  }
+
+  try {
+    const data = await httpClient.get(`/eventos/${eventId}`);
+    return data ? normalizeEvent(data) : null;
+  } catch (err) {
+    if (String(eventId).toLowerCase() === 'coachella') {
+      return normalizeEvent(COACHELLA_HEROICA_EVENT);
+    }
+    throw err;
+  }
 }
 
 /**

@@ -21,6 +21,8 @@ import Navbar from '../components/usersComponets/Navbar.jsx';
 import CustomSelect from '../components/common/CustomSelect.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
 import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
+import TicketSectionSeparator from '../components/common/TicketSectionSeparator.jsx';
+import MapDynamicBackground from '../components/home/MapDynamicBackground.jsx';
 import { getFeaturedEvents, getMapEvents, getUpcomingEvents } from '../services/eventService.js';
 import { getCategoryNames } from '../services/categoryService.js';
 
@@ -243,17 +245,19 @@ export default function Home() {
   ], [categoryList]);
 
   return (
-    <div className="w-full min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body">
+    <div className="w-full min-h-screen bg-white text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body overflow-x-clip">
 
       {/* Navbar Superior Fijo / Sticky */}
       <Navbar variant="dark" />
 
       {/* Hero Principal con Buscador Integrado */}
       <Hero />
-      <br></br><br></br>
+
+      <div className="h-8 sm:h-12" aria-hidden="true" />
 
       {/* 2. Eventos Destacados: Título centrado sin descripción ni badges */}
-      <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-10 sm:py-14 max-w-[1850px] mx-auto relative z-10">
+      
+      <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-12 max-w-[1850px] mx-auto relative z-10 bg-white">
         <div className="flex flex-col items-center justify-center mb-8 text-center">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight uppercase">
             Eventos Destacados
@@ -285,8 +289,12 @@ export default function Home() {
         })()}
       </section>
 
-      {/* 3. Próximos Eventos: Título centrado y Grilla de Boletos Verticales */}
-      <section id="proximos" className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-14 sm:py-18 bg-white border-y border-slate-200">
+      {/* Separador entre Destacados y Próximos Eventos */}
+      <TicketSectionSeparator />
+
+
+      {/* 3. Próximos Eventos: Título centrado y Grilla de Boletos Verticales en Blanco Puro */}
+      <section id="proximos" className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-12 bg-white">
         <div className="max-w-[1850px] mx-auto">
           <div className="flex flex-col items-center justify-center mb-10 text-center relative">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight uppercase">
@@ -326,9 +334,15 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Separador antes del Mapa de Eventos (Full-bleed 100%) */}
+      <TicketSectionSeparator />
+
       {/* 5. Mapa de Eventos en Cartagena */}
-      <section id="mapa" className="w-full bg-[#0A1325] border-y border-slate-800 px-6 sm:px-12 lg:px-20 py-16 sm:py-20 relative z-0 isolate overflow-hidden">
-        <div className="max-w-7xl mx-auto relative z-0 isolate">
+      <section id="mapa" className="w-full bg-[#0A1325] px-6 sm:px-12 lg:px-20 py-16 sm:py-20 relative z-0 isolate overflow-hidden">
+        {/* Fondo dinámico de partículas doradas ambientales */}
+        <MapDynamicBackground />
+
+        <div className="max-w-7xl mx-auto relative z-10 isolate">
           <div className="mb-8 flex flex-col items-center justify-center text-center">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight uppercase mb-6">
               Mapa de Eventos
@@ -479,8 +493,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Carrusel de Categorías: Después del Mapa */}
-      <section className="w-full py-12 sm:py-16 bg-[#F8FAFC] border-b border-slate-200">
+      {/* Separador después del Mapa */}
+      <TicketSectionSeparator />
+
+
+      {/* 5. Carrusel de Categorías en Fondo Blanco */}
+      <section className="w-full py-8 sm:py-12 bg-white">
         <div className="text-center mb-6">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight uppercase">
             Categorías
@@ -489,8 +507,16 @@ export default function Home() {
         <CategoryTickerCarousel />
       </section>
 
+      {/* Separador entre Categorías y Banners */}
+      <TicketSectionSeparator />
+
+
       {/* 6. Banners Asimétricos (/api/banners-home) */}
       <HomeBannersSection />
+
+      {/* Separador entre Banners y Franja CTA */}
+      <TicketSectionSeparator />
+
 
       {/* 7. Franja CTA para Organizadores: Justo encima del Footer */}
       <OrganizerCtaSection />

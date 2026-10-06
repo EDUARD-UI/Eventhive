@@ -10,6 +10,7 @@ import CustomSelect from '../components/common/CustomSelect.jsx';
 import { searchEvents, getEvents } from '../services/eventService.js';
 import { getCategoryNames, getFeaturedCategories } from '../services/categoryService.js';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
+import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 
 const SORT_OPTIONS = [
   { label: 'Fecha más próxima', value: 'fecha,asc' },
@@ -215,11 +216,14 @@ export default function BuscarEventosPage() {
   const activeCategory = categoryList.find((c) => String(c.id) === String(categoriaIdParam));
 
   return (
-    <div className="w-full min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col justify-between font-body">
+    <div className="w-full min-h-screen text-slate-900 flex flex-col justify-between font-body relative">
+      {/* Fondo interactivo de puntitos negros brillantes flotando */}
+      <FloatingDotsBackground />
+
       {/* Navbar idéntico */}
       <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
         {/* Cabecera / Título Principal Refactorizada (Opción 1 Directa + Flex Balanceado) */}
         <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-5 pb-3 border-b border-slate-200/70">
           <div className="max-w-2xl">
@@ -378,14 +382,14 @@ export default function BuscarEventosPage() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
               {[1, 2, 3, 4, 5, 6].map((n) => (
-                <EventCardSkeleton key={n} notchBg="bg-[#F8FAFC]" />
+                <EventCardSkeleton key={n} notchBg="bg-white" />
               ))}
             </div>
           ) : events.length > 0 ? (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
                 {events.map((event) => (
-                  <EventListCard key={event.id} event={event} notchBg="bg-[#F8FAFC]" />
+                  <EventListCard key={event.id} event={event} notchBg="bg-white" />
                 ))}
               </div>
 

@@ -39,24 +39,45 @@ export default function HomeBannersSection() {
   const bannerLeft = banners.find((b) => b.posicion === 1) || banners[0];
   const bannerRight = banners.find((b) => b.posicion === 2) || (banners.length > 1 ? banners[1] : null);
 
-  const renderBannerCard = (banner, isOffsetUp = false) => {
+  const renderBannerCard = (banner, colSpanClass = 'lg:col-span-6') => {
     if (!banner) return null;
 
-    const isExternal = banner.enlaceUrl?.startsWith('http');
+    let targetUrl = banner.enlaceUrl || '';
+    // Respaldo de seguridad en caso de que enlaceUrl siga apuntando a un archivo de imagen:
+    if (/\.(jpe?g|png|webp|gif|svg)(\?.*)?$/i.test(targetUrl) || !targetUrl || targetUrl === '#') {
+      if (/coachella/i.test(banner.titulo || '')) {
+        targetUrl = '/eventos/coachella';
+      } else if (/classic/i.test(banner.titulo || '')) {
+        targetUrl = '/eventos/22';
+      } else {
+        targetUrl = '/buscar';
+      }
+    }
+
+    const eventMatch = targetUrl.match(/\/eventos?\/(\d+)/i);
+    if (eventMatch) {
+      targetUrl = `/eventos/${eventMatch[1]}`;
+    }
+
+    const isExternal = targetUrl.startsWith('http');
+    const CardWrapper = isExternal ? 'a' : Link;
+    const wrapperProps = isExternal
+      ? { href: targetUrl, target: '_blank', rel: 'noopener noreferrer' }
+      : { to: targetUrl };
 
     return (
       <div
-        className={`group relative overflow-hidden rounded-3xl border border-slate-200 shadow-md hover:shadow-xl transition-all duration-300 ${
-          isOffsetUp ? 'lg:translate-y-4' : 'lg:-translate-y-2'
-        }`}
+        className={`group relative overflow-hidden rounded-3xl border border-slate-200 shadow-md hover:shadow-xl transition-all duration-300 w-full ${colSpanClass}`}
       >
-        {/* Contenedor con ratio rectangular armónico */}
-        <div className="relative aspect-[16/10] sm:aspect-[16/9] lg:aspect-[16/10] w-full overflow-hidden bg-slate-900">
+        <CardWrapper
+          {...wrapperProps}
+          className="block relative w-full h-[320px] sm:h-[380px] lg:h-[440px] overflow-hidden bg-slate-900 cursor-pointer"
+        >
           {banner.imagenUrl ? (
             <ImageWithFallback
               src={banner.imagenUrl}
               alt={banner.titulo}
-              className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-700 ease-out"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
               fallbackText={banner.titulo}
               iconSize={36}
             />
@@ -66,7 +87,7 @@ export default function HomeBannersSection() {
           )}
 
           {/* Sombreado de alto contraste para máxima legibilidad */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-slate-950/10 pointer-events-none" />
 
           {/* Contenido textual y botón */}
           <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-8 lg:p-10 z-10">
@@ -74,45 +95,30 @@ export default function HomeBannersSection() {
               {banner.titulo}
             </h3>
 
-            {banner.textoBoton && banner.enlaceUrl && (
+            {banner.textoBoton && (
               <div>
-                {isExternal ? (
-                  <a
-                    href={banner.enlaceUrl}
-                    target="_self"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 shadow-md active:scale-95 group/btn cursor-pointer"
-                  >
-                    <span>{banner.textoBoton}</span>
-                    <FiArrowRight
-                      size={15}
-                      className="transition-transform duration-200 group-hover/btn:translate-x-1"
-                    />
-                  </a>
-                ) : (
-                  <Link
-                    to={banner.enlaceUrl}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 shadow-md active:scale-95 group/btn cursor-pointer"
-                  >
-                    <span>{banner.textoBoton}</span>
-                    <FiArrowRight
-                      size={15}
-                      className="transition-transform duration-200 group-hover/btn:translate-x-1"
-                    />
-                  </Link>
-                )}
+                <span
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 group-hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 shadow-md group-hover:shadow-amber-500/25 active:scale-95 cursor-pointer"
+                >
+                  <span>{banner.textoBoton}</span>
+                  <FiArrowRight
+                    size={15}
+                    className="transition-transform duration-200 group-hover:translate-x-1"
+                  />
+                </span>
               </div>
             )}
           </div>
-        </div>
+        </CardWrapper>
       </div>
     );
   };
 
   return (
-    <section className="w-full py-14 sm:py-20 px-4 sm:px-6 md:px-8 lg:px-12 max-w-[1850px] mx-auto">
-      <div className={`grid grid-cols-1 ${bannerRight ? 'lg:grid-cols-2' : ''} gap-8 lg:gap-10 items-center`}>
-        {renderBannerCard(bannerLeft, false)}
-        {bannerRight && renderBannerCard(bannerRight, true)}
+    <section className="w-full py-12 sm:py-16 px-4 sm:px-6 md:px-8 lg:px-12 max-w-[1850px] mx-auto">
+      <div className={`grid grid-cols-1 ${bannerRight ? 'lg:grid-cols-12' : ''} gap-6 sm:gap-8 lg:gap-8 items-stretch`}>
+        {renderBannerCard(bannerLeft, bannerRight ? 'lg:col-span-7' : 'lg:col-span-12')}
+        {bannerRight && renderBannerCard(bannerRight, 'lg:col-span-5')}
       </div>
     </section>
   );
