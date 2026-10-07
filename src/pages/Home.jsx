@@ -252,15 +252,13 @@ export default function Home() {
 
       {/* Hero Principal con Buscador Integrado */}
       <Hero />
-
-      <div className="h-8 sm:h-12" aria-hidden="true" />
+      
 
       {/* 2. Eventos Destacados: Título centrado sin descripción ni badges */}
-      
-      <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-12 max-w-[1850px] mx-auto relative z-10 bg-white">
+      <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-10 pb-8 sm:pt-14 sm:pb-12 max-w-[1850px] mx-auto relative z-10 bg-white">
         <div className="flex flex-col items-center justify-center mb-8 text-center">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight uppercase">
-            Eventos Destacados
+            
           </h2>
         </div>
 
@@ -334,11 +332,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Separador antes del Mapa de Eventos (Full-bleed 100%) */}
-      <TicketSectionSeparator />
+      
 
       {/* 5. Mapa de Eventos en Cartagena */}
       <section id="mapa" className="w-full bg-[#0A1325] px-6 sm:px-12 lg:px-20 py-16 sm:py-20 relative z-0 isolate overflow-hidden">
+        {/* Borde superior estilo tiquete punteado (dashed) grueso que delimita la sección oscura de Mapa */}
+        <div
+          aria-hidden="true"
+          className="absolute left-0 right-0 top-0 z-20 pointer-events-none select-none w-full border-t-[3px] sm:border-t-4 border-dashed border-slate-200/90"
+        />
+
         {/* Fondo dinámico de partículas doradas ambientales */}
         <MapDynamicBackground />
 
@@ -491,17 +494,22 @@ export default function Home() {
             </MapContainer>
           </div>
         </div>
+
+        {/* Borde inferior estilo tiquete punteado (dashed) grueso que delimita la sección oscura de Mapa */}
+        <div
+          aria-hidden="true"
+          className="absolute left-0 right-0 bottom-0 z-20 pointer-events-none select-none w-full border-b-[3px] sm:border-b-4 border-dashed border-slate-200/90"
+        />
       </section>
 
-      {/* Separador después del Mapa */}
-      <TicketSectionSeparator />
+      
 
 
       {/* 5. Carrusel de Categorías en Fondo Blanco */}
       <section className="w-full py-8 sm:py-12 bg-white">
         <div className="text-center mb-6">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight uppercase">
-            Categorías
+            
           </h2>
         </div>
         <CategoryTickerCarousel />
