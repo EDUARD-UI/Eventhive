@@ -65,16 +65,14 @@ export default function Hero() {
       </div>
 
       {/* Contenido Principal */}
-      <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-start text-left px-4 sm:px-6 md:px-8 pt-8 sm:pt-12 md:pt-14 pb-16 sm:pb-20">
-        {/* Ubicación y Badge Temático  */}
-        <div className="flex flex-wrap items-center gap-3 mb-4">
-          <div className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-300">
-            <FiMapPin className="text-amber-400" size={15} />
-            <span>Cartagena de Indias, Colombia</span>
-          </div>
+      <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center text-center px-4 sm:px-6 md:px-8 pt-10 sm:pt-14 md:pt-16 pb-14 sm:pb-16">
+        {/* Ubicación y Badge Temático */}
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-xs text-xs sm:text-sm font-semibold text-slate-300 mb-5">
+          <FiMapPin className="text-amber-400" size={15} />
+          <span>Cartagena de Indias, Colombia</span>
         </div>
 
-        <h1 className="max-w-3xl font-display text-[34px] sm:text-[50px] lg:text-[56px] font-black leading-[1.08] tracking-tight text-white drop-shadow-lg">
+        <h1 className="max-w-3xl font-display text-[32px] sm:text-[46px] lg:text-[54px] font-black leading-[1.12] tracking-tight text-white drop-shadow-md">
           Vive la magia de{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-300">
             Cartagena
@@ -83,19 +81,16 @@ export default function Hero() {
           Tus Eventos Favoritos en un Solo Lugar
         </h1>
 
-        <p className="mt-3.5 max-w-xl text-xs sm:text-base text-slate-300 leading-relaxed font-normal">
+        <p className="mt-3.5 max-w-xl text-xs sm:text-base text-slate-300/90 leading-relaxed font-normal">
           Descubre festivales, conciertos, arte, gastronomía y vida nocturna en la ciudad amurallada.
         </p>
-      </div>
 
-      {/* 5. Buscador Sobresaliendo Semi-Fuera sobre el límite inferior del Hero */}
-      <div className="relative z-20 max-w-2xl sm:max-w-[760px] mx-auto px-4 -mb-14 sm:-mb-18">
-        <SearchCard />
-      </div>
 
-      {/* Línea dorada en la base del Hero */}
-      <div className="relative left-0 right-0 bottom-0 z-10 pointer-events-none select-none w-full">
-        <div className="h-[5px] w-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.9)]" />
+        {/* Buscador integrado directamente con balance natural en el Hero */}
+        <br/>
+        <div className="w-full mt-7 sm:mt-9">
+          <SearchCard />
+        </div>
       </div>
     </section>
   );

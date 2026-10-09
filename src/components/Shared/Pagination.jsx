@@ -10,6 +10,8 @@ export default function Pagination({
   pageSizeOptions = [5, 10, 20],
   showPageSize = true,
   className = '',
+  minimal = false,
+  showInfo = true,
 }) {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const safePage = Math.min(Math.max(1, currentPage), totalPages);
@@ -39,6 +41,69 @@ export default function Pagination({
       onPageChange(page);
     }
   };
+
+  // Modo minimalista y centrado para vistas de cara al cliente (sin texto "Mostrando...")
+  if (minimal || !showInfo) {
+    if (totalPages <= 1) return null;
+
+    return (
+      <nav
+        aria-label="Paginación"
+        className={`flex items-center justify-center gap-1.5 py-4 w-full select-none ${className}`}
+      >
+        <button
+          type="button"
+          onClick={() => handlePageClick(safePage - 1)}
+          disabled={safePage <= 1}
+          aria-label="Página anterior"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs transition-all hover:bg-slate-100 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+        >
+          <FiChevronLeft size={16} />
+        </button>
+
+        <div className="flex items-center gap-1.5">
+          {getPageNumbers().map((p, idx) => {
+            if (p === '...') {
+              return (
+                <span
+                  key={`ellipsis-${idx}`}
+                  className="flex h-9 w-8 items-center justify-center text-slate-400 text-xs font-bold"
+                >
+                  •••
+                </span>
+              );
+            }
+            const isActive = p === safePage;
+            return (
+              <button
+                key={p}
+                type="button"
+                onClick={() => handlePageClick(p)}
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex h-9 min-w-[36px] px-3 items-center justify-center rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-slate-950 text-white shadow-md shadow-slate-950/20 scale-105'
+                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 hover:border-slate-300 shadow-xs'
+                }`}
+              >
+                {p}
+              </button>
+            );
+          })}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => handlePageClick(safePage + 1)}
+          disabled={safePage >= totalPages}
+          aria-label="Página siguiente"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs transition-all hover:bg-slate-100 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+        >
+          <FiChevronRight size={16} />
+        </button>
+      </nav>
+    );
+  }
 
   return (
     <div

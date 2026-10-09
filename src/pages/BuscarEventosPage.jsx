@@ -10,6 +10,9 @@ import CustomSelect from '../components/common/CustomSelect.jsx';
 import { searchEvents, getEvents } from '../services/eventService.js';
 import { getCategoryNames, getFeaturedCategories } from '../services/categoryService.js';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
+import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
+
+const PAGE_SIZE = 9;
 
 const SORT_OPTIONS = [
   { label: 'Fecha más próxima', value: 'fecha,asc' },
@@ -62,7 +65,7 @@ export default function BuscarEventosPage() {
     setSearchInput(tituloParam);
   }, [tituloParam]);
 
-  // Cargar eventos según filtros
+  // Cargar eventos según filtros (9 eventos por página)
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -77,7 +80,7 @@ export default function BuscarEventosPage() {
         if (hasTitle) {
           // Si el usuario combinó búsqueda por texto con fecha o categoría,
           // consultamos un lote amplio de coincidencias de título para filtrar exactamente en cliente
-          const size = (hasDate || hasCategory) ? 60 : 10;
+          const size = (hasDate || hasCategory) ? 60 : PAGE_SIZE;
           const result = await searchEvents({
             titulo: tituloParam.trim(),
             page: (hasDate || hasCategory) ? 0 : pageParam,
@@ -102,13 +105,12 @@ export default function BuscarEventosPage() {
           }
 
           if (hasDate || hasCategory) {
-            const pageSize = 10;
-            const start = pageParam * pageSize;
-            const paginated = filtered.slice(start, start + pageSize);
+            const start = pageParam * PAGE_SIZE;
+            const paginated = filtered.slice(start, start + PAGE_SIZE);
             return {
               events: paginated,
               total: filtered.length,
-              totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
+              totalPages: Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)),
               currentPage: pageParam,
             };
           }
@@ -121,7 +123,7 @@ export default function BuscarEventosPage() {
           categoriaId: hasCategory ? Number(categoriaIdParam) : undefined,
           fecha: hasDate ? fechaParam.trim() : undefined,
           page: pageParam,
-          size: 10,
+          size: PAGE_SIZE,
           sort: sortParam,
         });
       } catch (err) {
@@ -215,11 +217,14 @@ export default function BuscarEventosPage() {
   const activeCategory = categoryList.find((c) => String(c.id) === String(categoriaIdParam));
 
   return (
-    <div className="w-full min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col justify-between font-body">
+    <div className="w-full min-h-screen text-slate-900 flex flex-col justify-between font-body relative">
+      {/* Fondo interactivo de puntitos negros brillantes flotando */}
+      <FloatingDotsBackground />
+
       {/* Navbar idéntico */}
       <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
         {/* Cabecera / Título Principal Refactorizada (Opción 1 Directa + Flex Balanceado) */}
         <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-5 pb-3 border-b border-slate-200/70">
           <div className="max-w-2xl">
@@ -373,31 +378,55 @@ export default function BuscarEventosPage() {
           )}
         </section>
 
-        {/* 1. Grilla Vertical de Boletos de Eventos en Blanco Puro */}
+        {/* 1. Grilla Estilo Pinterest de Boletos de Eventos */}
         <section>
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6 [column-fill:_balance]">
               {[1, 2, 3, 4, 5, 6].map((n) => (
-                <EventCardSkeleton key={n} notchBg="bg-[#F8FAFC]" />
+                <div key={n} className="break-inside-avoid inline-block w-full mb-6">
+                  <EventCardSkeleton
+                    notchBg="bg-white"
+                    aspectVariant={n % 3 === 0 ? 'tall' : n % 3 === 1 ? 'wide' : 'standard'}
+                  />
+                </div>
               ))}
             </div>
           ) : events.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
-                {events.map((event) => (
-                  <EventListCard key={event.id} event={event} notchBg="bg-[#F8FAFC]" />
+              <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6 [column-fill:_balance]">
+                {events.map((event, idx) => (
+                  <div
+                    key={event.id}
+                    className={`break-inside-avoid inline-block w-full mb-6 transition-transform duration-300 ${
+                      idx % 3 === 1 ? 'sm:translate-y-2' : idx % 3 === 2 ? 'lg:-translate-y-1' : ''
+                    }`}
+                  >
+                    <EventListCard
+                      event={event}
+                      notchBg="bg-white"
+                      aspectVariant={
+                        event.promocionado
+                          ? 'gold'
+                          : idx % 3 === 0
+                          ? 'tall'
+                          : idx % 3 === 1
+                          ? 'wide'
+                          : 'standard'
+                      }
+                    />
+                  </div>
                 ))}
               </div>
 
-              {/* Componente de Paginación */}
-              {totalElements > 10 && (
-                <div className="mt-10 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
+              {/* Componente de Paginación Minimalista y Centrado (9 por página) */}
+              {totalElements > PAGE_SIZE && (
+                <div className="mt-12 flex justify-center w-full">
                   <Pagination
                     currentPage={pageParam + 1}
                     totalItems={totalElements}
-                    pageSize={10}
+                    pageSize={PAGE_SIZE}
                     onPageChange={(p) => handlePageChange(p - 1)}
-                    showPageSize={false}
+                    minimal={true}
                   />
                 </div>
               )}
@@ -423,63 +452,61 @@ export default function BuscarEventosPage() {
             </div>
           )}
         </section>
-
-        {/* 2. Sección de Categorías Destacadas (debajo de eventos y paginación) */}
-        {featuredCategories.length > 0 && (
-          <section className="mt-16 pt-12 border-t border-slate-200">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-xl sm:text-2xl font-extrabold text-slate-950 tracking-tight uppercase">
-                  Categorías Destacadas
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 mt-0.5 font-normal">
-                  Explora las experiencias culturales más populares en Cartagena.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-              {featuredCategories.slice(0, 6).map((cat) => {
-                const imageUrl = cat.imagenUrl || cat.urlFoto || cat.foto || cat.imagen;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => {
-                      const next = new URLSearchParams();
-                      next.set('categoriaId', String(cat.id));
-                      setSearchParams(next);
-                      window.scrollTo({ top: 120, behavior: 'smooth' });
-                    }}
-                    className="group relative rounded-2xl h-32 sm:h-36 bg-slate-900 border border-slate-200 hover:border-slate-400 overflow-hidden flex flex-col justify-end p-3 text-left transition-all duration-200 ease-out hover:-translate-y-0.5 shadow-sm active:scale-95 cursor-pointer"
-                  >
-                    {imageUrl && (
-                      <div className="absolute inset-0">
-                        <ImageWithFallback
-                          src={imageUrl}
-                          alt={cat.nombre}
-                          className="w-full h-full object-cover opacity-55 group-hover:opacity-75 transition-opacity duration-300"
-                          showText={false}
-                        />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent pointer-events-none" />
-
-                    <div className="relative z-10">
-                      <h4 className="text-xs sm:text-sm font-extrabold uppercase text-white truncate tracking-tight group-hover:text-amber-300 transition-colors">
-                        {cat.nombre}
-                      </h4>
-                      <span className="text-[10px] text-slate-300 font-semibold block mt-0.5">
-                        {cat.totalEventos ?? 0} {(cat.totalEventos ?? 0) === 1 ? 'evento' : 'eventos'}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        )}
       </main>
+
+      {/* 2. Sección de Categorías Destacadas (Cubre todo el ancho de la pantalla) */}
+      {featuredCategories.length > 0 && (
+        <section className="w-full max-w-none py-12 sm:py-16 px-4 sm:px-6 md:px-8 lg:px-12 border-t border-slate-200/80 bg-white/70 backdrop-blur-xs relative z-10">
+          <div className="w-full mb-6">
+            <h3 className="text-xl sm:text-2xl font-extrabold text-slate-950 tracking-tight uppercase">
+              Categorías Destacadas
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5 font-normal">
+              Explora las experiencias culturales más populares en Cartagena.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 w-full">
+            {featuredCategories.map((cat) => {
+              const imageUrl = cat.imagenUrl || cat.urlFoto || cat.foto || cat.imagen;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    const next = new URLSearchParams();
+                    next.set('categoriaId', String(cat.id));
+                    setSearchParams(next);
+                    window.scrollTo({ top: 120, behavior: 'smooth' });
+                  }}
+                  className="group relative rounded-2xl h-32 sm:h-36 bg-slate-900 border border-slate-200 hover:border-slate-400 overflow-hidden flex flex-col justify-end p-3 text-left transition-all duration-200 ease-out hover:-translate-y-0.5 shadow-sm active:scale-95 cursor-pointer w-full"
+                >
+                  {imageUrl && (
+                    <div className="absolute inset-0">
+                      <ImageWithFallback
+                        src={imageUrl}
+                        alt={cat.nombre}
+                        className="w-full h-full object-cover opacity-55 group-hover:opacity-75 transition-opacity duration-300"
+                        showText={false}
+                      />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent pointer-events-none" />
+
+                  <div className="relative z-10">
+                    <h4 className="text-xs sm:text-sm font-extrabold uppercase text-white truncate tracking-tight group-hover:text-amber-300 transition-colors">
+                      {cat.nombre}
+                    </h4>
+                    <span className="text-[10px] text-slate-300 font-semibold block mt-0.5">
+                      {cat.totalEventos ?? 0} {(cat.totalEventos ?? 0) === 1 ? 'evento' : 'eventos'}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Footer idéntico */}
       <Footer />

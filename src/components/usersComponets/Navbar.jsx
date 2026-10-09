@@ -40,16 +40,23 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
       <header
         className={`w-full transition-all ${
           embedded
-            ? `relative z-30 flex items-center justify-between gap-4 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 xl:px-12 py-4 sm:py-5 bg-transparent border-none shadow-none ${
-                isLight ? 'text-slate-800' : 'text-white'
-              }`
-            : `sticky top-0 z-50 flex items-center justify-between gap-3 px-4 py-3.5 backdrop-blur-md sm:px-6 xl:px-10 ${
+            ? 'relative z-30 bg-transparent border-none shadow-none'
+            : `sticky top-0 z-50 backdrop-blur-md ${
                 isLight
                   ? 'bg-white/95 text-slate-800 border-b border-slate-200/80 shadow-[0_2px_12px_rgba(15,23,42,0.04)]'
                   : 'bg-[#0B132B]/95 text-white border-b border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.35)]'
               }`
         }`}
       >
+        <div
+          className={`mx-auto flex w-full items-center justify-between ${
+            embedded
+              ? `max-w-7xl gap-4 px-4 py-4 sm:px-6 sm:py-5 md:px-8 xl:px-12 ${
+                  isLight ? 'text-slate-800' : 'text-white'
+                }`
+              : 'max-w-7xl gap-3 px-4 py-3.5 sm:px-6 xl:px-10'
+          }`}
+        >
         {/* Logo de Marca */}
         <Link to="/" className="flex shrink-0 items-center group">
           <AppLogo
@@ -170,6 +177,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
           >
             <FiMenu size={22} />
           </button>
+        </div>
         </div>
       </header>
 

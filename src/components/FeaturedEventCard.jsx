@@ -43,11 +43,11 @@ export default function FeaturedEventCard({ event }) {
 
           <div className="space-y-1.5 text-xs sm:text-sm text-slate-600 mb-4">
             <div className="flex items-center gap-2">
-              <FiCalendar className="text-brand shrink-0" size={14} />
+              <FiCalendar className="text-slate-950 shrink-0" size={14} />
               <span className="font-medium text-slate-700">{date}</span>
             </div>
             <div className="flex items-center gap-2">
-              <FiMapPin className="text-rose-500 shrink-0" size={14} />
+              <FiMapPin className="text-slate-950 shrink-0" size={14} />
               <span className="truncate text-slate-600">{location}</span>
             </div>
           </div>

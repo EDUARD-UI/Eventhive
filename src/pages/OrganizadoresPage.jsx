@@ -15,6 +15,7 @@ import { session, normalizeRole } from '../services/session.js';
 import OrganizationListCard from '../components/common/OrganizationListCard.jsx';
 import OrganizationCardSkeleton from '../components/common/OrganizationCardSkeleton.jsx';
 import Pagination from '../components/Shared/Pagination.jsx';
+import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 
 const PAGE_SIZE = 8;
 
@@ -78,11 +79,14 @@ export default function OrganizadoresPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col justify-between font-body overflow-x-hidden max-w-full">
+    <div className="w-full min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col justify-between font-body overflow-x-hidden max-w-full relative">
+      {/* Fondo interactivo de puntitos negros brillantes flotando */}
+      <FloatingDotsBackground />
+
       {/* Navbar idéntico */}
       <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-w-0 max-w-full">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-w-0 max-w-full relative z-10">
         {/* Cabecera / Título de la sección + Buscador integrado */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 pb-6 border-b border-slate-200/80">
           <div className="space-y-1.5 max-w-xl min-w-0">
@@ -173,20 +177,20 @@ export default function OrganizadoresPage() {
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
                 {[1, 2, 3, 4, 5, 6].map((n) => (
-                  <OrganizationCardSkeleton key={n} notchBg="bg-[#F8FAFC]" />
+                  <OrganizationCardSkeleton key={n} notchBg="bg-white" />
                 ))}
               </div>
             ) : organizations.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
                   {organizations.map((org) => (
-                    <OrganizationListCard key={org.id} org={org} notchBg="bg-[#F8FAFC]" />
+                    <OrganizationListCard key={org.id} org={org} notchBg="bg-white" />
                   ))}
                 </div>
 
-                {/* Paginación */}
+                {/* Paginación Minimalista y Centrada */}
                 {totalElements > PAGE_SIZE && (
-                  <div className="mt-10 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
+                  <div className="mt-12 flex justify-center w-full">
                     <Pagination
                       currentPage={currentPage}
                       totalItems={totalElements}
@@ -195,7 +199,7 @@ export default function OrganizadoresPage() {
                         setCurrentPage(p);
                         window.scrollTo({ top: 180, behavior: 'smooth' });
                       }}
-                      showPageSize={false}
+                      minimal={true}
                     />
                   </div>
                 )}

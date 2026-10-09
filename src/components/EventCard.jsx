@@ -41,11 +41,11 @@ export default function EventCard({ event }) {
 
           <div className="space-y-1.5 text-xs text-slate-600">
             <div className="flex items-center gap-2">
-              <FiCalendar className="text-brand shrink-0" size={13.5} />
+              <FiCalendar className="text-slate-900 shrink-0" size={13.5} />
               <span className="font-medium text-slate-700 truncate">{date}</span>
             </div>
             <div className="flex items-center gap-2 truncate">
-              <FiMapPin className="text-rose-500 shrink-0" size={13.5} />
+              <FiMapPin className="text-slate-900 shrink-0" size={13.5} />
               <span className="truncate text-slate-600">{location}</span>
             </div>
           </div>
