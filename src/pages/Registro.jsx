@@ -6,6 +6,7 @@ import InputField from '../components/common/InputField.jsx';
 import useForm from '../hooks/useForm.js';
 import { authService } from '../services/authService.js';
 import { session, normalizeRole } from '../services/session.js';
+import { sanitizeText, sanitizePhone, sanitizeEmail } from '../utils/sanitizer.js';
 
 const validateRegister = (values) => {
   const errors = {};
@@ -48,10 +49,13 @@ const validateRegister = (values) => {
       errors.email = 'Ingresa un formato de correo válido.';
     }
 
-    if (!values.phone?.trim()) {
+    const cleanPhone = sanitizePhone(values.phone);
+    if (!cleanPhone) {
       errors.phone = 'El teléfono de contacto es obligatorio.';
-    } else if (values.phone.trim().length < 7) {
+    } else if (cleanPhone.length < 7) {
       errors.phone = 'Ingresa un número de teléfono válido (mínimo 7 dígitos).';
+    } else if (cleanPhone.length > 10 || (values.phone || '').length > 10) {
+      errors.phone = 'El teléfono no puede superar los 10 dígitos.';
     }
   }
 
@@ -103,18 +107,18 @@ export default function Registro() {
   const onSubmit = async (formValues) => {
     if (isOrganizer) {
       await authService.registrarOrganizacion({
-        razonSocial: formValues.razonSocial.trim(),
-        nit: formValues.nit.trim(),
-        correoEmpresarial: formValues.correoEmpresarial.trim(),
-        nombreCompleto: formValues.nombreCompleto.trim(),
-        correoUsuario: formValues.correoUsuario.trim(),
+        razonSocial: sanitizeText(formValues.razonSocial),
+        nit: sanitizeText(formValues.nit),
+        correoEmpresarial: sanitizeEmail(formValues.correoEmpresarial),
+        nombreCompleto: sanitizeText(formValues.nombreCompleto),
+        correoUsuario: sanitizeEmail(formValues.correoUsuario),
         password: formValues.password,
       });
     } else {
       await authService.registrarCliente({
-        nombre: formValues.name.trim(),
-        correo: formValues.email.trim(),
-        telefono: formValues.phone.trim(),
+        nombre: sanitizeText(formValues.name),
+        correo: sanitizeEmail(formValues.email),
+        telefono: sanitizePhone(formValues.phone),
         clave: formValues.password,
       });
     }
@@ -313,11 +317,15 @@ export default function Registro() {
                 id="phone"
                 name="phone"
                 type="tel"
-                label="Teléfono o WhatsApp de contacto"
-                placeholder="+57 300 123 4567"
+                label="Teléfono o WhatsApp de contacto (máx. 10 dígitos)"
+                placeholder="Ej: 3001234567"
                 icon={FiPhone}
                 value={values.phone}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setFieldValue('phone', cleaned);
+                }}
+                maxLength={10}
                 onBlur={handleBlur}
                 error={errors.phone}
                 touched={touched.phone}

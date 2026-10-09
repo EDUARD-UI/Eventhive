@@ -17,6 +17,7 @@ import { userService } from '../../services/userService.js';
 import { httpClient } from '../../services/httpClient.js';
 import { session } from '../../services/session.js';
 import { showSuccessAlert, showErrorAlert, showWarningAlert } from '../../utils/alertUtils.js';
+import { sanitizeText, sanitizePhone } from '../../utils/sanitizer.js';
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/10';
@@ -197,10 +198,12 @@ export default function PerfilOrganizador() {
   const handleRepSave = async (e) => {
     if (e?.preventDefault) e.preventDefault();
     try {
+      const cleanNombre = sanitizeText(repProfile.nombre);
+      const cleanTelefono = sanitizePhone(repProfile.telefono);
       // Update text fields
       await userService.updatePerfil({
-        nombre: repProfile.nombre,
-        telefono: repProfile.telefono,
+        nombre: cleanNombre,
+        telefono: cleanTelefono,
       });
 
       // Upload image if selected — item 9: bucket imagenPerfil
@@ -490,10 +493,15 @@ export default function PerfilOrganizador() {
                     className={inputClass}
                   />
                 </Field>
-                <Field label="Teléfono">
+                <Field label="Teléfono (Máx. 10 dígitos)">
                   <input
                     value={repProfile.telefono}
-                    onChange={(e) => setRepProfile((p) => ({ ...p, telefono: e.target.value }))}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setRepProfile((p) => ({ ...p, telefono: cleaned }));
+                    }}
+                    maxLength={10}
+                    placeholder="Ej: 3001234567"
                     className={inputClass}
                   />
                 </Field>

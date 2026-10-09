@@ -260,20 +260,20 @@ export default function EventDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#070D1E] text-slate-100">
+      <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 font-body">
         <Navbar />
         <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-pulse">
           <div className="space-y-3">
-            <div className="h-6 w-32 bg-slate-800 rounded-md" />
-            <div className="h-10 w-2/3 bg-slate-800 rounded-xl" />
-            <div className="h-5 w-1/3 bg-slate-800/60 rounded" />
+            <div className="h-6 w-32 bg-slate-200 rounded-md" />
+            <div className="h-10 w-2/3 bg-slate-200 rounded-xl" />
+            <div className="h-5 w-1/3 bg-slate-100 rounded" />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-8 space-y-6">
-              <div className="h-80 sm:h-96 bg-slate-800 rounded-3xl" />
-              <div className="h-44 bg-slate-800/80 rounded-3xl p-6" />
+              <div className="h-80 sm:h-96 bg-white border border-slate-200 rounded-3xl" />
+              <div className="h-44 bg-white border border-slate-200 rounded-3xl p-6" />
             </div>
-            <div className="lg:col-span-4 h-96 bg-slate-800/80 rounded-3xl p-6" />
+            <div className="lg:col-span-4 h-96 bg-white border border-slate-200 rounded-3xl p-6" />
           </div>
         </main>
         <Footer />
@@ -307,10 +307,10 @@ export default function EventDetailPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body">
+    <div className="w-full min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body overflow-x-hidden max-w-full">
       <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 min-w-0">
         {/* Enlace discreto de retorno */}
         <div>
           <button
@@ -377,23 +377,23 @@ export default function EventDetailPage() {
             </div>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-950 tracking-tight uppercase leading-tight">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-950 tracking-tight uppercase leading-tight break-words">
             {event.title}
           </h1>
 
           {/* Fila de metadatos: fecha y ubicación */}
           <div className="flex flex-wrap items-center gap-y-3 gap-x-6 text-sm text-slate-600 pt-1">
             {event.date && (
-              <div className="flex items-center gap-2 font-semibold">
+              <div className="flex items-center gap-2 font-semibold shrink-0">
                 <FiCalendar className="text-amber-500 shrink-0" size={18} />
                 <span className="text-slate-900">{event.date}</span>
               </div>
             )}
 
             {event.location && (
-              <div className="flex items-center gap-2 font-medium">
-                <FiMapPin className="text-amber-500 shrink-0" size={18} />
-                <span className="text-slate-800 truncate max-w-md">{event.location}</span>
+              <div className="flex items-start sm:items-center gap-2 font-medium min-w-0 max-w-full">
+                <FiMapPin className="text-amber-500 shrink-0 mt-0.5 sm:mt-0" size={18} />
+                <span className="text-slate-800 break-words leading-snug min-w-0 flex-1">{event.location}</span>
               </div>
             )}
           </div>
@@ -514,16 +514,16 @@ export default function EventDetailPage() {
                   Ubicación del Evento
                 </h2>
                 {event.location && (
-                  <span className="text-xs font-bold text-slate-500 hidden sm:inline">
+                  <span className="text-xs font-bold text-slate-500 hidden sm:inline max-w-xs truncate">
                     {event.location}
                   </span>
                 )}
               </div>
 
               {event.location && (
-                <div className="flex items-center gap-2 text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
-                  <FiMapPin className="text-amber-500 shrink-0" size={17} />
-                  <span className="font-semibold text-slate-900">{event.location}</span>
+                <div className="flex items-start sm:items-center gap-2.5 text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200/80 min-w-0 max-w-full overflow-hidden">
+                  <FiMapPin className="text-amber-500 shrink-0 mt-0.5 sm:mt-0" size={17} />
+                  <span className="font-semibold text-slate-900 break-words leading-snug min-w-0 flex-1">{event.location}</span>
                 </div>
               )}
 

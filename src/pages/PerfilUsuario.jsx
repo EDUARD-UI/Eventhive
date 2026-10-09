@@ -32,6 +32,7 @@ import { organizerService } from '../services/organizerService.js';
 import { normalizeEvent } from '../services/eventService.js';
 import { session } from '../services/session.js';
 import { formatPrice, getCategoryGradient } from '../utils/formatters.js';
+import { sanitizeText, sanitizePhone } from '../utils/sanitizer.js';
 
 const TABS = [
   { id: 'guardados', label: 'Guardados' },
@@ -76,7 +77,6 @@ export default function PerfilUsuario() {
     nombreCompleto: '',
     correo: '',
     telefono: '',
-    ciudad: 'Cartagena de Indias',
     rol: 'CLIENTE',
     urlImagenPerfil: null,
     notifEmail: true,
@@ -118,8 +118,7 @@ export default function PerfilUsuario() {
               id: perfilData.id || sessionUser.id,
               nombreCompleto: perfilData.nombre || sessionUser.name || 'Usuario',
               correo: perfilData.correo || sessionUser.email || '',
-              telefono: perfilData.telefono || '',
-              ciudad: perfilData.ciudad || 'Cartagena de Indias',
+              telefono: perfilData.telefono ? sanitizePhone(perfilData.telefono) : '',
               rol: perfilData.rol || sessionUser.role || 'CLIENTE',
               urlImagenPerfil:
                 perfilData.urlImagenPerfil ||
@@ -351,24 +350,36 @@ export default function PerfilUsuario() {
   // Guardar datos de perfil (PUT /usuarios/perfil)
   const handleUpdatePerfil = async (e) => {
     e.preventDefault();
-    if (!usuario.nombreCompleto.trim()) {
+    const cleanNombre = sanitizeText(usuario.nombreCompleto);
+    if (!cleanNombre) {
       Swal.fire('Atención', 'El nombre es obligatorio.', 'warning');
+      return;
+    }
+
+    const cleanPhone = sanitizePhone(usuario.telefono);
+    if (usuario.telefono && cleanPhone.length > 10) {
+      Swal.fire('Atención', 'El teléfono no puede superar los 10 dígitos.', 'warning');
       return;
     }
 
     try {
       setIsUpdating(true);
       await userService.updatePerfil({
-        nombre: usuario.nombreCompleto.trim(),
-        telefono: usuario.telefono.trim(),
+        nombre: cleanNombre,
+        telefono: cleanPhone,
       });
 
       // Actualizar sesión local con el nuevo nombre
       const current = session.getUser() || {};
       session.save({
         ...current,
-        nombre: usuario.nombreCompleto.trim(),
+        nombre: cleanNombre,
       });
+      setUsuario((prev) => ({
+        ...prev,
+        nombreCompleto: cleanNombre,
+        telefono: cleanPhone,
+      }));
 
       Swal.fire({
         icon: 'success',
@@ -1159,13 +1170,17 @@ export default function PerfilUsuario() {
 
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1">
-                  Teléfono
+                  Teléfono (Máx. 10 dígitos)
                 </label>
                 <input
                   type="tel"
                   value={usuario.telefono}
-                  onChange={(e) => setUsuario({ ...usuario, telefono: e.target.value })}
-                  placeholder="+57 300 123 4567"
+                  onChange={(e) => {
+                    const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setUsuario({ ...usuario, telefono: cleaned });
+                  }}
+                  maxLength={10}
+                  placeholder="Ej: 3001234567"
                   className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                 />
               </div>

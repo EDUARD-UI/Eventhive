@@ -18,6 +18,7 @@ export default function InputField({
   autoComplete,
   className = '',
   helperText,
+  ...props
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === 'password';
@@ -53,6 +54,7 @@ export default function InputField({
           onBlur={onBlur}
           disabled={disabled}
           autoComplete={autoComplete}
+          {...props}
           className={`w-full rounded-xl border bg-white text-sm text-ink transition-all outline-none placeholder:text-slate-400
             ${Icon ? 'pl-10' : 'pl-3.5'}
             ${isPassword ? 'pr-11' : 'pr-3.5'}

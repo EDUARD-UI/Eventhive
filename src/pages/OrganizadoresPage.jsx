@@ -78,16 +78,16 @@ export default function OrganizadoresPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col justify-between font-body">
+    <div className="w-full min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col justify-between font-body overflow-x-hidden max-w-full">
       {/* Navbar idéntico */}
       <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-w-0 max-w-full">
         {/* Cabecera / Título de la sección + Buscador integrado */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 pb-6 border-b border-slate-200/80">
-          <div className="space-y-1.5 max-w-xl">
+          <div className="space-y-1.5 max-w-xl min-w-0">
             <div className="flex items-center flex-wrap gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight uppercase">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight uppercase break-words">
                 Organizaciones y Productores
               </h1>
               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/80 shadow-2xs">
@@ -104,7 +104,7 @@ export default function OrganizadoresPage() {
           </div>
 
           {/* Buscador Rápido con ancho óptimo y sin truncamiento */}
-          <div className="relative w-full md:w-84 lg:w-96 shrink-0">
+          <div className="relative w-full md:w-80 lg:w-96 max-w-full shrink-0">
             <input
               type="text"
               value={searchTerm}

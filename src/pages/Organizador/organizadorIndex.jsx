@@ -621,16 +621,6 @@ export default function OrganizadorIndex() {
   };
 
   const renderContent = () => {
-    if (selectedEventId) {
-      return (
-        <EventDetailView
-          eventId={selectedEventId}
-          onBack={() => setSelectedEventId(null)}
-          onEdit={() => {}}
-        />
-      );
-    }
-
     if (creationView === 'wizard') {
       return (
         <>
@@ -702,6 +692,16 @@ export default function OrganizadorIndex() {
       )}
 
       {renderContent()}
+
+      {/* Detalle de evento en modal lateral desde la derecha (estilo Wizard) */}
+      {selectedEventId && (
+        <EventDetailView
+          eventId={selectedEventId}
+          onBack={() => setSelectedEventId(null)}
+          onEdit={() => {}}
+          isDrawer={true}
+        />
+      )}
 
       {/* En pantallas de escritorio (lg+), el wizard se despliega desde una lateral */}
       {creationView === 'wizard' && (

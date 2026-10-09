@@ -397,17 +397,11 @@ const DEFAULT_CATEGORIES = [
         <button
           type="button"
           onClick={handleSafeBack}
-          className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-wider text-slate-800 hover:bg-slate-50 transition-colors shadow-2xs self-start sm:self-auto cursor-pointer"
+          aria-label="Cerrar"
+          title="Cerrar"
+          className="w-10 h-10 rounded-2xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-950 flex items-center justify-center transition-colors shadow-2xs self-start sm:self-auto cursor-pointer shrink-0"
         >
-          {isDrawer ? (
-            <>
-              <FiX size={15} /> Cerrar panel
-            </>
-          ) : (
-            <>
-              <FiArrowLeft size={14} /> Regresar a mis eventos
-            </>
-          )}
+          <FiX size={18} />
         </button>
       </div>
 

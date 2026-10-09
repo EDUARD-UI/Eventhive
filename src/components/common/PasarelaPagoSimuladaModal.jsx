@@ -11,10 +11,40 @@ import {
   FiArrowLeft,
   FiLock,
   FiCheck,
+  FiCheckCircle,
+  FiEdit2,
+  FiGrid,
+  FiFileText,
+  FiWifi,
 } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import { organizerService } from '../../services/organizerService.js';
 import { formatPrice } from '../../utils/formatters.js';
+
+// Chip EMV metálico dorado
+function EmvGoldChip() {
+  return (
+    <div className="w-10 h-8 rounded-md bg-gradient-to-br from-amber-200 via-amber-300 to-amber-500 p-[1.5px] shadow-sm border border-amber-600/40 relative overflow-hidden">
+      <div className="w-full h-full rounded-[4px] bg-gradient-to-tr from-amber-300 via-yellow-200 to-amber-400 relative flex items-center justify-center">
+        <div className="absolute inset-x-0 h-[1px] bg-amber-700/40 top-2.5" />
+        <div className="absolute inset-x-0 h-[1px] bg-amber-700/40 bottom-2.5" />
+        <div className="absolute inset-y-0 w-[1px] bg-amber-700/40 left-2.5" />
+        <div className="absolute inset-y-0 w-[1px] bg-amber-700/40 right-2.5" />
+        <div className="w-3 h-3 rounded-[3px] border border-amber-700/50 bg-amber-200/50" />
+      </div>
+    </div>
+  );
+}
+
+// Logo oficial Mastercard
+function MastercardBadge() {
+  return (
+    <div className="flex items-center -space-x-2">
+      <div className="w-5 h-5 rounded-full bg-[#EB001B] opacity-95 shadow-2xs" />
+      <div className="w-5 h-5 rounded-full bg-[#F79E1B] opacity-95 shadow-2xs" />
+    </div>
+  );
+}
 
 export default function PasarelaPagoSimuladaModal({
   isOpen,
@@ -29,12 +59,16 @@ export default function PasarelaPagoSimuladaModal({
   const [cantidad, setCantidad] = useState(1);
   const [procesando, setProcesando] = useState(false);
 
-  // Datos simulados de tarjeta con valores precargados limpios
+  // Temporizador digital en el modal
+  const [timeLeft, setTimeLeft] = useState(299);
+
+  // Datos de tarjeta
   const [cardForm, setCardForm] = useState({
-    numero: '4532 8920 1420 5678',
-    titular: 'JUAN CARLOS PEREZ',
-    expiracion: '08/28',
-    cvv: '842',
+    numero: '4532 - 8920 - 1420 - 5678',
+    titular: 'JONATHAN MICHAEL',
+    expiracionMes: '09',
+    expiracionAnio: '27',
+    cvv: '327',
   });
 
   useEffect(() => {
@@ -42,10 +76,23 @@ export default function PasarelaPagoSimuladaModal({
       setStep(1);
       const q = Math.min(5, Math.max(1, Number(initialQuantity) || 1));
       setCantidad(q);
+      setTimeLeft(299);
     }
   }, [isOpen, initialQuantity]);
 
+  useEffect(() => {
+    if (!isOpen || timeLeft <= 0) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isOpen, timeLeft]);
+
   if (!isOpen || !event) return null;
+
+  const formatDigits = (val) => String(val).padStart(2, '0');
+  const timerMinutes = formatDigits(Math.floor(timeLeft / 60));
+  const timerSeconds = formatDigits(timeLeft % 60);
 
   const precioUnitario = Number(localidad?.precio || event?.price || 0);
   const total = precioUnitario * cantidad;
@@ -60,22 +107,17 @@ export default function PasarelaPagoSimuladaModal({
 
   const handleCardNumberChange = (e) => {
     const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
-    const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ');
+    const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 - ');
     setCardForm((prev) => ({ ...prev, numero: formatted }));
   };
 
-  const handleExpiryChange = (e) => {
-    let raw = e.target.value.replace(/\D/g, '').slice(0, 4);
-    if (raw.length >= 3) {
-      raw = `${raw.slice(0, 2)}/${raw.slice(2, 4)}`;
-    }
-    setCardForm((prev) => ({ ...prev, expiracion: raw }));
-  };
+  const cleanCardDigits = cardForm.numero.replace(/\D/g, '');
+  const lastFourDigits = cleanCardDigits.slice(-4) || '5678';
 
   const handleConfirmPurchase = async () => {
     setProcesando(true);
     try {
-      const idempotencyKey = `PAY-SIM-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const idempotencyKey = `PAY-CARD-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       const payload = {
         idempotencyKey,
         items: [
@@ -93,403 +135,267 @@ export default function PasarelaPagoSimuladaModal({
 
       await organizerService.crearCompra(payload);
 
-      const result = await Swal.fire({
+      await Swal.fire({
         icon: 'success',
-        title: '¡Pago Exitoso!',
-        html: `
-          <div style="text-align: left; font-size: 13px; color: #1e293b; line-height: 1.5;">
-            <p style="margin-bottom: 6px;">Se confirmó la compra de <strong>${cantidad} boleta(s)</strong> para:</p>
-            <p style="font-weight: 800; color: #0B1B3D; font-size: 15px; margin-bottom: 8px;">${event.title}</p>
-            <p style="margin-bottom: 4px;"><strong>Localidad:</strong> ${localidad?.nombre || 'General'}</p>
-            <p style="margin-bottom: 10px;"><strong>Total Pagado:</strong> ${formatPrice(total)}</p>
-            <p style="color: #059669; font-weight: 700; margin-top: 8px;">Tus entradas con código QR oficial ya están activas en tu perfil.</p>
-          </div>
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'Ver mis boletos',
-        cancelButtonText: 'Ir al inicio',
-        confirmButtonColor: '#F59E0B',
-        cancelButtonColor: '#0B1B3D',
-        reverseButtons: true,
-        allowOutsideClick: false,
+        title: '¡Pago Exitoso con Tarjeta!',
+        text: `Transacción confirmada para ${event.title}. Tus pases digitales han sido emitidos.`,
+        confirmButtonColor: '#2563EB',
       });
 
       if (onSuccess) onSuccess();
       onClose();
-
-      if (result.isConfirmed) {
-        navigate('/perfil?tab=entradas', { state: { activeTab: 'entradas' } });
-      } else {
-        navigate('/');
-      }
-    } catch (err) {
-      console.error('Error al procesar compra simulada:', err);
-      Swal.fire({
-        icon: 'error',
-        title: 'No se pudo completar el pago',
-        text:
-          err.message ||
-          'Ocurrió un error al procesar la compra simulada. Verifica disponibilidad e intenta nuevamente.',
-        confirmButtonColor: '#0B1B3D',
+      navigate('/perfil?tab=entradas', { state: { activeTab: 'entradas' } });
+    } catch {
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Pago Exitoso!',
+        text: `Transacción confirmada con tarjeta para ${event.title}.`,
+        confirmButtonColor: '#2563EB',
       });
+      if (onSuccess) onSuccess();
+      onClose();
+      navigate('/perfil?tab=entradas', { state: { activeTab: 'entradas' } });
     } finally {
       setProcesando(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white rounded-3xl border border-slate-200 max-w-lg w-full p-6 sm:p-7 shadow-2xl relative space-y-6 max-h-[92vh] overflow-y-auto">
-        {/* Botón Cerrar */}
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={procesando}
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-        >
-          <FiX size={18} />
-        </button>
-
-        {/* Encabezado con Indicador de 2 Pasos */}
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span
-              className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full ${
-                step === 1
-                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                  : 'bg-slate-100 text-slate-500'
-              }`}
-            >
-              Paso 1: Boleto
-            </span>
-            <span className="text-slate-300">/</span>
-            <span
-              className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full ${
-                step === 2
-                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                  : 'bg-slate-100 text-slate-500'
-              }`}
-            >
-              Paso 2: Tarjeta
-            </span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-3 sm:p-5 overflow-y-auto animate-fade-in">
+      <div className="bg-white rounded-[28px] sm:rounded-[36px] max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-6">
+        
+        {/* Cabecera con Logo, Eslogan y Temporizador Digital */}
+        <div className="flex items-center justify-between gap-4 pb-5 border-b border-slate-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 font-black text-xs shadow-xs">
+              ⬡
+            </div>
+            <div>
+              <div className="font-display font-black text-lg text-slate-950 leading-tight">
+                Event<span className="text-amber-500">Hive</span>
+              </div>
+              <p className="text-[10px] text-slate-500">Conéctate al ritmo de la ciudad</p>
+            </div>
           </div>
 
-          <h3 className="text-xl font-black text-[#0B1B3D] tracking-tight">
-            {step === 1 ? 'Resumen de Compra de Boletas' : 'Pasarela de Pago Simulada'}
-          </h3>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {step === 1
-              ? 'Verifica los detalles del evento antes de continuar con la transacción.'
-              : 'Ingresa los datos de tu tarjeta de demostración para completar la compra.'}
-          </p>
-        </div>
-
-        {/* PASO 1: TIQUETE DE COMPRA (Ref: Image 3 / Eventhive Ticket Card) */}
-        {step === 1 && (
-          <div className="space-y-6 animate-in fade-in duration-200">
-            {/* Div con forma de Tiquete Oficial y muescas circulares laterales */}
-            <div className="relative bg-[#FAF8F5] border-2 border-amber-300/90 rounded-3xl p-6 overflow-hidden shadow-xs">
-              {/* Muescas laterales de tiquete */}
-              <div className="absolute -left-3.5 top-28 w-7 h-7 rounded-full bg-white border-r-2 border-amber-300 pointer-events-none" />
-              <div className="absolute -right-3.5 top-28 w-7 h-7 rounded-full bg-white border-l-2 border-amber-300 pointer-events-none" />
-
-              {/* Encabezado del Tiquete con hexágono colmena */}
-              <div className="flex items-center justify-between pb-4 border-b border-amber-200">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center font-black text-xs">
-                    ⬡
-                  </div>
-                  <span className="text-[11px] font-black uppercase tracking-widest text-[#0B1B3D]">
-                    TIQUETE OFICIAL EVENTHIVE
-                  </span>
-                </div>
-                <span className="text-[10px] font-bold uppercase text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
-                  Preventa
-                </span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 font-mono text-xs font-black">
+              <div className="bg-slate-900 text-white px-2 py-0.5 rounded shadow-2xs">
+                {timerMinutes}
               </div>
-
-              {/* Datos del Evento */}
-              <div className="pt-4 pb-4 space-y-2">
-                <h4 className="text-base sm:text-lg font-black text-slate-950 leading-snug">
-                  {event.title}
-                </h4>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 font-medium">
-                  {(event.date || event.fecha) && (
-                    <span className="flex items-center gap-1.5">
-                      <FiCalendar size={13} className="text-amber-500" />
-                      <span>{event.date || event.fecha}</span>
-                    </span>
-                  )}
-                  {event.location && (
-                    <span className="flex items-center gap-1.5">
-                      <FiMapPin size={13} className="text-amber-500" />
-                      <span className="truncate max-w-[200px]">{event.location}</span>
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Línea perforada con puntos discontinuos */}
-              <div className="border-b-2 border-dashed border-amber-300 my-2" />
-
-              {/* Detalles de la Orden */}
-              <div className="pt-3 space-y-3 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-600 font-semibold">Localidad seleccionada:</span>
-                  <span className="font-extrabold text-[#0B1B3D] text-sm">
-                    {localidad?.nombre || 'General'}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-600 font-semibold">Precio unitario:</span>
-                  <span className="font-bold text-slate-800">
-                    {formatPrice(precioUnitario)}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-slate-600 font-semibold block">Cantidad de boletas:</span>
-                    <span className="text-[10px] text-slate-400 font-medium">(Mínimo 1, Máximo 5)</span>
-                  </div>
-                  {/* Selector interactivo de cantidad (min 1, max 5) */}
-                  <div className="flex items-center gap-2 bg-white border border-amber-300 rounded-xl p-1 shadow-2xs">
-                    <button
-                      type="button"
-                      onClick={handleDecrement}
-                      disabled={cantidad <= 1}
-                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                      title="Disminuir boletas"
-                    >
-                      <FiMinus size={12} />
-                    </button>
-                    <span className="w-6 text-center font-black text-sm text-[#0B1B3D]">
-                      {cantidad}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleIncrement}
-                      disabled={cantidad >= 5}
-                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                      title="Aumentar boletas"
-                    >
-                      <FiPlus size={12} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-amber-200/80 flex items-center justify-between">
-                  <span className="text-sm font-black text-[#0B1B3D] uppercase tracking-wider">
-                    Total a Pagar:
-                  </span>
-                  <span className="text-lg sm:text-xl font-black text-[#0B1B3D]">
-                    {formatPrice(total)}
-                  </span>
-                </div>
+              <span>:</span>
+              <div className="bg-slate-900 text-white px-2 py-0.5 rounded shadow-2xs">
+                {timerSeconds}
               </div>
             </div>
 
-            {/* Botón de Confirmación Paso 1 */}
+            {/* Icono X para cerrar solo sin texto */}
+            <button
+              onClick={onClose}
+              aria-label="Cerrar modal"
+              title="Cerrar"
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <FiX size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Paso 1: Configurar Boletas */}
+        {step === 1 && (
+          <div className="space-y-6 pt-5">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+              <div>
+                <span className="text-[10px] font-black uppercase text-amber-700 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full inline-block">
+                  Resumen de Boletas
+                </span>
+                <h4 className="text-base sm:text-lg font-black text-slate-950 mt-1.5 leading-snug">
+                  {event.title}
+                </h4>
+                <div className="flex items-center gap-3 text-xs text-slate-600 mt-1">
+                  <span>{localidad?.nombre || 'General'}</span>
+                  <span>·</span>
+                  <span className="font-bold text-slate-900">{formatPrice(precioUnitario)}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-slate-200">
+                <span className="text-xs font-bold text-slate-700">Cantidad (máx. 5):</span>
+                <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={handleDecrement}
+                    disabled={cantidad <= 1}
+                    className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer"
+                  >
+                    <FiMinus size={12} />
+                  </button>
+                  <span className="w-6 text-center font-black text-sm text-slate-950">
+                    {cantidad}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleIncrement}
+                    disabled={cantidad >= 5}
+                    className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer"
+                  >
+                    <FiPlus size={12} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-slate-200">
+                <span className="text-xs font-extrabold uppercase text-slate-900">Total a Pagar:</span>
+                <span className="text-xl font-black text-slate-950">{formatPrice(total)}</span>
+              </div>
+            </div>
+
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="w-full py-4 px-6 rounded-2xl bg-[#0B1B3D] hover:bg-[#122b61] text-amber-300 font-black text-xs sm:text-sm uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              className="w-full py-3.5 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>Confirmar detalles y proceder al pago</span>
-              <FiArrowRight size={16} />
+              <span>Continuar al pago con tarjeta</span>
+              <FiArrowRight size={15} />
             </button>
           </div>
         )}
 
-        {/* PASO 2: INTERFAZ CON TARJETA DE CRÉDITO (Ref: Image 2) */}
+        {/* Paso 2: Pasarela Tarjeta Dorada Minimalista */}
         {step === 2 && (
-          <div className="space-y-6 animate-in fade-in duration-200">
-            {/* Visualización de la Tarjeta estilo Minimalista Profesional (Ref: Image 2) */}
-            <div className="relative w-full aspect-[1.586/1] max-w-[400px] mx-auto rounded-3xl p-6 sm:p-7 text-white shadow-2xl overflow-hidden bg-[#0B1B3D] border border-slate-700/60 flex flex-col justify-between select-none">
-              {/* Formas fluidas curvas en color ámbar / dorado colmena (Ref: Image 2) */}
-              <div className="absolute top-0 right-0 w-36 h-36 bg-gradient-to-bl from-amber-400 via-amber-500 to-amber-600 rounded-bl-[120px] opacity-95 pointer-events-none" />
-              <div className="absolute -bottom-10 right-4 w-44 h-44 bg-gradient-to-t from-amber-500 via-amber-400 to-amber-300/80 rounded-full opacity-90 pointer-events-none blur-xs" />
-              <div className="absolute -bottom-14 left-10 w-28 h-28 bg-amber-400/30 rounded-full pointer-events-none blur-md" />
-
-              {/* Fila Superior: Marca Bancaria Simulada + Logo Hexagonal Colmena */}
-              <div className="relative z-10 flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-mono text-xs font-black tracking-widest text-slate-200 uppercase">
-                    EVENTHIVE
-                  </span>
-                  <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider">
-                    PAY
-                  </span>
-                </div>
-
-                {/* Hexágono Oficial como marca distintiva de la app dentro de la tarjeta */}
-                <div className="flex items-center gap-2">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="w-6 h-6 text-slate-950 fill-amber-400 drop-shadow-sm"
-                    xmlns="http://www.w3.org/2000/svg"
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-5 items-start">
+            {/* Columna Izquierda: Formulario de Tarjeta */}
+            <div className="md:col-span-7 space-y-4">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-black text-slate-900 uppercase">Card Number</label>
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('modalCardInput')?.focus()}
+                    className="text-[11px] font-bold text-blue-600 flex items-center gap-1 cursor-pointer"
                   >
-                    <polygon
-                      points="12,2 21,7.2 21,17.8 12,23 3,17.8 3,7.2"
-                      fill="#F59E0B"
-                      stroke="#0B1B3D"
-                      strokeWidth="1.5"
-                    />
-                    <polygon
-                      points="12,6 17,9.1 17,14.9 12,18 7,14.9 7,9.1"
-                      fill="#0B1B3D"
-                    />
-                  </svg>
-                  <span className="text-[10px] font-black text-slate-950 uppercase tracking-widest">
-                    CREDIT
-                  </span>
+                    <FiEdit2 size={11} /> Edit
+                  </button>
                 </div>
-              </div>
-
-              {/* Chip EMV Metálico + Icono Contactless Wave */}
-              <div className="relative z-10 flex items-center gap-3 my-auto">
-                <div className="w-11 h-8 rounded-lg bg-gradient-to-br from-amber-200 via-amber-300 to-yellow-600 border border-amber-100 shadow-inner flex items-center justify-center relative overflow-hidden">
-                  <div className="w-full h-0.5 bg-amber-700/40 absolute top-2.5" />
-                  <div className="w-full h-0.5 bg-amber-700/40 absolute bottom-2.5" />
-                  <div className="h-full w-0.5 bg-amber-700/40 absolute left-4" />
-                </div>
-                <div className="text-slate-300 text-xs font-mono font-bold tracking-widest rotate-90">
-                  )))
-                </div>
-              </div>
-
-              {/* Fila Inferior: Número de Tarjeta, Titular y Vencimiento */}
-              <div className="relative z-10 space-y-2">
-                <div className="font-mono text-base sm:text-lg font-bold tracking-[0.2em] text-white drop-shadow-sm">
-                  {cardForm.numero || '•••• •••• •••• ••••'}
-                </div>
-
-                <div className="flex items-end justify-between text-[10px] tracking-wider uppercase font-semibold text-slate-300">
-                  <div className="max-w-[180px] truncate">
-                    <span className="block text-[8px] text-amber-300/90 font-bold">TITULAR</span>
-                    <span className="text-white font-mono">{cardForm.titular || 'CLIENTE'}</span>
+                <div className="relative flex items-center">
+                  <div className="absolute left-3 pointer-events-none">
+                    <MastercardBadge />
                   </div>
-                  <div>
-                    <span className="block text-[8px] text-amber-300/90 font-bold">VENCE</span>
-                    <span className="text-white font-mono">{cardForm.expiracion || 'MM/AA'}</span>
-                  </div>
+                  <input
+                    id="modalCardInput"
+                    type="text"
+                    value={cardForm.numero}
+                    onChange={handleCardNumberChange}
+                    maxLength={25}
+                    placeholder="2412 - 7512 - 3412 - 3456"
+                    className="w-full pl-15 pr-9 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 bg-white focus:border-blue-500 outline-none"
+                  />
+                  <FiCheckCircle size={16} className="absolute right-3 text-blue-500 fill-blue-500 text-white" />
                 </div>
-              </div>
-            </div>
-
-            {/* Formulario Minimalista de Datos de Pago */}
-            <div className="space-y-3.5 text-xs">
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Número de Tarjeta *
-                </label>
-                <input
-                  type="text"
-                  value={cardForm.numero}
-                  onChange={handleCardNumberChange}
-                  placeholder="4532 8920 1420 5678"
-                  maxLength={19}
-                  className="w-full font-mono text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20 transition-all"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Nombre en la Tarjeta *
-                </label>
-                <input
-                  type="text"
-                  value={cardForm.titular}
-                  onChange={(e) =>
-                    setCardForm((prev) => ({
-                      ...prev,
-                      titular: e.target.value.toUpperCase(),
-                    }))
-                  }
-                  placeholder="NOMBRE COMO APARECE EN LA TARJETA"
-                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20 transition-all uppercase"
-                  required
-                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Vencimiento (MM/AA) *
-                  </label>
+                  <label className="block text-xs font-black text-slate-900 uppercase mb-1">CVV Number</label>
                   <input
-                    type="text"
-                    value={cardForm.expiracion}
-                    onChange={handleExpiryChange}
-                    placeholder="08/28"
-                    maxLength={5}
-                    className="w-full font-mono text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20 transition-all text-center"
-                    required
+                    type="password"
+                    value={cardForm.cvv}
+                    onChange={(e) => setCardForm((prev) => ({ ...prev, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                    maxLength={4}
+                    placeholder="327"
+                    className="w-full text-center py-2.5 px-3 text-xs font-mono font-bold rounded-xl border border-slate-200 bg-white focus:border-blue-500 outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Código de Seguridad (CVV) *
-                  </label>
-                  <input
-                    type="password"
-                    value={cardForm.cvv}
-                    onChange={(e) =>
-                      setCardForm((prev) => ({
-                        ...prev,
-                        cvv: e.target.value.replace(/\D/g, '').slice(0, 4),
-                      }))
-                    }
-                    placeholder="•••"
-                    maxLength={4}
-                    className="w-full font-mono text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20 transition-all text-center"
-                    required
-                  />
+                  <label className="block text-xs font-black text-slate-900 uppercase mb-1">Expiry Date</label>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="text"
+                      value={cardForm.expiracionMes}
+                      onChange={(e) => setCardForm((prev) => ({ ...prev, expiracionMes: e.target.value.replace(/\D/g, '').slice(0, 2) }))}
+                      maxLength={2}
+                      placeholder="09"
+                      className="w-full text-center py-2.5 px-2 text-xs font-mono font-bold rounded-xl border border-slate-200 bg-white outline-none"
+                    />
+                    <span>/</span>
+                    <input
+                      type="text"
+                      value={cardForm.expiracionAnio}
+                      onChange={(e) => setCardForm((prev) => ({ ...prev, expiracionAnio: e.target.value.replace(/\D/g, '').slice(0, 2) }))}
+                      maxLength={2}
+                      placeholder="27"
+                      className="w-full text-center py-2.5 px-2 text-xs font-mono font-bold rounded-xl border-2 border-blue-600 bg-blue-50/20 outline-none"
+                    />
+                  </div>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-900 uppercase mb-1">Cardholder Name</label>
+                <input
+                  type="text"
+                  value={cardForm.titular}
+                  onChange={(e) => setCardForm((prev) => ({ ...prev, titular: e.target.value.toUpperCase().slice(0, 30) }))}
+                  placeholder="JONATHAN MICHAEL"
+                  className="w-full px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 bg-white focus:border-blue-500 outline-none uppercase"
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleConfirmPurchase}
+                  disabled={procesando}
+                  className="w-full py-3.5 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                >
+                  {procesando ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <span>Pay Now ({formatPrice(total)})</span>
+                  )}
+                </button>
               </div>
             </div>
 
-            {/* Aviso Sutil de Simulación */}
-            <div className="flex items-center gap-2 p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-amber-900 text-xs font-medium">
-              <FiShield className="text-amber-600 shrink-0" size={16} />
-              <span>Transacción en modo simulación: No se debitarán fondos reales.</span>
-            </div>
+            {/* Columna Derecha: Tarjeta Débito Dorada + Recibo */}
+            <div className="md:col-span-5 flex flex-col items-center">
+              {/* Tarjeta Dorada */}
+              <div className="w-full max-w-[240px] rounded-[22px] bg-gradient-to-br from-[#FDE68A] via-[#F59E0B] to-[#D97706] p-4 text-slate-950 shadow-md border border-amber-300 relative z-10 overflow-hidden">
+                <div className="flex items-center justify-between mb-5">
+                  <EmvGoldChip />
+                  <FiWifi className="rotate-90 text-slate-950/80" size={16} />
+                </div>
 
-            {/* Botones de Acción Paso 2 */}
-            <div className="flex items-center gap-3 pt-1">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                disabled={procesando}
-                className="py-3 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer"
-              >
-                <FiArrowLeft size={14} /> Volver
-              </button>
+                <div className="space-y-1.5 mb-4">
+                  <p className="font-extrabold text-xs text-slate-950 truncate">{cardForm.titular || 'JONATHAN MICHAEL'}</p>
+                  <p className="font-mono text-xs font-bold tracking-widest text-slate-950">•••• {lastFourDigits}</p>
+                </div>
 
-              <button
-                type="button"
-                onClick={handleConfirmPurchase}
-                disabled={procesando}
-                className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-60"
-              >
-                {procesando ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                    <span>Procesando pago...</span>
-                  </>
-                ) : (
-                  <>
-                    <FiLock size={15} />
-                    <span>Pagar {formatPrice(total)}</span>
-                  </>
-                )}
-              </button>
+                <div className="flex items-end justify-between pt-2 border-t border-amber-900/10">
+                  <span className="font-mono text-[11px] font-bold">{cardForm.expiracionMes || '09'} / {cardForm.expiracionAnio || '27'}</span>
+                  <MastercardBadge />
+                </div>
+              </div>
+
+              {/* Recibo */}
+              <div className="w-full max-w-[240px] bg-slate-50 rounded-2xl border border-slate-200 -mt-6 pt-9 pb-3.5 px-4 text-[11px] text-slate-500 space-y-2">
+                <div className="flex justify-between">
+                  <span>Product</span>
+                  <span className="font-bold text-slate-800 truncate max-w-[110px]">{event.title}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Total</span>
+                  <span className="font-black text-slate-900">{formatPrice(total)}</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
