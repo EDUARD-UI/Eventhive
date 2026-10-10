@@ -7,10 +7,15 @@ import {
   Building2,
   Phone,
   User,
+  Eye,
+  Mail,
+  Edit,
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import AdminInfoAlert from '../../components/componentsAdmin/AdminInfoAlert.jsx';
+import ModalDetalleUsuarioAdmin from '../../components/componentsAdmin/ModalDetalleUsuarioAdmin.jsx';
+import ModalEnviarCorreo from '../../components/Shared/ModalEnviarCorreo.jsx';
 import adminService from '../../features/admin/services/adminService.js';
 
 export default function AdminUsuariosView({
@@ -24,6 +29,15 @@ export default function AdminUsuariosView({
   const [pageSize, setPageSize] = useState(10);
   const [totalItems, setTotalItems] = useState(initialUsuarios.length || 0);
   const [loading, setLoading] = useState(false);
+
+  // Modales a la derecha
+  const [selectedUserForDrawer, setSelectedUserForDrawer] = useState(null);
+  const [mailModal, setMailModal] = useState({
+    isOpen: false,
+    email: '',
+    name: '',
+    subject: '',
+  });
 
   // Carga reactiva de usuarios desde endpoint paginado GET /api/usuarios o búsqueda
   const fetchUsuarios = useCallback(async () => {
@@ -91,51 +105,73 @@ export default function AdminUsuariosView({
     }
   };
 
+  const handleSaveUser = async (updatedData) => {
+    if (onUpdateUsuario) {
+      await onUpdateUsuario(updatedData);
+    } else {
+      await adminService.updateUsuario(updatedData.id, updatedData);
+    }
+    await fetchUsuarios();
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Alerta Informativa Inicial (Requisito 10) */}
+      {/* Alerta Informativa Inicial */}
       <AdminInfoAlert
         id="usuarios"
         title="Directorio Central de Usuarios"
-        description="Consulte la lista paginada de cuentas registradas en Eventhive, su rol asignado en la plataforma y la organización a la que están vinculados en caso de existir."
+        description="Consulte la lista paginada de cuentas registradas en Eventhive, su rol asignado en la plataforma y la organización a la que están vinculados. Puede ver el detalle de cada usuario, editar sus permisos o enviarle una comunicación vía correo en el panel lateral derecho."
       />
 
-      {/* Filtros y Buscador */}
-      <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
-        <div className="relative w-full md:w-96">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" strokeWidth={1.75} />
-          <input
-            type="text"
-            placeholder="Buscar por nombre de usuario..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-          />
+      {/* Encabezado y Barra de Filtros */}
+      <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" strokeWidth={1.75} />
+            <span>Directorio de Cuentas de Usuario</span>
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Total registrado: <strong>{totalItems}</strong> cuentas en la base de datos
+          </p>
         </div>
 
-        <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+          {/* Buscador */}
+          <div className="relative w-full sm:w-64">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" strokeWidth={1.75} />
+            <input
+              type="text"
+              placeholder="Buscar por nombre de usuario..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
+          </div>
+
+          {/* Filtro por Rol */}
           <select
             value={filtroRol}
             onChange={(e) => {
               setFiltroRol(e.target.value);
               setCurrentPage(1);
             }}
-            className="py-2.5 px-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full sm:w-auto text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           >
             <option value="TODOS">Todos los Roles</option>
             <option value="CLIENTE">Clientes</option>
             <option value="REPRESENTANTE">Representantes</option>
             <option value="OPERADOR">Operadores</option>
             <option value="MODERADOR">Moderadores</option>
+            <option value="MARKETING">Marketing</option>
             <option value="ADMINISTRADOR">Administradores</option>
           </select>
         </div>
       </div>
 
-      {/* Tabla de Usuarios (Requisito 5: NO mostrar Correo ni Estado) */}
+      {/* Tabla de Usuarios */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -146,18 +182,19 @@ export default function AdminUsuariosView({
                 <th className="py-3.5 px-4">Teléfono</th>
                 <th className="py-3.5 px-4 text-center">Rol del Usuario</th>
                 <th className="py-3.5 px-4">Organización Vinculada</th>
+                <th className="py-3.5 px-4 text-right">Acción</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-400">
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
                     Cargando directorio de usuarios...
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-400">
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
                     No se encontraron usuarios con los criterios especificados.
                   </td>
                 </tr>
@@ -207,7 +244,7 @@ export default function AdminUsuariosView({
                         </Badge>
                       </td>
 
-                      {/* Organización Vinculada (Requisito 5) */}
+                      {/* Organización Vinculada */}
                       <td className="py-4 px-4">
                         {orgName ? (
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-800 font-medium">
@@ -219,6 +256,38 @@ export default function AdminUsuariosView({
                             Sin organización
                           </span>
                         )}
+                      </td>
+
+                      {/* Acciones individuales (Ver detalle a la derecha y Correo individual) */}
+                      <td className="py-4 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUserForDrawer(user)}
+                            className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 text-xs font-bold transition-all active:scale-95"
+                            title="Ver detalle y editar usuario"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Detalle</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setMailModal({
+                                isOpen: true,
+                                email: user.correo || user.email || '',
+                                name: user.nombre || '',
+                                subject: `Comunicación para ${user.nombre}`,
+                              })
+                            }
+                            className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 text-xs font-bold transition-all active:scale-95"
+                            title="Enviar correo individual a este usuario"
+                          >
+                            <Mail className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Correo</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -241,6 +310,34 @@ export default function AdminUsuariosView({
           pageSizeOptions={[5, 10, 20]}
         />
       </div>
+
+      {/* Modal Drawer a la Derecha para Detalle y Edición de Usuario */}
+      {selectedUserForDrawer && (
+        <ModalDetalleUsuarioAdmin
+          usuario={selectedUserForDrawer}
+          onClose={() => setSelectedUserForDrawer(null)}
+          onSave={handleSaveUser}
+          onOpenSendMail={(mailData) => {
+            setMailModal({
+              isOpen: true,
+              email: mailData.email,
+              name: mailData.name,
+              subject: `Comunicación para ${mailData.name}`,
+            });
+          }}
+        />
+      )}
+
+      {/* Modal Drawer a la Derecha para Enviar Correo Individual */}
+      <ModalEnviarCorreo
+        isOpen={mailModal.isOpen}
+        onClose={() => setMailModal((prev) => ({ ...prev, isOpen: false }))}
+        initialEmail={mailModal.email}
+        initialName={mailModal.name}
+        defaultSubject={mailModal.subject}
+        title="Enviar Correo al Usuario"
+        subtitle="Comunicación individual directa desde el panel de administración"
+      />
     </div>
   );
 }

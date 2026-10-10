@@ -56,7 +56,7 @@ export default function Pagination({
           onClick={() => handlePageClick(safePage - 1)}
           disabled={safePage <= 1}
           aria-label="Página anterior"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs transition-all hover:bg-slate-100 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1428] text-slate-700 dark:text-slate-300 shadow-xs transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
         >
           <FiChevronLeft size={16} />
         </button>
@@ -67,7 +67,7 @@ export default function Pagination({
               return (
                 <span
                   key={`ellipsis-${idx}`}
-                  className="flex h-9 w-8 items-center justify-center text-slate-400 text-xs font-bold"
+                  className="flex h-9 w-8 items-center justify-center text-slate-400 dark:text-slate-500 text-xs font-bold"
                 >
                   •••
                 </span>
@@ -82,8 +82,8 @@ export default function Pagination({
                 aria-current={isActive ? 'page' : undefined}
                 className={`flex h-9 min-w-[36px] px-3 items-center justify-center rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-slate-950 text-white shadow-md shadow-slate-950/20 scale-105'
-                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 hover:border-slate-300 shadow-xs'
+                    ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 scale-105'
+                    : 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1428] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs'
                 }`}
               >
                 {p}
@@ -97,7 +97,7 @@ export default function Pagination({
           onClick={() => handlePageClick(safePage + 1)}
           disabled={safePage >= totalPages}
           aria-label="Página siguiente"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs transition-all hover:bg-slate-100 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1428] text-slate-700 dark:text-slate-300 shadow-xs transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
         >
           <FiChevronRight size={16} />
         </button>
@@ -107,25 +107,25 @@ export default function Pagination({
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3.5 border-t border-slate-200/80 bg-slate-50/50 text-xs text-slate-600 select-none ${className}`}
+      className={`flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3.5 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0B1428]/50 text-xs text-slate-600 dark:text-slate-400 select-none ${className}`}
     >
       {/* Información de registros y selector de tamaño */}
-      <div className="flex flex-wrap items-center gap-3 text-slate-500">
+      <div className="flex flex-wrap items-center gap-3 text-slate-500 dark:text-slate-400">
         <span>
           Mostrando{' '}
-          <strong className="font-semibold text-slate-800">
+          <strong className="font-semibold text-slate-800 dark:text-slate-200">
             {totalItems === 0 ? 0 : `${startRecord}-${endRecord}`}
           </strong>{' '}
-          de <strong className="font-semibold text-slate-800">{totalItems}</strong> registros
+          de <strong className="font-semibold text-slate-800 dark:text-slate-200">{totalItems}</strong> registros
         </span>
 
         {showPageSize && onPageSizeChange && totalItems > 0 && (
-          <div className="flex items-center gap-1.5 ml-1 sm:ml-3 pl-3 border-l border-slate-200">
+          <div className="flex items-center gap-1.5 ml-1 sm:ml-3 pl-3 border-l border-slate-200 dark:border-slate-800">
             <span className="text-[11px] text-slate-400">Filas:</span>
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 shadow-sm outline-none focus:border-brand cursor-pointer hover:border-slate-300 transition-colors"
+              className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1428] px-2 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-sm outline-none focus:border-amber-500 cursor-pointer hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
             >
               {pageSizeOptions.map((opt) => (
                 <option key={opt} value={opt}>
@@ -144,7 +144,7 @@ export default function Pagination({
           onClick={() => handlePageClick(safePage - 1)}
           disabled={safePage <= 1}
           aria-label="Página anterior"
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1428] text-slate-600 dark:text-slate-300 shadow-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-[#0B1428]"
         >
           <FiChevronLeft size={15} />
         </button>
@@ -155,7 +155,7 @@ export default function Pagination({
               return (
                 <span
                   key={`ellipsis-${idx}`}
-                  className="flex h-8 w-8 items-center justify-center text-slate-400 text-xs"
+                  className="flex h-8 w-8 items-center justify-center text-slate-400 dark:text-slate-500 text-xs"
                 >
                   …
                 </span>
@@ -170,8 +170,8 @@ export default function Pagination({
                 aria-current={isActive ? 'page' : undefined}
                 className={`flex h-8 min-w-[32px] px-2 items-center justify-center rounded-lg text-xs font-semibold shadow-sm transition-all ${
                   isActive
-                    ? 'bg-brand text-white shadow-brand/20 shadow-md font-bold'
-                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-amber-500 text-slate-950 font-bold shadow-amber-500/20 shadow-md'
+                    : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1428] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {p}
@@ -185,7 +185,7 @@ export default function Pagination({
           onClick={() => handlePageClick(safePage + 1)}
           disabled={safePage >= totalPages}
           aria-label="Página siguiente"
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1428] text-slate-600 dark:text-slate-300 shadow-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-[#0B1428]"
         >
           <FiChevronRight size={15} />
         </button>

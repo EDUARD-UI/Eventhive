@@ -11,20 +11,19 @@ import {
 } from 'react-icons/fi';
 import Hero from '../components/Hero.jsx';
 import FeaturedEventsCarousel from '../components/home/FeaturedEventsCarousel.jsx';
-import HiveEventCard from '../components/home/HiveEventCard.jsx';
+import CrossedRibbonsBanner from '../components/home/CrossedRibbonsBanner.jsx';
 import CategoryTickerCarousel from '../components/home/CategoryTickerCarousel.jsx';
 import HiveEmptyState from '../components/home/HiveEmptyState.jsx';
 import HomeBannersSection from '../components/home/HomeBannersSection.jsx';
-import OrganizerCtaSection from '../components/home/OrganizerCtaSection.jsx';
+import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import CustomSelect from '../components/common/CustomSelect.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
 import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
-import TicketSectionSeparator from '../components/common/TicketSectionSeparator.jsx';
-import MapDynamicBackground from '../components/home/MapDynamicBackground.jsx';
 import { getFeaturedEvents, getMapEvents, getUpcomingEvents } from '../services/eventService.js';
 import { getCategoryNames } from '../services/categoryService.js';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 const DISTANCE_OPTIONS = [
   { value: 'all', label: 'Todas las distancias' },
@@ -66,7 +65,7 @@ const userLocationPinIcon = () =>
   L.divIcon({
     className: 'custom-user-pin-wrapper',
     html: `
-      <div style="position: relative; display: flex; items-center justify-content: center; width: 30px; height: 30px;">
+      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px;">
         <span style="position: absolute; width: 30px; height: 30px; border-radius: 9999px; background: rgba(245, 158, 11, 0.4); animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
         <span style="position: relative; width: 15px; height: 15px; border-radius: 9999px; background: #F59E0B; border: 2.5px solid #0B132B; box-shadow: 0 2px 8px rgba(0,0,0,0.6);"></span>
       </div>
@@ -244,24 +243,19 @@ export default function Home() {
     })),
   ], [categoryList]);
 
+  const { isDark } = useTheme();
+
   return (
-    <div className="w-full min-h-screen bg-white text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body overflow-x-clip">
+    <div className="w-full min-h-screen bg-slate-50 dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 selection:bg-amber-400 selection:text-slate-950 font-body overflow-x-clip transition-colors duration-200">
 
       {/* Navbar Superior Fijo / Sticky */}
-      <Navbar variant="dark" />
+      <Navbar />
 
       {/* Hero Principal con Buscador Integrado */}
       <Hero />
-      
 
-      {/* 2. Eventos Destacados: Título centrado sin descripción ni badges */}
-      <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-10 pb-8 sm:pt-14 sm:pb-12 max-w-[1850px] mx-auto relative z-10 bg-white">
-        <div className="flex flex-col items-center justify-center mb-8 text-center">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight uppercase">
-            
-          </h2>
-        </div>
-
+      {/* 2. Eventos Destacados */}
+      <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-10 pb-8 sm:pt-14 sm:pb-12 max-w-[1850px] mx-auto relative z-10 transition-colors duration-200">
         {(() => {
           const carouselEvents = featuredEvents.length > 0 ? featuredEvents : upcomingEvents;
           if (carouselEvents.length > 0) {
@@ -269,11 +263,11 @@ export default function Home() {
           }
           if (isLoadingEvents) {
             return (
-              <div className="w-full rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[340px] max-h-[480px] bg-slate-200 animate-pulse relative overflow-hidden flex flex-col justify-end p-6 sm:p-12 shadow-sm">
-                <div className="w-28 h-6 bg-slate-300 rounded-md mb-4" />
-                <div className="w-2/3 h-8 sm:h-10 bg-slate-300 rounded-lg mb-3" />
-                <div className="w-1/2 h-4 bg-slate-300 rounded mb-6 hidden sm:block" />
-                <div className="w-36 h-10 bg-slate-300 rounded-xl" />
+              <div className="w-full rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[340px] max-h-[480px] bg-slate-200 dark:bg-slate-800/80 border border-slate-300/40 dark:border-slate-700/60 animate-pulse relative overflow-hidden flex flex-col justify-end p-6 sm:p-12 shadow-sm">
+                <div className="w-28 h-6 bg-slate-300 dark:bg-slate-700 rounded-md mb-4" />
+                <div className="w-2/3 h-8 sm:h-10 bg-slate-300 dark:bg-slate-700 rounded-lg mb-3" />
+                <div className="w-1/2 h-4 bg-slate-300 dark:bg-slate-700/80 rounded mb-6 hidden sm:block" />
+                <div className="w-36 h-10 bg-slate-300 dark:bg-slate-700 rounded-xl" />
               </div>
             );
           }
@@ -287,22 +281,21 @@ export default function Home() {
         })()}
       </section>
 
-      {/* Separador entre Destacados y Próximos Eventos */}
-      <TicketSectionSeparator />
+      {/* Cintas Cruzadas entre el Carrusel Principal y los Eventos Próximos */}
+      <CrossedRibbonsBanner badgeText="CARTAGENA EN VIVO" />
 
-
-      {/* 3. Próximos Eventos: Título centrado y Grilla de Boletos Verticales en Blanco Puro */}
-      <section id="proximos" className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-12 bg-white">
+      {/* 3. Próximos Eventos: Título centrado y Grilla de Boletos */}
+      <section id="proximos" className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-10 sm:py-14 bg-white/60 dark:bg-slate-900/40 transition-colors duration-200">
         <div className="max-w-[1850px] mx-auto">
           <div className="flex flex-col items-center justify-center mb-10 text-center relative">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight uppercase">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
               Próximos Eventos
             </h2>
 
             <div className="mt-3">
               <Link
                 to="/buscar"
-                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 hover:text-amber-600 transition-colors duration-200 group"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 group"
               >
                 <span>Ver cartelera completa</span>
                 <FiArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-1" />
@@ -315,7 +308,6 @@ export default function Home() {
               {[1, 2, 3, 4].map((n) => (
                 <div key={n} className={n % 2 === 0 ? 'lg:translate-y-3' : ''}>
                   <EventCardSkeleton
-                    notchBg="bg-white"
                     aspectVariant={n % 2 === 0 ? 'tall' : 'standard'}
                   />
                 </div>
@@ -327,7 +319,6 @@ export default function Home() {
                 <div key={event.id} className={idx % 2 === 1 ? 'lg:translate-y-3' : ''}>
                   <EventListCard
                     event={event}
-                    notchBg="bg-white"
                     aspectVariant={idx % 2 === 0 ? 'standard' : 'tall'}
                   />
                 </div>
@@ -343,22 +334,12 @@ export default function Home() {
         </div>
       </section>
 
-      
-
-      {/* 5. Mapa de Eventos en Cartagena */}
-      <section id="mapa" className="w-full bg-[#0A1325] px-6 sm:px-12 lg:px-20 py-16 sm:py-20 relative z-0 isolate overflow-hidden">
-        {/* Borde superior estilo tiquete punteado (dashed) grueso que delimita la sección oscura de Mapa */}
-        <div
-          aria-hidden="true"
-          className="absolute left-0 right-0 top-0 z-20 pointer-events-none select-none w-full border-t-[3px] sm:border-t-4 border-dashed border-slate-200/90"
-        />
-
-        {/* Fondo dinámico de partículas doradas ambientales */}
-        <MapDynamicBackground />
+      {/* 4. Mapa de Eventos en Cartagena */}
+      <section id="mapa" className="w-full bg-[#0A1325] dark:bg-white text-white dark:text-slate-900 px-6 sm:px-12 lg:px-20 py-16 sm:py-20 relative z-0 isolate overflow-hidden transition-colors duration-200">
 
         <div className="max-w-7xl mx-auto relative z-10 isolate">
           <div className="mb-8 flex flex-col items-center justify-center text-center">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight uppercase mb-6">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white dark:text-slate-950 tracking-tight uppercase mb-6">
               Mapa de Eventos
             </h2>
 
@@ -399,7 +380,7 @@ export default function Home() {
                   onChange={(event) => setSelectedCategory(event.target.value)}
                   options={categoryOptions}
                   placeholder="Todas las categorías"
-                  variant="dark"
+                  variant={isDark ? 'light' : 'dark'}
                 />
               </div>
 
@@ -410,14 +391,14 @@ export default function Home() {
                   onChange={(event) => handleDistanceChange(event.target.value)}
                   options={DISTANCE_OPTIONS}
                   placeholder="Distancia"
-                  variant="dark"
+                  variant={isDark ? 'light' : 'dark'}
                 />
               </div>
             </div>
           </div>
 
-          {/* Contenedor del Mapa */}
-          <div className="relative z-0 isolate overflow-hidden rounded-3xl border border-slate-800 shadow-2xl h-[440px] sm:h-[500px] bg-slate-900">
+          {/* Contenedor del Mapa con mapa en colores por defecto */}
+          <div className="relative z-0 isolate overflow-hidden rounded-3xl border border-slate-800 dark:border-slate-300 shadow-2xl h-[440px] sm:h-[500px] bg-slate-100">
             <MapContainer
               center={userLocation ? [userLocation.lat, userLocation.lng] : [10.415, -75.54]}
               zoom={13}
@@ -447,14 +428,14 @@ export default function Home() {
                   icon={userLocationPinIcon()}
                 >
                   <Popup>
-                    <div className="p-1 text-center min-w-[150px]">
+                    <div className="p-2 text-center min-w-[150px]">
                       <span className="font-bold text-xs text-amber-600 block mb-0.5">
-                        📍 Tu ubicación actual
+                        Tu ubicación actual
                       </span>
                       <span className="text-[11px] text-slate-600 block">
                         {selectedDistance === 'all'
                           ? 'Ubicación de referencia'
-                          : `Buscando eventos en un radio de ${selectedDistance} km`}
+                          : `Buscando en radio de ${selectedDistance} km`}
                       </span>
                     </div>
                   </Popup>
@@ -474,28 +455,29 @@ export default function Home() {
                     icon={locationPinIcon()}
                   >
                     <Popup>
-                      <div className="p-1 min-w-[190px]">
+                      <div className="p-2 min-w-[200px]">
                         <div className="flex items-center justify-between gap-1 mb-1">
                           <span className="text-[10px] font-bold text-amber-700 uppercase block">
                             {event.category}
                           </span>
                           {distanceToUser != null && (
-                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                            <span className="text-[10px] font-bold text-slate-950 bg-amber-400 px-1.5 py-0.5 rounded">
                               {distanceToUser.toFixed(1)} km
                             </span>
                           )}
                         </div>
-                        <h4 className="text-xs font-bold text-slate-900 mb-1">
+                        <h4 className="text-xs font-bold text-slate-900 mb-1 leading-snug">
                           {event.title}
                         </h4>
-                        <p className="text-[11px] text-slate-600 mb-2">
+                        <p className="text-[11px] text-slate-600 mb-2 line-clamp-2">
                           {event.description}
                         </p>
                         <Link
                           to={`/eventos/${event.id}`}
-                          className="text-[11px] font-bold text-amber-600 hover:underline inline-block"
+                          className="text-[11px] font-bold text-amber-600 hover:text-amber-700 inline-flex items-center gap-1 transition-colors"
                         >
-                          Ver detalle →
+                          <span>Ver evento</span>
+                          <FiArrowRight size={11} />
                         </Link>
                       </div>
                     </Popup>
@@ -505,42 +487,28 @@ export default function Home() {
             </MapContainer>
           </div>
         </div>
-
-        {/* Borde inferior estilo tiquete punteado (dashed) grueso que delimita la sección oscura de Mapa */}
-        <div
-          aria-hidden="true"
-          className="absolute left-0 right-0 bottom-0 z-20 pointer-events-none select-none w-full border-b-[3px] sm:border-b-4 border-dashed border-slate-200/90"
-        />
       </section>
 
       
 
 
-      {/* 5. Carrusel de Categorías en Fondo Blanco */}
-      <section className="w-full py-8 sm:py-12 bg-white">
+      {/* 5. Carrusel de Categorías */}
+      <section className="w-full py-8 sm:py-12 bg-transparent transition-colors duration-200">
         <div className="text-center mb-6">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight uppercase">
-            
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
+            Categorías
           </h2>
         </div>
         <CategoryTickerCarousel />
       </section>
 
-      {/* Separador entre Categorías y Banners */}
-      <TicketSectionSeparator />
-
-
-      {/* 6. Banners Asimétricos (/api/banners-home) */}
+      {/* 6. Banners Asimétricos */}
       <HomeBannersSection />
 
-      {/* Separador entre Banners y Franja CTA */}
-      <TicketSectionSeparator />
+      {/* 7. Pre-Footer "Conéctate al ritmo de la ciudad" con cartas coleccionables */}
+      <CityRhythmPreFooter />
 
-
-      {/* 7. Franja CTA para Organizadores: Justo encima del Footer */}
-      <OrganizerCtaSection />
-
-      {/* Pie de Página idéntico */}
+      {/* Pie de Página */}
       <Footer />
     </div>
   );

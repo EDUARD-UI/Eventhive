@@ -48,7 +48,82 @@ export async function getHomeBanners() {
   }
 }
 
+/**
+ * Obtener banners del home para administración (GET /api/banners-home/admin).
+ * Devuelve exactamente los dos espacios administrativos (posiciones 1 y 2).
+ */
+export async function getAdminBanners() {
+  try {
+    const data = await httpClient.get('/banners-home/admin');
+    const list = Array.isArray(data) ? data : data?.content || [];
+    if (list.length > 0) {
+      return list.map((b) => ({
+        ...normalizeBanner(b),
+        id: b.id,
+        posicion: b.posicion,
+        titulo: b.titulo || '',
+        imagenUrl: b.imagenUrl || '',
+        textoBoton: b.textoBoton || '',
+        enlaceUrl: b.enlaceUrl || '',
+      })).sort((a, b) => a.posicion - b.posicion);
+    }
+  } catch (err) {
+    console.warn('No se pudieron obtener los banners de admin, usando fallback:', err?.message);
+  }
+
+  // Fallback con los banners del home
+  const publicBanners = await getHomeBanners();
+  const slot1 = publicBanners.find((b) => Number(b.posicion) === 1) || {
+    id: null,
+    posicion: 1,
+    titulo: '',
+    imagenUrl: '',
+    textoBoton: 'Ver más',
+    enlaceUrl: '',
+  };
+  const slot2 = publicBanners.find((b) => Number(b.posicion) === 2) || {
+    id: null,
+    posicion: 2,
+    titulo: '',
+    imagenUrl: '',
+    textoBoton: 'Ver más',
+    enlaceUrl: '',
+  };
+  return [slot1, slot2];
+}
+
+/**
+ * Guardar o actualizar banner por posición (POST o PUT /api/banners-home/{posicion})
+ */
+export async function saveBanner(posicion, bannerData) {
+  const payload = {
+    titulo: bannerData.titulo,
+    imagenUrl: bannerData.imagenUrl,
+    textoBoton: bannerData.textoBoton,
+    enlaceUrl: bannerData.enlaceUrl,
+    posicion: Number(posicion),
+  };
+
+  try {
+    return await httpClient.put(`/banners-home/${posicion}`, payload);
+  } catch (err) {
+    // Si da 404 (no existe aún en esa posición), usar POST
+    return await httpClient.post(`/banners-home/${posicion}`, payload);
+  }
+}
+
+/**
+ * Eliminar banner por posición (DELETE /api/banners-home/{posicion})
+ */
+export async function deleteBanner(posicion) {
+  return await httpClient.delete(`/banners-home/${posicion}`);
+}
+
 export default {
   getHomeBanners,
+  getAdminBanners,
+  saveBanner,
+  deleteBanner,
   normalizeBanner,
 };
+

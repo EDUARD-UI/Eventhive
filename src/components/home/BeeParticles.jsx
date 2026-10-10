@@ -89,84 +89,51 @@ export function BeeSvg({ size = 32, angle = 0, isLeader = false }) {
  * Exactamente 5 abejas estilizadas con estela dorada (honey trail)
  * y comportamiento interactivo con el cursor sobre fondo blanco.
  */
-export default function BeeParticles({ mousePos }) {
+export default function BeeParticles() {
   const containerRef = useRef(null);
 
   // Estado inicial de las 5 abejas dispersas por el hero
   const [bees, setBees] = useState([
-    { id: 1, x: 240, y: 130, angle: 15, size: 34, isLeader: true, trail: [] },
-    { id: 2, x: 750, y: 100, angle: -20, size: 26, isLeader: false, trail: [] },
-    { id: 3, x: 980, y: 160, angle: 25, size: 28, isLeader: false, trail: [] },
-    { id: 4, x: 420, y: 220, angle: -10, size: 24, isLeader: false, trail: [] },
-    { id: 5, x: 120, y: 80, angle: 30, size: 22, isLeader: false, trail: [] },
+    { id: 1, x: 280, y: 140, angle: 15, size: 34, isLeader: true, trail: [] },
+    { id: 2, x: 720, y: 110, angle: -20, size: 26, isLeader: false, trail: [] },
+    { id: 3, x: 920, y: 220, angle: 25, size: 28, isLeader: false, trail: [] },
+    { id: 4, x: 440, y: 280, angle: -10, size: 24, isLeader: false, trail: [] },
+    { id: 5, x: 140, y: 210, angle: 30, size: 22, isLeader: false, trail: [] },
   ]);
 
   useEffect(() => {
     let animId;
     let t = 0;
 
-    // Física de simulación para cada una de las 5 abejas
+    // Simulación autónoma y orgánica para cada una de las 5 abejas (se mueven a placer)
     const state = [
-      { x: 240, y: 130, vx: 0, vy: 0, baseX: 260, baseY: 130, speed: 0.015, radiusX: 75, radiusY: 45, size: 34, trail: [] },
-      { x: 750, y: 100, vx: 0, vy: 0, baseX: 780, baseY: 100, speed: 0.020, radiusX: 55, radiusY: 35, size: 26, trail: [] },
-      { x: 980, y: 160, vx: 0, vy: 0, baseX: 960, baseY: 160, speed: 0.017, radiusX: 65, radiusY: 40, size: 28, trail: [] },
-      { x: 420, y: 220, vx: 0, vy: 0, baseX: 440, baseY: 210, speed: 0.019, radiusX: 55, radiusY: 35, size: 24, trail: [] },
-      { x: 120, y: 80, vx: 0, vy: 0, baseX: 140, baseY: 85, speed: 0.022, radiusX: 45, radiusY: 30, size: 22, trail: [] },
+      { x: 280, y: 140, vx: 0, vy: 0, baseX: 300, baseY: 160, speedX: 0.012, speedY: 0.009, radiusX: 180, radiusY: 90, size: 34, trail: [] },
+      { x: 720, y: 110, vx: 0, vy: 0, baseX: 700, baseY: 140, speedX: 0.015, speedY: 0.011, radiusX: 160, radiusY: 100, size: 26, trail: [] },
+      { x: 920, y: 220, vx: 0, vy: 0, baseX: 850, baseY: 260, speedX: 0.011, speedY: 0.014, radiusX: 200, radiusY: 110, size: 28, trail: [] },
+      { x: 440, y: 280, vx: 0, vy: 0, baseX: 460, baseY: 290, speedX: 0.013, speedY: 0.016, radiusX: 150, radiusY: 80, size: 24, trail: [] },
+      { x: 140, y: 210, vx: 0, vy: 0, baseX: 160, baseY: 220, speedX: 0.017, speedY: 0.012, radiusX: 120, radiusY: 95, size: 22, trail: [] },
     ];
 
     const loop = () => {
       t += 1;
-      const targetMouse = mousePos?.current;
-      const hasMouse = targetMouse && targetMouse.x > 0 && targetMouse.y > 0;
 
       const updated = state.map((b, idx) => {
-        // Movimiento natural orbital en lemniscata (8 suave)
-        const orbitX = b.baseX + Math.sin(t * b.speed + idx * 1.8) * b.radiusX;
-        const orbitY = b.baseY + Math.cos(t * b.speed * 1.5 + idx * 1.2) * b.radiusY;
+        // Vuelo libre y ondulante multidireccional (a placer)
+        const destX = b.baseX + Math.sin(t * b.speedX + idx * 1.5) * b.radiusX + Math.sin(t * 0.025 + idx) * 20;
+        const destY = b.baseY + Math.cos(t * b.speedY + idx * 2.1) * b.radiusY + Math.cos(t * 0.02 + idx) * 15;
 
-        let destX = orbitX;
-        let destY = orbitY;
-
-        // Si el cursor interactúa en el hero:
-        if (hasMouse) {
-          if (idx === 0) {
-            // Líder: curiosidad directa hacia el cursor
-            destX = orbitX * 0.45 + targetMouse.x * 0.55;
-            destY = orbitY * 0.45 + targetMouse.y * 0.55 - 45;
-          } else if (idx === 1) {
-            destX = orbitX * 0.65 + (targetMouse.x + 90) * 0.35;
-            destY = orbitY * 0.65 + (targetMouse.y - 25) * 0.35;
-          } else if (idx === 2) {
-            destX = orbitX * 0.70 + (targetMouse.x + 130) * 0.30;
-            destY = orbitY * 0.70 + (targetMouse.y + 35) * 0.30;
-          } else if (idx === 3) {
-            destX = orbitX * 0.75 + (targetMouse.x - 85) * 0.25;
-            destY = orbitY * 0.75 + (targetMouse.y + 45) * 0.25;
-          } else {
-            destX = orbitX * 0.80 + (targetMouse.x - 120) * 0.20;
-            destY = orbitY * 0.80 + (targetMouse.y - 40) * 0.20;
-          }
-        }
-
-        // Amortiguación / física suave
-        b.vx = (destX - b.x) * 0.055;
-        b.vy = (destY - b.y) * 0.055;
+        // Amortiguación fluida
+        b.vx = (destX - b.x) * 0.04;
+        b.vy = (destY - b.y) * 0.04;
         b.x += b.vx;
         b.y += b.vy;
 
-        // Ángulo de orientación hacia la dirección del movimiento
-        let targetAngle = 0;
-        if (hasMouse && idx === 0) {
-          const dx = targetMouse.x - b.x;
-          const dy = targetMouse.y - b.y;
-          targetAngle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
-        } else {
-          targetAngle = Math.atan2(b.vy, b.vx) * (180 / Math.PI) + 90;
-        }
+        // Ángulo de orientación natural hacia la trayectoria
+        const targetAngle = Math.atan2(b.vy, b.vx) * (180 / Math.PI) + 90;
 
         // Estela dorada de miel
         if (t % 3 === 0) {
-          b.trail.unshift({ x: b.x, y: b.y + 10, alpha: 0.85, size: idx === 0 ? 5 : 3.5 });
+          b.trail.unshift({ x: b.x, y: b.y + 10, alpha: 0.8, size: idx === 0 ? 5 : 3.5 });
           if (b.trail.length > 7) b.trail.pop();
         }
 
@@ -191,7 +158,7 @@ export default function BeeParticles({ mousePos }) {
 
     animId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animId);
-  }, [mousePos]);
+  }, []);
 
   return (
     <div

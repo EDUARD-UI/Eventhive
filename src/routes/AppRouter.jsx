@@ -8,6 +8,7 @@ import PerfilOrganizacionPublicoPage from '../pages/PerfilOrganizacionPublicoPag
 import AdminPanel from '../pages/Administrador/AdminPanel.jsx';
 import ModeradorPanel from '../pages/Moderador/ModeradorPanel.jsx';
 import OrganizadorIndex from '../pages/Organizador/organizadorIndex.jsx';
+import MarketingPanel from '../pages/Marketing/MarketingPanel.jsx';
 import InicioSesion from '../pages/InicioSesion.jsx';
 import Registro from '../pages/Registro.jsx';
 import RutaProtegida from './RutaProtegida.jsx';
@@ -95,6 +96,17 @@ export default function AppRouter() {
         <Route path="/organization" element={<Navigate to="/organizacion" replace />} />
         <Route path="/organizador/dashboard" element={<Navigate to="/organizacion" replace />} />
         <Route path="/organizacion/dashboard" element={<Navigate to="/organizacion" replace />} />
+
+        <Route
+          path="/marketing"
+          element={
+            <RutaProtegida rolesPermitidos={['MARKETING', 'ADMINISTRADOR']}>
+              <MarketingPanel />
+            </RutaProtegida>
+          }
+        />
+        <Route path="/Marketing" element={<Navigate to="/marketing" replace />} />
+        <Route path="/marketing/dashboard" element={<Navigate to="/marketing" replace />} />
 
         {/* Autenticación protegida para usuarios ya logueados */}
         <Route

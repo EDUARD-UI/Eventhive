@@ -161,14 +161,14 @@ export default function Registro() {
     >
       <div className="space-y-4">
         {/* Selector de Rol Asistente vs Organización con Segmented Control */}
-        <div className="p-1.5 rounded-2xl bg-slate-200/80 border border-slate-200 shadow-inner flex gap-1.5 mb-2">
+        <div className="p-1.5 rounded-2xl bg-slate-200/80 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-inner flex gap-1.5 mb-2">
           <button
             type="button"
             onClick={() => setFieldValue('role', 'usuario')}
             className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
               !isOrganizer
-                ? 'bg-[#0B132B] text-white shadow-sm font-bold'
-                : 'text-slate-600 hover:text-[#0B132B] font-semibold'
+                ? 'bg-[#0B132B] dark:bg-amber-500 text-white dark:text-slate-950 shadow-sm font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-[#0B132B] dark:hover:text-white font-semibold'
             }`}
           >
             Quiero asistir a eventos
@@ -178,8 +178,8 @@ export default function Registro() {
             onClick={() => setFieldValue('role', 'organizador')}
             className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
               isOrganizer
-                ? 'bg-[#0B132B] text-white shadow-sm font-bold'
-                : 'text-slate-600 hover:text-[#0B132B] font-semibold'
+                ? 'bg-[#0B132B] dark:bg-amber-500 text-white dark:text-slate-950 shadow-sm font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-[#0B132B] dark:hover:text-white font-semibold'
             }`}
           >
             Organización de eventos
@@ -189,7 +189,7 @@ export default function Registro() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5" noValidate>
           {isOrganizer ? (
             <div className="space-y-3.5 animate-fade-in">
-              <div className="flex items-center gap-2 pt-1 pb-1 text-xs font-bold text-slate-700 uppercase tracking-wide border-b border-borderc">
+              <div className="flex items-center gap-2 pt-1 pb-1 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide border-b border-borderc dark:border-slate-800">
                 <FiBriefcase className="text-amber-500" size={14} />
                 <span>Datos de la Organización</span>
               </div>
@@ -241,7 +241,7 @@ export default function Registro() {
                 />
               </div>
 
-              <div className="flex items-center gap-2 pt-3 pb-1 text-xs font-bold text-slate-700 uppercase tracking-wide border-b border-borderc">
+              <div className="flex items-center gap-2 pt-3 pb-1 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide border-b border-borderc dark:border-slate-800">
                 <FiUser className="text-amber-500" size={14} />
                 <span>Datos del Representante (Acceso al Dashboard)</span>
               </div>

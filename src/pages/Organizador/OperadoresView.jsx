@@ -18,6 +18,7 @@ import Swal from 'sweetalert2';
 import { organizerService } from '../../services/organizerService.js';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
+import ModalEnviarCorreo from '../../components/Shared/ModalEnviarCorreo.jsx';
 
 const PERMISOS_DISPONIBLES = [
   { id: 'CHECK_IN', label: 'Check-in de Asistentes', desc: 'Escanear boletos y validar ingresos' },
@@ -31,6 +32,9 @@ export default function OperadoresView() {
   const [invitaciones, setInvitaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('operadores'); // 'operadores' | 'invitaciones'
+
+  // Modal Enviar Correo
+  const [emailModal, setEmailModal] = useState({ isOpen: false, email: '', name: '', subject: '' });
 
   // Modal Invitar
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -193,14 +197,14 @@ export default function OperadoresView() {
 
   return (
     <div className="space-y-6">
-      {/* 1. Header con botón de invitar */}
+      {/* 1. Header con botón de enviar correo */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="font-display text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            Gestión de Operadores
+            Gestión de Trabajadores
           </h2>
           <p className="mt-1 text-xs text-slate-500 max-w-xl">
-            Administra los operadores de tu organización, define sus permisos de trabajo y envía invitaciones oficiales.
+            Administra los operadores y colaboradores de tu organización, comunícate mediante correo y gestiona sus permisos.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -218,7 +222,7 @@ export default function OperadoresView() {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-black uppercase tracking-wider shadow-sm transition-all active:scale-95 cursor-pointer"
           >
             <FiUserPlus size={15} />
-            <span>Invitar Operador</span>
+            <span>Invitar</span>
           </button>
         </div>
       </div>
@@ -371,23 +375,40 @@ export default function OperadoresView() {
                   </div>
 
                   {/* Acciones */}
-                  <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-1.5 flex-wrap">
                     <button
                       type="button"
-                      onClick={() => openPermisosModal(op)}
-                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                      onClick={() =>
+                        setEmailModal({
+                          isOpen: true,
+                          email: correo,
+                          name: nombre,
+                          subject: 'Información de la organización',
+                        })
+                      }
+                      className="px-2.5 py-1.5 rounded-lg border border-amber-300/80 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
-                      <FiEdit2 size={12} />
-                      <span>Permisos</span>
+                      <FiMail size={12} />
+                      <span>Correo</span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleExpulsar(op)}
-                      className="px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                    >
-                      <FiTrash2 size={12} />
-                      <span>Expulsar</span>
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => openPermisosModal(op)}
+                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <FiEdit2 size={12} />
+                        <span>Permisos</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleExpulsar(op)}
+                        className="px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <FiTrash2 size={12} />
+                        <span>Expulsar</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -603,6 +624,16 @@ export default function OperadoresView() {
           </div>
         </div>
       )}
+      {/* Modal Genérico de Envío de Correo */}
+      <ModalEnviarCorreo
+        isOpen={emailModal.isOpen}
+        onClose={() => setEmailModal((prev) => ({ ...prev, isOpen: false }))}
+        initialEmail={emailModal.email}
+        initialName={emailModal.name}
+        defaultSubject={emailModal.subject}
+        title="Enviar Correo a Trabajador"
+        subtitle="Comunícate con el operador o colaborador vía correo electrónico"
+      />
     </div>
   );
 }

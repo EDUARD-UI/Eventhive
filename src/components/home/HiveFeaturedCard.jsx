@@ -13,11 +13,11 @@ function HoneycombDateBadge({ dateStr }) {
   const month = parts.find((p) => p.length === 3 && isNaN(p)) || 'HOY';
 
   return (
-    <div className="relative w-12 h-14 flex items-center justify-center filter drop-shadow-md shrink-0">
-      {/* Celda hexagonal dorada */}
-      <div className="absolute inset-0 clip-hexagon-horiz bg-gradient-to-b from-yellow-300 via-amber-400 to-amber-600" />
+    <div className="relative w-12 h-14 flex items-center justify-center shrink-0">
+      {/* Celda hexagonal dorada pura */}
+      <div className="absolute inset-0 clip-hexagon-horiz bg-[#FBBF24]" />
       <div className="absolute inset-[2px] clip-hexagon-horiz bg-[#0B172C] flex flex-col items-center justify-center text-center p-1">
-        <span className="text-[9px] font-black uppercase text-amber-300 tracking-wider leading-none">
+        <span className="text-[9px] font-black uppercase text-[#FBBF24] tracking-wider leading-none">
           {month}
         </span>
         <span className="font-display text-sm font-black text-white leading-tight">
@@ -37,9 +37,9 @@ export default function HiveFeaturedCard({ event }) {
   const { id, category, title, date, location, photo, favorite } = event;
 
   return (
-    <article className="group relative flex flex-col md:flex-row flex-1 bg-white border border-amber-200/90 hover:border-amber-400 rounded-3xl overflow-hidden transition-all duration-300 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.07)] hover:shadow-[0_20px_35px_-5px_rgba(245,158,11,0.18)] hover:-translate-y-1">
+    <article className="group relative flex flex-col md:flex-row flex-1 bg-[#FBBF24] border-2 border-black rounded-3xl overflow-hidden transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-1">
       {/* Imagen del evento */}
-      <div className="relative w-full md:w-5/12 aspect-[16/10] md:aspect-auto overflow-hidden bg-slate-100">
+      <div className="relative w-full md:w-5/12 aspect-[16/10] md:aspect-auto overflow-hidden bg-slate-900 border-b-2 md:border-b-0 md:border-r-2 border-black">
         <ImageWithFallback
           src={photo}
           alt={title}
@@ -53,7 +53,7 @@ export default function HiveFeaturedCard({ event }) {
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:to-black/30 pointer-events-none" />
 
           {/* Badge Destacado con celda de panal */}
-          <div className="absolute left-3.5 top-3.5 z-10 flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black text-[10.5px] uppercase tracking-wider shadow-md">
+          <div className="absolute left-3.5 top-3.5 z-10 flex items-center gap-1.5 px-3 py-1 rounded-full bg-black text-[#FBBF24] font-black text-[10.5px] uppercase tracking-wider shadow-xs border border-black">
             <span>⬡</span>
             <span>Destacado</span>
           </div>
@@ -66,11 +66,11 @@ export default function HiveFeaturedCard({ event }) {
       </div>
 
       {/* Detalles del evento */}
-      <div className="p-6 md:p-7 flex-1 flex flex-col justify-between relative z-10 bg-white">
+      <div className="p-6 md:p-7 flex-1 flex flex-col justify-between relative z-10 bg-[#FBBF24]">
         <div>
           <div className="flex items-center justify-between gap-3 mb-2.5">
-            {/* Tag con fondo azul de la navbar */}
-            <span className="text-[10px] font-black uppercase tracking-widest text-white bg-[#0D1527] border border-[#0D1527] px-2.5 py-0.5 rounded-md flex items-center gap-1 shadow-xs">
+            {/* Tag en negro */}
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#FBBF24] bg-black border border-black px-2.5 py-0.5 rounded-md flex items-center gap-1 shadow-xs">
               <span>●</span> {category}
             </span>
 
@@ -78,27 +78,27 @@ export default function HiveFeaturedCard({ event }) {
             <HoneycombDateBadge dateStr={date} />
           </div>
 
-          <h3 className="font-display text-xl sm:text-2xl font-black text-[#0B172C] group-hover:text-amber-700 transition-colors duration-200 line-clamp-2 leading-snug mb-3">
+          <h3 className="font-display text-xl sm:text-2xl font-black text-black group-hover:text-slate-900 transition-colors duration-200 line-clamp-2 leading-snug mb-3">
             {title}
           </h3>
 
-          <div className="space-y-2 text-xs sm:text-sm text-slate-600 mb-6">
+          <div className="space-y-2 text-xs sm:text-sm text-black font-bold mb-6">
             <div className="flex items-center gap-2">
-              <FiCalendar className="text-amber-600 shrink-0" size={14} />
-              <span className="font-semibold text-slate-700">{date}</span>
+              <FiCalendar className="text-black shrink-0" size={14} />
+              <span className="font-black text-black">{date}</span>
             </div>
             <div className="flex items-center gap-2">
-              <FiMapPin className="text-rose-500 shrink-0" size={14} />
-              <span className="truncate text-slate-600">{location}</span>
+              <FiMapPin className="text-black shrink-0" size={14} />
+              <span className="truncate text-black">{location}</span>
             </div>
           </div>
         </div>
 
         {/* Footer con botón de acción */}
-        <div className="pt-4 border-t border-amber-100 flex items-center justify-end">
+        <div className="pt-4 border-t-2 border-black flex items-center justify-end">
           <Link
             to={`/eventos/${id}`}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 shadow-md shadow-amber-500/25 active:scale-95 transition-all duration-200"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider text-[#FBBF24] bg-black hover:bg-slate-900 border-2 border-black shadow-md active:scale-95 transition-all duration-200"
           >
             <span>Ver detalles</span>
             <FiArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />

@@ -28,7 +28,7 @@ export default function ModeradorLayout({
     .toUpperCase() || 'MD';
 
   return (
-    <div className="moderador-theme flex min-h-screen bg-[#f1f5f9] font-body text-slate-800">
+    <div className="moderador-theme flex h-screen overflow-hidden bg-[#f1f5f9] font-body text-slate-800">
       <Sidebar
         role="Moderador"
         items={menuItems}
@@ -40,7 +40,7 @@ export default function ModeradorLayout({
         onClose={() => setMobileMenuOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* Cabecera compartida del Moderador */}
         <Header
           title={title}

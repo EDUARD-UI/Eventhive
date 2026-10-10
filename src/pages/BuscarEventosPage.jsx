@@ -217,38 +217,38 @@ export default function BuscarEventosPage() {
   const activeCategory = categoryList.find((c) => String(c.id) === String(categoriaIdParam));
 
   return (
-    <div className="w-full min-h-screen text-slate-900 flex flex-col justify-between font-body relative">
-      {/* Fondo interactivo de puntitos negros brillantes flotando */}
+    <div className="w-full min-h-screen bg-white dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body relative transition-colors duration-200">
+      {/* Fondo interactivo de puntitos */}
       <FloatingDotsBackground />
 
       {/* Navbar idéntico */}
       <Navbar />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
-        {/* Cabecera / Título Principal Refactorizada (Opción 1 Directa + Flex Balanceado) */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-5 pb-3 border-b border-slate-200/70">
+        {/* Cabecera / Título Principal */}
+        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-5 pb-3 border-b border-slate-200/70 dark:border-slate-800">
           <div className="max-w-2xl">
             <div className="flex flex-wrap items-center gap-3 mb-1.5">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B132B] tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B132B] dark:text-white tracking-tight">
                 Eventos en Cartagena
               </h1>
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/80 shadow-2xs">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-400/20 shadow-2xs">
                 {loading ? 'Cargando...' : `${totalElements} disponibles`}
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-600 font-normal leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-normal leading-relaxed">
               Descubre conciertos, festivales, experiencias culturales y deportivas en La Heroica.
             </p>
           </div>
 
-          {/* Buscador Rápido por Título alineado limpiamente a la derecha */}
+          {/* Buscador Rápido por Título */}
           <form onSubmit={handleSearchSubmit} className="relative w-full md:w-80 shrink-0">
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Busca tu evento..."
-              className="w-full h-11 bg-white border border-slate-300 hover:border-slate-400 focus:border-[#0B132B] rounded-xl pl-10 pr-9 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B132B]/10 transition-all shadow-xs"
+              className="w-full h-11 bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 focus:border-amber-500 rounded-xl pl-10 pr-9 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/15 transition-all shadow-xs"
             />
             <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none" />
             {searchInput && (
@@ -289,7 +289,7 @@ export default function BuscarEventosPage() {
                 type="date"
                 value={fechaParam}
                 onChange={handleDateChange}
-                className="w-full bg-white border border-slate-300 hover:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-800/10 transition-all cursor-pointer shadow-xs"
+                className="w-full bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-amber-500 focus:ring-2 focus:ring-slate-800/10 transition-all cursor-pointer shadow-xs"
                 aria-label="Filtrar por fecha específica"
                 title="Filtrar por día exacto (yyyy-MM-dd)"
               />
@@ -311,7 +311,7 @@ export default function BuscarEventosPage() {
               <button
                 type="button"
                 onClick={handleClearFilters}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs sm:text-sm font-semibold transition-all duration-200 active:scale-95 shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#0B1428] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-semibold transition-all duration-200 active:scale-95 shadow-xs cursor-pointer"
               >
                 <FiX size={14} />
                 <span>Limpiar filtros</span>
@@ -322,11 +322,11 @@ export default function BuscarEventosPage() {
           {/* Chips de filtros activos */}
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-2 mt-3 pt-2">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Filtros activos:
               </span>
               {activeCategory && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-slate-300 text-slate-800 text-xs font-semibold shadow-xs">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold shadow-xs">
                   Categoría: {activeCategory.nombre}
                   <button
                     type="button"
@@ -342,7 +342,7 @@ export default function BuscarEventosPage() {
                 </span>
               )}
               {fechaParam && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-slate-300 text-slate-800 text-xs font-semibold shadow-xs">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold shadow-xs">
                   Fecha: {fechaParam}
                   <button
                     type="button"
@@ -358,7 +358,7 @@ export default function BuscarEventosPage() {
                 </span>
               )}
               {tituloParam && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-slate-300 text-slate-800 text-xs font-semibold shadow-xs">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold shadow-xs">
                   Búsqueda: “{tituloParam}”
                   <button
                     type="button"
@@ -385,7 +385,7 @@ export default function BuscarEventosPage() {
               {[1, 2, 3, 4, 5, 6].map((n) => (
                 <div key={n} className="break-inside-avoid inline-block w-full mb-6">
                   <EventCardSkeleton
-                    notchBg="bg-white"
+                    notchBg="bg-[#F8FAFC] dark:bg-[#070D1B]"
                     aspectVariant={n % 3 === 0 ? 'tall' : n % 3 === 1 ? 'wide' : 'standard'}
                   />
                 </div>
@@ -403,7 +403,7 @@ export default function BuscarEventosPage() {
                   >
                     <EventListCard
                       event={event}
-                      notchBg="bg-white"
+                      notchBg="bg-[#F8FAFC] dark:bg-[#070D1B]"
                       aspectVariant={
                         event.promocionado
                           ? 'gold'
@@ -432,20 +432,20 @@ export default function BuscarEventosPage() {
               )}
             </>
           ) : (
-            <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center max-w-lg mx-auto shadow-sm my-8">
-              <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-12 text-center max-w-lg mx-auto shadow-sm my-8">
+              <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 <FiCalendar size={24} />
               </div>
-              <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 tracking-tight uppercase mb-2">
+              <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-2">
                 No encontramos eventos con estos criterios
               </h2>
-              <p className="text-slate-600 text-xs sm:text-sm max-w-md mx-auto mb-6 leading-relaxed">
+              <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto mb-6 leading-relaxed">
                 Prueba ajustando la fecha, cambiando de categoría o restableciendo los filtros para ver toda la cartelera cultural.
               </p>
               <button
                 type="button"
                 onClick={handleClearFilters}
-                className="px-6 py-2.5 rounded-xl bg-slate-950 hover:bg-amber-500 hover:text-slate-950 text-white text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
+                className="px-6 py-2.5 rounded-xl bg-slate-950 dark:bg-amber-500 hover:bg-amber-500 hover:text-slate-950 text-white dark:text-slate-950 text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
               >
                 Ver todos los eventos
               </button>
@@ -491,7 +491,7 @@ export default function BuscarEventosPage() {
                       />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-slate-950/60 pointer-events-none" />
 
                   <div className="relative z-10">
                     <h4 className="text-xs sm:text-sm font-extrabold uppercase text-white truncate tracking-tight group-hover:text-amber-300 transition-colors">

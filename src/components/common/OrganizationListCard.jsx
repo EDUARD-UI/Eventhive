@@ -211,7 +211,7 @@ export default function OrganizationListCard({ org, notchBg = 'bg-[#F8FAFC]' }) 
 
           <Link
             to={`/organizaciones/${id}`}
-            className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 border border-slate-200/90 text-center"
+            className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 border border-slate-200 text-center"
           >
             <FiEye size={13} />
             <span>Perfil</span>

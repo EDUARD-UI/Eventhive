@@ -132,12 +132,16 @@ export default function ModalDetalleEventoModeracion({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-3 sm:p-5 animate-in fade-in duration-200"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex justify-end">
+      {/* Backdrop */}
       <div
-        className="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200"
+        className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Drawer lateral derecho */}
+      <div
+        className="relative z-50 w-full sm:w-[620px] md:w-[680px] lg:w-[740px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Banner de Imagen y Encabezado */}

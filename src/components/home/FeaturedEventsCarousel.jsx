@@ -145,14 +145,12 @@ export default function FeaturedEventsCarousel({ events = [] }) {
                   iconSize={0}
                 />
 
-                {/* Overlays oscuros sobrios para legibilidad impecable */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#060B18]/95 via-[#060B18]/50 to-transparent pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#060B18]/85 via-transparent to-transparent pointer-events-none hidden sm:block" />
+                {/* Overlays oscuros sobrios sin gradientes */}
+                <div className="absolute inset-0 bg-[#060B18]/65 group-hover:bg-[#060B18]/55 transition-colors duration-300 pointer-events-none" />
 
                 {/* Badge de Categoría: solo en desktop */}
                 <div className="hidden lg:block absolute top-6 left-8 z-20">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-slate-900/90 text-amber-400 border border-slate-700 backdrop-blur-sm shadow-sm">
-                    <span>⬡</span>
+                  <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-slate-900/90 text-amber-400 border border-slate-700 backdrop-blur-sm shadow-sm">
                     <span>{category}</span>
                   </span>
                 </div>

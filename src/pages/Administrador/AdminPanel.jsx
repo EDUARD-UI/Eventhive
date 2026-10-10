@@ -22,12 +22,10 @@ import {
 // Vistas del Módulo de Administración
 import AdminResumenView from './AdminResumenView.jsx';
 import AdminOrganizacionesView from './AdminOrganizacionesView.jsx';
-import AdminModeradoresView from './AdminModeradoresView.jsx';
+import AdminTrabajadoresView from './AdminTrabajadoresView.jsx';
 import AdminReportesView from './AdminReportesView.jsx';
 import AdminUsuariosView from './AdminUsuariosView.jsx';
 import AdminCategoriasView from './AdminCategoriasView.jsx';
-import AdminPromocionesView from './AdminPromocionesView.jsx';
-import AdminHistorialView from './AdminHistorialView.jsx';
 import Swal from 'sweetalert2';
 import AdminSolicitudesView from './AdminSolicitudesView.jsx';
 import AdminPerfilView from './AdminPerfilView.jsx';
@@ -225,12 +223,10 @@ export default function AdminPanel() {
         icon: ClipboardList,
         count: solicitudesVerificacion.length > 0 ? solicitudesVerificacion.length : null,
       },
-      { id: 'moderadores', label: 'Moderadores', icon: ShieldCheck },
+      { id: 'trabajadores', label: 'Trabajadores', icon: Users },
       { id: 'reportes', label: 'Métricas Comerciales', icon: BarChart3 },
       { id: 'usuarios', label: 'Directorio Usuarios', icon: Users },
       { id: 'categorias', label: 'Categorías', icon: Tag },
-      { id: 'promociones', label: 'Promociones & Banners', icon: Percent },
-      { id: 'historial', label: 'Historial & Auditoría', icon: History },
       { id: 'perfil', label: 'Mi Perfil', icon: User },
     ],
     [orgsPendientesCount, solicitudesVerificacion.length]
@@ -666,11 +662,10 @@ export default function AdminPanel() {
           />
         );
 
+      case 'trabajadores':
       case 'moderadores':
         return (
-          <AdminModeradoresView
-            moderadores={moderadores}
-            moderationStats={moderationStats}
+          <AdminTrabajadoresView
             onAsignarModerador={handleOpenAsignarModerador}
             onToggleEstadoModerador={handleToggleEstadoModerador}
           />
@@ -704,18 +699,6 @@ export default function AdminPanel() {
             onEliminarCategoria={handleEliminarCategoria}
           />
         );
-
-      case 'promociones':
-        return (
-          <AdminPromocionesView
-            promociones={promociones}
-            onSavePromocion={handleSavePromocion}
-            onToggleEstadoPromocion={handleToggleEstadoPromocion}
-          />
-        );
-
-      case 'historial':
-        return <AdminHistorialView auditLogs={auditLogs} />;
 
       case 'solicitudes':
         return (

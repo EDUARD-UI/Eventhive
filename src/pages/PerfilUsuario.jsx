@@ -446,14 +446,11 @@ export default function PerfilUsuario() {
           : [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-slate-900 selection:bg-amber-400 selection:text-slate-950 font-body">
+    <div className="min-h-screen flex flex-col bg-[#FAF8F5] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 selection:bg-amber-400 selection:text-slate-950 font-body transition-colors duration-200">
       <Navbar />
 
       {/* Header Cultural */}
-      <section className="relative w-full bg-[#0B1B3D] text-white pt-14 pb-20 px-6 sm:px-10 lg:px-16 overflow-hidden border-b border-amber-500/20">
-        <div className="absolute inset-0 bg-[radial-gradient(#F59E0B_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
-
+      <section className="relative w-full bg-[#0B1B3D] dark:bg-[#081021] text-white pt-14 pb-20 px-6 sm:px-10 lg:px-16 overflow-hidden border-b border-amber-500/20">
         <div className="max-w-6xl mx-auto relative z-10">
           <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
             Panel de Usuario
@@ -469,7 +466,7 @@ export default function PerfilUsuario() {
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
 
         {/* Barra de Pestañas Flotante Estilo Cápsula */}
-        <div className="bg-white rounded-3xl border-2 border-amber-200/90 shadow-xl p-2 -mt-14 relative z-20 overflow-x-auto scrollbar-none">
+        <div className="bg-white dark:bg-[#0B1428] rounded-3xl border-2 border-amber-200/90 dark:border-slate-800 shadow-xl p-2 -mt-14 relative z-20 overflow-x-auto scrollbar-none">
           <div className="flex items-center gap-1.5 min-w-max">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.id;
@@ -485,8 +482,8 @@ export default function PerfilUsuario() {
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${isActive
-                    ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md'
-                    : 'text-slate-600 hover:text-[#0B1B3D] hover:bg-amber-50/60'
+                    ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-[#0B1B3D] dark:hover:text-white hover:bg-amber-50/60 dark:hover:bg-slate-800/60'
                     }`}
                 >
                   <span>{tab.label}</span>
@@ -494,7 +491,7 @@ export default function PerfilUsuario() {
                     <span
                       className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isActive
                         ? 'bg-slate-950 text-amber-300'
-                        : 'bg-amber-100 text-amber-950 border border-amber-300'
+                        : 'bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
                         }`}
                     >
                       {count}
@@ -509,17 +506,16 @@ export default function PerfilUsuario() {
         {/* Layout en 2 columnas: Sidebar Perfil + Contenido */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
 
-          {/* Sidebar de Usuario — Guía Tarjeta Imagen 1 */}
+          {/* Sidebar de Usuario */}
           <aside className="w-full lg:w-[340px] shrink-0 space-y-6">
 
-            {/* Tarjeta Identidad (Basada en Imagen 1) */}
-            <div className="bg-white border border-amber-200/80 rounded-[28px] shadow-sm p-6 relative overflow-hidden transition-all duration-300 hover:shadow-md">
-              {/* Botón de editar arriba a la derecha (estilo icono de la imagen 1) */}
+            {/* Tarjeta Identidad */}
+            <div className="bg-white dark:bg-[#0B1428] border border-amber-200/80 dark:border-slate-800 rounded-[28px] shadow-sm p-6 relative overflow-hidden transition-all duration-300 hover:shadow-md">
               <button
                 type="button"
                 onClick={() => setEditModal(true)}
                 title="Editar información de perfil"
-                className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-amber-600 hover:bg-amber-50/80 transition-colors cursor-pointer"
+                className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50/80 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <FiEdit2 size={16} />
               </button>
@@ -536,7 +532,7 @@ export default function PerfilUsuario() {
 
                 {/* Avatar circular limpio con iniciales o foto */}
                 <div className="relative mb-4 group">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-200 p-[3px] shadow-md overflow-hidden relative">
+                  <div className="w-24 h-24 rounded-full border-2 border-amber-400 p-[3px] shadow-md overflow-hidden relative bg-white dark:bg-slate-900">
                     {photoPreview || usuario.urlImagenPerfil ? (
                       <img
                         src={photoPreview || usuario.urlImagenPerfil}
@@ -560,7 +556,7 @@ export default function PerfilUsuario() {
                     onClick={() => fileInputRef.current?.click()}
                     title="Cambiar foto de perfil"
                     disabled={isUploadingPhoto}
-                    className="absolute bottom-0 right-0 p-2 rounded-full bg-[#0B1B3D] text-amber-400 hover:text-white hover:bg-amber-600 transition-colors shadow-md border-2 border-white cursor-pointer"
+                    className="absolute bottom-0 right-0 p-2 rounded-full bg-[#0B1B3D] text-amber-400 hover:text-white hover:bg-amber-600 transition-colors shadow-md border-2 border-white dark:border-slate-800 cursor-pointer"
                   >
                     <FiCamera size={14} />
                   </button>
@@ -586,7 +582,7 @@ export default function PerfilUsuario() {
                       type="button"
                       onClick={handleCancelPhoto}
                       disabled={isUploadingPhoto}
-                      className="px-2.5 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-[11px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-[11px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer"
                     >
                       <FiX size={12} />
                       <span>Cancelar</span>
@@ -595,26 +591,26 @@ export default function PerfilUsuario() {
                 )}
 
                 {/* Nombre del Usuario */}
-                <h2 className="text-xl font-bold font-display text-[#0B1B3D] truncate max-w-[260px]">
+                <h2 className="text-xl font-bold font-display text-[#0B1B3D] dark:text-white truncate max-w-[260px]">
                   {usuario.nombreCompleto || 'Usuario EventHive'}
                 </h2>
 
                 {/* Rol Badge */}
-                <span className="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-amber-500/10 text-amber-700 border border-amber-300/40">
+                <span className="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-300/40 dark:border-amber-700/40">
                   <FiShield size={11} />
                   <span>{usuario.rol || 'CLIENTE'}</span>
                 </span>
               </div>
 
               {/* Lista de Datos Proporcionados por el Endpoint */}
-              <div className="mt-6 pt-5 border-t border-slate-100 space-y-3 text-xs">
+              <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 space-y-3 text-xs">
                 {/* E-mail */}
                 <div className="flex items-center justify-between gap-2 py-1">
-                  <span className="text-slate-400 font-medium shrink-0 flex items-center gap-1.5">
+                  <span className="text-slate-400 dark:text-slate-500 font-medium shrink-0 flex items-center gap-1.5">
                     <FiMail size={13} className="text-amber-500" />
                     <span>E-mail:</span>
                   </span>
-                  <span className="font-semibold text-slate-800 truncate text-right max-w-[190px]" title={usuario.correo}>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 truncate text-right max-w-[190px]" title={usuario.correo}>
                     {usuario.correo || '—'}
                   </span>
                 </div>
@@ -622,11 +618,11 @@ export default function PerfilUsuario() {
                 {/* Teléfono (si existe en el endpoint) */}
                 {usuario.telefono && (
                   <div className="flex items-center justify-between gap-2 py-1">
-                    <span className="text-slate-400 font-medium shrink-0 flex items-center gap-1.5">
+                    <span className="text-slate-400 dark:text-slate-500 font-medium shrink-0 flex items-center gap-1.5">
                       <FiPhone size={13} className="text-amber-500" />
                       <span>Teléfono:</span>
                     </span>
-                    <span className="font-semibold text-slate-800 truncate text-right">
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 truncate text-right">
                       {usuario.telefono}
                     </span>
                   </div>
@@ -634,11 +630,11 @@ export default function PerfilUsuario() {
               </div>
 
               {/* Botón de acción */}
-              <div className="mt-6 pt-4 border-t border-slate-100">
+              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setEditModal(true)}
-                  className="w-full py-2.5 px-4 rounded-xl border border-amber-300 hover:border-amber-400 bg-amber-50/50 hover:bg-amber-100/70 text-xs font-black uppercase tracking-wider text-amber-950 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-xs"
+                  className="w-full py-2.5 px-4 rounded-xl border border-amber-300 dark:border-slate-700 bg-amber-50/50 dark:bg-slate-800/60 hover:bg-amber-100/70 dark:hover:bg-slate-700 text-xs font-black uppercase tracking-wider text-amber-950 dark:text-amber-300 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-xs"
                 >
                   <FiEdit2 size={13} />
                   <span>Editar Datos</span>
@@ -647,44 +643,44 @@ export default function PerfilUsuario() {
             </div>
 
             {/* Tarjeta Estadísticas */}
-            <div className="bg-white border-2 border-amber-200/90 rounded-3xl shadow-sm p-6 space-y-4">
-              <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block">
+            <div className="bg-white dark:bg-[#0B1428] border-2 border-amber-200/90 dark:border-slate-800 rounded-3xl shadow-sm p-6 space-y-4">
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 dark:text-amber-400 block">
                 ACTIVIDAD EN LA APLICACION
               </span>
 
               <div className="flex items-center gap-3.5 text-sm">
-                <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-slate-800 border border-amber-200 dark:border-slate-700 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                   <FiBookmark size={18} />
                 </div>
                 <div>
-                  <strong className="block text-lg font-black leading-none text-[#0B1B3D]">
+                  <strong className="block text-lg font-black leading-none text-[#0B1B3D] dark:text-white">
                     {guardados.length}
                   </strong>
-                  <span className="text-xs font-medium text-slate-500">experiencias guardadas</span>
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">experiencias guardadas</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-3.5 text-sm">
-                <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-slate-800 border border-amber-200 dark:border-slate-700 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                   <FiShoppingBag size={18} />
                 </div>
                 <div>
-                  <strong className="block text-lg font-black leading-none text-[#0B1B3D]">
+                  <strong className="block text-lg font-black leading-none text-[#0B1B3D] dark:text-white">
                     {boletosList.length}
                   </strong>
-                  <span className="text-xs font-medium text-slate-500">boletos adquiridos</span>
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">boletos adquiridos</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-3.5 text-sm">
-                <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-slate-800 border border-amber-200 dark:border-slate-700 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                   <FiCalendar size={18} />
                 </div>
                 <div>
-                  <strong className="block text-lg font-black leading-none text-[#0B1B3D]">
+                  <strong className="block text-lg font-black leading-none text-[#0B1B3D] dark:text-white">
                     {eventosProximos.length + eventosHistorial.length}
                   </strong>
-                  <span className="text-xs font-medium text-slate-500">eventos confirmados</span>
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">eventos confirmados</span>
                 </div>
               </div>
             </div>
@@ -693,9 +689,9 @@ export default function PerfilUsuario() {
           {/* Contenido Principal por Pestaña */}
           <section className="flex-1 min-w-0 w-full">
             {loading ? (
-              <div className="bg-white rounded-3xl border border-amber-200/90 p-14 text-center shadow-sm">
+              <div className="bg-white dark:bg-[#0B1428] rounded-3xl border border-amber-200/90 dark:border-slate-800 p-14 text-center shadow-sm">
                 <div className="w-10 h-10 mx-auto mb-3 border-3 border-amber-400 border-t-[#0B1B3D] rounded-full animate-spin" />
-                <p className="text-xs font-black uppercase tracking-wider text-[#0B1B3D]">
+                <p className="text-xs font-black uppercase tracking-wider text-[#0B1B3D] dark:text-slate-200">
                   Cargando información del usuario...
                 </p>
               </div>
@@ -704,33 +700,33 @@ export default function PerfilUsuario() {
                 {/* Pestaña: Mis Entradas / QR */}
                 {activeTab === 'entradas' && (
                   <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-3xl border border-amber-200/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="bg-white dark:bg-[#0B1428] p-6 rounded-3xl border border-amber-200/90 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block mb-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 dark:text-amber-400 block mb-1">
                           PASES OFICIALES
                         </span>
-                        <h3 className="text-xl font-black text-[#0B1B3D]">Mis Boletos Digitales</h3>
-                        <p className="text-xs text-slate-600 mt-0.5">
+                        <h3 className="text-xl font-black text-[#0B1B3D] dark:text-white">Mis Boletos Digitales</h3>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                           Presenta tu código QR en el acceso del evento para validar tu entrada.
                         </p>
                       </div>
-                      <span className="text-xs font-black text-amber-950 bg-amber-100 border border-amber-300 px-3.5 py-1.5 rounded-full shrink-0 self-start sm:self-auto">
+                      <span className="text-xs font-black text-amber-950 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 px-3.5 py-1.5 rounded-full shrink-0 self-start sm:self-auto">
                         {boletosList.length} {boletosList.length === 1 ? 'boleto activo' : 'boletos activos'}
                       </span>
                     </div>
 
                     {boletosList.length === 0 ? (
-                      <div className="bg-white rounded-3xl border-2 border-dashed border-amber-300 p-14 text-center shadow-sm">
-                        <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 text-xl">
+                      <div className="bg-white dark:bg-[#0B1428] rounded-3xl border-2 border-dashed border-amber-300 dark:border-slate-700 p-14 text-center shadow-sm">
+                        <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 dark:bg-slate-800 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 text-xl">
                           <FiShoppingBag size={24} />
                         </div>
-                        <h4 className="font-black text-lg text-[#0B1B3D] mb-1">Aún no tienes boletos adquiridos</h4>
-                        <p className="text-xs font-medium text-slate-600 max-w-sm mx-auto mb-6">
+                        <h4 className="font-black text-lg text-[#0B1B3D] dark:text-white mb-1">Aún no tienes boletos adquiridos</h4>
+                        <p className="text-xs font-medium text-slate-600 dark:text-slate-400 max-w-sm mx-auto mb-6">
                           Explora la cartelera cultural de Cartagena de Indias y adquiere tus entradas oficiales.
                         </p>
                         <Link
                           to="/buscar"
-                          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95"
+                          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95"
                         >
                           <span>Explorar Cartelera</span>
                           <FiArrowRight size={14} />
@@ -741,7 +737,7 @@ export default function PerfilUsuario() {
                         {boletosList.map((ticket) => (
                           <article
                             key={ticket.id}
-                            className="bg-white border-2 border-amber-200/90 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+                            className="bg-white dark:bg-[#0B1428] border-2 border-amber-200/90 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
                           >
                             {/* Cabecera del Boleto */}
                             <div className="p-5 bg-[#0B1B3D] text-white relative border-b-2 border-amber-400">
@@ -766,42 +762,42 @@ export default function PerfilUsuario() {
 
                             {/* Detalles de Acceso */}
                             <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                              <div className="space-y-2 text-xs text-slate-700 font-semibold">
+                              <div className="space-y-2 text-xs text-slate-700 dark:text-slate-300 font-semibold">
                                 <p className="flex items-center gap-1.5 truncate">
-                                  <FiMapPin className="text-amber-600 shrink-0" size={14} />
+                                  <FiMapPin className="text-amber-600 dark:text-amber-400 shrink-0" size={14} />
                                   <span>{ticket.lugar}</span>
                                 </p>
                                 <p>
-                                  <strong className="text-[#0B1B3D]">Ubicación:</strong> {ticket.asiento}
+                                  <strong className="text-[#0B1B3D] dark:text-white">Ubicación:</strong> {ticket.asiento}
                                 </p>
                                 <p>
-                                  <strong className="text-[#0B1B3D]">Titular:</strong> {ticket.titular}
+                                  <strong className="text-[#0B1B3D] dark:text-white">Titular:</strong> {ticket.titular}
                                 </p>
                                 <p>
-                                  <strong className="text-[#0B1B3D]">Precio:</strong> {ticket.precio}
+                                  <strong className="text-[#0B1B3D] dark:text-white">Precio:</strong> {ticket.precio}
                                 </p>
                               </div>
 
                               {/* QR y Acciones */}
-                              <div className="pt-4 border-t border-dashed border-amber-200 flex items-center justify-between gap-3">
+                              <div className="pt-4 border-t border-dashed border-amber-200 dark:border-slate-800 flex items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
                                   <img
                                     src={ticket.codigoQR}
                                     alt="QR Boleto"
-                                    className="w-14 h-14 rounded-xl border border-amber-200 p-1 bg-white shrink-0 shadow-xs"
+                                    className="w-14 h-14 rounded-xl border border-amber-200 dark:border-slate-700 p-1 bg-white shrink-0 shadow-xs"
                                   />
                                   <div>
-                                    <p className="text-[11px] font-black text-emerald-700 flex items-center gap-1">
+                                    <p className="text-[11px] font-black text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                                       <FiCheckCircle size={12} /> {ticket.estado}
                                     </p>
-                                    <p className="text-[10px] text-slate-500 font-medium">Acceso Oficial</p>
+                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Acceso Oficial</p>
                                   </div>
                                 </div>
 
                                 <button
                                   type="button"
                                   onClick={() => setTicketModal(ticket)}
-                                  className="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-400 hover:text-slate-950 text-xs font-black uppercase tracking-wider text-amber-950 border border-amber-300 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                                  className="px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-slate-800 hover:bg-amber-400 dark:hover:bg-amber-500 hover:text-slate-950 text-xs font-black uppercase tracking-wider text-amber-950 dark:text-amber-300 border border-amber-300 dark:border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
                                 >
                                   <FiExternalLink size={13} />
                                   <span>Ver QR</span>
@@ -819,13 +815,13 @@ export default function PerfilUsuario() {
                 {activeTab === 'seguridad' && (
                   <div className="space-y-6">
                     {/* Información Personal */}
-                    <div className="bg-white border-2 border-amber-200/90 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
+                    <div className="bg-white dark:bg-[#0B1428] border-2 border-amber-200/90 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
                       <div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block mb-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 dark:text-amber-400 block mb-1">
                           DATOS DE CONTACTO
                         </span>
-                        <h3 className="text-xl font-black text-[#0B1B3D]">Información Personal</h3>
-                        <p className="text-xs text-slate-600 mt-0.5 font-medium">
+                        <h3 className="text-xl font-black text-[#0B1B3D] dark:text-white">Información Personal</h3>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 font-medium">
                           Mantén actualizados tus datos para la emisión de tus boletos oficiales.
                         </p>
                       </div>
@@ -833,7 +829,7 @@ export default function PerfilUsuario() {
                       <form onSubmit={handleUpdatePerfil} className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
+                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">
                               Nombre Completo
                             </label>
                             <input
@@ -842,26 +838,26 @@ export default function PerfilUsuario() {
                               onChange={(e) =>
                                 setUsuario({ ...usuario, nombreCompleto: e.target.value })
                               }
-                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
+                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 dark:border-slate-700 bg-[#FAF8F5] dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                               placeholder="Tu nombre completo"
                               required
                             />
                           </div>
 
                           <div>
-                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
+                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">
                               Correo Electrónico
                             </label>
                             <input
                               type="email"
                               value={usuario.correo}
                               disabled
-                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
+                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed"
                             />
                           </div>
 
                           <div className="sm:col-span-2">
-                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
+                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">
                               Teléfono
                             </label>
                             <input
@@ -870,7 +866,7 @@ export default function PerfilUsuario() {
                               onChange={(e) =>
                                 setUsuario({ ...usuario, telefono: e.target.value })
                               }
-                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
+                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 dark:border-slate-700 bg-[#FAF8F5] dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                               placeholder="+57 300 123 4567"
                             />
                           </div>
@@ -880,7 +876,7 @@ export default function PerfilUsuario() {
                           <button
                             type="submit"
                             disabled={isUpdating}
-                            className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md shadow-amber-500/20 transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
+                            className="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
                           >
                             {isUpdating && (
                               <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
@@ -892,16 +888,16 @@ export default function PerfilUsuario() {
                     </div>
 
                     {/* Cambio de Contraseña */}
-                    <div className="bg-white border-2 border-amber-200/90 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
+                    <div className="bg-white dark:bg-[#0B1428] border-2 border-amber-200/90 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-slate-800 border border-amber-200 dark:border-slate-700 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                           <FiKey size={18} />
                         </div>
                         <div>
-                          <h3 className="text-xl font-black text-[#0B1B3D]">
+                          <h3 className="text-xl font-black text-[#0B1B3D] dark:text-white">
                             Seguridad de la Cuenta
                           </h3>
-                          <p className="text-xs text-slate-600 mt-0.5 font-medium">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 font-medium">
                             Actualiza tu contraseña periódicamente para proteger tus compras.
                           </p>
                         </div>
@@ -910,7 +906,7 @@ export default function PerfilUsuario() {
                       <form onSubmit={handleChangePassword} className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           <div>
-                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
+                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">
                               Contraseña Actual
                             </label>
                             <input
@@ -920,13 +916,13 @@ export default function PerfilUsuario() {
                                 setPasswordForm({ ...passwordForm, claveActual: e.target.value })
                               }
                               placeholder="••••••••"
-                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
+                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 dark:border-slate-700 bg-[#FAF8F5] dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                               required
                             />
                           </div>
 
                           <div>
-                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
+                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">
                               Nueva Contraseña
                             </label>
                             <input
@@ -936,13 +932,13 @@ export default function PerfilUsuario() {
                                 setPasswordForm({ ...passwordForm, claveNueva: e.target.value })
                               }
                               placeholder="Mínimo 6 caracteres"
-                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
+                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 dark:border-slate-700 bg-[#FAF8F5] dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                               required
                             />
                           </div>
 
                           <div>
-                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
+                            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">
                               Confirmar Nueva Contraseña
                             </label>
                             <input
@@ -955,7 +951,7 @@ export default function PerfilUsuario() {
                                 })
                               }
                               placeholder="Repite la contraseña"
-                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
+                              className="w-full text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl border border-amber-200 dark:border-slate-700 bg-[#FAF8F5] dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                               required
                             />
                           </div>
@@ -965,10 +961,10 @@ export default function PerfilUsuario() {
                           <button
                             type="submit"
                             disabled={isChangingPassword}
-                            className="px-6 py-3 rounded-xl bg-[#0B1B3D] hover:bg-slate-900 text-white text-xs font-black uppercase tracking-wider shadow-md transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
+                            className="px-6 py-3 rounded-xl bg-[#0B1B3D] dark:bg-amber-500 hover:bg-slate-900 dark:hover:bg-amber-400 text-white dark:text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
                           >
                             {isChangingPassword && (
-                              <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              <span className="w-3.5 h-3.5 border-2 border-white dark:border-slate-950 border-t-transparent rounded-full animate-spin" />
                             )}
                             <span>Actualizar Contraseña</span>
                           </button>
@@ -983,19 +979,19 @@ export default function PerfilUsuario() {
                   activeTab === 'proximos' ||
                   activeTab === 'historial') && (
                     <div className="space-y-6">
-                      <div className="bg-white p-6 rounded-3xl border-2 border-amber-200/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="bg-white dark:bg-[#0B1428] p-6 rounded-3xl border-2 border-amber-200/90 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block mb-1">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 dark:text-amber-400 block mb-1">
                             AGENDA PERSONAL
                           </span>
-                          <h3 className="text-xl font-black text-[#0B1B3D]">
+                          <h3 className="text-xl font-black text-[#0B1B3D] dark:text-white">
                             {activeTab === 'guardados'
                               ? 'Eventos Guardados en Favoritos'
                               : activeTab === 'proximos'
                                 ? 'Experiencias Próximas'
                                 : 'Historial de Eventos Asistidos'}
                           </h3>
-                          <p className="text-xs text-slate-600 mt-0.5">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                             {activeTab === 'guardados'
                               ? 'Experiencias que te interesan y has añadido a tu lista de deseos.'
                               : activeTab === 'proximos'
@@ -1003,29 +999,29 @@ export default function PerfilUsuario() {
                                 : 'Historial de eventos pasados en Cartagena de Indias.'}
                           </p>
                         </div>
-                        <span className="text-xs font-black text-amber-950 bg-amber-100 border border-amber-300 px-3.5 py-1.5 rounded-full shrink-0 self-start sm:self-auto">
+                        <span className="text-xs font-black text-amber-950 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 px-3.5 py-1.5 rounded-full shrink-0 self-start sm:self-auto">
                           {eventosVisibles.length} {eventosVisibles.length === 1 ? 'evento' : 'eventos'}
                         </span>
                       </div>
 
                       {eventosVisibles.length === 0 ? (
-                        <div className="bg-white rounded-3xl border-2 border-dashed border-amber-300 p-14 text-center shadow-sm">
-                          <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 text-xl">
-
+                        <div className="bg-white dark:bg-[#0B1428] rounded-3xl border-2 border-dashed border-amber-300 dark:border-slate-700 p-14 text-center shadow-sm">
+                          <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 dark:bg-slate-800 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 text-xl">
+                            <FiBookmark size={24} />
                           </div>
-                          <h4 className="font-black text-lg text-[#0B1B3D] mb-1">
+                          <h4 className="font-black text-lg text-[#0B1B3D] dark:text-white mb-1">
                             {activeTab === 'guardados'
                               ? 'No tienes eventos guardados en favoritos'
                               : activeTab === 'proximos'
                                 ? 'No tienes eventos próximos agendados'
                                 : 'Aún no registras historial de eventos'}
                           </h4>
-                          <p className="text-xs font-medium text-slate-600 max-w-sm mx-auto mb-6">
+                          <p className="text-xs font-medium text-slate-600 dark:text-slate-400 max-w-sm mx-auto mb-6">
                             Explora la cartelera cultural de Cartagena de Indias y guarda tus favoritos.
                           </p>
                           <Link
                             to="/buscar"
-                            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95"
+                            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95"
                           >
                             <span>Explorar Experiencias</span>
                             <FiArrowRight size={14} />
@@ -1041,7 +1037,7 @@ export default function PerfilUsuario() {
                                   type="button"
                                   onClick={(e) => handleRemoveDeseo(e, evento.id)}
                                   title="Quitar de favoritos"
-                                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/95 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center shadow-md z-20 transition-colors cursor-pointer"
+                                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/95 dark:bg-slate-800 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center shadow-md z-20 transition-colors cursor-pointer"
                                 >
                                   <FiTrash2 size={14} />
                                 </button>
@@ -1061,46 +1057,46 @@ export default function PerfilUsuario() {
       {/* Modal Digital Ticket QR */}
       {ticketModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 sm:p-7 shadow-2xl border-2 border-amber-200/90 text-center relative overflow-hidden">
+          <div className="bg-white dark:bg-[#0B1428] rounded-3xl max-w-sm w-full p-6 sm:p-7 shadow-2xl border-2 border-amber-200/90 dark:border-slate-800 text-center relative overflow-hidden">
             <button
               onClick={() => setTicketModal(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-[#0B1B3D] transition-colors p-1 cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-[#0B1B3D] dark:hover:text-white transition-colors p-1 cursor-pointer"
             >
               <FiX size={20} />
             </button>
 
-            <span className="text-[10px] font-black uppercase tracking-wider text-amber-950 bg-amber-100 border border-amber-300 px-3 py-1 rounded-full inline-block">
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-950 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 px-3 py-1 rounded-full inline-block">
               Pase Digital Oficial
             </span>
 
-            <h3 className="font-black text-lg text-[#0B1B3D] mt-3 leading-snug">{ticketModal.evento}</h3>
-            <p className="text-xs font-bold text-amber-800 mt-0.5">
+            <h3 className="font-black text-lg text-[#0B1B3D] dark:text-white mt-3 leading-snug">{ticketModal.evento}</h3>
+            <p className="text-xs font-bold text-amber-800 dark:text-amber-400 mt-0.5">
               {ticketModal.zona} · {ticketModal.asiento}
             </p>
 
-            <div className="my-5 p-4 rounded-2xl bg-amber-50/50 border border-amber-200 inline-block shadow-inner">
+            <div className="my-5 p-4 rounded-2xl bg-amber-50/50 dark:bg-slate-900 border border-amber-200 dark:border-slate-800 inline-block shadow-inner">
               <img
                 src={ticketModal.codigoQR}
                 alt="QR Code"
-                className="w-48 h-48 mx-auto object-contain rounded-lg"
+                className="w-48 h-48 mx-auto object-contain rounded-lg bg-white p-2"
               />
-              <p className="font-mono text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-widest">
+              <p className="font-mono text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-2 uppercase tracking-widest">
                 Código de Acceso Oficial
               </p>
             </div>
 
-            <div className="text-xs text-slate-700 text-left bg-[#FAF8F5] p-3.5 rounded-2xl mb-5 space-y-1 font-medium border border-amber-100">
+            <div className="text-xs text-slate-700 dark:text-slate-300 text-left bg-[#FAF8F5] dark:bg-slate-900/80 p-3.5 rounded-2xl mb-5 space-y-1 font-medium border border-amber-100 dark:border-slate-800">
               <p>
-                <strong className="text-[#0B1B3D]">Fecha:</strong> {ticketModal.fecha} ({ticketModal.hora})
+                <strong className="text-[#0B1B3D] dark:text-white">Fecha:</strong> {ticketModal.fecha} ({ticketModal.hora})
               </p>
               <p className="truncate">
-                <strong className="text-[#0B1B3D]">Lugar:</strong> {ticketModal.lugar}
+                <strong className="text-[#0B1B3D] dark:text-white">Lugar:</strong> {ticketModal.lugar}
               </p>
               <p>
-                <strong className="text-[#0B1B3D]">Titular:</strong> {ticketModal.titular}
+                <strong className="text-[#0B1B3D] dark:text-white">Titular:</strong> {ticketModal.titular}
               </p>
               <p>
-                <strong className="text-[#0B1B3D]">Precio:</strong> {ticketModal.precio}
+                <strong className="text-[#0B1B3D] dark:text-white">Precio:</strong> {ticketModal.precio}
               </p>
             </div>
 
@@ -1114,7 +1110,7 @@ export default function PerfilUsuario() {
                   confirmButtonColor: '#0B1B3D',
                 });
               }}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+              className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
             >
               <FiDownload size={14} />
               <span>Guardar / Confirmar Pase</span>
@@ -1126,17 +1122,17 @@ export default function PerfilUsuario() {
       {/* Modal Editar Perfil */}
       {editModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border-2 border-amber-200/90">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-amber-100">
+          <div className="bg-white dark:bg-[#0B1428] rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border-2 border-amber-200/90 dark:border-slate-800">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-amber-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <span className="text-amber-500 text-lg">⬡</span>
-                <h3 className="text-lg font-black text-[#0B1B3D]">
+                <FiEdit2 className="text-amber-500 text-lg" />
+                <h3 className="text-lg font-black text-[#0B1B3D] dark:text-white">
                   Editar Datos del Perfil
                 </h3>
               </div>
               <button
                 onClick={() => setEditModal(false)}
-                className="text-slate-400 hover:text-[#0B1B3D] p-1 cursor-pointer"
+                className="text-slate-400 hover:text-[#0B1B3D] dark:hover:text-white p-1 cursor-pointer"
               >
                 <FiX size={18} />
               </button>
@@ -1144,32 +1140,32 @@ export default function PerfilUsuario() {
 
             <form onSubmit={handleUpdatePerfil} className="space-y-4">
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1">
                   Nombre Completo
                 </label>
                 <input
                   type="text"
                   value={usuario.nombreCompleto}
                   onChange={(e) => setUsuario({ ...usuario, nombreCompleto: e.target.value })}
-                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
+                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-amber-200 dark:border-slate-700 bg-[#FAF8F5] dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1">
                   Correo Electrónico (Solo Lectura)
                 </label>
                 <input
                   type="email"
                   value={usuario.correo}
                   disabled
-                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
+                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1">
                   Teléfono (Máx. 10 dígitos)
                 </label>
                 <input
@@ -1181,7 +1177,7 @@ export default function PerfilUsuario() {
                   }}
                   maxLength={10}
                   placeholder="Ej: 3001234567"
-                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-amber-200 bg-[#FAF8F5] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
+                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-amber-200 dark:border-slate-700 bg-[#FAF8F5] dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
                 />
               </div>
 
@@ -1189,14 +1185,14 @@ export default function PerfilUsuario() {
                 <button
                   type="button"
                   onClick={() => setEditModal(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-black uppercase tracking-wider text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                  className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
                 >
                   {isUpdating && (
                     <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />

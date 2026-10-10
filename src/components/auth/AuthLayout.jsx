@@ -38,7 +38,7 @@ export default function AuthLayout({
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F8FAFC] font-body selection:bg-amber-400 selection:text-slate-950">
+    <div className="min-h-screen flex bg-[#F8FAFC] dark:bg-[#070D1B] font-body selection:bg-amber-400 selection:text-slate-950 transition-colors duration-200">
       {/* Panel Izquierdo de Marca con Paleta de Colmena, Foto Colonial y Abejas */}
       <div
         ref={panelRef}
@@ -53,21 +53,13 @@ export default function AuthLayout({
           style={{ backgroundImage: `url('${cartagenaBg}')` }}
         />
 
-        {/* 2. Gradientes ambientales nocturnos con resplandores dorados */}
+        {/* 2. Fondo ambiental nocturno */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-b from-[#080E1D]/90 via-[#0B132B]/80 to-[#0B132B] pointer-events-none"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute -top-24 -left-24 w-88 h-88 bg-amber-500/15 rounded-full blur-3xl pointer-events-none transition-opacity duration-500 group-hover/panel:opacity-90"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute bottom-16 right-0 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl pointer-events-none"
+          className="absolute inset-0 bg-[#0B132B]/85 pointer-events-none"
         />
 
-        {/* 3. Malla Hexagonal de Panal interactiva (sutil, encendida al hover) */}
+        {/* 3. Malla Hexagonal de Panal interactiva */}
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none select-none overflow-hidden">
           <svg className="absolute inset-0 w-full h-full opacity-15 group-hover/panel:opacity-80 transition-opacity duration-700 pointer-events-none">
             <defs>
@@ -78,7 +70,7 @@ export default function AuthLayout({
                 patternUnits="userSpaceOnUse"
               >
                 <path
-                  d="M32 0 L64 18.475 L64 55.425 L32 73.9 L0 55.425 L0 18.475 Z M32 110.85 L64 92.375 L64 55.425 L32 73.9 L0 55.425 L0 92.375 Z"
+                  d="M32 0 L64 18.475 L64 55.425 L32 73.9 L0 55.425 L0 18.475 Z M32 110.85 L64 92.375 L64 55.425 L32 73.9 L0 55.425 L0 18.475 Z"
                   fill="none"
                   stroke="#F59E0B"
                   strokeWidth="0.8"
@@ -103,7 +95,7 @@ export default function AuthLayout({
         <div className="relative z-20 my-auto py-8 text-left">
 
           <h1 className="font-display text-3xl sm:text-4xl lg:text-[40px] font-black leading-[1.14] max-w-md text-white tracking-tight">
-            Vive la <span className="text-amber-400 drop-shadow-[0_0_14px_rgba(245,158,11,0.5)]">Magia</span> de la Heroica, evento a evento.
+            Vive la <span className="text-amber-400">Magia</span> de la Heroica, evento a evento.
           </h1>
 
           <p className="text-sm sm:text-base text-slate-300 mt-4 max-w-md leading-relaxed font-normal">
@@ -136,19 +128,19 @@ export default function AuthLayout({
       </div>
 
       {/* Contenedor Derecho del Formulario */}
-      <div className="flex-1 flex flex-col justify-between p-6 sm:p-10 lg:p-14 overflow-y-auto bg-white">
+      <div className="flex-1 flex flex-col justify-between p-6 sm:p-10 lg:p-14 overflow-y-auto bg-white dark:bg-[#0B1428] text-slate-900 dark:text-slate-100 transition-colors duration-200">
         {/* Barra Superior con Enlace de Cambio */}
         <div className="flex items-center justify-between lg:justify-end gap-3 text-xs sm:text-sm">
           <Link to="/" className="lg:hidden flex items-center">
-            <AppLogo className="h-8 w-fit" textClassName="text-[#0B132B] text-base" hiveClassName="text-amber-500" />
+            <AppLogo className="h-8 w-fit" textClassName="text-[#0B132B] dark:text-white text-base" hiveClassName="text-amber-500" />
           </Link>
 
           {topPromptText && topActionText && topActionHref && (
-            <p className="text-slate-500 font-medium">
+            <p className="text-slate-500 dark:text-slate-400 font-medium">
               {topPromptText}{' '}
               <Link
                 to={topActionHref}
-                className="font-bold text-amber-600 hover:text-amber-700 transition-colors underline underline-offset-2 ml-1"
+                className="font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors underline underline-offset-2 ml-1"
               >
                 {topActionText}
               </Link>
@@ -160,15 +152,15 @@ export default function AuthLayout({
         <div className="w-full max-w-md mx-auto my-auto py-8">
           {title && (
             <div className="mb-6 text-left">
-              <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[#0B132B] tracking-tight">
+              <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[#0B132B] dark:text-white tracking-tight">
                 {title}
               </h2>
-              {subtitle && <p className="text-xs sm:text-sm text-slate-500 mt-2">{subtitle}</p>}
+              {subtitle && <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2">{subtitle}</p>}
             </div>
           )}
 
           {errorBanner && (
-            <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm font-medium flex items-center gap-2.5 animate-fade-in text-left">
+            <div className="mb-5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs sm:text-sm font-medium flex items-center gap-2.5 animate-fade-in text-left">
               <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
               <span>{errorBanner}</span>
             </div>

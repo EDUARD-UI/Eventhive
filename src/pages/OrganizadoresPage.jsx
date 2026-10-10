@@ -79,7 +79,7 @@ export default function OrganizadoresPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col justify-between font-body overflow-x-hidden max-w-full relative">
+    <div className="w-full min-h-screen bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body overflow-x-hidden max-w-full relative transition-colors duration-200">
       {/* Fondo interactivo de puntitos negros brillantes flotando */}
       <FloatingDotsBackground />
 
@@ -88,13 +88,13 @@ export default function OrganizadoresPage() {
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-w-0 max-w-full relative z-10">
         {/* Cabecera / Título de la sección + Buscador integrado */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 pb-6 border-b border-slate-200/80">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 pb-6 border-b border-slate-200/80 dark:border-slate-800">
           <div className="space-y-1.5 max-w-xl min-w-0">
             <div className="flex items-center flex-wrap gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight uppercase break-words">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase break-words">
                 Organizaciones y Productores
               </h1>
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/80 shadow-2xs">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 shadow-2xs">
                 {loading ? (
                   <span className="inline-block animate-pulse">Cargando...</span>
                 ) : (
@@ -102,7 +102,7 @@ export default function OrganizadoresPage() {
                 )}
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-600 font-normal leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-normal leading-relaxed">
               Directorio oficial de colectivos, promotores y productores culturales en Cartagena.
             </p>
           </div>
@@ -114,7 +114,7 @@ export default function OrganizadoresPage() {
               value={searchTerm}
               onChange={handleSearchChange}
               placeholder="Buscar organización por nombre..."
-              className="w-full h-11 bg-white border border-slate-300 hover:border-slate-400 focus:border-amber-500 rounded-xl pl-10 pr-9 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all shadow-xs"
+              className="w-full h-11 bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 focus:border-amber-500 rounded-xl pl-10 pr-9 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all shadow-xs"
             />
             <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none" />
             {searchTerm && (
@@ -122,7 +122,7 @@ export default function OrganizadoresPage() {
                 type="button"
                 onClick={() => setSearchTerm('')}
                 aria-label="Limpiar búsqueda"
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
               >
                 ✕
               </button>
@@ -132,14 +132,14 @@ export default function OrganizadoresPage() {
 
         {/* Barra de Filtros: Tabs segmentados a la izquierda y Botón de Acción destacado a la derecha */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 mb-8">
-          <div className="inline-flex p-1 bg-slate-200/70 rounded-2xl border border-slate-200/80 gap-1 self-start sm:self-auto">
+          <div className="inline-flex p-1 bg-slate-200/70 dark:bg-slate-900/80 rounded-2xl border border-slate-200/80 dark:border-slate-800 gap-1 self-start sm:self-auto">
             <button
               type="button"
               onClick={() => setActiveTab('directorio')}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
                 activeTab === 'directorio'
-                  ? 'bg-[#0B132B] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  ? 'bg-[#0B132B] dark:bg-amber-500 text-white dark:text-slate-950 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60'
               }`}
             >
               Directorio
@@ -149,8 +149,8 @@ export default function OrganizadoresPage() {
               onClick={() => setActiveTab('informacion')}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
                 activeTab === 'informacion'
-                  ? 'bg-[#0B132B] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  ? 'bg-[#0B132B] dark:bg-amber-500 text-white dark:text-slate-950 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60'
               }`}
             >
               Información para Productores
@@ -177,14 +177,14 @@ export default function OrganizadoresPage() {
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
                 {[1, 2, 3, 4, 5, 6].map((n) => (
-                  <OrganizationCardSkeleton key={n} notchBg="bg-white" />
+                  <OrganizationCardSkeleton key={n} notchBg="bg-[#F8FAFC] dark:bg-[#070D1B]" />
                 ))}
               </div>
             ) : organizations.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
                   {organizations.map((org) => (
-                    <OrganizationListCard key={org.id} org={org} notchBg="bg-white" />
+                    <OrganizationListCard key={org.id} org={org} notchBg="bg-[#F8FAFC] dark:bg-[#070D1B]" />
                   ))}
                 </div>
 
@@ -205,14 +205,14 @@ export default function OrganizadoresPage() {
                 )}
               </>
             ) : (
-              <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center max-w-lg mx-auto shadow-sm my-8">
-                <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4 text-xl">
+              <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-12 text-center max-w-lg mx-auto shadow-sm my-8">
+                <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto mb-4 text-xl">
                   <FiUsers size={24} />
                 </div>
-                <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 tracking-tight uppercase mb-2">
+                <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-2">
                   No se encontraron organizaciones
                 </h2>
-                <p className="text-slate-600 text-xs sm:text-sm max-w-md mx-auto mb-6 leading-relaxed">
+                <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto mb-6 leading-relaxed">
                   {searchTerm.trim()
                     ? `No hay coincidencias para el término “${searchTerm}”.`
                     : 'Aún no hay organizaciones activas registradas en la plataforma.'}
@@ -221,7 +221,7 @@ export default function OrganizadoresPage() {
                   <button
                     type="button"
                     onClick={() => setSearchTerm('')}
-                    className="px-6 py-2.5 rounded-xl bg-slate-950 hover:bg-amber-500 hover:text-slate-950 text-white text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
+                    className="px-6 py-2.5 rounded-xl bg-slate-950 dark:bg-amber-500 hover:bg-amber-500 hover:text-slate-950 text-white dark:text-slate-950 text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
                   >
                     Limpiar búsqueda
                   </button>

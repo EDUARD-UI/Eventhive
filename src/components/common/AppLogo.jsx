@@ -3,7 +3,7 @@ import logoImage from '../../assets/logo pequeño.png';
 export default function AppLogo({
   className = '',
   textClassName = '',
-  hiveClassName = 'text-[#087fea]',
+  hiveClassName = 'text-amber-500',
   showName = true,
   showImage = true,
   alt = 'EventHive',

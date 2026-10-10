@@ -25,11 +25,11 @@ function EventHiveBrandLogo() {
     <div className="flex items-center gap-3">
       <img src={logoImage} alt="EventHive" className="w-10 h-10 object-contain shrink-0 drop-shadow-xs" />
       <div>
-        <div className="font-display font-black text-xl tracking-tight text-slate-950 leading-none flex items-center">
+        <div className="font-display font-black text-xl tracking-tight text-slate-950 dark:text-white leading-none flex items-center">
           <span>Event</span>
           <span className="text-amber-500">Hive</span>
         </div>
-        <p className="text-[11px] font-medium text-slate-500 tracking-normal mt-0.5">
+        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 tracking-normal mt-0.5">
           Conéctate al ritmo de la ciudad
         </p>
       </div>
@@ -37,11 +37,11 @@ function EventHiveBrandLogo() {
   );
 }
 
-// Chip EMV metálico dorado realista
+// Chip EMV metálico dorado
 function EmvGoldChip() {
   return (
-    <div className="w-11 h-9 rounded-md bg-gradient-to-br from-amber-200 via-amber-300 to-amber-500 p-[1.5px] shadow-sm border border-amber-600/40 relative overflow-hidden">
-      <div className="w-full h-full rounded-[4px] bg-gradient-to-tr from-amber-300 via-yellow-200 to-amber-400 relative flex items-center justify-center">
+    <div className="w-11 h-9 rounded-md bg-amber-400 p-[1.5px] shadow-sm border border-amber-600/40 relative overflow-hidden">
+      <div className="w-full h-full rounded-[4px] bg-amber-300 relative flex items-center justify-center">
         <div className="absolute inset-x-0 h-[1px] bg-amber-700/40 top-3" />
         <div className="absolute inset-x-0 h-[1px] bg-amber-700/40 bottom-3" />
         <div className="absolute inset-y-0 w-[1px] bg-amber-700/40 left-3" />
@@ -282,27 +282,27 @@ export default function PasarelaPagoPage() {
 
   // Interfaz Principal Minimalista y Profesional en Español, con Navbar y Footer
   return (
-    <div className="w-full min-h-screen bg-[#F0F4F8] text-slate-900 flex flex-col justify-between font-body relative">
+    <div className="w-full min-h-screen bg-[#F0F4F8] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body relative transition-colors duration-200">
       <Navbar />
 
       <main className="flex-1 flex flex-col justify-center items-center p-3 sm:p-6 lg:p-8 py-8 sm:py-12">
         {/* Tarjeta Modal Principal */}
-        <div className="bg-white rounded-[28px] sm:rounded-[36px] border border-slate-200/90 shadow-[0_20px_50px_rgba(15,23,42,0.08)] max-w-4xl w-full p-6 sm:p-10 relative overflow-hidden">
+        <div className="bg-white dark:bg-[#0B1428] rounded-[28px] sm:rounded-[36px] border border-slate-200/90 dark:border-slate-800 shadow-[0_20px_50px_rgba(15,23,42,0.08)] max-w-4xl w-full p-6 sm:p-10 relative overflow-hidden">
           
           {/* FILA SUPERIOR: Logo, Nombre, Eslogan + Temporizador Digital + Botón Cerrar (X) */}
-          <div className="flex items-center justify-between gap-4 pb-6 sm:pb-8 border-b border-slate-100">
+          <div className="flex items-center justify-between gap-4 pb-6 sm:pb-8 border-b border-slate-100 dark:border-slate-800">
             {/* Identidad de Marca Oficial */}
             <EventHiveBrandLogo />
 
             {/* Temporizador Digital en cubos flip-clock + Icono X solo */}
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="flex items-center gap-1 font-mono text-xs font-black" title="Tiempo restante para completar el pago">
-                <div className="flex items-center gap-1 bg-[#0A1329] text-white px-2.5 py-1 rounded-md shadow-2xs">
+                <div className="flex items-center gap-1 bg-[#0A1329] dark:bg-amber-500 text-white dark:text-slate-950 px-2.5 py-1 rounded-md shadow-2xs">
                   <span>{timerMinutes[0]}</span>
                   <span>{timerMinutes[1]}</span>
                 </div>
-                <span className="text-[#0A1329] font-bold text-sm">:</span>
-                <div className="flex items-center gap-1 bg-[#0A1329] text-white px-2.5 py-1 rounded-md shadow-2xs">
+                <span className="text-[#0A1329] dark:text-amber-400 font-bold text-sm">:</span>
+                <div className="flex items-center gap-1 bg-[#0A1329] dark:bg-amber-500 text-white dark:text-slate-950 px-2.5 py-1 rounded-md shadow-2xs">
                   <span>{timerSeconds[0]}</span>
                   <span>{timerSeconds[1]}</span>
                 </div>
@@ -317,7 +317,7 @@ export default function PasarelaPagoPage() {
                 }}
                 aria-label="Cerrar pasarela de pago"
                 title="Cerrar"
-                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
               >
                 <FiX size={18} />
               </button>
@@ -333,7 +333,7 @@ export default function PasarelaPagoPage() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <div>
-                    <label className="block text-xs font-black text-slate-950 uppercase tracking-wide">
+                    <label className="block text-xs font-black text-slate-950 dark:text-white uppercase tracking-wide">
                       Número de tarjeta
                     </label>
                     <p className="text-[11px] text-slate-400">
@@ -528,15 +528,9 @@ export default function PasarelaPagoPage() {
             {/* COLUMNA DERECHA: Tarjeta Débito Dorada + Recibo Minimalista (5 columnas) */}
             <div className="lg:col-span-5 flex flex-col items-center">
               
-              {/* TARJETA DÉBITO DE COLOR DORADO (Colores elegantes de EventHive) */}
+              {/* TARJETA DÉBITO DORADA */}
               <div className="w-full max-w-[280px] sm:max-w-[300px] z-10 relative">
-                <div className="relative rounded-[26px] bg-gradient-to-br from-[#FDE68A] via-[#F59E0B] to-[#D97706] p-6 text-slate-950 shadow-[0_20px_40px_-10px_rgba(245,158,11,0.5)] border border-amber-300/80 overflow-hidden transform transition-transform hover:-translate-y-1 duration-300">
-                  {/* Textura de agua y curvas concéntricas elegantes */}
-                  <div className="absolute -right-16 -top-16 w-52 h-52 rounded-full border border-white/25 pointer-events-none" />
-                  <div className="absolute -right-8 -top-8 w-44 h-44 rounded-full border border-white/20 pointer-events-none" />
-                  <div className="absolute -left-12 -bottom-12 w-48 h-48 rounded-full border border-white/20 pointer-events-none" />
-                  <div className="absolute inset-0 bg-gradient-to-tr from-amber-600/10 via-white/20 to-transparent pointer-events-none" />
-
+                <div className="relative rounded-[26px] bg-amber-400 p-6 text-slate-950 shadow-md border-2 border-amber-500 overflow-hidden transform transition-transform hover:-translate-y-1 duration-300">
                   {/* Fila superior: Chip EMV + Icono Contactless Wi-Fi */}
                   <div className="flex items-center justify-between mb-8 relative z-10">
                     <EmvGoldChip />
@@ -563,7 +557,7 @@ export default function PasarelaPagoPage() {
                   </div>
 
                   {/* Fila inferior: Fecha de vencimiento + Distintivo de tarjeta */}
-                  <div className="flex items-end justify-between relative z-10 pt-2 border-t border-amber-900/10">
+                  <div className="flex items-end justify-between relative z-10 pt-2 border-t border-amber-900/15">
                     <div>
                       <span className="text-[9px] font-bold uppercase tracking-wider text-amber-950/70 block">
                         Vence
@@ -573,7 +567,7 @@ export default function PasarelaPagoPage() {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950/80 text-amber-300 border border-amber-400/40 text-[10px] font-black uppercase tracking-wider shadow-2xs">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 text-amber-400 border border-slate-900 text-[10px] font-black uppercase tracking-wider shadow-2xs">
                       <FiCreditCard size={12} />
                       <span>Tarjeta</span>
                     </div>
@@ -581,49 +575,49 @@ export default function PasarelaPagoPage() {
                 </div>
               </div>
 
-              {/* RECIBO MINIMALISTA (Ubicado justo debajo de la tarjeta dorada) */}
-              <div className="w-full max-w-[280px] sm:max-w-[300px] bg-[#F8FAFC] rounded-3xl border border-slate-200/90 -mt-10 pt-14 pb-5 px-5 shadow-xs relative z-0 space-y-4">
+              {/* RECIBO MINIMALISTA */}
+              <div className="w-full max-w-[280px] sm:max-w-[300px] bg-[#F8FAFC] dark:bg-slate-900/90 rounded-3xl border border-slate-200/90 dark:border-slate-800 -mt-10 pt-14 pb-5 px-5 shadow-xs relative z-0 space-y-4">
                 {/* Desglose de compra */}
                 <div className="space-y-2.5 text-xs">
-                  <div className="flex items-center justify-between text-slate-500">
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                     <span>Empresa</span>
-                    <span className="font-bold text-slate-800 flex items-center gap-1">
+                    <span className="font-bold text-slate-800 dark:text-white flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-amber-500" />
                       <span>EventHive</span>
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-slate-500">
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                     <span>Número de orden</span>
-                    <span className="font-mono font-bold text-slate-800">{orderNumber}</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-white">{orderNumber}</span>
                   </div>
 
-                  <div className="flex items-center justify-between text-slate-500">
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                     <span>Evento</span>
-                    <span className="font-semibold text-slate-800 truncate max-w-[130px]" title={event?.title}>
+                    <span className="font-semibold text-slate-800 dark:text-white truncate max-w-[130px]" title={event?.title}>
                       {event?.title || 'Entrada Cultural'}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-slate-500">
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                     <span>Localidad</span>
-                    <span className="font-semibold text-slate-800">{selectedLocalidad?.nombre || 'General'}</span>
+                    <span className="font-semibold text-slate-800 dark:text-white">{selectedLocalidad?.nombre || 'General'}</span>
                   </div>
 
-                  <div className="flex items-center justify-between text-slate-500">
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                     <span>Cantidad</span>
-                    <span className="font-bold text-slate-800">{cantidad} boleta{cantidad > 1 ? 's' : ''}</span>
+                    <span className="font-bold text-slate-800 dark:text-white">{cantidad} boleta{cantidad > 1 ? 's' : ''}</span>
                   </div>
 
-                  <div className="flex items-center justify-between text-slate-500">
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                     <span>IVA (19%)</span>
-                    <span className="font-semibold text-slate-700">Incluido</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">Incluido</span>
                   </div>
                 </div>
 
                 {/* Perforación de boleto / Línea punteada de recibo */}
                 <div className="relative flex items-center w-full my-2">
-                  <div className="w-full border-b border-dashed border-slate-300" />
+                  <div className="w-full border-b border-dashed border-slate-300 dark:border-slate-700" />
                 </div>
 
                 {/* Pie del recibo: Total a pagar con icono de recibo */}
@@ -632,13 +626,13 @@ export default function PasarelaPagoPage() {
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                       Total a pagar
                     </span>
-                    <span className="text-lg font-black text-slate-950 tracking-tight">
+                    <span className="text-lg font-black text-slate-950 dark:text-white tracking-tight">
                       ${Number(total).toLocaleString('es-CO')}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-500 uppercase ml-1">COP</span>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase ml-1">COP</span>
                   </div>
 
-                  <div className="w-9 h-9 rounded-xl bg-slate-200/80 text-slate-700 flex items-center justify-center shrink-0 shadow-2xs">
+                  <div className="w-9 h-9 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0 shadow-2xs">
                     <FiFileText size={18} />
                   </div>
                 </div>

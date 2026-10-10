@@ -10,8 +10,8 @@ import React from 'react';
 export default function TicketSectionSeparator({
   className = '',
   maxWidth = '',
-  notchColor = 'bg-slate-100',
-  borderColor = 'border-slate-300',
+  notchColor = 'bg-slate-100 dark:bg-[#070D1B]',
+  borderColor = 'border-slate-300 dark:border-slate-800',
   'aria-hidden': ariaHidden,
 }) {
   return (

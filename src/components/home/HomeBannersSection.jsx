@@ -31,7 +31,29 @@ export default function HomeBannersSection() {
     };
   }, []);
 
-  if (loading || !banners || banners.length === 0) {
+  if (loading) {
+    return (
+      <section className="w-full py-8 sm:py-12 px-4 sm:px-6 md:px-8 lg:px-10 max-w-none">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-8 items-start">
+          {/* Skeleton Banner Izquierdo */}
+          <div className="w-full lg:-translate-y-2 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60 shadow-md animate-pulse h-[320px] sm:h-[390px] lg:h-[450px] relative p-6 sm:p-8 lg:p-10 flex flex-col justify-end">
+            <div className="w-3/4 h-8 sm:h-10 bg-slate-300 dark:bg-slate-800 rounded-xl mb-4" />
+            <div className="w-1/2 h-5 sm:h-6 bg-slate-200 dark:bg-slate-800/70 rounded-lg mb-6" />
+            <div className="w-36 h-10 bg-amber-400/30 dark:bg-amber-500/20 rounded-xl" />
+          </div>
+
+          {/* Skeleton Banner Derecho */}
+          <div className="w-full lg:translate-y-6 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60 shadow-md animate-pulse h-[320px] sm:h-[390px] lg:h-[450px] relative p-6 sm:p-8 lg:p-10 flex flex-col justify-end">
+            <div className="w-2/3 h-8 sm:h-10 bg-slate-300 dark:bg-slate-800 rounded-xl mb-4" />
+            <div className="w-2/5 h-5 sm:h-6 bg-slate-200 dark:bg-slate-800/70 rounded-lg mb-6" />
+            <div className="w-36 h-10 bg-amber-400/30 dark:bg-amber-500/20 rounded-xl" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!banners || banners.length === 0) {
     return null;
   }
 
@@ -67,7 +89,7 @@ export default function HomeBannersSection() {
 
     return (
       <div
-        className={`group relative overflow-hidden rounded-3xl border border-slate-200/90 shadow-md hover:shadow-2xl hover:shadow-amber-500/10 hover:border-amber-400/60 hover:-translate-y-2 hover:scale-[1.01] transition-all duration-500 ease-out w-full ${colSpanClass}`}
+        className={`group relative overflow-hidden rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-md hover:shadow-2xl hover:shadow-amber-500/10 hover:border-amber-400/60 hover:-translate-y-2 hover:scale-[1.01] transition-all duration-500 ease-out w-full ${colSpanClass}`}
       >
         <CardWrapper
           {...wrapperProps}
@@ -86,15 +108,11 @@ export default function HomeBannersSection() {
             <div className="w-full h-full bg-[#0D1527] relative" />
           )}
 
-          {/* Sombreado de alto contraste para máxima legibilidad */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/45 to-slate-950/10 pointer-events-none" />
-
-          {/* Sutil resplandor ámbar en hover */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/0 via-amber-400/5 to-amber-300/15 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-
-          {/* Contenido textual y botón */}
-          <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-8 lg:p-10 z-10">
-            <h3 className="font-extrabold text-white group-hover:text-amber-100 text-xl sm:text-2xl lg:text-3xl leading-snug tracking-tight uppercase mb-4 max-w-lg drop-shadow-md transition-colors duration-300">
+          {/* Sin oscurecer la imagen del banner para que se vea nítida en modo oscuro */}
+          
+          {/* Contenido textual y botón con sombra de texto de alta legibilidad sin gradiente */}
+          <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-8 lg:p-10 z-10 pointer-events-none">
+            <h3 className="font-extrabold text-white group-hover:text-amber-100 text-xl sm:text-2xl lg:text-3xl leading-snug tracking-tight uppercase mb-4 max-w-lg drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] transition-colors duration-300">
               {banner.titulo}
             </h3>
 

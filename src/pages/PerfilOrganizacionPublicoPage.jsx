@@ -133,17 +133,12 @@ export default function PerfilOrganizacionPublicoPage() {
 
   if (loading) {
     return (
-      <div className="w-full min-h-screen bg-white text-slate-900 flex flex-col justify-between relative">
+      <div className="w-full min-h-screen bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between relative transition-colors duration-200">
         <FloatingDotsBackground />
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center py-24 gap-3">
-          <div className="relative w-14 h-14 flex items-center justify-center">
-            <div className="absolute inset-0 clip-hexagon-horiz bg-gradient-to-r from-amber-400 to-amber-500 animate-spin" />
-            <div className="absolute inset-[3px] clip-hexagon-horiz bg-white flex items-center justify-center">
-              <span className="text-amber-500 text-base">⬡</span>
-            </div>
-          </div>
-          <p className="text-xs font-black uppercase tracking-widest text-[#0B1B3D]">
+          <div className="w-12 h-12 border-3 border-amber-400 border-t-[#0B1B3D] dark:border-t-white rounded-full animate-spin" />
+          <p className="text-xs font-black uppercase tracking-widest text-[#0B1B3D] dark:text-slate-200">
             Cargando perfil de la organización...
           </p>
         </div>
@@ -154,20 +149,20 @@ export default function PerfilOrganizacionPublicoPage() {
 
   if (!organization) {
     return (
-      <div className="w-full min-h-screen bg-white text-slate-900 flex flex-col justify-between relative">
+      <div className="w-full min-h-screen bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between relative transition-colors duration-200">
         <FloatingDotsBackground />
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center py-24 px-6 text-center">
-          <div className="w-16 h-16 rounded-3xl bg-amber-100 text-amber-600 flex items-center justify-center mb-4 text-2xl shadow-inner">
-            ⬡
+          <div className="w-16 h-16 rounded-3xl bg-amber-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 text-2xl shadow-inner">
+            <FiUsers size={28} />
           </div>
-          <h2 className="text-2xl font-black text-[#0B1B3D] mb-2">Organización no encontrada</h2>
-          <p className="text-slate-600 text-sm max-w-md mb-6 font-medium">
+          <h2 className="text-2xl font-black text-[#0B1B3D] dark:text-white mb-2">Organización no encontrada</h2>
+          <p className="text-slate-600 dark:text-slate-400 text-sm max-w-md mb-6 font-medium">
             La organización solicitada no está disponible o no tiene un perfil público registrado.
           </p>
           <Link
             to="/organizaciones"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md hover:from-amber-500 hover:to-amber-600 transition-all active:scale-95"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95"
           >
             <FiArrowLeft size={16} />
             Volver a Organizaciones
@@ -179,16 +174,13 @@ export default function PerfilOrganizacionPublicoPage() {
   }
 
   return (
-    <div className="w-full min-h-screen text-slate-900 flex flex-col justify-between selection:bg-amber-400 selection:text-slate-950 relative">
+    <div className="w-full min-h-screen bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between selection:bg-amber-400 selection:text-slate-950 relative transition-colors duration-200">
       <FloatingDotsBackground />
       <Navbar />
 
       <main className="flex-1 relative z-10">
         {/* Banner de Cabecera Colmena */}
-        <section className="w-full bg-[#0B1B3D] text-white pt-10 pb-16 px-6 sm:px-12 lg:px-20 border-b border-amber-500/20 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(#F59E0B_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
-
+        <section className="w-full bg-[#0B1B3D] dark:bg-[#081021] text-white pt-10 pb-16 px-6 sm:px-12 lg:px-20 border-b border-amber-500/20 relative overflow-hidden">
           <div className="max-w-6xl mx-auto relative z-10">
             {/* Botón de retroceso */}
             <Link
@@ -202,10 +194,10 @@ export default function PerfilOrganizacionPublicoPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               {/* Información principal del Organizador */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-                {/* Avatar Hexagonal */}
+                {/* Avatar */}
                 <div className="relative shrink-0">
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 clip-hexagon bg-gradient-to-b from-amber-400 to-amber-600 p-[3px] filter drop-shadow-md">
-                    <div className="w-full h-full clip-hexagon bg-[#0B172C] overflow-hidden flex items-center justify-center">
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border-2 border-amber-400 p-[3px] shadow-md bg-[#0B172C]">
+                    <div className="w-full h-full rounded-xl bg-[#0B172C] overflow-hidden flex items-center justify-center">
                       <ImageWithFallback
                         src={organization.avatar}
                         alt={organization.name}
@@ -230,8 +222,7 @@ export default function PerfilOrganizacionPublicoPage() {
 
                 <div>
                   <div className="flex flex-wrap items-center gap-2.5 mb-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-950 bg-amber-100 px-3 py-0.5 rounded-full border border-amber-300 flex items-center gap-1">
-                      <span>⬡</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-950 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-3 py-0.5 rounded-full border border-amber-300 dark:border-amber-800 flex items-center gap-1">
                       <span>{organization.category}</span>
                     </span>
 
@@ -271,11 +262,11 @@ export default function PerfilOrganizacionPublicoPage() {
                   onClick={handleToggleFollow}
                   className={`px-6 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all shadow-md active:scale-95 flex items-center gap-2 cursor-pointer ${isFollowing
                       ? 'bg-white/20 text-white border border-white/30 hover:bg-white/30'
-                      : 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 shadow-amber-500/25'
+                      : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
                     }`}
                 >
                   <FiUsers size={16} />
-                  <span>{isFollowing ? '✓ Siguiendo' : '+ Seguir Organización'}</span>
+                  <span>{isFollowing ? 'Siguiendo' : 'Seguir Organización'}</span>
                 </button>
               </div>
             </div>
@@ -293,24 +284,24 @@ export default function PerfilOrganizacionPublicoPage() {
         <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
 
           {/* Barra de pestañas por estado: Todos, Publicados, Finalizados */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-amber-200/80 pb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-amber-200/80 dark:border-slate-800 pb-5">
             <div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-amber-900 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-md inline-block mb-1">
-                ⬡ CARTELERA DE EVENTOS
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-900 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 px-2.5 py-0.5 rounded-md inline-block mb-1">
+                CARTELERA DE EVENTOS
               </span>
-              <h2 className="text-2xl font-black text-[#0B1B3D]">
+              <h2 className="text-2xl font-black text-[#0B1B3D] dark:text-white">
                 Experiencias de {organization.name}
               </h2>
             </div>
 
             {/* Pestañas de estado */}
-            <div className="inline-flex p-1 rounded-2xl bg-white border-2 border-amber-200/90 shadow-sm self-start sm:self-auto">
+            <div className="inline-flex p-1 rounded-2xl bg-white dark:bg-[#0B1428] border-2 border-amber-200/90 dark:border-slate-800 shadow-sm self-start sm:self-auto">
               <button
                 type="button"
                 onClick={() => handleTabChange('todos')}
                 className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${activeTab === 'todos'
-                    ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm'
-                    : 'text-slate-600 hover:text-[#0B1B3D]'
+                    ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-[#0B1B3D] dark:hover:text-white'
                   }`}
               >
                 Todos ({counts.todos})
@@ -319,8 +310,8 @@ export default function PerfilOrganizacionPublicoPage() {
                 type="button"
                 onClick={() => handleTabChange('publicados')}
                 className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${activeTab === 'publicados'
-                    ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm'
-                    : 'text-slate-600 hover:text-[#0B1B3D]'
+                    ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-[#0B1B3D] dark:hover:text-white'
                   }`}
               >
                 Activos ({counts.publicados})
@@ -329,8 +320,8 @@ export default function PerfilOrganizacionPublicoPage() {
                 type="button"
                 onClick={() => handleTabChange('finalizados')}
                 className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${activeTab === 'finalizados'
-                    ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm'
-                    : 'text-slate-600 hover:text-[#0B1B3D]'
+                    ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-[#0B1B3D] dark:hover:text-white'
                   }`}
               >
                 Finalizados ({counts.finalizados})
@@ -343,22 +334,8 @@ export default function PerfilOrganizacionPublicoPage() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {paginatedEvents.map((event) => {
-                  const isPast = event.startsAt ? new Date(event.startsAt) < new Date() : false;
-                  const estado = (event.estado || (isPast ? 'FINALIZADO' : 'PUBLICADO')).toUpperCase();
-
                   return (
                     <div key={event.id} className="relative flex flex-col">
-                      <div className="mb-2 flex items-center justify-between">
-                        <span
-                          className={`text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${estado === 'FINALIZADO'
-                              ? 'bg-slate-100 text-slate-600 border-slate-300'
-                              : 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                            }`}
-                        >
-                         
-                        </span>
-                      </div>
-
                       <HiveEventCard event={event} />
                     </div>
                   );
@@ -382,22 +359,22 @@ export default function PerfilOrganizacionPublicoPage() {
               )}
             </>
           ) : (
-            <div className="border-2 border-dashed border-amber-300 rounded-3xl bg-white p-14 text-center max-w-xl mx-auto shadow-sm my-6">
-              <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-3 text-xl">
-                ⬡
+            <div className="border-2 border-dashed border-amber-300 dark:border-slate-700 rounded-3xl bg-white dark:bg-[#0B1428] p-14 text-center max-w-xl mx-auto shadow-sm my-6">
+              <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-slate-800 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto mb-3 text-xl">
+                <FiCalendar size={24} />
               </div>
-              <h3 className="text-lg font-black text-[#0B1B3D] mb-1 uppercase">
+              <h3 className="text-lg font-black text-[#0B1B3D] dark:text-white mb-1 uppercase">
                 No hay eventos {activeTab !== 'todos' ? activeTab : 'registrados'}
               </h3>
-              <p className="text-xs text-slate-600 mb-6 font-medium">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-6 font-medium">
                 Esta organización actualmente no tiene eventos en la sección de{' '}
-                <strong className="text-amber-800">{activeTab}</strong>.
+                <strong className="text-amber-800 dark:text-amber-400">{activeTab}</strong>.
               </p>
               {activeTab !== 'todos' && (
                 <button
                   type="button"
                   onClick={() => setActiveTab('todos')}
-                  className="px-5 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-amber-100 dark:bg-slate-800 hover:bg-amber-200 dark:hover:bg-slate-700 text-amber-950 dark:text-amber-300 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
                 >
                   Ver todos los eventos ({counts.todos})
                 </button>

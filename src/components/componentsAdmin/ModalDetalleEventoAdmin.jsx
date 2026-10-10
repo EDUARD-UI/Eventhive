@@ -14,11 +14,16 @@ export default function ModalDetalleEventoAdmin({
   const isPublicado = evento.estado === 'Publicado';
 
   const modalContent = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 sm:p-6 overflow-y-auto no-scrollbar animate-in fade-in duration-200"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-[9999] flex justify-end">
+      {/* Backdrop */}
       <div
-        className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl border border-slate-100 overflow-hidden"
+        className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Drawer lateral derecho */}
+      <div
+        className="relative z-50 w-full sm:w-[620px] md:w-[680px] lg:w-[740px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Banner de Imagen */}

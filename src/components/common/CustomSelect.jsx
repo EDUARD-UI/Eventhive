@@ -49,15 +49,15 @@ export default function CustomSelect({
         className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer shadow-xs ${
           isDark
             ? 'bg-[#0D182E] border border-slate-700 hover:border-slate-500 text-white'
-            : 'bg-white border border-slate-300 hover:border-slate-400 text-slate-900'
-        } ${isOpen ? (isDark ? 'border-amber-400 ring-2 ring-amber-400/20' : 'border-slate-800 ring-2 ring-slate-800/10') : ''}`}
+            : 'bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 text-slate-900 dark:text-white'
+        } ${isOpen ? (isDark ? 'border-amber-400 ring-2 ring-amber-400/20' : 'border-slate-800 dark:border-amber-500 ring-2 ring-slate-800/10 dark:ring-amber-500/20') : ''}`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
         <span className="truncate">{displayText}</span>
         <FiChevronDown
           className={`shrink-0 transition-transform duration-200 ${
-            isOpen ? 'rotate-180 text-amber-500' : isDark ? 'text-slate-400' : 'text-slate-500'
+            isOpen ? 'rotate-180 text-amber-500' : isDark ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'
           }`}
           size={14}
         />
@@ -70,7 +70,7 @@ export default function CustomSelect({
           className={`absolute left-0 right-0 mt-1.5 max-h-60 overflow-y-auto rounded-xl p-1.5 z-50 shadow-xl transition-all duration-200 ${
             isDark
               ? 'bg-[#0D182E] border border-slate-700 text-white shadow-[0_10px_30px_rgba(0,0,0,0.6)]'
-              : 'bg-white border border-slate-300 text-slate-900 shadow-[0_10px_30px_rgba(0,0,0,0.12)]'
+              : 'bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)]'
           } ${dropdownClassName}`}
         >
           {options.map((opt) => {
@@ -86,10 +86,10 @@ export default function CustomSelect({
                   isSelected
                     ? isDark
                       ? 'bg-amber-400/15 text-amber-300 font-bold'
-                      : 'bg-slate-100 text-slate-950 font-bold'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-950 dark:text-white font-bold'
                     : isDark
                     ? 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
-                    : 'text-slate-700 hover:bg-slate-50 hover:text-slate-950'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-950 dark:hover:text-white'
                 }`}
               >
                 <span className="truncate">{opt.label}</span>

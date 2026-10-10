@@ -40,6 +40,7 @@ export const normalizeRole = (rawRole) => {
   }
   if (role === 'OPERADOR') return 'OPERADOR';
   if (role === 'MODERADOR' || role === 'MODERATOR') return 'MODERADOR';
+  if (role === 'MARKETING') return 'MARKETING';
   if (role === 'CLIENTE' || role === 'USER' || role === 'USUARIO' || role === 'CLIENT') return 'CLIENTE';
 
   return role || 'CLIENTE';
@@ -53,6 +54,8 @@ export const getDashboardPathForRole = (role) => {
     case 'ADMINISTRADOR':
     case 'ADMIN':
       return '/admin';
+    case 'MARKETING':
+      return '/marketing';
     case 'REPRESENTANTE':
     case 'OPERADOR':
     case 'ORGANIZADOR':
@@ -245,6 +248,7 @@ export const session = {
       ADMINISTRADOR: { email: 'admin@eventhive.local', name: 'Administrador Demo' },
       ADMIN: { email: 'admin@eventhive.local', name: 'Administrador Demo' },
       MODERADOR: { email: 'moderador@eventhive.local', name: 'Moderador Demo' },
+      MARKETING: { email: 'marketing@eventhive.local', name: 'Marketing Demo' },
       REPRESENTANTE: { email: 'organizador@eventhive.local', name: 'Organizador Demo' },
       OPERADOR: { email: 'operador@eventhive.local', name: 'Operador Demo' },
       ORGANIZADOR: { email: 'organizador@eventhive.local', name: 'Organizador Demo' },

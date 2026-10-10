@@ -67,7 +67,7 @@ export default function OrganizerCtaSection() {
   return (
     <section className="w-full py-12 sm:py-16 px-4 sm:px-6 md:px-8 lg:px-12 max-w-7xl mx-auto">
       {/* 1. Contenedor Principal Panorámico Premium */}
-      <div className="relative overflow-hidden rounded-3xl border border-blue-500/20 bg-gradient-to-r from-[#071329] via-[#0b1c3d] to-[#0c1f45] p-6 sm:p-10 lg:p-12 shadow-2xl">
+      <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-[#0B1428] p-6 sm:p-10 lg:p-12 shadow-2xl">
 
         {/* Destello de luz dorado tenue en la esquina superior izquierda */}
         <div
@@ -148,7 +148,7 @@ export default function OrganizerCtaSection() {
           {/* 3. Columna Derecha (Visual Slot + CTA) */}
           <div className="lg:col-span-5 flex flex-col items-center justify-center gap-6 w-full">
             {/* <!-- SLOT DE IMAGEN DERECHA: Insertar aquí el mockup/composición --> */}
-            <div className="w-full relative min-h-[200px] sm:min-h-[260px] lg:min-h-[280px] rounded-2xl border border-slate-700/60 bg-gradient-to-b from-slate-900/80 to-[#081226]/90 p-5 shadow-inner backdrop-blur-xs overflow-hidden flex flex-col justify-between group">
+            <div className="w-full relative min-h-[200px] sm:min-h-[260px] lg:min-h-[280px] rounded-2xl border border-slate-700/60 bg-slate-900/90 p-5 shadow-inner backdrop-blur-xs overflow-hidden flex flex-col justify-between group">
               {/* Resplandor interno decorativo */}
               <div className="absolute top-0 right-0 w-36 h-36 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
 

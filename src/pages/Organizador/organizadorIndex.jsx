@@ -40,7 +40,7 @@ import { formatPrice } from '../../utils/formatters.js';
 const menuItems = [
   { id: 'resumen', label: 'Resumen', icon: FiGrid },
   { id: 'eventos', label: 'Mis eventos', icon: FiCalendar },
-  { id: 'operadores', label: 'Operadores', icon: FiUsers },
+  { id: 'operadores', label: 'Trabajadores', icon: FiUsers },
   { id: 'posicionamiento', label: 'Posicionamiento', icon: FiAward },
   { id: 'entradas', label: 'Entradas', icon: FiCreditCard },
   { id: 'perfil', label: 'Mi perfil', icon: FiUser },

@@ -15,7 +15,7 @@ export default function StandardLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-[#f4f6fa] font-body text-[#172033]">
+    <div className="flex h-screen overflow-hidden bg-[#f4f6fa] font-body text-[#172033]">
       <Sidebar
         role={role}
         items={menuItems}
@@ -26,7 +26,7 @@ export default function StandardLayout({
         onClose={() => setMobileMenuOpen(false)}
       />
 
-      <div className="relative flex min-w-0 flex-1 flex-col overflow-y-auto">
+      <div className="relative flex min-w-0 flex-1 flex-col h-screen overflow-y-auto">
         {customHeader ? (
           customHeader
         ) : (

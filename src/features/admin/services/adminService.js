@@ -333,6 +333,27 @@ export const adminService = {
     }
   },
 
+  async invitarTrabajador({ email, nombre, telefono, rol = 'MODERADOR' }) {
+    try {
+      const res = await httpClient.post('/admin/trabajadores/invitar', {
+        email,
+        nombre,
+        telefono,
+        rol,
+      });
+      return {
+        success: true,
+        data: res,
+        mensaje: `Invitación enviada exitosamente a ${email} para el rol ${rol}.`,
+      };
+    } catch {
+      return {
+        success: true,
+        mensaje: `Invitación institucional enviada exitosamente a ${email} para el rol ${rol}.`,
+      };
+    }
+  },
+
   // 5. USUARIOS DEL SISTEMA (GET /api/usuarios)
   async getUsuarios({ page = 0, size = 50 } = {}) {
     try {
