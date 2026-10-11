@@ -254,9 +254,8 @@ export default function Home() {
       {/* Hero Principal con Buscador Integrado */}
       <Hero />
 
-      <br></br>
       {/* 2. Eventos Destacados */}
-      <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-10 pb-8 sm:pt-14 sm:pb-12 max-w-[1850px] mx-auto relative z-10 transition-colors duration-200">
+      <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-3 pb-8 sm:pt-5 sm:pb-12 max-w-[1850px] mx-auto relative z-10 transition-colors duration-200">
         {(() => {
           const carouselEvents = featuredEvents.length > 0 ? featuredEvents : upcomingEvents;
           if (carouselEvents.length > 0) {

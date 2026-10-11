@@ -241,17 +241,12 @@ export default function BuscarEventosPage() {
       <Navbar />
 
       <main className="flex-1 max-w-[1900px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-8 sm:py-12 relative z-10">
-        {/* Cabecera / Título Principal (Buscador removido ya que está en el Navbar) */}
-        <div className="mb-8 pb-4 border-b border-slate-200/70 dark:border-slate-800">
-          <div className="flex flex-wrap items-center gap-3 mb-1.5">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B132B] dark:text-white tracking-tight">
-              Eventos en Cartagena
-            </h1>
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-400/20 shadow-2xs">
-              {loading ? 'Cargando...' : `${totalElements} disponibles`}
-            </span>
-          </div>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-normal leading-relaxed">
+        {/* Cabecera / Título Principal Centrado */}
+        <div className="mb-8 pb-4 border-b border-slate-200/70 dark:border-slate-800 text-center flex flex-col items-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0B132B] dark:text-white tracking-tight mb-2">
+            Eventos en Cartagena
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-normal leading-relaxed max-w-xl mx-auto">
             Descubre conciertos, festivales, experiencias culturales y deportivas en La Heroica.
           </p>
         </div>
@@ -446,10 +441,10 @@ export default function BuscarEventosPage() {
         </div>
       </main>
 
-      {/* 2. Sección de Categorías Destacadas (Ocupa todo el ancho de la pantalla y cards con más altura) */}
+      {/* 2. Sección de Categorías Destacadas (Ocupa todo el ancho de la pantalla en pantallas grandes) */}
       {featuredCategories.length > 0 && (
-        <section className="w-full py-12 sm:py-16 px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 border-t border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-[#0B1428]/80 backdrop-blur-xs relative z-10 transition-colors duration-200">
-          <div className="w-full mb-8">
+        <section className="w-full py-10 sm:py-14 px-4 sm:px-6 md:px-8 lg:px-8 xl:px-10 border-t border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-[#0B1428]/80 backdrop-blur-xs relative z-10 transition-colors duration-200">
+          <div className="w-full mb-6 sm:mb-8">
             <h3 className="text-xl sm:text-2xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
               Categorías Destacadas
             </h3>
@@ -458,7 +453,7 @@ export default function BuscarEventosPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6 2xl:grid-cols-8 gap-4 sm:gap-5 w-full">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-4 sm:gap-5 w-full">
             {featuredCategories.map((cat) => {
               const imageUrl = cat.imagenUrl || cat.urlFoto || cat.foto || cat.imagen;
               return (

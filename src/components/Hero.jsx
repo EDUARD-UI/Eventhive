@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { FiArrowRight, FiMapPin } from 'react-icons/fi';
 import BeeParticles from './home/BeeParticles.jsx';
 import CartagenaHiveSkyline from './home/CartagenaHiveSkyline.jsx';
 import HexagonalHivePattern from './common/HexagonalHivePattern.jsx';
+import promocionalVideo from '../assets/promocional.mp4';
 import colombiaImg from '../assets/Colombia.jpg';
 import { useTheme } from '../context/ThemeContext.jsx';
 
@@ -23,9 +24,33 @@ function SparkleStar({ className = 'w-5 h-5 text-amber-400' }) {
   );
 }
 
+// Ruta SVG normalizada (0 a 1) para recorte orgánico y contorno idéntico a la referencia
+const HERO_SHAPE_PATH =
+  'M 0,0.22 C 0,0.16 0.03,0.13 0.08,0.13 L 0.36,0.13 C 0.46,0.13 0.48,0.0 0.58,0.0 L 0.92,0.0 C 0.97,0.0 1.0,0.03 1.0,0.08 L 1.0,0.72 C 1.0,0.77 0.97,0.80 0.92,0.80 L 0.76,0.80 C 0.68,0.80 0.65,1.0 0.55,1.0 L 0.08,1.0 C 0.03,1.0 0,0.97 0,0.92 Z';
+
 export default function Hero() {
   const { isDark } = useTheme();
   const [scrollY, setScrollY] = useState(0);
+  const videoRef = useRef(null);
+
+  // Garantizar reproducción automática, fluida y en bucle sin requerir interacción del usuario a 0.75x
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.playbackRate = 0.75;
+      video.defaultMuted = true;
+      video.muted = true;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Reintentar asegurando estado silenciado para políticas de autoplay
+          video.muted = true;
+          video.playbackRate = 0.75;
+          video.play().catch(() => {});
+        });
+      }
+    }
+  }, []);
 
   // Transición suave de scroll estilo Apple / Antigravity
   useEffect(() => {
@@ -44,11 +69,11 @@ export default function Hero() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Progreso de desplazamiento normalizado de 0 a 1 en los primeros 650px
-  const scrollProgress = Math.min(1, Math.max(0, scrollY / 650));
+  // Progreso de desplazamiento normalizado
+  const scrollProgress = Math.min(1, Math.max(0, scrollY / 550));
   const scale = 1 - scrollProgress * 0.05;
   const opacity = 1 - scrollProgress * 0.35;
-  const translateY = scrollProgress * 28;
+  const translateY = scrollProgress * 24;
 
   // Clase de estilo dinámico para destellos y chispas según tema
   const sparkleClass = isDark
@@ -58,12 +83,21 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className={`relative overflow-visible select-none min-h-[580px] lg:min-h-[660px] flex items-center transition-colors duration-500 ${
+      className={`relative overflow-visible select-none min-h-[480px] lg:min-h-[550px] flex items-center transition-colors duration-500 ${
         isDark
           ? 'bg-gradient-to-b from-[#0F172A] via-[#090D1A] to-[#05070F] text-white'
           : 'bg-gradient-to-b from-[#EDF4F9] via-[#F8FAFC] to-[#F1F5F9] text-slate-900 border-b border-slate-200/60'
       }`}
     >
+      {/* Definición SVG del clipPath para la silueta orgánica asimétrica del video */}
+      <svg width="0" height="0" className="absolute w-0 h-0 pointer-events-none" aria-hidden="true">
+        <defs>
+          <clipPath id="heroMediaShape" clipPathUnits="objectBoundingBox">
+            <path d={HERO_SHAPE_PATH} />
+          </clipPath>
+        </defs>
+      </svg>
+
       {/* Contenedor ambiental: Colmena ascendente, Partículas y Silueta Muralla */}
       <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
         <HexagonalHivePattern variant="hero" />
@@ -78,7 +112,7 @@ export default function Hero() {
           opacity,
           willChange: 'transform, opacity',
         }}
-        className="relative z-10 mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12 py-12 sm:py-16 lg:py-20 transition-all duration-75"
+        className="relative z-10 mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12 py-8 sm:py-10 lg:py-12 transition-all duration-75"
       >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
           
@@ -87,7 +121,7 @@ export default function Hero() {
 
             {/* Ubicación y Badge: Peso visual equilibrado */}
             <div
-              className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-5 border transition-all ${
+              className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-4 sm:mb-5 border transition-all ${
                 isDark
                   ? 'bg-slate-900/80 border-white/10 text-slate-300 shadow-none'
                   : 'bg-white/95 border-slate-200 text-slate-700 shadow-xs'
@@ -99,7 +133,7 @@ export default function Hero() {
 
             {/* Título Principal con color accesible WCAG AA */}
             <h1
-              className={`font-display font-black text-4xl sm:text-5xl md:text-6xl xl:text-[66px] leading-[1.06] tracking-tight mb-5 drop-shadow-xs ${
+              className={`font-display font-black text-4xl sm:text-5xl md:text-6xl xl:text-[64px] leading-[1.06] tracking-tight mb-4 sm:mb-5 drop-shadow-xs ${
                 isDark ? 'text-white' : 'text-slate-950'
               }`}
             >
@@ -110,7 +144,7 @@ export default function Hero() {
             </h1>
 
             {/* Subtítulo descriptivo */}
-            <p className="max-w-lg text-sm sm:text-base leading-relaxed font-normal mb-8 text-slate-600 dark:text-slate-300">
+            <p className="max-w-lg text-sm sm:text-base leading-relaxed font-normal mb-6 sm:mb-8 text-slate-600 dark:text-slate-300">
               Descubre festivales, conciertos, arte, gastronomía y vida nocturna en la mágica Cartagena de Indias. Vive cada momento al máximo.
             </p>
 
@@ -138,11 +172,11 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Columna Derecha: Tarjeta de Foto con Efecto de Flotación 3D y Destellos */}
-          <div className="lg:col-span-7 flex justify-center lg:justify-end relative h-full lg:translate-x-6 xl:translate-x-12">
-            <div className="relative w-full max-w-[680px] h-full group">
+          {/* Columna Derecha: Tarjeta de Video desplazada a la derecha en pantallas grandes */}
+          <div className="lg:col-span-7 flex justify-center lg:justify-end relative h-full w-full lg:translate-x-8 xl:translate-x-14 2xl:translate-x-20 transition-transform duration-300">
+            <div className="relative w-full max-w-[460px] sm:max-w-[560px] lg:max-w-[680px] h-full group mx-auto lg:mr-0">
               
-              {/* Destellos festivos flotantes alrededor de la foto */}
+              {/* Destellos festivos flotantes alrededor de la tarjeta */}
               <div className="absolute -top-4 -left-3 sm:-top-5 sm:-left-4 z-30 pointer-events-none">
                 <SparkleStar className={`w-5 h-5 sm:w-6 sm:h-6 ${sparkleClass}`} />
               </div>
@@ -156,19 +190,54 @@ export default function Hero() {
                 <SparkleStar className={`w-3.5 h-3.5 ${sparkleClass}`} />
               </div>
 
-              {/* Tarjeta de Foto Flotante 3D con Sombras Calibradas y Esquinas Redondeadas */}
-              <div
-                className={`relative w-full h-[460px] sm:h-[530px] md:h-[590px] lg:h-[630px] overflow-hidden rounded-3xl sm:rounded-[2.5rem] border transition-all duration-500 ease-out ${
-                  isDark
-                    ? 'border-amber-500/20 bg-[#0A1325] shadow-2xl shadow-slate-900/40'
-                    : 'border-white/90 bg-white shadow-2xl shadow-slate-300/50'
-                }`}
-              >
-                <img
-                  src={colombiaImg}
-                  alt="Cartagena de Indias, Colombia"
-                  className="w-full h-full object-cover object-center scale-100 group-hover:scale-103 transition-transform duration-700 ease-out"
-                />
+              {/* Contenedor con Silueta Orgánica / Asimétrica del Video */}
+              <div className="relative w-full h-[320px] sm:h-[390px] md:h-[440px] lg:h-[490px] filter drop-shadow-[0_20px_35px_rgba(0,0,0,0.18)] dark:drop-shadow-[0_25px_45px_rgba(0,0,0,0.6)]">
+                
+                {/* Elemento recortado con la silueta curva */}
+                <div
+                  style={{ clipPath: 'url(#heroMediaShape)' }}
+                  className="relative w-full h-full overflow-hidden bg-slate-950 transition-all duration-500 ease-out"
+                >
+                  <video
+                    ref={videoRef}
+                    src={promocionalVideo}
+                    poster={colombiaImg}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="auto"
+                    onLoadedMetadata={(e) => {
+                      e.currentTarget.playbackRate = 0.75;
+                    }}
+                    className="w-full h-full object-cover object-center scale-100 group-hover:scale-105 transition-transform duration-700 ease-out"
+                  />
+
+                  {/* Sombra ambiental cinematográfica para contraste */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-slate-950/15 pointer-events-none" />
+
+                  {/* Badge sutil inferior izquierdo dentro del video: La Heroica */}
+                  <div className="absolute bottom-4 left-4 sm:bottom-5 sm:left-5 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500 text-slate-950 font-bold text-xs shadow-md">
+                    <FiMapPin size={13} className="shrink-0" />
+                    <span>La Heroica</span>
+                  </div>
+                </div>
+
+                {/* Borde vectorial continuo SVG que sigue exactamente la silueta recortada */}
+                <svg
+                  viewBox="0 0 1 1"
+                  preserveAspectRatio="none"
+                  className="absolute inset-0 w-full h-full pointer-events-none z-20"
+                >
+                  <path
+                    d={HERO_SHAPE_PATH}
+                    fill="none"
+                    stroke={isDark ? 'rgba(245, 158, 11, 0.35)' : 'rgba(255, 255, 255, 0.9)'}
+                    strokeWidth="1.5"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </svg>
+
               </div>
             </div>
           </div>
