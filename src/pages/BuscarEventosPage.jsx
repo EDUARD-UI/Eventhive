@@ -232,8 +232,6 @@ export default function BuscarEventosPage() {
   const hasActiveFilters = Boolean(tituloParam || fechaParam || categoriaIdParam || (sortParam && sortParam !== 'fecha,asc'));
   const activeCategory = categoryList.find((c) => String(c.id) === String(categoriaIdParam));
 
-  const { isDark } = useTheme();
-
   return (
     <div className="w-full min-h-screen bg-slate-50 dark:bg-[#0B0F19] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body relative transition-colors duration-200">
       {/* Fondo interactivo de puntitos */}
