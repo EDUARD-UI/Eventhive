@@ -231,7 +231,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
         currentUser={currentUser}
         onLogout={handleLogout}
       />
-      <HelpChat isOpen={isHelpOpen} onClose={closeHelp} />
+      <HelpChat isOpen={isHelpOpen} onClose={closeHelp} onOpen={openHelp} />
     </>
   );
 }

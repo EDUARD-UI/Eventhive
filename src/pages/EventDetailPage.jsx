@@ -334,12 +334,7 @@ export default function EventDetailPage() {
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-slate-900 dark:bg-amber-500 text-amber-400 dark:text-slate-950 border border-slate-800 dark:border-amber-400 shadow-xs">
                   <span>{event.category}</span>
                 </span>
-              )}
-
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-[#0B1428] border border-slate-200 dark:border-slate-800 shadow-xs">
-                <FiShield className="text-amber-500" size={13} />
-                <span>Cartelera Oficial Cartagena</span>
-              </span>
+              )}             
             </div>
 
             {/* Acciones del evento: Compartir y Guardar */}

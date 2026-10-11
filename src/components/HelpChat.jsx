@@ -41,7 +41,7 @@ export default function HelpChat({
   onOpen: controlledOnOpen,
 }) {
   const { isDark } = useTheme();
-  const [internalOpen, setInternalOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(Boolean(controlledIsOpen));
   const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [draft, setDraft] = useState("");
   const [loadingEvents, setLoadingEvents] = useState(false);
@@ -49,8 +49,15 @@ export default function HelpChat({
   const scrollRef = useRef(null);
   const navigate = useNavigate();
 
-  // Si se controla externamente mediante props
-  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalOpen;
+  // Sincronizar estado interno si controlledIsOpen cambia desde fuera (e.g. click en "Ayuda" del Navbar)
+  useEffect(() => {
+    if (controlledIsOpen !== undefined) {
+      setInternalOpen(Boolean(controlledIsOpen));
+    }
+  }, [controlledIsOpen]);
+
+  // Si se controla externamente mediante props, respetamos ambos para respuesta inmediata
+  const isOpen = controlledIsOpen !== undefined ? (Boolean(controlledIsOpen) || internalOpen) : internalOpen;
 
   useEffect(() => {
     if (isOpen) {

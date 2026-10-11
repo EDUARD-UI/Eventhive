@@ -254,6 +254,7 @@ export default function Home() {
       {/* Hero Principal con Buscador Integrado */}
       <Hero />
 
+      <br></br>
       {/* 2. Eventos Destacados */}
       <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-10 pb-8 sm:pt-14 sm:pb-12 max-w-[1850px] mx-auto relative z-10 transition-colors duration-200">
         {(() => {
@@ -306,20 +307,20 @@ export default function Home() {
           {isLoadingEvents ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
               {[1, 2, 3, 4].map((n) => (
-                <div key={n} className={n % 2 === 0 ? 'lg:translate-y-3' : ''}>
+                <div key={n}>
                   <EventCardSkeleton
-                    aspectVariant={n % 2 === 0 ? 'tall' : 'standard'}
+                    aspectVariant="standard"
                   />
                 </div>
               ))}
             </div>
           ) : upcomingEvents.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
-              {upcomingEvents.slice(0, 4).map((event, idx) => (
-                <div key={event.id} className={idx % 2 === 1 ? 'lg:translate-y-3' : ''}>
+              {upcomingEvents.slice(0, 4).map((event) => (
+                <div key={event.id}>
                   <EventListCard
                     event={event}
-                    aspectVariant={idx % 2 === 0 ? 'standard' : 'tall'}
+                    aspectVariant="standard"
                   />
                 </div>
               ))}
@@ -350,8 +351,8 @@ export default function Home() {
                 onClick={() => requestLocation(selectedDistance !== 'all' ? selectedDistance : null)}
                 disabled={isLocating}
                 className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95 shadow-sm cursor-pointer ${userLocation
-                    ? 'border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-700'
-                    : 'border-amber-500 bg-amber-500 hover:bg-amber-400 text-slate-950'
+                  ? 'border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-700'
+                  : 'border-amber-500 bg-amber-500 hover:bg-amber-400 text-slate-950'
                   }`}
                 title={userLocation ? 'Tu ubicación está activa' : 'Activar mi ubicación'}
               >
@@ -488,8 +489,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <br></br><br></br>
 
-      
 
 
       {/* 5. Carrusel de Categorías */}
@@ -501,13 +502,16 @@ export default function Home() {
         </div>
         <CategoryTickerCarousel />
       </section>
+      <br></br><br></br><br></br>
 
       {/* 6. Banners Asimétricos */}
       <HomeBannersSection />
 
+      <br></br><br></br><br></br>
       {/* 7. Pre-Footer "Conéctate al ritmo de la ciudad" con cartas coleccionables */}
       <CityRhythmPreFooter />
 
+      <br></br><br></br>
       {/* Pie de Página */}
       <Footer />
     </div>

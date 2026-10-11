@@ -23,7 +23,7 @@ import { session } from '../services/session.js';
 function EventHiveBrandLogo() {
   return (
     <div className="flex items-center gap-3">
-      <img src={logoImage} alt="EventHive" className="w-10 h-10 object-contain shrink-0 drop-shadow-xs" />
+     
       <div>
         <div className="font-display font-black text-xl tracking-tight text-slate-950 dark:text-white leading-none flex items-center">
           <span>Event</span>
@@ -345,8 +345,7 @@ export default function PasarelaPagoPage() {
                     onClick={() => document.getElementById('cardNumInput')?.focus()}
                     className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
                   >
-                    <FiEdit2 size={12} />
-                    <span>Editar</span>
+                    
                   </button>
                 </div>
 
