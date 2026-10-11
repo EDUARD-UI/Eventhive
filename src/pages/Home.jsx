@@ -282,7 +282,7 @@ export default function Home() {
       </section>
 
       {/* Cintas Cruzadas entre el Carrusel Principal y los Eventos Próximos */}
-      <CrossedRibbonsBanner badgeText="CARTAGENA EN VIVO" />
+      <CrossedRibbonsBanner badgeText="Conecta al ritmo de la ciudad" />
 
       {/* 3. Próximos Eventos: Título centrado y Grilla de Boletos */}
       <section id="proximos" className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-10 sm:py-14 bg-white/60 dark:bg-slate-900/40 transition-colors duration-200">
@@ -335,11 +335,11 @@ export default function Home() {
       </section>
 
       {/* 4. Mapa de Eventos en Cartagena */}
-      <section id="mapa" className="w-full bg-[#0A1325] dark:bg-white text-white dark:text-slate-900 px-6 sm:px-12 lg:px-20 py-16 sm:py-20 relative z-0 isolate overflow-hidden transition-colors duration-200">
+      <section id="mapa" className="w-full bg-slate-100 dark:bg-[#0B0F19] text-slate-900 dark:text-white px-6 sm:px-12 lg:px-20 py-16 sm:py-20 relative z-0 isolate overflow-hidden border-y border-slate-200 dark:border-white/[0.08] transition-colors duration-200">
 
         <div className="max-w-7xl mx-auto relative z-10 isolate">
           <div className="mb-8 flex flex-col items-center justify-center text-center">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white dark:text-slate-950 tracking-tight uppercase mb-6">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-6">
               Mapa de Eventos
             </h2>
 
@@ -373,32 +373,32 @@ export default function Home() {
                 )}
               </button>
 
-              {/* Selector Categoría con CustomSelect */}
+              {/* Selector Categoría con CustomSelect sincronizado con el tema */}
               <div className="w-48 sm:w-56">
                 <CustomSelect
                   value={selectedCategory}
                   onChange={(event) => setSelectedCategory(event.target.value)}
                   options={categoryOptions}
                   placeholder="Todas las categorías"
-                  variant={isDark ? 'light' : 'dark'}
+                  variant={isDark ? 'dark' : 'light'}
                 />
               </div>
 
-              {/* Selector Distancia con CustomSelect */}
+              {/* Selector Distancia con CustomSelect sincronizado con el tema */}
               <div className="w-44 sm:w-52">
                 <CustomSelect
                   value={selectedDistance}
                   onChange={(event) => handleDistanceChange(event.target.value)}
                   options={DISTANCE_OPTIONS}
                   placeholder="Distancia"
-                  variant={isDark ? 'light' : 'dark'}
+                  variant={isDark ? 'dark' : 'light'}
                 />
               </div>
             </div>
           </div>
 
-          {/* Contenedor del Mapa con mapa en colores por defecto */}
-          <div className="relative z-0 isolate overflow-hidden rounded-3xl border border-slate-800 dark:border-slate-300 shadow-2xl h-[440px] sm:h-[500px] bg-slate-100">
+          {/* Contenedor del Mapa */}
+          <div className="relative z-0 isolate overflow-hidden rounded-3xl border border-slate-300 dark:border-white/10 shadow-2xl h-[440px] sm:h-[500px] bg-slate-100">
             <MapContainer
               center={userLocation ? [userLocation.lat, userLocation.lng] : [10.415, -75.54]}
               zoom={13}

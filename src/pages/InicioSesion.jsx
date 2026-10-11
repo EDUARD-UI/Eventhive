@@ -94,9 +94,6 @@ export default function InicioSesion() {
     <AuthLayout
       title="Inicia sesión en EventHive"
       subtitle="Accede a tus eventos guardados, compras y organizaciones favoritas."
-      topPromptText="¿Aún no tienes cuenta?"
-      topActionText="Regístrate gratis"
-      topActionHref="/registro"
       errorBanner={
         submitError ||
         (sessionExpired
@@ -104,8 +101,8 @@ export default function InicioSesion() {
           : null)
       }
     >
-      <div className="space-y-4">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      <div className="space-y-3">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3" noValidate>
           <InputField
             id="email"
             name="email"
@@ -138,14 +135,14 @@ export default function InicioSesion() {
             autoComplete="current-password"
           />
 
-          <div className="flex items-center justify-between pt-1">
-            <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600 font-medium">
+          <div className="flex items-center justify-between pt-0.5">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600 dark:text-slate-300 font-medium">
               <input
                 type="checkbox"
                 name="remember"
                 checked={values.remember}
                 onChange={handleChange}
-                className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500/20 accent-amber-500 rounded-sm cursor-pointer"
+                className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-600 text-amber-500 focus:ring-amber-500/20 accent-amber-500 rounded-sm cursor-pointer"
               />
               <span>Recordar sesión</span>
             </label>
@@ -153,7 +150,7 @@ export default function InicioSesion() {
             <button
               type="button"
               onClick={() => Swal.fire('Recuperar contraseña', 'Te enviaremos un correo de restablecimiento.', 'info')}
-              className="text-xs font-semibold text-amber-600 hover:text-amber-700 transition-colors"
+              className="text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
             >
               ¿Olvidaste tu contraseña?
             </button>
@@ -162,11 +159,11 @@ export default function InicioSesion() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-3 py-3.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow-md shadow-amber-500/20 hover:shadow-amber-500/35 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full mt-2 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 hover:shadow-amber-500/35 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
           >
             {isSubmitting ? (
               <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
                 <span>Iniciando sesión...</span>
               </>
             ) : (
@@ -174,6 +171,12 @@ export default function InicioSesion() {
             )}
           </button>
         </form>
+        <div className="flex justify-end items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 pt-0.5">
+          <span>¿Aún no tienes cuenta?</span>
+          <Link to="/registro" className="font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors">
+            Regístrate
+          </Link>
+        </div>
       </div>
     </AuthLayout>
   );

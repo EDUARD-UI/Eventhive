@@ -36,19 +36,19 @@ export default function SearchCard({ onInputFocus, onInputBlur }) {
       {/* Tarjeta de Búsqueda estilizada, contenida y compacta */}
       <form
         onSubmit={handleSearch}
-        className="relative bg-white/95 backdrop-blur-md rounded-2xl border border-slate-100 p-4 sm:p-5 sm:px-6 shadow-[0_12px_32px_-8px_rgba(11,19,43,0.18)] transition-all duration-300 hover:shadow-[0_18px_40px_-8px_rgba(11,19,43,0.22)]"
+        className="relative bg-white/95 dark:bg-[#151D2F]/95 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-white/10 p-4 sm:p-5 sm:px-6 shadow-sm dark:shadow-none hover:shadow-md transition-all duration-300"
       >
         <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-3 sm:gap-3.5 items-end">
           {/* 1. Título o palabra clave del evento */}
           <div className="space-y-1.5 text-left">
             <label
               htmlFor="search-title"
-              className="text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5"
+              className="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5"
             >
               <span>¿Qué evento buscas?</span>
             </label>
             <div className="relative flex items-center">
-              <FiSearch className="absolute left-3.5 text-slate-400 pointer-events-none" size={16} />
+              <FiSearch className="absolute left-3.5 text-slate-400 dark:text-slate-500 pointer-events-none" size={16} />
               <input
                 id="search-title"
                 type="text"
@@ -57,7 +57,7 @@ export default function SearchCard({ onInputFocus, onInputBlur }) {
                 onBlur={onInputBlur}
                 onChange={(e) => setTitulo(e.target.value)}
                 placeholder="Festival, concierto, teatro..."
-                className="w-full h-11 bg-slate-50 border border-slate-200/90 focus:border-amber-500 focus:bg-white rounded-xl pl-10 pr-3.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:ring-3 focus:ring-amber-500/15 transition-all font-medium"
+                className="w-full h-11 bg-slate-50 dark:bg-slate-900/80 border border-slate-200/90 dark:border-white/10 focus:border-amber-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl pl-10 pr-3.5 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-amber-500/20 transition-all font-medium"
               />
             </div>
           </div>

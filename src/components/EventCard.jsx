@@ -8,9 +8,9 @@ export default function EventCard({ event }) {
   const { id, category, title, date, location, favorite, photo } = event;
 
   return (
-    <article className="group bg-white border border-slate-200/90 rounded-2xl overflow-hidden card-interactive flex flex-col justify-between">
+    <article className="group bg-white dark:bg-[#151D2F] border border-slate-200 dark:border-white/[0.07] hover:dark:bg-slate-800 hover:dark:border-white/15 rounded-2xl overflow-hidden shadow-sm hover:shadow-md card-interactive flex flex-col justify-between transition-all duration-300">
       <div>
-        <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+        <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-900">
           <ImageWithFallback
             src={photo}
             alt={title}
@@ -21,10 +21,16 @@ export default function EventCard({ event }) {
             fallbackText={category || 'Sin imagen'}
             iconSize={26}
           >
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/15 to-transparent opacity-70 group-hover:opacity-85 transition-opacity duration-300 pointer-events-none" />
+            {/* Máscara linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.85) 100%) para garantizar contraste y legibilidad */}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-80 group-hover:opacity-95 transition-opacity duration-300"
+              style={{
+                background: 'linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.85) 100%)',
+              }}
+            />
 
-            {/* Categoría Badge con Glassmorphism */}
-            <span className="absolute left-3 top-3 text-[10.5px] font-bold glass-pill text-slate-800 px-2.5 py-1 rounded-lg shadow-xs z-10 uppercase tracking-wider">
+            {/* Categoría Badge con contraste accesible */}
+            <span className="absolute left-3 top-3 text-[10.5px] font-bold px-2.5 py-1 rounded-lg shadow-xs z-10 uppercase tracking-wider backdrop-blur-md bg-white/90 dark:bg-slate-950/85 text-slate-800 dark:text-amber-400 border border-slate-200/80 dark:border-white/10">
               {category}
             </span>
 
@@ -35,27 +41,27 @@ export default function EventCard({ event }) {
         </div>
 
         <div className="p-4 sm:p-5">
-          <h3 className="font-display text-[15px] sm:text-[16px] font-bold leading-snug mb-3 text-slate-900 line-clamp-2 group-hover:text-brand transition-colors duration-200">
+          <h3 className="font-display text-[15px] sm:text-[16px] font-bold leading-snug mb-3 text-slate-900 dark:text-slate-100 line-clamp-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-200">
             {title}
           </h3>
 
-          <div className="space-y-1.5 text-xs text-slate-600">
+          <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
             <div className="flex items-center gap-2">
-              <FiCalendar className="text-slate-900 shrink-0" size={13.5} />
-              <span className="font-medium text-slate-700 truncate">{date}</span>
+              <FiCalendar className="text-amber-600 dark:text-amber-400 shrink-0" size={13.5} />
+              <span className="font-medium text-slate-700 dark:text-slate-300 truncate">{date}</span>
             </div>
             <div className="flex items-center gap-2 truncate">
-              <FiMapPin className="text-slate-900 shrink-0" size={13.5} />
-              <span className="truncate text-slate-600">{location}</span>
+              <FiMapPin className="text-amber-600 dark:text-amber-400 shrink-0" size={13.5} />
+              <span className="truncate text-slate-600 dark:text-slate-400">{location}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="px-4 sm:px-5 pb-4 pt-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/60">
+      <div className="px-4 sm:px-5 pb-4 pt-3 border-t border-slate-100 dark:border-white/[0.07] flex items-center justify-between bg-slate-50/80 dark:bg-[#0E1526]/80">
         <Link
           to={`/eventos/${id}`}
-          className="w-full inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-semibold shadow-xs hover:shadow-md hover:shadow-brand/20 transition-all duration-200 active:scale-[0.97]"
+          className="w-full inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 dark:text-slate-950 text-xs font-bold shadow-xs hover:shadow-md transition-all duration-200 active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
         >
           <span>Ver evento</span>
           <FiArrowRight size={13} className="transition-transform duration-200 group-hover:translate-x-0.5" />

@@ -35,24 +35,24 @@ export default function MobileDrawer({ isOpen, onClose, onHelpClick, currentUser
         role="dialog"
         aria-modal="true"
         aria-label="Menú de navegación"
-        className="absolute bottom-0 right-0 top-0 z-[70] flex w-[85%] max-w-[360px] flex-col gap-2 overflow-y-auto bg-white dark:bg-[#0B132B] text-slate-800 dark:text-slate-100 p-5 shadow-2xl transition-colors duration-200"
+        className="absolute bottom-0 right-0 top-0 z-[70] flex w-[85%] max-w-[360px] flex-col gap-2 overflow-y-auto bg-white dark:bg-[#0B0F19] text-slate-900 dark:text-slate-100 p-5 shadow-2xl border-l border-slate-200 dark:border-white/[0.08] transition-colors duration-200"
       >
         <div className="flex items-center justify-between mb-2">
-          {/* Botón de alternar tema */}
+          {/* Botón de alternar tema con buen contraste */}
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-white/5 text-xs font-semibold cursor-pointer"
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800/60 text-xs font-semibold cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
           >
             {isDark ? (
               <>
                 <FiSun size={15} className="text-amber-400" />
-                <span className="text-slate-200">Modo Claro</span>
+                <span className="text-slate-100">Modo Claro</span>
               </>
             ) : (
               <>
                 <FiMoon size={15} className="text-slate-700" />
-                <span className="text-slate-700">Modo Oscuro</span>
+                <span className="text-slate-800">Modo Oscuro</span>
               </>
             )}
           </button>
@@ -61,21 +61,21 @@ export default function MobileDrawer({ isOpen, onClose, onHelpClick, currentUser
             type="button"
             onClick={onClose}
             aria-label="Cerrar menú"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-300 cursor-pointer"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
           >
             <FiX size={18} />
           </button>
         </div>
 
-        {/* Buscador móvil */}
+        {/* Buscador móvil con contraste calibrado */}
         <form onSubmit={handleSearchSubmit} className="relative w-full mb-3">
-          <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+          <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={15} />
           <input
             type="text"
             value={mobileSearch}
             onChange={(e) => setMobileSearch(e.target.value)}
             placeholder="Buscar eventos..."
-            className="w-full h-10 pl-9.5 pr-3 rounded-xl bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+            className="w-full h-10 pl-9.5 pr-3 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-white/10 text-xs font-medium text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
           />
         </form>
 

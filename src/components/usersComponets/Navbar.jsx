@@ -46,8 +46,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
 
   const role = normalizeRole(currentUser?.role || currentUser?.rol);
   const panelPath = getDashboardPathForRole(role);
-  // Requisito: en modo oscuro el hero se queda oscuro y la navbar se pasa a blanca; en modo claro, lo inverso
-  const isNavbarWhite = isDark;
+  
 
   return (
     <>
@@ -56,9 +55,9 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
           embedded
             ? 'relative z-30 bg-transparent border-none shadow-none'
             : `sticky top-0 z-50 backdrop-blur-md ${
-                isNavbarWhite
-                  ? 'bg-white/95 text-slate-800 border-b border-slate-200/80 shadow-[0_2px_12px_rgba(15,23,42,0.04)]'
-                  : 'bg-[#0B132B]/95 text-white border-b border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.35)]'
+                isDark
+                  ? 'bg-[#0B0F19]/80 text-white border-b border-white/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.35)]'
+                  : 'bg-white/85 text-slate-800 border-b border-slate-200/80 shadow-[0_2px_12px_rgba(15,23,42,0.04)]'
               }`
         }`}
       >
@@ -66,49 +65,27 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
           className={`mx-auto flex w-full items-center justify-between ${
             embedded
               ? `max-w-7xl gap-4 px-4 py-4 sm:px-6 sm:py-5 md:px-8 xl:px-12 ${
-                  isNavbarWhite ? 'text-slate-800' : 'text-white'
+                  isDark ? 'text-white' : 'text-slate-800'
                 }`
               : 'max-w-7xl gap-3 px-4 py-3 sm:px-6 xl:px-10'
           }`}
         >
           {/* Logo de Marca y Buscador */}
           <div className="flex items-center gap-3 sm:gap-5 min-w-0">
-            <Link to="/" className="flex shrink-0 items-center group">
+            <Link to="/" className="flex shrink-0 items-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-lg">
               <AppLogo
                 className="h-8 sm:h-9 w-fit"
-                textClassName={isNavbarWhite ? 'text-[#0B132B]' : 'text-white'}
+                textClassName={isDark ? 'text-white' : 'text-[#0B132B]'}
                 hiveClassName="text-amber-500"
                 showImage={false}
               />
             </Link>
 
-            {/* Buscador integrado en la Navbar */}
-            <form
-              onSubmit={handleSearchSubmit}
-              className="relative hidden sm:flex items-center w-48 md:w-60 lg:w-72 transition-all"
-            >
-              <FiSearch
-                size={14}
-                className={`absolute left-3.5 pointer-events-none transition-colors ${
-                  isNavbarWhite ? 'text-slate-400' : 'text-slate-400'
-                }`}
-              />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar eventos..."
-                className={`w-full h-9 pl-9 pr-3 rounded-full text-xs font-medium outline-none transition-all duration-200 ${
-                  isNavbarWhite
-                    ? 'bg-slate-100 text-slate-800 placeholder-slate-400 border border-slate-200/90 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20'
-                    : 'bg-white/10 text-white placeholder-slate-400 border border-white/10 focus:bg-white/15 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20'
-                }`}
-              />
-            </form>
+            
           </div>
 
           {/* Menú de Navegación Central */}
-          <nav className="hidden min-w-0 items-center justify-center gap-5 text-sm font-medium xl:gap-7 lg:flex">
+          <nav className="hidden min-w-0 items-center justify-center gap-4 text-sm font-medium xl:gap-6 lg:flex">
             {NAV_LINKS.map((link) => {
               const isActive = location.pathname === link.href;
               return link.label === "Ayuda" ? (
@@ -116,10 +93,10 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
                   key={link.label}
                   type="button"
                   onClick={openHelp}
-                  className={`transition-colors duration-200 cursor-pointer font-medium ${
-                    isNavbarWhite
-                      ? 'text-slate-600 hover:text-[#0B132B]'
-                      : 'text-slate-300 hover:text-white'
+                  className={`transition-all duration-200 cursor-pointer font-medium px-2 py-1 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
+                    isDark
+                      ? 'text-slate-300 hover:text-white hover:bg-white/5'
+                      : 'text-slate-600 hover:text-[#0B132B] hover:bg-slate-100/70'
                   }`}
                 >
                   {link.label}
@@ -128,14 +105,14 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
                 <Link
                   key={link.label}
                   to={link.href}
-                  className={`transition-all duration-200 py-1 ${
+                  className={`transition-all duration-200 px-2 py-1 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
                     isActive
-                      ? isNavbarWhite
-                        ? 'text-[#0B132B] font-bold border-b-2 border-amber-500'
-                        : 'text-amber-400 font-bold border-b-2 border-amber-400'
-                      : isNavbarWhite
-                      ? 'text-slate-600 hover:text-[#0B132B]'
-                      : 'text-slate-300 hover:text-white'
+                      ? isDark
+                        ? 'text-amber-400 font-bold border-b-2 border-amber-400 rounded-b-none'
+                        : 'text-slate-950 font-bold border-b-2 border-amber-600 rounded-b-none'
+                      : isDark
+                      ? 'text-slate-300 hover:text-white hover:bg-white/5'
+                      : 'text-slate-600 hover:text-[#0B132B] hover:bg-slate-100/70'
                   }`}
                 >
                   {link.label}
@@ -146,22 +123,22 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
 
           {/* Acciones, Botón Tema y Autenticación */}
           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
-            {/* Botón de alternar Tema Claro / Oscuro */}
+            {/* Botón de alternar Tema Claro / Oscuro con estados accesibles y alto contraste */}
             <button
               type="button"
               onClick={toggleTheme}
               title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
               aria-label="Alternar tema claro y oscuro"
-              className={`p-2 rounded-full border transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center ${
-                isNavbarWhite
-                  ? 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:border-amber-400'
-                  : 'border-slate-700/80 bg-white/5 text-amber-400 hover:bg-white/10 hover:border-amber-400'
+              className={`p-2 rounded-full border transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${
+                isDark
+                  ? 'border-white/10 bg-slate-800/60 text-amber-400 hover:bg-slate-800 hover:text-amber-300 hover:border-amber-400/50 focus-visible:ring-offset-[#0B0F19]'
+                  : 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-amber-700 hover:border-amber-400/60 focus-visible:ring-offset-white'
               }`}
             >
               {isDark ? (
-                <FiSun size={17} className="text-amber-500" />
+                <FiSun size={17} className="text-amber-400" />
               ) : (
-                <FiMoon size={17} className="text-amber-400" />
+                <FiMoon size={17} className="text-slate-700" />
               )}
             </button>
 
@@ -169,10 +146,10 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
               <div className="hidden items-center gap-2 lg:flex">
                 <Link
                   to={panelPath}
-                  className={`flex max-w-[240px] items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 shadow-xs ${
-                    isNavbarWhite
-                      ? 'border border-slate-200 bg-slate-50/90 text-[#0B132B] hover:border-amber-400 hover:text-amber-700'
-                      : 'border border-slate-700/80 bg-[#131E3A] text-white hover:border-amber-400 hover:text-amber-300'
+                  className={`flex max-w-[240px] items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
+                    isDark
+                      ? 'border border-white/10 bg-[#131E3A] text-white hover:border-amber-400 hover:text-amber-300'
+                      : 'border border-slate-200 bg-slate-50/90 text-[#0B132B] hover:border-amber-500 hover:text-amber-800'
                   }`}
                 >
                   <span className="w-6 h-6 rounded-full bg-amber-500 text-[#0B132B] flex items-center justify-center text-[10px] font-black shrink-0">
@@ -180,7 +157,11 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
                   </span>
                   <span className="truncate">{currentUser.name || 'Mi Cuenta'}</span>
                   {role && role !== 'CLIENTE' && (
-                    <span className="ml-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-700 border border-amber-400/40">
+                    <span className={`ml-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${
+                      isDark
+                        ? 'bg-amber-400/20 text-amber-300 border-amber-400/40'
+                        : 'bg-amber-100 text-amber-800 border-amber-200'
+                    }`}>
                       {role}
                     </span>
                   )}
@@ -190,10 +171,11 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
                   type="button"
                   onClick={handleLogout}
                   title="Cerrar sesión"
-                  className={`p-2 rounded-full transition-colors duration-200 cursor-pointer ${
-                    isNavbarWhite
-                      ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
-                      : 'text-slate-400 hover:text-rose-400 hover:bg-rose-500/10'
+                  aria-label="Cerrar sesión"
+                  className={`p-2 rounded-full transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 ${
+                    isDark
+                      ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-500/10'
+                      : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
                   }`}
                 >
                   <FiLogOut size={16} />
@@ -201,15 +183,15 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
               </div>
             ) : (
               <div className={`hidden items-center gap-3 sm:gap-4 lg:flex pl-2 sm:pl-3 border-l ${
-                isNavbarWhite ? 'border-slate-200' : 'border-slate-800'
+                isDark ? 'border-white/10' : 'border-slate-200'
               }`}>
                 <button
                   type="button"
                   onClick={() => navigate("/iniciosesion")}
-                  className={`inline-flex whitespace-nowrap rounded-full px-5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95 cursor-pointer ${
-                    isNavbarWhite
-                      ? 'border border-slate-300 text-[#0B132B] hover:border-slate-500 hover:bg-slate-50'
-                      : 'border border-slate-600/80 bg-white/5 text-white hover:border-amber-400 hover:bg-white/10'
+                  className={`inline-flex whitespace-nowrap rounded-full px-5 py-2 text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
+                    isDark
+                      ? 'border border-white/15 bg-white/5 text-slate-100 hover:border-amber-400 hover:bg-white/10'
+                      : 'border border-slate-300 text-[#0B132B] hover:border-slate-400 hover:bg-slate-100'
                   }`}
                 >
                   Iniciar sesión
@@ -217,23 +199,23 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
                 <button
                   type="button"
                   onClick={() => navigate("/registro")}
-                  className="inline-flex whitespace-nowrap rounded-full px-6 py-2.5 text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition-all duration-200 active:scale-95 cursor-pointer"
+                  className="inline-flex whitespace-nowrap rounded-full px-6 py-2 text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm hover:shadow transition-all duration-200 active:scale-95 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
                 >
                   Registrarse
                 </button>
               </div>
             )}
 
-            {/* Botón de Menú Móvil */}
+            {/* Botón de Menú Móvil con focus-visible accesible */}
             <button
               type="button"
               onClick={open}
               aria-label="Abrir menú"
               aria-expanded={isOpen}
-              className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg transition-colors duration-200 cursor-pointer lg:hidden ${
-                isNavbarWhite
-                  ? 'text-[#0B132B] hover:bg-slate-100'
-                  : 'text-slate-200 hover:bg-slate-800 hover:text-white'
+              className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg transition-colors duration-200 cursor-pointer lg:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
+                isDark
+                  ? 'text-slate-200 hover:bg-slate-800 hover:text-white border border-white/10'
+                  : 'text-[#0B132B] hover:bg-slate-100 border border-slate-200/80'
               }`}
             >
               <FiMenu size={22} />

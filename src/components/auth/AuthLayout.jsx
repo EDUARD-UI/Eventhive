@@ -1,16 +1,20 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { FiCheckCircle } from 'react-icons/fi';
+import { FiCheckCircle, FiSun, FiMoon } from 'react-icons/fi';
 import AppLogo from '../common/AppLogo.jsx';
 import BeeParticles from '../home/BeeParticles.jsx';
+import HexagonalHivePattern from '../common/HexagonalHivePattern.jsx';
 import cartagenaBg from '../../assets/cartagena-hero.jpg';
+import { useTheme } from '../../context/ThemeContext.jsx';
 
 /**
  * AuthLayout
  * Layout compartido para Inicio de Sesión y Registro.
- * - Panel Izquierdo: Azul marino nocturno (#0B132B) + Foto de Cartagena colonial de fondo
- *   + Malla hexagonal dorada interactiva + 5 abejas realistas con física orbital y estela de miel.
- * - Panel Derecho: Formulario limpio con tipografía y acentos acordes a la paleta de la marca.
+ * - Panel Izquierdo: Fondo ambiental con gradiente idéntico al <Hero>,
+ *   capa de hexágonos del mismo tamaño y alineación que el Hero,
+ *   y abejas realistas con física orbital interactiva.
+ * - Separador central nítido y visible en Modo Claro y Modo Oscuro.
+ * - Panel Derecho: Formulario compacto sin necesidad de scroll vertical en pantallas estándar.
  */
 export default function AuthLayout({
   children,
@@ -21,6 +25,7 @@ export default function AuthLayout({
   topActionHref,
   errorBanner,
 }) {
+  const { isDark, toggleTheme } = useTheme();
   const panelRef = useRef(null);
   const mousePos = useRef({ x: -9999, y: -9999 });
 
@@ -38,79 +43,96 @@ export default function AuthLayout({
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F8FAFC] dark:bg-[#070D1B] font-body selection:bg-amber-400 selection:text-slate-950 transition-colors duration-200">
-      {/* Panel Izquierdo de Marca con Paleta de Colmena, Foto Colonial y Abejas */}
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden flex bg-slate-50 dark:bg-[#070D1B] font-body selection:bg-amber-400 selection:text-slate-950 transition-colors duration-300">
+      
+      {/* ========================================================
+          PANEL IZQUIERDO: MARCA, GRADIENTES HERO Y HEXÁGONOS
+          ======================================================== */}
       <div
         ref={panelRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className="hidden lg:flex lg:w-[45%] relative flex-col justify-between p-12 text-white overflow-hidden bg-[#0B132B] group/panel select-none"
+        className={`hidden lg:flex lg:w-[42%] xl:w-[40%] relative flex-col justify-between p-6 sm:p-8 lg:p-8 xl:p-10 overflow-hidden select-none transition-colors duration-500 border-r ${
+          isDark
+            ? 'bg-gradient-to-b from-[#0F172A] via-[#090D1A] to-[#05070F] text-white border-white/10'
+            : 'bg-gradient-to-b from-[#EDF4F9] via-[#F8FAFC] to-[#F1F5F9] text-slate-900 border-slate-300/90'
+        }`}
       >
-        {/* 1. Fotografía de Cartagena Colonial con blend suave */}
+        {/* 1. Fotografía de Cartagena Colonial con blend ambiental sutil */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-cover bg-center pointer-events-none mix-blend-overlay opacity-30 transition-transform duration-1000 ease-out group-hover/panel:scale-105"
+          className={`absolute inset-0 bg-cover bg-center pointer-events-none transition-transform duration-1000 ease-out hover:scale-103 ${
+            isDark
+              ? 'opacity-15 mix-blend-overlay'
+              : 'opacity-10 mix-blend-multiply'
+          }`}
           style={{ backgroundImage: `url('${cartagenaBg}')` }}
         />
 
-        {/* 2. Fondo ambiental nocturno */}
+        {/* 2. Capa de Hexágonos idéntica en tamaño y alineación al Hero */}
+        <HexagonalHivePattern variant="auth" />
+
+        {/* 3. Abejas Realistas con física orbital interactiva */}
+        <BeeParticles mousePos={mousePos} />
+
+        {/* Separador vertical de la mitad (Línea continua acentuada y visible en claro/oscuro) */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-[#0B132B]/85 pointer-events-none"
+          className="hidden lg:block absolute top-0 bottom-0 right-0 w-[1.5px] z-30 pointer-events-none bg-gradient-to-b from-amber-500/30 via-slate-300 to-amber-500/30 dark:from-amber-500/50 dark:via-white/20 dark:to-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.2)]"
         />
-
-        {/* 3. Malla Hexagonal de Panal interactiva */}
-        <div aria-hidden="true" className="absolute inset-0 pointer-events-none select-none overflow-hidden">
-          <svg className="absolute inset-0 w-full h-full opacity-15 group-hover/panel:opacity-80 transition-opacity duration-700 pointer-events-none">
-            <defs>
-              <pattern
-                id="auth-honeycomb-pattern"
-                width="64"
-                height="110.85"
-                patternUnits="userSpaceOnUse"
-              >
-                <path
-                  d="M32 0 L64 18.475 L64 55.425 L32 73.9 L0 55.425 L0 18.475 Z M32 110.85 L64 92.375 L64 55.425 L32 73.9 L0 55.425 L0 18.475 Z"
-                  fill="none"
-                  stroke="#F59E0B"
-                  strokeWidth="0.8"
-                  strokeOpacity="0.4"
-                  className="group-hover/panel:stroke-opacity-90 transition-all duration-700"
-                />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#auth-honeycomb-pattern)" />
-          </svg>
-        </div>
-
-        {/* 4. Abejas Realistas Doradas y Negras con física orbital e interacción */}
-        <BeeParticles mousePos={mousePos} />
 
         {/* Logo EventHive en la parte superior */}
         <Link to="/" className="relative z-20 flex items-center w-fit group">
-          <AppLogo className="h-8 w-fit" textClassName="text-white text-base" hiveClassName="text-amber-500" />
+          <AppLogo
+            className="h-7 sm:h-8 w-fit"
+            textClassName={isDark ? 'text-white text-base' : 'text-slate-900 text-base'}
+            hiveClassName="text-amber-500"
+          />
         </Link>
 
-        {/* Contenido Central Inspirador */}
-        <div className="relative z-20 my-auto py-8 text-left">
-
-          <h1 className="font-display text-3xl sm:text-4xl lg:text-[40px] font-black leading-[1.14] max-w-md text-white tracking-tight">
-            Vive la <span className="text-amber-400">Magia</span> de la Heroica, evento a evento.
+        {/* Contenido Central: Proporciones compactas y tipografía calibrada */}
+        <div className="relative z-20 my-auto py-3 text-left">
+          <h1
+            className={`font-display text-2xl sm:text-3xl lg:text-[28px] xl:text-[32px] font-black leading-[1.16] max-w-sm tracking-tight ${
+              isDark ? 'text-white' : 'text-slate-950'
+            }`}
+          >
+            Vive la{' '}
+            <span className={isDark ? 'text-amber-400' : 'text-amber-600'}>
+              Magia
+            </span>{' '}
+            de la Heroica, evento a evento.
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-300 mt-4 max-w-md leading-relaxed font-normal">
+          <p
+            className={`text-xs sm:text-sm mt-2.5 max-w-sm leading-relaxed font-normal ${
+              isDark ? 'text-slate-300' : 'text-slate-600'
+            }`}
+          >
             Descubre música, festivales, gastronomía y cultura local. Gestiona tus entradas o publica tus propios eventos de forma ágil y segura.
           </p>
 
-          <div className="mt-8 space-y-3.5">
+          {/* Lista de características con iconos compactos */}
+          <div className="mt-5 space-y-2.5">
             {[
               'Boletos 100% verificados con código QR digital',
               'Geolocalización y mapa interactivo en tiempo real',
               'Comunidad activa de asistentes y organizaciones',
             ].map((feature) => (
-              <div key={feature} className="flex items-center gap-3 text-xs sm:text-sm text-slate-200 font-medium">
-                <div className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-400/30">
-                  <FiCheckCircle size={13} className="text-amber-400" />
+              <div
+                key={feature}
+                className={`flex items-center gap-2.5 text-xs sm:text-[13px] font-medium ${
+                  isDark ? 'text-slate-200' : 'text-slate-700'
+                }`}
+              >
+                <div
+                  className={`w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 border ${
+                    isDark
+                      ? 'bg-amber-500/20 text-amber-400 border-amber-400/30'
+                      : 'bg-amber-100 text-amber-600 border-amber-300'
+                  }`}
+                >
+                  <FiCheckCircle size={12} className={isDark ? 'text-amber-400' : 'text-amber-600'} />
                 </div>
                 <span>{feature}</span>
               </div>
@@ -127,40 +149,69 @@ export default function AuthLayout({
         </div>
       </div>
 
-      {/* Contenedor Derecho del Formulario */}
-      <div className="flex-1 flex flex-col justify-between p-6 sm:p-10 lg:p-14 overflow-y-auto bg-white dark:bg-[#0B1428] text-slate-900 dark:text-slate-100 transition-colors duration-200">
-        {/* Barra Superior con Enlace de Cambio */}
-        <div className="flex items-center justify-between lg:justify-end gap-3 text-xs sm:text-sm">
+      {/* ========================================================
+          PANEL DERECHO: FORMULARIO COMPACTO Y ACCESIBLE
+          ======================================================== */}
+      <div className="flex-1 flex flex-col justify-between p-5 sm:p-7 lg:p-8 xl:p-10 overflow-y-auto bg-white dark:bg-[#0B1428] text-slate-900 dark:text-slate-100 transition-colors duration-300 lg:border-l border-slate-200 dark:border-slate-800/80">
+        
+        {/* Barra Superior con Enlace de Navegación y Alternador de Tema */}
+        <div className="flex items-center justify-between gap-3 text-xs sm:text-sm">
+          {/* Logo en versión móvil */}
           <Link to="/" className="lg:hidden flex items-center">
-            <AppLogo className="h-8 w-fit" textClassName="text-[#0B132B] dark:text-white text-base" hiveClassName="text-amber-500" />
+            <AppLogo
+              className="h-7 w-fit"
+              textClassName="text-[#0B132B] dark:text-white text-base"
+              hiveClassName="text-amber-500"
+            />
           </Link>
 
-          {topPromptText && topActionText && topActionHref && (
-            <p className="text-slate-500 dark:text-slate-400 font-medium">
-              {topPromptText}{' '}
-              <Link
-                to={topActionHref}
-                className="font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors underline underline-offset-2 ml-1"
-              >
-                {topActionText}
-              </Link>
-            </p>
-          )}
+          <div className="flex items-center gap-3 ml-auto">
+            {topPromptText && topActionText && topActionHref && (
+              <p className="text-slate-500 dark:text-slate-400 font-medium text-xs">
+                {topPromptText}{' '}
+                <Link
+                  to={topActionHref}
+                  className="font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors underline underline-offset-2 ml-1"
+                >
+                  {topActionText}
+                </Link>
+              </p>
+            )}
+
+            {/* Alternador de tema Claro / Oscuro con alta visibilidad */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+              aria-label="Alternar tema claro y oscuro"
+              className={`p-1.5 sm:p-2 rounded-full border transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center ${
+                isDark
+                  ? 'border-white/10 bg-slate-800/80 text-amber-400 hover:bg-slate-700 hover:border-amber-400/50'
+                  : 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-amber-700'
+              }`}
+            >
+              {isDark ? <FiSun size={15} /> : <FiMoon size={15} />}
+            </button>
+          </div>
         </div>
 
-        {/* Caja de Contenido del Formulario */}
-        <div className="w-full max-w-md mx-auto my-auto py-8">
+        {/* Caja Central del Formulario */}
+        <div className="w-full max-w-sm sm:max-w-md mx-auto my-auto py-2 sm:py-3">
           {title && (
-            <div className="mb-6 text-left">
-              <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[#0B132B] dark:text-white tracking-tight">
+            <div className="mb-3.5 text-left">
+              <h2 className="font-display text-xl sm:text-2xl font-black text-[#0B132B] dark:text-white tracking-tight">
                 {title}
               </h2>
-              {subtitle && <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2">{subtitle}</p>}
+              {subtitle && (
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-snug">
+                  {subtitle}
+                </p>
+              )}
             </div>
           )}
 
           {errorBanner && (
-            <div className="mb-5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs sm:text-sm font-medium flex items-center gap-2.5 animate-fade-in text-left">
+            <div className="mb-3.5 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-medium flex items-center gap-2.5 animate-fade-in text-left">
               <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
               <span>{errorBanner}</span>
             </div>
@@ -169,14 +220,21 @@ export default function AuthLayout({
           {children}
         </div>
 
-        {/* Footer Legal */}
-        <div className="text-center text-xs text-slate-400 pt-6">
+        {/* Footer Legal con enlaces accesibles */}
+        <div className="text-center text-[11px] text-slate-400 dark:text-slate-500 pt-3">
           <p>
             Al continuar, aceptas los{' '}
-            <Link to="/terminos" className="underline hover:text-slate-600 transition-colors">Términos de Servicio</Link> y la{' '}
-            <Link to="/privacidad" className="underline hover:text-slate-600 transition-colors">Política de Privacidad</Link> de EventHive.
+            <Link to="/terminos" className="underline hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+              Términos de Servicio
+            </Link>{' '}
+            y la{' '}
+            <Link to="/privacidad" className="underline hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+              Política de Privacidad
+            </Link>{' '}
+            de EventHive.
           </p>
         </div>
+
       </div>
     </div>
   );

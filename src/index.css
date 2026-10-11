@@ -3,6 +3,85 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   SISTEMA DE TOKENS DE DISEÑO Y VARIABLES CSS (MODO CLARO Y MODO OSCURO)
+   ========================================================================== */
+
+:root {
+  /* Fondo base y elevación tonal */
+  --bg-base: #F8FAFC;
+  --surface-1: #FFFFFF;
+  --surface-2: #FFFFFF;
+  --surface-3: #F1F5F9;
+
+  /* Tipografía y legibilidad */
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+
+  /* Bordes */
+  --border-subtle: #E2E8F0;
+  --border-default: #CBD5E1;
+
+  /* Color de acento corporativo (Ámbar / Oro) - Calibrado WCAG AA para modo claro */
+  --accent-primary: #D97706;
+  --accent-hover: #B45309;
+  --accent-text: #B45309; /* Ratio de contraste > 4.8:1 sobre fondo claro #F8FAFC / #FFFFFF */
+  --accent-subtle: #FEF3C7;
+  --accent-border: #FDE68A;
+  --accent-badge-bg: #FFFBEB;
+  --accent-badge-text: #92400E;
+
+  /* Sombras suaves para modo claro */
+  --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  --shadow-card-hover: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+
+  /* Navbar */
+  --navbar-bg: rgba(255, 255, 255, 0.85);
+  --navbar-border: rgba(226, 232, 240, 0.85);
+  --navbar-text: #0F172A;
+}
+
+.dark {
+  /* Fondo base profundo y arquitectura de elevación tonal */
+  --bg-base: #0B0F19;
+  --surface-1: #151D2F; /* Capa 1: Tarjetas y contenedores de primer nivel */
+  --surface-2: #1E293B; /* Capa 2: Modales, popups, dropdowns y elevación media */
+  --surface-3: #28364F; /* Capa 3: Estados hover y elementos flotantes destacados */
+
+  /* Tipografía y legibilidad en modo oscuro */
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+
+  /* Bordes perimetrales con opacidad translúcida para delimitación sin sombras */
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-default: rgba(255, 255, 255, 0.12);
+
+  /* Color de acento corporativo - Modulado para evitar deslumbramiento / vibración cromática */
+  --accent-primary: #F59E0B;
+  --accent-hover: #FBBF24;
+  --accent-text: #FBBF24; /* Alto contraste nítido y descansado a la vista */
+  --accent-subtle: rgba(245, 158, 11, 0.12);
+  --accent-border: rgba(245, 158, 11, 0.25);
+  --accent-badge-bg: rgba(245, 158, 11, 0.15);
+  --accent-badge-text: #FDE68A;
+
+  /* Elevación lumínica tonal en lugar de box-shadow */
+  --shadow-card: none;
+  --shadow-card-hover: 0 0 24px -4px rgba(245, 158, 11, 0.12);
+
+  /* Navbar */
+  --navbar-bg: rgba(11, 15, 25, 0.82);
+  --navbar-border: rgba(255, 255, 255, 0.08);
+  --navbar-text: #F8FAFC;
+}
+
+/* Máscara de degradado para legibilidad garantizada sobre imágenes multimedia */
+.card-image-scrim {
+  background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.85) 100%);
+}
+
 html,
 body {
   max-width: 100%;

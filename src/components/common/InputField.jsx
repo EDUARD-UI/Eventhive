@@ -55,14 +55,14 @@ export default function InputField({
           disabled={disabled}
           autoComplete={autoComplete}
           {...props}
-          className={`w-full rounded-xl border bg-white dark:bg-[#070D1B] text-sm text-ink dark:text-white transition-all outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500
-            ${Icon ? 'pl-10' : 'pl-3.5'}
-            ${isPassword ? 'pr-11' : 'pr-3.5'}
-            py-2.5
+          className={`w-full rounded-xl border bg-slate-50/70 dark:bg-[#070D1B] text-xs sm:text-sm text-slate-900 dark:text-white transition-all outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500
+            ${Icon ? 'pl-9' : 'pl-3.5'}
+            ${isPassword ? 'pr-10' : 'pr-3.5'}
+            py-2
             ${
               hasError
                 ? 'border-rose-400 bg-rose-50/20 dark:bg-rose-950/20 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                : 'border-borderc dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20'
+                : 'border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:bg-white dark:focus:bg-[#0B132B]'
             }
             ${disabled ? 'bg-slate-100 dark:bg-slate-800 opacity-60 cursor-not-allowed' : ''}
           `}

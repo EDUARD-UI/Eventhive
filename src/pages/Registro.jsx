@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FiUser, FiMail, FiLock, FiBriefcase, FiPhone, FiFileText } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import AuthLayout from '../components/auth/AuthLayout.jsx';
@@ -154,21 +154,19 @@ export default function Registro() {
     <AuthLayout
       title="Crea tu cuenta en EventHive"
       subtitle="Únete a la mayor comunidad de eventos de Cartagena de Indias."
-      topPromptText="¿Ya tienes una cuenta?"
-      topActionText="Inicia sesión"
-      topActionHref="/iniciosesion"
+
       errorBanner={submitError}
     >
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Selector de Rol Asistente vs Organización con Segmented Control */}
-        <div className="p-1.5 rounded-2xl bg-slate-200/80 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-inner flex gap-1.5 mb-2">
+        <div className="p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 shadow-xs flex gap-1 mb-2">
           <button
             type="button"
             onClick={() => setFieldValue('role', 'usuario')}
-            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
+            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
               !isOrganizer
                 ? 'bg-[#0B132B] dark:bg-amber-500 text-white dark:text-slate-950 shadow-sm font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-[#0B132B] dark:hover:text-white font-semibold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-[#0B132B] dark:hover:text-white font-medium'
             }`}
           >
             Quiero asistir a eventos
@@ -176,21 +174,21 @@ export default function Registro() {
           <button
             type="button"
             onClick={() => setFieldValue('role', 'organizador')}
-            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
+            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
               isOrganizer
                 ? 'bg-[#0B132B] dark:bg-amber-500 text-white dark:text-slate-950 shadow-sm font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-[#0B132B] dark:hover:text-white font-semibold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-[#0B132B] dark:hover:text-white font-medium'
             }`}
           >
             Organización de eventos
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5" noValidate>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5" noValidate>
           {isOrganizer ? (
-            <div className="space-y-3.5 animate-fade-in">
-              <div className="flex items-center gap-2 pt-1 pb-1 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide border-b border-borderc dark:border-slate-800">
-                <FiBriefcase className="text-amber-500" size={14} />
+            <div className="space-y-2.5 animate-fade-in">
+              <div className="flex items-center gap-2 pt-0.5 pb-0.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide border-b border-slate-200 dark:border-slate-800">
+                <FiBriefcase className="text-amber-500" size={13} />
                 <span>Datos de la Organización</span>
               </div>
 
@@ -241,9 +239,9 @@ export default function Registro() {
                 />
               </div>
 
-              <div className="flex items-center gap-2 pt-3 pb-1 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide border-b border-borderc dark:border-slate-800">
-                <FiUser className="text-amber-500" size={14} />
-                <span>Datos del Representante (Acceso al Dashboard)</span>
+              <div className="flex items-center gap-2 pt-2 pb-0.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide border-b border-slate-200 dark:border-slate-800">
+                <FiUser className="text-amber-500" size={13} />
+                <span>Datos del Representante</span>
               </div>
 
               <InputField
@@ -266,7 +264,7 @@ export default function Registro() {
                 id="correoUsuario"
                 name="correoUsuario"
                 type="email"
-                label="Correo de acceso del usuario"
+                label="Correo de acceso del representante legal"
                 placeholder="carlos@email.com"
                 icon={FiMail}
                 value={values.correoUsuario}
@@ -372,11 +370,11 @@ export default function Registro() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-4 py-3.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow-md shadow-amber-500/20 hover:shadow-amber-500/35 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full mt-2.5 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 hover:shadow-amber-500/35 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
           >
             {isSubmitting ? (
               <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
                 <span>Creando tu cuenta...</span>
               </>
             ) : isOrganizer ? (
@@ -386,6 +384,15 @@ export default function Registro() {
             )}
           </button>
         </form>
+        <div className="flex justify-end items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 pt-0.5">
+          <span>¿Ya tienes una cuenta?</span>
+          <Link
+            to="/iniciosesion"
+            className="font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
+          >
+            Inicia sesión
+          </Link>
+        </div>
       </div>
     </AuthLayout>
   );

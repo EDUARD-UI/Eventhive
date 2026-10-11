@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { FiCalendar, FiMapPin, FiArrowLeft, FiHeart, FiShare2, FiShield, FiTag, FiClock, FiCheckCircle, FiPlus, FiMinus } from 'react-icons/fi';
+import { FiCalendar, FiMapPin, FiArrowLeft, FiArrowRight, FiHeart, FiShare2, FiShield, FiTag, FiClock, FiCheckCircle, FiPlus, FiMinus } from 'react-icons/fi';
 import { Sparkles } from 'lucide-react';
 import L from 'leaflet';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';

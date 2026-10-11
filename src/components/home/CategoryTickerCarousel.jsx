@@ -66,7 +66,7 @@ export default function CategoryTickerCarousel() {
             <Link
               key={`${cat.id}-${index}`}
               to={`/buscar?categoriaId=${cat.id}`}
-              className="relative flex-shrink-0 w-[250px] sm:w-[290px] h-[135px] sm:h-[155px] rounded-2xl bg-[#0B1428] border border-slate-800 hover:border-slate-600 transition-all duration-300 ease-out overflow-hidden flex flex-col justify-end p-4 text-left shadow-lg group/item hover:scale-[1.02]"
+              className="relative flex-shrink-0 w-[250px] sm:w-[290px] h-[135px] sm:h-[155px] rounded-2xl bg-white dark:bg-[#151D2F] border border-slate-200 dark:border-white/[0.07] hover:border-slate-300 hover:dark:bg-slate-800 hover:dark:border-white/15 shadow-sm hover:shadow-md transition-all duration-300 ease-out overflow-hidden flex flex-col justify-end p-4 text-left group/item hover:scale-[1.02]"
             >
               {/* Fotografía de la categoría nítida y visible */}
               {imageUrl ? (
@@ -74,23 +74,28 @@ export default function CategoryTickerCarousel() {
                   <ImageWithFallback
                     src={imageUrl}
                     alt={cat.nombre}
-                    className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500 ease-out opacity-75 group-hover/item:opacity-90"
+                    className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500 ease-out opacity-80 group-hover/item:opacity-95"
                     showText={false}
                   />
                 </div>
               ) : (
-                <div className="absolute inset-0 bg-[#0F1D38]" />
+                <div className="absolute inset-0 bg-slate-200 dark:bg-[#0F1D38]" />
               )}
 
-              {/* Degradado inferior para legibilidad del texto */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+              {/* Máscara de degradado linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.85) 100%) para legibilidad óptima */}
+              <div
+                className="absolute inset-0 pointer-events-none opacity-85 group-hover/item:opacity-95 transition-opacity duration-300"
+                style={{
+                  background: 'linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.85) 100%)',
+                }}
+              />
 
-              {/* Contenido: Solo título y número de eventos (sin logo) */}
+              {/* Contenido: Solo título y número de eventos con alto contraste */}
               <div className="relative z-10 w-full min-w-0">
-                <h4 className="text-base sm:text-lg font-extrabold uppercase text-white truncate tracking-tight group-hover/item:text-amber-300 transition-colors duration-200">
+                <h4 className="text-base sm:text-lg font-extrabold uppercase text-white truncate tracking-tight group-hover/item:text-amber-300 transition-colors duration-200 drop-shadow-sm">
                   {cat.nombre}
                 </h4>
-                <p className="text-xs text-slate-300 font-semibold mt-0.5">
+                <p className="text-xs text-slate-200 font-semibold mt-0.5 drop-shadow-xs">
                   {cat.totalEventos ?? 0} {(cat.totalEventos ?? 0) === 1 ? 'evento' : 'eventos'}
                 </p>
               </div>

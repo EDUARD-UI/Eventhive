@@ -11,6 +11,7 @@ import { searchEvents, getEvents } from '../services/eventService.js';
 import { getCategoryNames, getFeaturedCategories } from '../services/categoryService.js';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 const PAGE_SIZE = 9;
 
@@ -216,8 +217,10 @@ export default function BuscarEventosPage() {
   const hasActiveFilters = Boolean(tituloParam || fechaParam || categoriaIdParam || (sortParam && sortParam !== 'fecha,asc'));
   const activeCategory = categoryList.find((c) => String(c.id) === String(categoriaIdParam));
 
+  const { isDark } = useTheme();
+
   return (
-    <div className="w-full min-h-screen bg-white dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body relative transition-colors duration-200">
+    <div className="w-full min-h-screen bg-slate-50 dark:bg-[#0B0F19] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body relative transition-colors duration-200">
       {/* Fondo interactivo de puntitos */}
       <FloatingDotsBackground />
 
@@ -226,7 +229,7 @@ export default function BuscarEventosPage() {
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
         {/* Cabecera / Título Principal */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-5 pb-3 border-b border-slate-200/70 dark:border-slate-800">
+        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-5 pb-3 border-b border-slate-200/70 dark:border-white/[0.08]">
           <div className="max-w-2xl">
             <div className="flex flex-wrap items-center gap-3 mb-1.5">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B132B] dark:text-white tracking-tight">
@@ -248,7 +251,7 @@ export default function BuscarEventosPage() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Busca tu evento..."
-              className="w-full h-11 bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 focus:border-amber-500 rounded-xl pl-10 pr-9 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/15 transition-all shadow-xs"
+              className="w-full h-11 bg-white dark:bg-slate-800/60 border border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 focus:border-amber-500 rounded-xl pl-10 pr-9 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/15 transition-all shadow-xs"
             />
             <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none" />
             {searchInput && (
@@ -279,7 +282,7 @@ export default function BuscarEventosPage() {
                 onChange={handleCategoryChange}
                 options={categorySelectOptions}
                 placeholder="Eventos (Todas)"
-                variant="light"
+                variant={isDark ? 'dark' : 'light'}
               />
             </div>
 
@@ -289,7 +292,7 @@ export default function BuscarEventosPage() {
                 type="date"
                 value={fechaParam}
                 onChange={handleDateChange}
-                className="w-full bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-amber-500 focus:ring-2 focus:ring-slate-800/10 transition-all cursor-pointer shadow-xs"
+                className="w-full bg-white dark:bg-slate-800/60 border border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-amber-500 focus:ring-2 focus:ring-slate-800/10 transition-all cursor-pointer shadow-xs"
                 aria-label="Filtrar por fecha específica"
                 title="Filtrar por día exacto (yyyy-MM-dd)"
               />
@@ -302,7 +305,7 @@ export default function BuscarEventosPage() {
                 onChange={handleSortChange}
                 options={SORT_OPTIONS}
                 placeholder="Ordenar por"
-                variant="light"
+                variant={isDark ? 'dark' : 'light'}
               />
             </div>
 
