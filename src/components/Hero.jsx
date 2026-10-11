@@ -52,16 +52,12 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className={`relative overflow-visible select-none min-h-[580px] lg:min-h-[660px] flex items-center transition-colors duration-300 ${
-        isDark
-          ? 'bg-[#0B132B] text-white'
-          : 'bg-slate-100 text-slate-900 border-b border-slate-200/80'
-      }`}
+      className="relative overflow-visible select-none min-h-[580px] lg:min-h-[660px] flex items-center bg-slate-100 text-slate-900 border-b border-slate-200/80 transition-colors duration-300"
     >
       {/* Contenedor aislado de efectos y partículas (abejas vuelan a placer) */}
       <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
         <BeeParticles />
-        <CartagenaHiveSkyline className={`z-5 opacity-30 ${isDark ? 'text-slate-900' : 'text-slate-300'}`} />
+        <CartagenaHiveSkyline className="z-5 opacity-30 text-slate-300" />
       </div>
 
       {/* Contenido Principal con Transición de Scroll estilo Apple / Antigravity */}
@@ -83,33 +79,19 @@ export default function Hero() {
             </div>
 
             {/* Ubicación y Badge */}
-            <div
-              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-5 border ${
-                isDark
-                  ? 'bg-slate-900/80 border-slate-700/80 text-slate-300'
-                  : 'bg-white border-slate-200 text-slate-700 shadow-2xs'
-              }`}
-            >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-5 border bg-white border-slate-200 text-slate-700 shadow-2xs">
               <FiMapPin className="text-amber-500" size={14} />
               <span>Cartagena de Indias, Colombia</span>
             </div>
 
             {/* Título Principal en color sólido */}
-            <h1
-              className={`font-display font-black text-4xl sm:text-5xl md:text-6xl xl:text-[66px] leading-[1.06] tracking-tight mb-5 drop-shadow-xs ${
-                isDark ? 'text-white' : 'text-slate-950'
-              }`}
-            >
+            <h1 className="font-display font-black text-4xl sm:text-5xl md:text-6xl xl:text-[66px] leading-[1.06] tracking-tight mb-5 drop-shadow-xs text-slate-950">
               Conéctate al <br />
               <span className="text-amber-500">ritmo de la ciudad</span>
             </h1>
 
             {/* Subtítulo descriptivo */}
-            <p
-              className={`max-w-lg text-sm sm:text-base leading-relaxed font-normal mb-8 ${
-                isDark ? 'text-slate-300' : 'text-slate-600'
-              }`}
-            >
+            <p className="max-w-lg text-sm sm:text-base leading-relaxed font-normal mb-8 text-slate-600">
               Descubre festivales, conciertos, arte, gastronomía y vida nocturna en la mágica Cartagena de Indias. Vive cada momento al máximo.
             </p>
 
@@ -132,16 +114,10 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Columna Derecha: Imagen completa Colombia.jpg posicionada más hacia la derecha */}
+          {/* Columna Derecha: Imagen Colombia.jpg en cuadro delimitado */}
           <div className="lg:col-span-7 flex justify-center lg:justify-end relative h-full lg:translate-x-6 xl:translate-x-12">
             <div className="relative w-full max-w-[680px] h-full group">
-              <div
-                className={`relative w-full h-[460px] sm:h-[530px] md:h-[590px] lg:h-[630px] overflow-hidden rounded-[2.5rem] shadow-2xl border transition-all duration-500 ${
-                  isDark
-                    ? 'border-slate-800 bg-[#0A1325]'
-                    : 'border-slate-200/90 bg-white'
-                }`}
-              >
+              <div className="relative w-full h-[460px] sm:h-[530px] md:h-[590px] lg:h-[630px] overflow-hidden rounded-[2.5rem] shadow-2xl border border-slate-200/90 bg-white transition-all duration-500">
                 <img
                   src={colombiaImg}
                   alt="Cartagena de Indias, Colombia"
