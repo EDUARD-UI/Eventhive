@@ -1,17 +1,17 @@
 import { useEffect, useRef } from 'react';
+import { useTheme } from '../../context/ThemeContext.jsx';
 
 /**
  * FloatingDotsBackground
- * Fondo interactivo de puntos negros brillantes flotando sobre fondo blanco:
- * - Basado fielmente en la referencia visual (dispersión abundante de puntos oscuros nítidos).
+ * Fondo interactivo de puntos flotantes que se adapta al modo claro y oscuro:
+ * - Modo claro: puntos negros sobre fondo blanco puro (#FFFFFF).
+ * - Modo oscuro: puntos blancos brillantes sobre fondo azul oscuro profundo (#070D1B).
  * - Renderizado en canvas acelerado por hardware a 60 FPS sin carga en el DOM.
- * - Efecto "brillante" (twinkle): oscilación de opacidad y micro-resplandor dinámico.
- * - Efecto "flotando": deriva vertical ascendente suave con balanceo lateral sinusoidal.
- * - Soporte Retina / HiDPI con devicePixelRatio para nitidez cristalina.
- * - Ubicado a nivel z-0 con pointer-events-none para interacción transparente.
+ * - Efecto brillante (twinkle) y deriva vertical suave con balanceo lateral sinusoidal.
  */
 export default function FloatingDotsBackground({ className = '' }) {
   const canvasRef = useRef(null);
+  const { isDark } = useTheme();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -26,7 +26,7 @@ export default function FloatingDotsBackground({ className = '' }) {
     let particles = [];
     let isVisible = true;
 
-    // Paleta de tonos negros y pizarra oscura para máxima nitidez y profundidad
+    // Paletas dinámicas según el tema
     const darkPalette = [
       'rgba(0, 0, 0, ',       // Negro puro
       'rgba(2, 6, 23, ',      // Slate 950
@@ -34,6 +34,16 @@ export default function FloatingDotsBackground({ className = '' }) {
       'rgba(15, 23, 42, ',    // Slate 900
       'rgba(30, 41, 59, ',    // Slate 800
     ];
+
+    const lightPalette = [
+      'rgba(255, 255, 255, ', // Blanco puro
+      'rgba(248, 250, 252, ', // Slate 50
+      'rgba(241, 245, 249, ', // Slate 100
+      'rgba(254, 243, 199, ', // Amber 100 suave
+      'rgba(253, 230, 138, ', // Amber 200 brillante
+    ];
+
+    const activePalette = isDark ? lightPalette : darkPalette;
 
     const createParticle = (initialY = null) => {
       const rand = Math.random();
@@ -52,7 +62,7 @@ export default function FloatingDotsBackground({ className = '' }) {
         x: Math.random() * width,
         y: initialY !== null ? initialY : Math.random() * height,
         radius,
-        colorPrefix: darkPalette[Math.floor(Math.random() * darkPalette.length)],
+        colorPrefix: activePalette[Math.floor(Math.random() * activePalette.length)],
         baseAlpha: Math.random() * 0.3 + 0.65, // 0.65 a 0.95 (alta visibilidad)
         twinkleSpeed: Math.random() * 0.04 + 0.018,
         twinklePhase: Math.random() * Math.PI * 2,
@@ -102,8 +112,8 @@ export default function FloatingDotsBackground({ className = '' }) {
       const dt = Math.min((currentTime - lastTime) / 16.666, 2.5);
       lastTime = currentTime;
 
-      // Fondo blanco puro sólido
-      ctx.fillStyle = '#FFFFFF';
+      // Fondo dinámico: blanco puro en modo claro, azul noche en modo oscuro
+      ctx.fillStyle = isDark ? '#070D1B' : '#FFFFFF';
       ctx.fillRect(0, 0, width, height);
 
       const timeSec = currentTime * 0.001;
@@ -133,7 +143,7 @@ export default function FloatingDotsBackground({ className = '' }) {
         const twinkleSine = Math.sin(timeSec * 2 * Math.PI * p.twinkleSpeed + p.twinklePhase);
         const currentAlpha = Math.max(0.35, Math.min(1.0, p.baseAlpha + twinkleSine * p.twinkleAmp));
 
-        // Dibujar el punto negro
+        // Dibujar el punto (negro en claro, blanco en oscuro)
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = `${p.colorPrefix}${currentAlpha.toFixed(3)})`;
@@ -144,7 +154,9 @@ export default function FloatingDotsBackground({ className = '' }) {
           const haloAlpha = ((twinkleSine - 0.55) * 0.4).toFixed(3);
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.radius * 2.3, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(15, 23, 42, ${haloAlpha})`;
+          ctx.fillStyle = isDark
+            ? `rgba(255, 255, 255, ${haloAlpha})`
+            : `rgba(15, 23, 42, ${haloAlpha})`;
           ctx.fill();
         }
       }
@@ -175,7 +187,7 @@ export default function FloatingDotsBackground({ className = '' }) {
       window.removeEventListener('resize', resize);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [isDark]);
 
   return (
     <div
@@ -186,9 +198,9 @@ export default function FloatingDotsBackground({ className = '' }) {
         zIndex: 0,
         pointerEvents: 'none',
         overflow: 'hidden',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: isDark ? '#070D1B' : '#FFFFFF',
       }}
-      className={`select-none ${className}`}
+      className={`select-none transition-colors duration-200 ${className}`}
     >
       <canvas
         ref={canvasRef}

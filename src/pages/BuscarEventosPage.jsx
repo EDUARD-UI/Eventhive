@@ -13,7 +13,6 @@ import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 
-const PAGE_SIZE = 9;
 
 const SORT_OPTIONS = [
   { label: 'Fecha más próxima', value: 'fecha,asc' },
@@ -23,8 +22,26 @@ const SORT_OPTIONS = [
 ];
 
 export default function BuscarEventosPage() {
+  const { isDark } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  // En computadores y pantallas grandes: 12 (para ubicar 4, 4, 4); en móviles y tablets: 8
+  const [pageSize, setPageSize] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024 ? 12 : 8;
+    }
+    return 12;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const nextSize = window.innerWidth >= 1024 ? 12 : 8;
+      setPageSize((prev) => (prev !== nextSize ? nextSize : prev));
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const tituloParam = searchParams.get('titulo') || '';
   const fechaParam = searchParams.get('fecha') || '';
@@ -66,7 +83,7 @@ export default function BuscarEventosPage() {
     setSearchInput(tituloParam);
   }, [tituloParam]);
 
-  // Cargar eventos según filtros (9 eventos por página)
+  // Cargar eventos según filtros (12 en desktop, 8 en mobile)
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -79,9 +96,7 @@ export default function BuscarEventosPage() {
 
         // Caso 1: Búsqueda por título textual
         if (hasTitle) {
-          // Si el usuario combinó búsqueda por texto con fecha o categoría,
-          // consultamos un lote amplio de coincidencias de título para filtrar exactamente en cliente
-          const size = (hasDate || hasCategory) ? 60 : PAGE_SIZE;
+          const size = (hasDate || hasCategory) ? 60 : pageSize;
           const result = await searchEvents({
             titulo: tituloParam.trim(),
             page: (hasDate || hasCategory) ? 0 : pageParam,
@@ -106,12 +121,12 @@ export default function BuscarEventosPage() {
           }
 
           if (hasDate || hasCategory) {
-            const start = pageParam * PAGE_SIZE;
-            const paginated = filtered.slice(start, start + PAGE_SIZE);
+            const start = pageParam * pageSize;
+            const paginated = filtered.slice(start, start + pageSize);
             return {
               events: paginated,
               total: filtered.length,
-              totalPages: Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)),
+              totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
               currentPage: pageParam,
             };
           }
@@ -119,12 +134,12 @@ export default function BuscarEventosPage() {
           return result;
         }
 
-        // Caso 2: Sin término textual -> consulta nativa con filtros directos al backend /api/eventos
+        // Caso 2: Sin término textual -> consulta nativa al backend con el tamaño dinámico
         return await getEvents({
           categoriaId: hasCategory ? Number(categoriaIdParam) : undefined,
           fecha: hasDate ? fechaParam.trim() : undefined,
           page: pageParam,
-          size: PAGE_SIZE,
+          size: pageSize,
           sort: sortParam,
         });
       } catch (err) {
@@ -147,7 +162,7 @@ export default function BuscarEventosPage() {
     return () => {
       isMounted = false;
     };
-  }, [tituloParam, fechaParam, categoriaIdParam, sortParam, pageParam]);
+  }, [tituloParam, fechaParam, categoriaIdParam, sortParam, pageParam, pageSize]);
 
   const handlePageChange = (newPage) => {
     const next = new URLSearchParams(searchParams);
@@ -227,249 +242,225 @@ export default function BuscarEventosPage() {
       {/* Navbar idéntico */}
       <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
-        {/* Cabecera / Título Principal */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-5 pb-3 border-b border-slate-200/70 dark:border-white/[0.08]">
-          <div className="max-w-2xl">
-            <div className="flex flex-wrap items-center gap-3 mb-1.5">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B132B] dark:text-white tracking-tight">
-                Eventos en Cartagena
-              </h1>
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-400/20 shadow-2xs">
-                {loading ? 'Cargando...' : `${totalElements} disponibles`}
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-normal leading-relaxed">
-              Descubre conciertos, festivales, experiencias culturales y deportivas en La Heroica.
-            </p>
+      <main className="flex-1 max-w-[1900px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-8 sm:py-12 relative z-10">
+        {/* Cabecera / Título Principal (Buscador removido ya que está en el Navbar) */}
+        <div className="mb-8 pb-4 border-b border-slate-200/70 dark:border-slate-800">
+          <div className="flex flex-wrap items-center gap-3 mb-1.5">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B132B] dark:text-white tracking-tight">
+              Eventos en Cartagena
+            </h1>
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-400/20 shadow-2xs">
+              {loading ? 'Cargando...' : `${totalElements} disponibles`}
+            </span>
           </div>
-
-          {/* Buscador Rápido por Título */}
-          <form onSubmit={handleSearchSubmit} className="relative w-full md:w-80 shrink-0">
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Busca tu evento..."
-              className="w-full h-11 bg-white dark:bg-slate-800/60 border border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 focus:border-amber-500 rounded-xl pl-10 pr-9 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/15 transition-all shadow-xs"
-            />
-            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none" />
-            {searchInput && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchInput('');
-                  const next = new URLSearchParams(searchParams);
-                  next.delete('titulo');
-                  setSearchParams(next);
-                }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-xs font-bold cursor-pointer p-1"
-                title="Limpiar búsqueda"
-              >
-                ✕
-              </button>
-            )}
-          </form>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-normal leading-relaxed">
+            Descubre conciertos, festivales, experiencias culturales y deportivas en La Heroica.
+          </p>
         </div>
 
-        {/* Barra de Filtros con CustomSelect (mantiene su estilo al desplegarse) */}
-        <section className="mb-8">
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Filtro Categorías con CustomSelect */}
-            <div className="min-w-[170px] sm:min-w-[210px] flex-1 sm:flex-none">
-              <CustomSelect
-                value={categoriaIdParam}
-                onChange={handleCategoryChange}
-                options={categorySelectOptions}
-                placeholder="Eventos (Todas)"
-                variant={isDark ? 'dark' : 'light'}
-              />
-            </div>
-
-            {/* Filtro Fechas */}
-            <div className="min-w-[140px] sm:min-w-[160px] flex-1 sm:flex-none">
-              <input
-                type="date"
-                value={fechaParam}
-                onChange={handleDateChange}
-                className="w-full bg-white dark:bg-slate-800/60 border border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-amber-500 focus:ring-2 focus:ring-slate-800/10 transition-all cursor-pointer shadow-xs"
-                aria-label="Filtrar por fecha específica"
-                title="Filtrar por día exacto (yyyy-MM-dd)"
-              />
-            </div>
-
-            {/* Filtro Ordenar por con CustomSelect */}
-            <div className="min-w-[160px] sm:min-w-[190px] flex-1 sm:flex-none">
-              <CustomSelect
-                value={sortParam}
-                onChange={handleSortChange}
-                options={SORT_OPTIONS}
-                placeholder="Ordenar por"
-                variant={isDark ? 'dark' : 'light'}
-              />
-            </div>
-
-            {/* Botón Limpiar Filtros */}
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={handleClearFilters}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#0B1428] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-semibold transition-all duration-200 active:scale-95 shadow-xs cursor-pointer"
-              >
-                <FiX size={14} />
-                <span>Limpiar filtros</span>
-              </button>
-            )}
-          </div>
-
-          {/* Chips de filtros activos */}
-          {hasActiveFilters && (
-            <div className="flex flex-wrap items-center gap-2 mt-3 pt-2">
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Filtros activos:
-              </span>
-              {activeCategory && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold shadow-xs">
-                  Categoría: {activeCategory.nombre}
+        {/* Layout de 2 columnas: Filtros Sticky a la izquierda y Eventos con Scroll a la derecha */}
+        <div className="flex flex-col lg:flex-row items-start gap-8">
+          {/* Columna Izquierda: Filtros Sticky que permanecen fijos al hacer scroll */}
+          <aside className="w-full lg:w-72 xl:w-80 shrink-0 lg:sticky lg:top-20 z-20">
+            <div className="bg-white/95 dark:bg-[#0B1428]/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 dark:border-slate-800">
+                <h2 className="text-xs font-black uppercase tracking-wider text-slate-950 dark:text-white">
+                  Filtros
+                </h2>
+                {hasActiveFilters && (
                   <button
                     type="button"
-                    onClick={() => {
-                      const next = new URLSearchParams(searchParams);
-                      next.delete('categoriaId');
-                      setSearchParams(next);
-                    }}
-                    className="hover:text-amber-600 font-bold ml-1 cursor-pointer"
+                    onClick={handleClearFilters}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
                   >
-                    ×
+                    <FiX size={12} />
+                    <span>Limpiar todo</span>
                   </button>
-                </span>
-              )}
-              {fechaParam && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold shadow-xs">
-                  Fecha: {fechaParam}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = new URLSearchParams(searchParams);
-                      next.delete('fecha');
-                      setSearchParams(next);
-                    }}
-                    className="hover:text-amber-600 font-bold ml-1 cursor-pointer"
-                  >
-                    ×
-                  </button>
-                </span>
-              )}
-              {tituloParam && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold shadow-xs">
-                  Búsqueda: “{tituloParam}”
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchInput('');
-                      const next = new URLSearchParams(searchParams);
-                      next.delete('titulo');
-                      setSearchParams(next);
-                    }}
-                    className="hover:text-amber-600 font-bold ml-1 cursor-pointer"
-                  >
-                    ×
-                  </button>
-                </span>
-              )}
-            </div>
-          )}
-        </section>
+                )}
+              </div>
 
-        {/* 1. Grilla Estilo Pinterest de Boletos de Eventos */}
-        <section>
-          {loading ? (
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6 [column-fill:_balance]">
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <div key={n} className="break-inside-avoid inline-block w-full mb-6">
-                  <EventCardSkeleton
-                    notchBg="bg-[#F8FAFC] dark:bg-[#070D1B]"
-                    aspectVariant={n % 3 === 0 ? 'tall' : n % 3 === 1 ? 'wide' : 'standard'}
-                  />
+              {/* Filtro Categorías con CustomSelect */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                  Categoría
+                </label>
+                <CustomSelect
+                  value={categoriaIdParam}
+                  onChange={handleCategoryChange}
+                  options={categorySelectOptions}
+                  placeholder="Todas las categorías"
+                  variant={isDark ? 'dark' : 'light'}
+                />
+              </div>
+
+              {/* Filtro Fechas */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                  Fecha
+                </label>
+                <input
+                  type="date"
+                  value={fechaParam}
+                  onChange={handleDateChange}
+                  className="w-full bg-white dark:bg-[#081026] border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition-all cursor-pointer shadow-xs"
+                  aria-label="Filtrar por fecha específica"
+                  title="Filtrar por día exacto (yyyy-MM-dd)"
+                />
+              </div>
+
+              {/* Filtro Ordenar por con CustomSelect */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                  Ordenar por
+                </label>
+                <CustomSelect
+                  value={sortParam}
+                  onChange={handleSortChange}
+                  options={SORT_OPTIONS}
+                  placeholder="Ordenar por"
+                  variant={isDark ? 'dark' : 'light'}
+                />
+              </div>
+
+              {/* Chips de filtros activos */}
+              {hasActiveFilters && (
+                <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800 space-y-2">
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                    Filtros aplicados:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {activeCategory && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-[11px] font-semibold">
+                        {activeCategory.nombre}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = new URLSearchParams(searchParams);
+                            next.delete('categoriaId');
+                            setSearchParams(next);
+                          }}
+                          className="hover:text-amber-600 font-bold ml-0.5 cursor-pointer"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {fechaParam && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-[11px] font-semibold">
+                        {fechaParam}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = new URLSearchParams(searchParams);
+                            next.delete('fecha');
+                            setSearchParams(next);
+                          }}
+                          className="hover:text-amber-600 font-bold ml-0.5 cursor-pointer"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {tituloParam && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-[11px] font-semibold">
+                        “{tituloParam}”
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSearchInput('');
+                            const next = new URLSearchParams(searchParams);
+                            next.delete('titulo');
+                            setSearchParams(next);
+                          }}
+                          className="hover:text-amber-600 font-bold ml-0.5 cursor-pointer"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
-          ) : events.length > 0 ? (
-            <>
-              <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6 [column-fill:_balance]">
-                {events.map((event, idx) => (
-                  <div
-                    key={event.id}
-                    className={`break-inside-avoid inline-block w-full mb-6 transition-transform duration-300 ${
-                      idx % 3 === 1 ? 'sm:translate-y-2' : idx % 3 === 2 ? 'lg:-translate-y-1' : ''
-                    }`}
-                  >
-                    <EventListCard
-                      event={event}
+          </aside>
+
+          {/* Columna Derecha: Grilla de Eventos (4 cards para ubicar 4, 4, 4 en pantallas grandes) */}
+          <div className="flex-1 min-w-0 w-full">
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5 sm:gap-6 items-start">
+                {[...Array(pageSize).keys()].map((n) => (
+                  <div key={n} className="w-full">
+                    <EventCardSkeleton
                       notchBg="bg-[#F8FAFC] dark:bg-[#070D1B]"
-                      aspectVariant={
-                        event.promocionado
-                          ? 'gold'
-                          : idx % 3 === 0
-                          ? 'tall'
-                          : idx % 3 === 1
-                          ? 'wide'
-                          : 'standard'
-                      }
+                      aspectVariant="standard"
                     />
                   </div>
                 ))}
               </div>
-
-              {/* Componente de Paginación Minimalista y Centrado (9 por página) */}
-              {totalElements > PAGE_SIZE && (
-                <div className="mt-12 flex justify-center w-full">
-                  <Pagination
-                    currentPage={pageParam + 1}
-                    totalItems={totalElements}
-                    pageSize={PAGE_SIZE}
-                    onPageChange={(p) => handlePageChange(p - 1)}
-                    minimal={true}
-                  />
+            ) : events.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5 sm:gap-6 items-start">
+                  {events.map((event) => (
+                    <div key={event.id} className="w-full">
+                      <EventListCard
+                        event={event}
+                        notchBg="bg-[#F8FAFC] dark:bg-[#070D1B]"
+                        aspectVariant={event.promocionado ? 'gold' : 'standard'}
+                      />
+                    </div>
+                  ))}
                 </div>
-              )}
-            </>
-          ) : (
-            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-12 text-center max-w-lg mx-auto shadow-sm my-8">
-              <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                <FiCalendar size={24} />
+
+                {/* Componente de Paginación Minimalista y Centrado */}
+                {totalElements > pageSize && (
+                  <div className="mt-12 flex justify-center w-full">
+                    <Pagination
+                      currentPage={pageParam + 1}
+                      totalItems={totalElements}
+                      pageSize={pageSize}
+                      onPageChange={(p) => handlePageChange(p - 1)}
+                      minimal={true}
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-12 text-center max-w-lg mx-auto shadow-sm my-8">
+                <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+                  <FiCalendar size={24} />
+                </div>
+                <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-2">
+                  No encontramos eventos con estos criterios
+                </h2>
+                <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto mb-6 leading-relaxed">
+                  Prueba ajustando la fecha, cambiando de categoría o restableciendo los filtros para ver toda la cartelera cultural.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="px-6 py-2.5 rounded-xl bg-slate-950 dark:bg-amber-500 hover:bg-amber-500 hover:text-slate-950 text-white dark:text-slate-950 text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
+                >
+                  Ver todos los eventos
+                </button>
               </div>
-              <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-2">
-                No encontramos eventos con estos criterios
-              </h2>
-              <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto mb-6 leading-relaxed">
-                Prueba ajustando la fecha, cambiando de categoría o restableciendo los filtros para ver toda la cartelera cultural.
-              </p>
-              <button
-                type="button"
-                onClick={handleClearFilters}
-                className="px-6 py-2.5 rounded-xl bg-slate-950 dark:bg-amber-500 hover:bg-amber-500 hover:text-slate-950 text-white dark:text-slate-950 text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
-              >
-                Ver todos los eventos
-              </button>
-            </div>
-          )}
-        </section>
+            )}
+          </div>
+        </div>
       </main>
 
-      {/* 2. Sección de Categorías Destacadas (Cubre todo el ancho de la pantalla) */}
+      {/* 2. Sección de Categorías Destacadas (Ocupa todo el ancho de la pantalla y cards con más altura) */}
       {featuredCategories.length > 0 && (
-        <section className="w-full max-w-none py-12 sm:py-16 px-4 sm:px-6 md:px-8 lg:px-12 border-t border-slate-200/80 bg-white/70 backdrop-blur-xs relative z-10">
-          <div className="w-full mb-6">
-            <h3 className="text-xl sm:text-2xl font-extrabold text-slate-950 tracking-tight uppercase">
+        <section className="w-full py-12 sm:py-16 px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 border-t border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-[#0B1428]/80 backdrop-blur-xs relative z-10 transition-colors duration-200">
+          <div className="w-full mb-8">
+            <h3 className="text-xl sm:text-2xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
               Categorías Destacadas
             </h3>
-            <p className="text-xs sm:text-sm text-slate-600 mt-0.5 font-normal">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 font-normal">
               Explora las experiencias culturales más populares en Cartagena.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 w-full">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6 2xl:grid-cols-8 gap-4 sm:gap-5 w-full">
             {featuredCategories.map((cat) => {
               const imageUrl = cat.imagenUrl || cat.urlFoto || cat.foto || cat.imagen;
               return (
@@ -482,25 +473,25 @@ export default function BuscarEventosPage() {
                     setSearchParams(next);
                     window.scrollTo({ top: 120, behavior: 'smooth' });
                   }}
-                  className="group relative rounded-2xl h-32 sm:h-36 bg-slate-900 border border-slate-200 hover:border-slate-400 overflow-hidden flex flex-col justify-end p-3 text-left transition-all duration-200 ease-out hover:-translate-y-0.5 shadow-sm active:scale-95 cursor-pointer w-full"
+                  className="group relative rounded-2xl h-48 sm:h-56 md:h-60 bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600 overflow-hidden flex flex-col justify-end p-4 sm:p-5 text-left transition-all duration-300 ease-out hover:-translate-y-1 shadow-md active:scale-95 cursor-pointer w-full"
                 >
                   {imageUrl && (
                     <div className="absolute inset-0">
                       <ImageWithFallback
                         src={imageUrl}
                         alt={cat.nombre}
-                        className="w-full h-full object-cover opacity-55 group-hover:opacity-75 transition-opacity duration-300"
+                        className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300"
                         showText={false}
                       />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-slate-950/60 pointer-events-none" />
+                  <div className="absolute inset-0 bg-slate-950/65 pointer-events-none" />
 
-                  <div className="relative z-10">
-                    <h4 className="text-xs sm:text-sm font-extrabold uppercase text-white truncate tracking-tight group-hover:text-amber-300 transition-colors">
+                  <div className="relative z-10 w-full min-w-0">
+                    <h4 className="text-sm sm:text-base font-extrabold uppercase text-white truncate tracking-tight group-hover:text-amber-300 transition-colors">
                       {cat.nombre}
                     </h4>
-                    <span className="text-[10px] text-slate-300 font-semibold block mt-0.5">
+                    <span className="text-xs text-slate-300 font-semibold block mt-1">
                       {cat.totalEventos ?? 0} {(cat.totalEventos ?? 0) === 1 ? 'evento' : 'eventos'}
                     </span>
                   </div>

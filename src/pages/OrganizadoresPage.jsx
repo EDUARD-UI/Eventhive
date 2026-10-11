@@ -79,8 +79,8 @@ export default function OrganizadoresPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body overflow-x-hidden max-w-full relative transition-colors duration-200">
-      {/* Fondo interactivo de puntitos negros brillantes flotando */}
+    <div className="w-full min-h-screen bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body overflow-x-clip max-w-full relative transition-colors duration-200">
+      {/* Fondo interactivo de puntitos que se adapta al modo claro y oscuro */}
       <FloatingDotsBackground />
 
       {/* Navbar idéntico */}

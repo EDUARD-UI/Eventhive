@@ -110,11 +110,7 @@ export default function Hero() {
             </h1>
 
             {/* Subtítulo descriptivo */}
-            <p
-              className={`max-w-lg text-sm sm:text-base leading-relaxed font-normal mb-8 ${
-                isDark ? 'text-slate-300' : 'text-slate-600'
-              }`}
-            >
+            <p className="max-w-lg text-sm sm:text-base leading-relaxed font-normal mb-8 text-slate-600 dark:text-slate-300">
               Descubre festivales, conciertos, arte, gastronomía y vida nocturna en la mágica Cartagena de Indias. Vive cada momento al máximo.
             </p>
 

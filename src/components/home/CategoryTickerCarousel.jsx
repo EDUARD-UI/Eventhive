@@ -39,10 +39,10 @@ export default function CategoryTickerCarousel() {
           {[1, 2, 3, 4, 5, 6].map((n) => (
             <div
               key={n}
-              className="w-[250px] sm:w-[290px] h-[135px] sm:h-[155px] rounded-2xl bg-slate-200 dark:bg-slate-800/80 border border-slate-300/70 dark:border-slate-700/60 shrink-0 p-4 flex flex-col justify-end"
+              className="w-[260px] sm:w-[310px] h-[185px] sm:h-[210px] rounded-2xl bg-slate-200 dark:bg-slate-800/80 border border-slate-300/70 dark:border-slate-700/60 shrink-0 p-5 flex flex-col justify-end"
             >
-              <div className="w-3/4 h-5 bg-slate-300 dark:bg-slate-700 rounded-md mb-2" />
-              <div className="w-1/3 h-3 bg-slate-300/80 dark:bg-slate-700/80 rounded" />
+              <div className="w-3/4 h-6 bg-slate-300 dark:bg-slate-700 rounded-md mb-2" />
+              <div className="w-1/3 h-4 bg-slate-300/80 dark:bg-slate-700/80 rounded" />
             </div>
           ))}
         </div>

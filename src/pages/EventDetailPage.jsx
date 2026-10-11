@@ -302,7 +302,7 @@ export default function EventDetailPage() {
   }
   
   return (
-    <div className="w-full min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 selection:bg-amber-400 selection:text-slate-950 font-body overflow-x-hidden max-w-full relative transition-colors duration-200">
+    <div className="w-full min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 selection:bg-amber-400 selection:text-slate-950 font-body overflow-x-clip max-w-full relative transition-colors duration-200">
       <FloatingDotsBackground />
       <Navbar />
 
