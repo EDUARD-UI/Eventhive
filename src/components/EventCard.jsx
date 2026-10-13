@@ -5,10 +5,14 @@ import { getCategoryGradient } from '../utils/formatters.js';
 import ImageWithFallback from './common/ImageWithFallback.jsx';
 
 export default function EventCard({ event }) {
-  const { id, category, title, date, location, favorite, photo } = event;
+  const { id, category, title, date, location, favorite, photo, promocionado } = event;
 
   return (
-    <article className="group bg-white dark:bg-[#151D2F] border border-slate-200 dark:border-white/[0.07] hover:dark:bg-slate-800 hover:dark:border-white/15 rounded-2xl overflow-hidden shadow-sm hover:shadow-md card-interactive flex flex-col justify-between transition-all duration-300">
+    <article className={`group bg-white dark:bg-[#151D2F] border rounded-2xl overflow-hidden shadow-sm hover:shadow-md card-interactive flex flex-col justify-between transition-all duration-300 ${
+      promocionado
+        ? 'border-amber-400/60 dark:border-amber-500/50 ring-1 ring-amber-400/20 shadow-amber-500/5'
+        : 'border-slate-200 dark:border-white/[0.07] hover:dark:bg-slate-800 hover:dark:border-white/15'
+    }`}>
       <div>
         <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-900">
           <ImageWithFallback
@@ -29,10 +33,17 @@ export default function EventCard({ event }) {
               }}
             />
 
-            {/* Categoría Badge con contraste accesible */}
-            <span className="absolute left-3 top-3 text-[10.5px] font-bold px-2.5 py-1 rounded-lg shadow-xs z-10 uppercase tracking-wider backdrop-blur-md bg-white/90 dark:bg-slate-950/85 text-slate-800 dark:text-amber-400 border border-slate-200/80 dark:border-white/10">
-              {category}
-            </span>
+            {/* Categoría y Badge Promocionado con contraste accesible */}
+            <div className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1.5">
+              <span className="text-[10.5px] font-bold px-2.5 py-1 rounded-lg shadow-xs uppercase tracking-wider backdrop-blur-md bg-white/90 dark:bg-slate-950/85 text-slate-800 dark:text-amber-400 border border-slate-200/80 dark:border-white/10">
+                {category}
+              </span>
+              {promocionado && (
+                <span className="text-[9.5px] font-black px-2 py-0.5 rounded-md shadow-md uppercase tracking-wider bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-slate-950 flex items-center gap-1 border border-amber-300">
+                  <span>★</span> Promocionado
+                </span>
+              )}
+            </div>
 
             <div className="absolute right-3 top-3 z-10">
               <FavoriteButton initialActive={favorite} eventId={id} />

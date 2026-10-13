@@ -37,24 +37,26 @@ export default function AdminLayout({
         onClose={() => setMobileMenuOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        {/* Cabecera compartida del Administrador */}
-        <Header
-          title={title}
-          badgeText={badgeText}
-          showSearch={Boolean(onSearchChange)}
-          searchTerm={searchTerm}
-          onSearchChange={onSearchChange}
-          searchPlaceholder="Buscar en el sistema..."
-          userName={userName}
-          userInitials={userInitials}
-          userPhoto={userPhoto}
-          onProfileClick={() => onSelect && onSelect('perfil')}
-          onMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
-        />
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        {/* Cabecera compartida del Administrador (Estática) */}
+        <div className="shrink-0 z-20">
+          <Header
+            title={title}
+            badgeText={badgeText}
+            showSearch={Boolean(onSearchChange)}
+            searchTerm={searchTerm}
+            onSearchChange={onSearchChange}
+            searchPlaceholder="Buscar en el sistema..."
+            userName={userName}
+            userInitials={userInitials}
+            userPhoto={userPhoto}
+            onProfileClick={() => onSelect && onSelect('perfil')}
+            onMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
+          />
+        </div>
 
-        {/* Contenedor principal con fondo gris claro y tarjetas blancas nítidas */}
-        <main className="px-4 sm:px-8 pb-10 flex-1 pt-6 max-w-[1400px] w-full mx-auto">
+        {/* Contenedor principal: única sección que realiza scroll */}
+        <main className="px-4 sm:px-8 pb-10 flex-1 pt-6 max-w-[1400px] w-full mx-auto overflow-y-auto min-h-0">
           {children}
         </main>
       </div>

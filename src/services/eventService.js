@@ -66,14 +66,15 @@ export const normalizeEvent = (event) => {
     startsAt: event.fecha ? `${event.fecha}T${event.hora || '00:00:00'}` : null,
     lat: event.latitud,
     lng: event.longitud,
-    promocionado: Boolean(event.promocionado),
+    promocionado: Boolean(event.promocionado || event.destacado || event.urlImagenDestacado || event.imagenPromocional),
+    imagenPromocional: event.imagenPromocional || event.urlImagenDestacado || null,
     price: event.precio ?? event.localidades?.[0]?.precio ?? null,
     minPrice:
       Array.isArray(event.localidades) && event.localidades.length > 0
         ? Math.min(...event.localidades.map((l) => Number(l.precio || 0)))
         : event.precio ?? null,
     favorite: false,
-    photo: event.foto || event.fotoUrl || event.imagen || event.imagenUrl || event.banner || null,
+    photo: event.imagenPromocional || event.urlImagenDestacado || event.foto || event.fotoUrl || event.imagen || event.imagenUrl || event.banner || null,
     organization: event.organizacion || event.organizador,
     localidades: event.localidades || [],
   };

@@ -26,17 +26,21 @@ export default function StandardLayout({
         onClose={() => setMobileMenuOpen(false)}
       />
 
-      <div className="relative flex min-w-0 flex-1 flex-col h-screen overflow-y-auto">
-        {customHeader ? (
-          customHeader
-        ) : (
-          <Header
-            {...headerProps}
-            onMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
-          />
-        )}
+      <div className="relative flex min-w-0 flex-1 flex-col h-screen overflow-hidden">
+        {/* Barra superior de navegación estática */}
+        <div className="shrink-0 z-20">
+          {customHeader ? (
+            customHeader
+          ) : (
+            <Header
+              {...headerProps}
+              onMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
+            />
+          )}
+        </div>
 
-        <main className={`mx-auto w-full ${maxWidthClass} flex-1 px-4 sm:px-8 pb-10 pt-6 sm:pt-8`}>
+        {/* Sección principal de datos: única que realiza scroll */}
+        <main className={`mx-auto w-full ${maxWidthClass} flex-1 overflow-y-auto min-h-0 px-4 sm:px-8 pb-10 pt-6 sm:pt-8`}>
           {children}
         </main>
       </div>

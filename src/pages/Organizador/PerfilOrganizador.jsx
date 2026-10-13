@@ -41,6 +41,7 @@ export default function PerfilOrganizador() {
     nivel: '',
     estado: '',
     nit: '',
+    rut: '',
   });
   const [orgLoading, setOrgLoading] = useState(true);
   const [orgSaved, setOrgSaved] = useState(false);
@@ -86,7 +87,8 @@ export default function PerfilOrganizador() {
           totalSeguidores: org.totalSeguidores || 0,
           nivel: org.nivel || '',
           estado: org.estado || '',
-          nit: org.nit || '',
+          nit: org.nit || org.rut || '',
+          rut: org.rut || org.nit || '',
         });
       })
       .catch(() => {})
@@ -160,6 +162,8 @@ export default function PerfilOrganizador() {
         razonSocial: orgProfile.razonSocial,
         descripcion: orgProfile.descripcion,
         correoContacto: orgProfile.correoContacto,
+        rut: orgProfile.rut,
+        nit: orgProfile.rut || orgProfile.nit,
       };
       fd.append('datos', new Blob([JSON.stringify(datos)], { type: 'application/json' }));
       if (orgImageFile) {
@@ -325,20 +329,25 @@ export default function PerfilOrganizador() {
                     <h3 className="font-display text-lg font-bold text-slate-900">
                       {orgProfile.razonSocial}
                     </h3>
-                    {orgProfile.estado && (
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                        orgProfile.estado === 'APROBADA'
-                          ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
-                          : 'bg-amber-50 border border-amber-200 text-amber-700'
-                      }`}>
-                        <FiShield size={11} /> {orgProfile.estado}
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      {orgProfile.estado && (
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          orgProfile.estado === 'APROBADA'
+                            ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
+                            : 'bg-amber-50 border border-amber-200 text-amber-700'
+                        }`}>
+                          <FiShield size={11} /> {orgProfile.estado}
+                        </span>
+                      )}
+                      <span className="text-[11px] font-mono text-slate-500 font-semibold">
+                        RUT: {orgProfile.rut || orgProfile.nit || 'Sin registrar'}
                       </span>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Fields — item 7: only razonSocial, correoContacto, descripcion */}
+              {/* Form Fields: Razón Social, RUT, Correo, Descripción */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Field label="Razón Social">
                   <input
@@ -348,7 +357,16 @@ export default function PerfilOrganizador() {
                   />
                 </Field>
 
-                <Field label="Correo de Contacto">
+                <Field label="RUT de la Organización">
+                  <input
+                    value={orgProfile.rut}
+                    placeholder="Ej: 901.234.567-8"
+                    onChange={(e) => setOrgProfile((p) => ({ ...p, rut: e.target.value, nit: e.target.value }))}
+                    className={inputClass}
+                  />
+                </Field>
+
+                <Field label="Correo de Contacto" className="md:col-span-2">
                   <input
                     type="email"
                     value={orgProfile.correoContacto}

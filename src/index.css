@@ -462,3 +462,22 @@ body::-webkit-scrollbar {
   animation: nectarPulse 3.5s ease-in-out infinite;
 }
 
+/* Estilos personalizados para selectores de fecha/calendario */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 3px;
+  opacity: 0.75;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  filter: invert(0.4) sepia(1) saturate(5) hue-rotate(185deg);
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8) sepia(1) saturate(5) hue-rotate(5deg);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+

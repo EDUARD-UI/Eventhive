@@ -20,6 +20,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-lea
 import Swal from 'sweetalert2';
 import { organizerService } from '../../services/organizerService.js';
 import { formatPrice } from '../../utils/formatters.js';
+import StyledDatePicker from '../common/StyledDatePicker.jsx';
 
 // Pin temático ámbar colmena para Leaflet
 const amberHivePinIcon = () =>
@@ -507,15 +508,14 @@ const DEFAULT_CATEGORIES = [
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Fecha *
-                  </label>
-                  <input
-                    type="date"
+                  <StyledDatePicker
+                    id="fecha"
+                    name="fecha"
+                    label="Fecha"
+                    required
                     value={form.fecha}
                     onChange={(e) => updateForm('fecha', e.target.value)}
-                    className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
-                    required
+                    helperText="Solo fechas desde hoy hacia adelante"
                   />
                 </div>
 

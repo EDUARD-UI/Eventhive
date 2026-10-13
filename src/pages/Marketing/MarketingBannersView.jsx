@@ -73,15 +73,6 @@ export default function MarketingBannersView() {
     const banner = banners.find((b) => b.posicion === posicion);
     if (!banner) return;
 
-    if (!banner.titulo?.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Título requerido',
-        text: 'Por favor ingresa un título para el banner promocional.',
-      });
-      return;
-    }
-
     if (!banner.imagenUrl?.trim()) {
       Swal.fire({
         icon: 'warning',
@@ -238,7 +229,7 @@ export default function MarketingBannersView() {
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                Título del Banner <span className="text-rose-500">*</span>
+                Título del Banner <span className="text-slate-400 font-normal lowercase">(opcional)</span>
               </label>
               <input
                 type="text"
@@ -268,7 +259,7 @@ export default function MarketingBannersView() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                  Texto del Botón CTA
+                  Texto del Botón CTA <span className="text-slate-400 font-normal lowercase">(opcional)</span>
                 </label>
                 <input
                   type="text"

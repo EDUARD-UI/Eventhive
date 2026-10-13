@@ -11,6 +11,7 @@ import { searchEvents, getEvents } from '../services/eventService.js';
 import { getCategoryNames, getFeaturedCategories } from '../services/categoryService.js';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
+import StyledDatePicker from '../components/common/StyledDatePicker.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 
 
@@ -287,17 +288,15 @@ export default function BuscarEventosPage() {
               </div>
 
               {/* Filtro Fechas */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-                  Fecha
-                </label>
-                <input
-                  type="date"
+              <div>
+                <StyledDatePicker
+                  id="filtro-fecha"
+                  name="filtro-fecha"
+                  label="Fecha"
                   value={fechaParam}
                   onChange={handleDateChange}
-                  className="w-full bg-white dark:bg-[#081026] border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition-all cursor-pointer shadow-xs"
-                  aria-label="Filtrar por fecha específica"
-                  title="Filtrar por día exacto (yyyy-MM-dd)"
+                  variant={isDark ? 'dark' : 'light'}
+                  helperText="Filtrar eventos por día exacto"
                 />
               </div>
 

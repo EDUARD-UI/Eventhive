@@ -347,9 +347,9 @@ export default function PerfilUsuario() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Guardar datos de perfil (PUT /usuarios/perfil)
+  // Guardar datos de perfil y foto unificados (PUT /usuarios/perfil y PUT /usuarios/perfil/imagen)
   const handleUpdatePerfil = async (e) => {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     const cleanNombre = sanitizeText(usuario.nombreCompleto);
     if (!cleanNombre) {
       Swal.fire('Atención', 'El nombre es obligatorio.', 'warning');
@@ -364,27 +364,48 @@ export default function PerfilUsuario() {
 
     try {
       setIsUpdating(true);
+      let updatedPhotoUrl = usuario.urlImagenPerfil;
+
+      // 1. Si seleccionó una nueva foto de perfil, subirla primero
+      if (selectedPhotoFile) {
+        try {
+          const res = await userService.uploadFotoPerfil(selectedPhotoFile);
+          updatedPhotoUrl = res?.urlImagenPerfil || res?.url || res?.data?.urlImagenPerfil || photoPreview;
+        } catch (photoErr) {
+          console.warn('Error al subir foto:', photoErr);
+        }
+      }
+
+      // 2. Actualizar datos de texto
       await userService.updatePerfil({
         nombre: cleanNombre,
         telefono: cleanPhone,
       });
 
-      // Actualizar sesión local con el nuevo nombre
+      // 3. Actualizar sesión local con nuevo nombre y foto
       const current = session.getUser() || {};
       session.save({
         ...current,
         nombre: cleanNombre,
+        urlImagenPerfil: updatedPhotoUrl,
+        fotoUrl: updatedPhotoUrl,
+        foto: updatedPhotoUrl,
       });
+
       setUsuario((prev) => ({
         ...prev,
         nombreCompleto: cleanNombre,
         telefono: cleanPhone,
+        urlImagenPerfil: updatedPhotoUrl,
       }));
+
+      setSelectedPhotoFile(null);
+      setPhotoPreview(null);
 
       Swal.fire({
         icon: 'success',
         title: '¡Perfil actualizado!',
-        text: 'Tus datos se guardaron correctamente.',
+        text: 'Tus datos personales y foto de perfil se guardaron correctamente.',
         timer: 1800,
         showConfirmButton: false,
       });
@@ -1119,88 +1140,167 @@ export default function PerfilUsuario() {
         </div>
       )}
 
-      {/* Modal Editar Perfil */}
+      {/* Modal Lateral Derecho: Editar Perfil con cambio de foto unificado (Requisito 8) */}
       {editModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white dark:bg-[#0B1428] rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border-2 border-amber-200/90 dark:border-slate-800">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-amber-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <FiEdit2 className="text-amber-500 text-lg" />
-                <h3 className="text-lg font-black text-[#0B1B3D] dark:text-white">
-                  Editar Datos del Perfil
-                </h3>
-              </div>
-              <button
-                onClick={() => setEditModal(false)}
-                className="text-slate-400 hover:text-[#0B1B3D] dark:hover:text-white p-1 cursor-pointer"
-              >
-                <FiX size={18} />
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
+          {/* Backdrop con blur */}
+          <div
+            className="fixed inset-0 bg-slate-950/50 backdrop-blur-2xs cursor-pointer transition-opacity"
+            onClick={() => setEditModal(false)}
+          />
 
-            <form onSubmit={handleUpdatePerfil} className="space-y-4">
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1">
-                  Nombre Completo
-                </label>
-                <input
-                  type="text"
-                  value={usuario.nombreCompleto}
-                  onChange={(e) => setUsuario({ ...usuario, nombreCompleto: e.target.value })}
-                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-amber-200 dark:border-slate-700 bg-[#FAF8F5] dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1">
-                  Correo Electrónico (Solo Lectura)
-                </label>
-                <input
-                  type="email"
-                  value={usuario.correo}
-                  disabled
-                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1">
-                  Teléfono (Máx. 10 dígitos)
-                </label>
-                <input
-                  type="tel"
-                  value={usuario.telefono}
-                  onChange={(e) => {
-                    const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
-                    setUsuario({ ...usuario, telefono: cleaned });
-                  }}
-                  maxLength={10}
-                  placeholder="Ej: 3001234567"
-                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-amber-200 dark:border-slate-700 bg-[#FAF8F5] dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20"
-                />
-              </div>
-
-              <div className="flex gap-2.5 pt-3">
+          {/* Drawer Lateral Derecho */}
+          <div
+            className="relative z-50 w-full sm:w-[480px] md:w-[520px] bg-white dark:bg-[#0B1428] h-full shadow-2xl border-l border-amber-200/90 dark:border-slate-800 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              {/* Encabezado del Drawer */}
+              <div className="bg-[#0B1B3D] dark:bg-[#081021] text-white p-6 relative">
                 <button
                   type="button"
                   onClick={() => setEditModal(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                  title="Cerrar panel"
                 >
-                  Cancelar
+                  <FiX size={18} />
                 </button>
-                <button
-                  type="submit"
-                  disabled={isUpdating}
-                  className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
-                >
-                  {isUpdating && (
-                    <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                  )}
-                  <span>Guardar</span>
-                </button>
+
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
+                    <FiEdit2 size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-white">
+                      Editar Perfil de Cliente
+                    </h3>
+                    <p className="text-xs text-slate-300">
+                      Actualiza tu información personal y foto de perfil en un solo paso
+                    </p>
+                  </div>
+                </div>
               </div>
-            </form>
+
+              {/* Formulario Unificado */}
+              <form onSubmit={handleUpdatePerfil} id="cliente-perfil-form" className="p-6 space-y-6">
+                {/* 1. SECCIÓN DE FOTO DE PERFIL UNIFICADA */}
+                <div className="flex flex-col items-center p-5 rounded-2xl bg-amber-50/50 dark:bg-slate-900/60 border border-amber-200/70 dark:border-slate-800 text-center">
+                  <div className="relative group mb-3">
+                    <div className="w-24 h-24 rounded-full border-3 border-amber-400 p-1 shadow-md overflow-hidden bg-white dark:bg-slate-950">
+                      {photoPreview || usuario.urlImagenPerfil ? (
+                        <img
+                          src={photoPreview || usuario.urlImagenPerfil}
+                          alt={usuario.nombreCompleto}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full rounded-full bg-[#0B1B3D] flex items-center justify-center text-amber-300 text-2xl font-black select-none">
+                          {getInitials(usuario.nombreCompleto)}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute bottom-0 right-0 p-2 rounded-full bg-[#0B1B3D] text-amber-400 hover:text-white hover:bg-amber-600 transition-colors shadow-md border-2 border-white dark:border-slate-800 cursor-pointer"
+                      title="Seleccionar nueva foto"
+                    >
+                      <FiCamera size={14} />
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 underline cursor-pointer"
+                  >
+                    {selectedPhotoFile ? 'Cambiar selección de foto' : 'Subir o cambiar foto de perfil'}
+                  </button>
+
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                    PNG, JPG o JPEG (máx. 5 MB). La foto se guardará junto con tus datos.
+                  </p>
+                </div>
+
+                {/* 2. DATOS DE TEXTO */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">
+                      Nombre Completo *
+                    </label>
+                    <input
+                      type="text"
+                      value={usuario.nombreCompleto}
+                      onChange={(e) => setUsuario({ ...usuario, nombreCompleto: e.target.value })}
+                      className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-amber-200 dark:border-slate-700 bg-[#FAF8F5] dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20 transition-all"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        Correo Electrónico
+                      </label>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                        Solo Lectura
+                      </span>
+                    </div>
+                    <input
+                      type="email"
+                      value={usuario.correo}
+                      disabled
+                      className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">
+                      Teléfono Celular (Máx. 10 dígitos)
+                    </label>
+                    <input
+                      type="tel"
+                      value={usuario.telefono}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setUsuario({ ...usuario, telefono: cleaned });
+                      }}
+                      maxLength={10}
+                      placeholder="Ej: 3001234567"
+                      className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-amber-200 dark:border-slate-700 bg-[#FAF8F5] dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/20 transition-all"
+                    />
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            {/* Pie del Drawer con Acciones */}
+            <div className="p-6 bg-slate-50 dark:bg-slate-900/80 border-t border-amber-100 dark:border-slate-800 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedPhotoFile(null);
+                  setPhotoPreview(null);
+                  setEditModal(false);
+                }}
+                disabled={isUpdating}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                form="cliente-perfil-form"
+                disabled={isUpdating}
+                className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md hover:shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 disabled:opacity-60"
+              >
+                {isUpdating && (
+                  <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                )}
+                <span>Guardar Cambios</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

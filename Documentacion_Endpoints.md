@@ -2746,11 +2746,16 @@ de un solo uso y vence 24 horas después del envío.
 - Público; devuelve el correo, rol y fecha de expiración para mostrar el formulario.
 
 #### `POST /api/invitaciones/roles/aceptar`
-- Público. Body: `{ "token": "...", "nombre": "Nombre", "telefono": "+573001112233", "clave": "contraseña segura" }`.
-- Crea la cuenta nueva o actualiza la cuenta CLIENTE existente con el rol invitado.
+- Público. Para una cuenta nueva, body: `{ "token": "...", "nombre": "Nombre", "telefono": "+573001112233", "clave": "contraseña segura" }`. Para una cuenta CLIENTE existente basta con `{ "token": "..." }`.
+- La cuenta CLIENTE conserva nombre, teléfono y contraseña; al aceptar se cambia su rol y, para OPERADOR, se vincula a la organización que envió la invitación. Los demás roles existentes (REPRESENTANTE, MODERADOR, OPERADOR, ADMINISTRADOR o MARKETING) no pueden aceptar otra invitación.
 
 #### `GET /api/invitaciones/roles/enviadas`
 - ADMINISTRADOR o REPRESENTANTE. Devuelve la lista paginada de invitaciones enviadas por la persona autenticada.
+
+#### Preparación de despliegue y prueba SMTP
+- Antes del primer despliegue, ejecutar una vez `demo/src/main/resources/db/migration/20261012_correo_invitaciones.sql` contra PostgreSQL/Supabase. `spring.jpa.hibernate.ddl-auto=none` está configurado, así que las tablas no se crean automáticamente.
+- Configurar `MAIL_HOST` (opcional; por defecto `smtp-relay.brevo.com`), `MAIL_PORT` (opcional; por defecto `587`), `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` (remitente verificado por Brevo), `MAIL_FROM_NAME` (opcional; por defecto `EventHive`) y `FRONTEND_URL` (origen del frontend que recibe los enlaces).
+- Para probar el envío real, autenticar un ADMINISTRADOR y llamar a `POST /api/invitaciones/roles` con `{"correo":"destino@correo.com","rol":"MARKETING"}`; un REPRESENTANTE puede probar con `"rol":"OPERADOR"`. Un envío SMTP fallido responde con error y no deja guardada la invitación.
 
 ---
 

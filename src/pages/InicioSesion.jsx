@@ -147,13 +147,12 @@ export default function InicioSesion() {
               <span>Recordar sesión</span>
             </label>
 
-            <button
-              type="button"
-              onClick={() => Swal.fire('Recuperar contraseña', 'Te enviaremos un correo de restablecimiento.', 'info')}
+            <Link
+              to="/recuperar-contrasena"
               className="text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
             >
               ¿Olvidaste tu contraseña?
-            </button>
+            </Link>
           </div>
 
           <button

@@ -230,7 +230,64 @@ function OrgEventsCalendar({ events = [], onSelectEvent }) {
 }
 
 export default function OrganizadorIndex() {
+  const user = session.getUser() || {};
+  const isOperador = user.role === 'OPERADOR' || user.rol === 'OPERADOR';
+  const userPermisos = user.permisos || user.authorities || [];
+
+  const dynamicMenuItems = useMemo(() => {
+    if (!isOperador) {
+      return [
+        { id: 'resumen', label: 'Resumen', icon: FiGrid },
+        { id: 'eventos', label: 'Mis eventos', icon: FiCalendar },
+        { id: 'operadores', label: 'Trabajadores', icon: FiUsers },
+        { id: 'posicionamiento', label: 'Posicionamiento', icon: FiAward },
+        { id: 'entradas', label: 'Entradas', icon: FiCreditCard },
+        { id: 'perfil', label: 'Mi perfil', icon: FiUser },
+      ];
+    }
+
+    const permisosList = Array.isArray(userPermisos)
+      ? userPermisos.map((p) => String(p).toUpperCase())
+      : [String(userPermisos).toUpperCase()];
+
+    const hasAnyPerm = (keys) =>
+      keys.some((k) => permisosList.some((p) => p === k || p.includes(k)));
+
+    const items = [{ id: 'resumen', label: 'Resumen', icon: FiGrid }];
+
+    // Mis eventos: solo si tiene permiso de crear, editar, cancelar o panel de eventos
+    if (hasAnyPerm(['EVENTOS', 'CREAR_EVENTO', 'EDITAR_EVENTO', 'CANCELAR_EVENTO', 'PANEL_EVENTOS'])) {
+      items.push({ id: 'eventos', label: 'Mis eventos', icon: FiCalendar });
+    }
+
+    // Entradas / Check-in: solo si tiene permiso de check-in o entradas
+    if (hasAnyPerm(['CHECK_IN', 'ENTRADAS', 'PANEL_ENTRADAS', 'BOLETOS'])) {
+      items.push({ id: 'entradas', label: 'Entradas', icon: FiCreditCard });
+    }
+
+    // Posicionamiento: solo si tiene permiso de posicionamiento o promociones
+    if (hasAnyPerm(['POSICIONAMIENTO', 'PROMOCIONES', 'PANEL_POSICIONAMIENTO'])) {
+      items.push({ id: 'posicionamiento', label: 'Posicionamiento', icon: FiAward });
+    }
+
+    // Trabajadores: solo si explícitamente tiene permiso especial (por defecto solo representante)
+    if (hasAnyPerm(['OPERADORES', 'PANEL_TRABAJADORES', 'TRABAJADORES'])) {
+      items.push({ id: 'operadores', label: 'Trabajadores', icon: FiUsers });
+    }
+
+    items.push({ id: 'perfil', label: 'Mi perfil', icon: FiUser });
+    return items;
+  }, [isOperador, userPermisos]);
+
   const [activeItem, setActiveItem] = useState('resumen');
+
+  useEffect(() => {
+    // Si la pestaña actual no está permitida para el operador, volver a resumen
+    if (!dynamicMenuItems.some((m) => m.id === activeItem)) {
+      setActiveItem('resumen');
+    }
+  }, [dynamicMenuItems, activeItem]);
+
   const [creationView, setCreationView] = useState(null);
   const [notification, setNotification] = useState(false);
   const [orgData, setOrgData] = useState(null);
@@ -643,8 +700,8 @@ export default function OrganizadorIndex() {
 
   return (
     <StandardLayout
-      role="Organización"
-      menuItems={menuItems}
+      role={isOperador ? "Operador" : "Organización"}
+      menuItems={dynamicMenuItems}
       activeItem={creationView === 'wizard' ? null : activeItem}
       onSelect={(item) => {
         // Corrección Requerimiento 8: Limpiar wizard y eventos seleccionados al navegar

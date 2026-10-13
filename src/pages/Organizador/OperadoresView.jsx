@@ -13,6 +13,10 @@ import {
   FiEdit2,
   FiX,
   FiCheck,
+  FiEye,
+  FiUser,
+  FiCalendar,
+  FiPhone,
 } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import { organizerService } from '../../services/organizerService.js';
@@ -21,10 +25,11 @@ import Badge from '../../components/Shared/Badge.jsx';
 import ModalEnviarCorreo from '../../components/Shared/ModalEnviarCorreo.jsx';
 
 const PERMISOS_DISPONIBLES = [
-  { id: 'CHECK_IN', label: 'Check-in de Asistentes', desc: 'Escanear boletos y validar ingresos' },
+  { id: 'CHECK_IN', label: 'Check-in de Asistentes', desc: 'Escanear boletos y validar ingresos al evento' },
   { id: 'CREAR_EVENTO', label: 'Crear Eventos', desc: 'Registrar nuevos eventos para la organización' },
-  { id: 'EDITAR_EVENTO', label: 'Editar Eventos', desc: 'Modificar información de eventos existentes' },
+  { id: 'EDITAR_EVENTO', label: 'Editar Eventos', desc: 'Modificar información y precios de eventos existentes' },
   { id: 'CANCELAR_EVENTO', label: 'Cancelar Eventos', desc: 'Suspender o cancelar eventos publicados' },
+  { id: 'POSICIONAMIENTO', label: 'Gestión de Posicionamiento', desc: 'Acceso al módulo de posicionamiento y planes promocionales' },
 ];
 
 export default function OperadoresView() {
@@ -378,35 +383,49 @@ export default function OperadoresView() {
                   <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-1.5 flex-wrap">
                     <button
                       type="button"
-                      onClick={() =>
-                        setEmailModal({
-                          isOpen: true,
-                          email: correo,
-                          name: nombre,
-                          subject: 'Información de la organización',
-                        })
-                      }
-                      className="px-2.5 py-1.5 rounded-lg border border-amber-300/80 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                      onClick={() => openPermisosModal(op)}
+                      className="px-2.5 py-1.5 rounded-lg bg-[#0B1B3D] text-amber-300 hover:bg-slate-900 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                      title="Ver detalles completos del operador y sus permisos"
                     >
-                      <FiMail size={12} />
-                      <span>Correo</span>
+                      <FiEye size={12} />
+                      <span>Ver Detalle</span>
                     </button>
+
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
+                        onClick={() =>
+                          setEmailModal({
+                            isOpen: true,
+                            email: correo,
+                            name: nombre,
+                            subject: 'Información de la organización',
+                          })
+                        }
+                        className="px-2 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                        title="Enviar correo electrónico"
+                      >
+                        <FiMail size={12} />
+                        <span className="hidden sm:inline">Correo</span>
+                      </button>
+
+                      <button
+                        type="button"
                         onClick={() => openPermisosModal(op)}
-                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        className="px-2 py-1.5 rounded-lg border border-amber-300/80 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                        title="Gestionar permisos"
                       >
                         <FiEdit2 size={12} />
                         <span>Permisos</span>
                       </button>
+
                       <button
                         type="button"
                         onClick={() => handleExpulsar(op)}
-                        className="px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        className="px-2 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                        title="Expulsar de la organización"
                       >
                         <FiTrash2 size={12} />
-                        <span>Expulsar</span>
                       </button>
                     </div>
                   </div>
@@ -543,83 +562,171 @@ export default function OperadoresView() {
         </div>
       )}
 
-      {/* MODAL: Gestionar Permisos */}
+      {/* MODAL LATERAL DERECHO: Detalle del Usuario y Gestión de Permisos (Requisito 13) */}
       {editingOperador && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl border border-slate-200 max-w-lg w-full p-6 shadow-2xl relative">
-            <button
-              type="button"
-              onClick={() => setEditingOperador(null)}
-              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-            >
-              <FiX size={16} />
-            </button>
+        <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
+          {/* Backdrop oscuro con blur suave */}
+          <div
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
+            onClick={() => setEditingOperador(null)}
+          />
 
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <FiShield size={18} />
-              </div>
-              <div>
-                <h3 className="font-display text-lg font-bold text-slate-900">
-                  Permisos de {editingOperador.nombre || editingOperador.correo}
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Selecciona los permisos que este operador tendrá en tu organización.
-                </p>
-              </div>
-            </div>
+          {/* Drawer Lateral Derecho */}
+          <div
+            className="relative z-50 w-full sm:w-[500px] md:w-[560px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              {/* Cabecera del Drawer */}
+              <div className="bg-[#0B1B3D] text-white p-6 relative">
+                <button
+                  type="button"
+                  onClick={() => setEditingOperador(null)}
+                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                  title="Cerrar panel"
+                >
+                  <FiX size={18} />
+                </button>
 
-            <div className="space-y-2.5 my-4">
-              {PERMISOS_DISPONIBLES.map((perm) => {
-                const isSelected = selectedPermisos.includes(perm.id);
-                return (
-                  <div
-                    key={perm.id}
-                    onClick={() => togglePermiso(perm.id)}
-                    className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${
-                      isSelected
-                        ? 'border-brand bg-blue-50/50 text-slate-900'
-                        : 'border-slate-200 hover:border-slate-300 text-slate-600'
-                    }`}
-                  >
-                    <div
-                      className={`w-5 h-5 rounded-md border mt-0.5 flex items-center justify-center transition-colors ${
-                        isSelected
-                          ? 'bg-brand border-brand text-white'
-                          : 'border-slate-300 bg-white'
-                      }`}
-                    >
-                      {isSelected && <FiCheck size={12} />}
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-400 text-slate-950 font-black text-xl flex items-center justify-center shrink-0 shadow-md">
+                    {(editingOperador.nombre || editingOperador.correo || 'OP')
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-amber-300 inline-block mb-1">
+                      Detalle de Colaborador
+                    </span>
+                    <h3 className="font-display text-lg sm:text-xl font-bold text-white truncate">
+                      {editingOperador.nombre || 'Operador sin nombre'}
+                    </h3>
+                    <p className="text-xs text-slate-300 truncate">
+                      {editingOperador.correo || 'Sin correo registrado'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contenido del Drawer */}
+              <div className="p-6 space-y-6">
+                {/* 1. Datos del Usuario */}
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
+                    <FiUser size={13} className="text-amber-500" />
+                    <span>Información del Usuario</span>
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Rol en Organización</span>
+                      <strong className="text-slate-800">Operador</strong>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-bold text-slate-900">{perm.label}</p>
-                      <p className="text-[11px] text-slate-500">{perm.desc}</p>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Estado</span>
+                      <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
+                        <FiCheckCircle size={12} /> Activo
+                      </span>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Teléfono</span>
+                      <strong className="text-slate-800">{editingOperador.telefono || 'No registrado'}</strong>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Identificador</span>
+                      <strong className="text-slate-800 font-mono text-[11px]">#{editingOperador.id || editingOperador.operadorId || '—'}</strong>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+
+                {/* 2. Permisos y Accesos a Paneles */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                      <FiShield size={13} className="text-brand" />
+                      <span>Permisos y Paneles Habilitados</span>
+                    </h4>
+                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                      {selectedPermisos.length} activos
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mb-3">
+                    Los operadores solo podrán visualizar los paneles y acciones asignados por el representante.
+                  </p>
+
+                  <div className="space-y-2.5">
+                    {PERMISOS_DISPONIBLES.map((perm) => {
+                      const isSelected = selectedPermisos.includes(perm.id);
+                      return (
+                        <div
+                          key={perm.id}
+                          onClick={() => togglePermiso(perm.id)}
+                          className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${
+                            isSelected
+                              ? 'border-brand bg-blue-50/50 shadow-2xs text-slate-900'
+                              : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
+                          }`}
+                        >
+                          <div
+                            className={`w-5 h-5 rounded-md border mt-0.5 flex items-center justify-center transition-colors ${
+                              isSelected
+                                ? 'bg-brand border-brand text-white'
+                                : 'border-slate-300 bg-white'
+                            }`}
+                          >
+                            {isSelected && <FiCheck size={12} />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-slate-900">{perm.label}</p>
+                            <p className="text-[11px] text-slate-500 leading-relaxed">{perm.desc}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+            {/* Pie del Drawer con Acciones */}
+            <div className="p-6 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between gap-3 flex-wrap">
               <button
                 type="button"
-                onClick={() => setEditingOperador(null)}
-                disabled={isUpdatingPermisos}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider transition-all"
+                onClick={() => {
+                  setEmailModal({
+                    isOpen: true,
+                    email: editingOperador.correo,
+                    name: editingOperador.nombre,
+                    subject: 'Información de la organización',
+                  });
+                }}
+                className="px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
               >
-                Cancelar
+                <FiMail size={13} />
+                <span>Enviar Correo</span>
               </button>
-              <button
-                type="button"
-                onClick={handleSavePermisos}
-                disabled={isUpdatingPermisos}
-                className="px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-black uppercase tracking-wider shadow-sm transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer"
-              >
-                {isUpdatingPermisos && (
-                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                )}
-                <span>Guardar Permisos</span>
-              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingOperador(null)}
+                  disabled={isUpdatingPermisos}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSavePermisos}
+                  disabled={isUpdatingPermisos}
+                  className="px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-black uppercase tracking-wider shadow-sm transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
+                >
+                  {isUpdatingPermisos && (
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  )}
+                  <span>Guardar Permisos</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

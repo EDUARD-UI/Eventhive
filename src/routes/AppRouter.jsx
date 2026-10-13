@@ -19,6 +19,8 @@ import AcercaDe from '../pages/SobreNosotros/AcercaDe.jsx';
 import Privacidad from '../pages/SobreNosotros/Privacidad.jsx';
 import Terminos from '../pages/SobreNosotros/Terminos.jsx';
 import Contacto from '../pages/SobreNosotros/Contacto.jsx';
+import NotFoundPage from '../pages/NotFoundPage.jsx';
+import RecuperarContrasenaPage from '../pages/RecuperarContrasenaPage.jsx';
 
 /**
  * Si el usuario ya está autenticado e intenta ir a /iniciosesion o /registro,
@@ -170,8 +172,19 @@ export default function AppRouter() {
           }
         />
 
-        {/* Fallback de ruta no encontrada: redirige al Home de forma limpia */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="/recuperar-contrasena"
+          element={
+            <GuestOnlyRoute>
+              <RecuperarContrasenaPage />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route path="/olvide-contrasena" element={<Navigate to="/recuperar-contrasena" replace />} />
+        <Route path="/restablecer-contrasena" element={<RecuperarContrasenaPage />} />
+
+        {/* Fallback de ruta no encontrada: página 404 personalizada */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );

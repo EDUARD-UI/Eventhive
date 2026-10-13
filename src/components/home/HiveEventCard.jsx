@@ -27,11 +27,18 @@ export default function HiveEventCard({ event }) {
               }}
             />
 
-            {/* Categoría Badge */}
-            <span className="absolute left-3 top-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-white/90 dark:bg-slate-950/80 text-amber-700 dark:text-amber-400 border border-slate-200/80 dark:border-slate-700/80 shadow-xs z-10 flex items-center gap-1 backdrop-blur-sm">
-              <span>⬡</span>
-              <span>{category}</span>
-            </span>
+            {/* Categoría Badge y Badge Promocionado */}
+            <div className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-white/90 dark:bg-slate-950/80 text-amber-700 dark:text-amber-400 border border-slate-200/80 dark:border-slate-700/80 shadow-xs flex items-center gap-1 backdrop-blur-sm">
+                <span>⬡</span>
+                <span>{category}</span>
+              </span>
+              {event.promocionado && (
+                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border border-amber-300 shadow-sm flex items-center gap-1">
+                  <span>★</span> Promocionado
+                </span>
+              )}
+            </div>
 
             {/* Favorito */}
             <div className="absolute right-3 top-3 z-10">

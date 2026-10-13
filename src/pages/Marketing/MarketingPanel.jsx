@@ -88,19 +88,22 @@ export default function MarketingPanel() {
       />
 
       {/* Contenido Principal */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        <Header
-          title={getHeaderTitle()}
-          badgeText="Panel de Marketing"
-          userName={userName}
-          userInitials={userInitials}
-          userPhoto={userPhoto}
-          userEmail={sessionUser?.email}
-          onProfileClick={() => handleSelectTab('perfil')}
-          onMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
-        />
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        <div className="shrink-0 z-20">
+          <Header
+            title={getHeaderTitle()}
+            badgeText="Panel de Marketing"
+            userName={userName}
+            userInitials={userInitials}
+            userPhoto={userPhoto}
+            userEmail={sessionUser?.email}
+            onProfileClick={() => handleSelectTab('perfil')}
+            onMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
+          />
+        </div>
 
-        <main className="px-4 sm:px-8 pb-10 flex-1 pt-6 max-w-[1400px] w-full mx-auto">
+        {/* Sección de datos: única que realiza scroll */}
+        <main className="px-4 sm:px-8 pb-10 flex-1 pt-6 max-w-[1400px] w-full mx-auto overflow-y-auto min-h-0">
           {renderCurrentView()}
         </main>
       </div>
