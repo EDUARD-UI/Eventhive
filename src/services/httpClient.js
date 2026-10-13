@@ -1,8 +1,14 @@
-import { API_BASE_URL } from '../config/api.js';
+import {
+  API_BASE_URL,
+  getApiBaseUrl,
+  getActiveBackend,
+  switchToLocalFallback,
+} from '../config/api.js';
 import { session, isTokenExpired } from './session.js';
 
 const buildUrl = (path, params) => {
-  const url = new URL(`${API_BASE_URL}${path}`);
+  const baseUrl = getApiBaseUrl();
+  const url = new URL(`${baseUrl}${path}`);
 
   Object.entries(params || {}).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
@@ -81,7 +87,7 @@ function cerrarSesionYRedirigir() {
   }
 }
 
-async function request(path, { method = 'GET', params, body, isFormData = false, _retried = false } = {}) {
+async function request(path, { method = 'GET', params, body, isFormData = false, _retried = false, _fallbackAttempted = false } = {}) {
   // Rutas de autenticación pública que no deben pasar por refresh de token ni enviar Authorization
   const esRutaAuthPublica =
     path === '/auth/login' ||
@@ -120,7 +126,9 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000);
+    // En Render damos hasta 15s (si no responde o se congela, no dejamos esperando 45s)
+    const timeoutMs = getActiveBackend() === 'render' ? 15000 : 35000;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     response = await fetch(buildUrl(path, params), {
       method,
@@ -130,10 +138,28 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
     });
     clearTimeout(timeoutId);
   } catch (err) {
+    // Si la llamada falló estando en Render y aún no hemos probado el fallback:
+    if (!_fallbackAttempted && getActiveBackend() === 'render') {
+      const reason = err.name === 'AbortError'
+        ? 'Tiempo de espera en Render agotado (>15s)'
+        : 'No se pudo conectar con el servidor de Render';
+      console.warn(`[EventHive API] ${reason}. Conmutando automáticamente a backend local (http://localhost:8080/api)...`);
+      switchToLocalFallback(reason);
+      return request(path, { method, params, body, isFormData, _retried, _fallbackAttempted: true });
+    }
+
     if (err.name === 'AbortError') {
       throw new Error('La solicitud tardó demasiado tiempo en responder. Verifica la conexión con el servidor.');
     }
     throw new Error('No fue posible conectar con el servidor. Verifica que el backend esté disponible.');
+  }
+
+  // Si Render respondió con un error de gateway/servidor caído (502, 503, 504)
+  if (!_fallbackAttempted && getActiveBackend() === 'render' && [502, 503, 504].includes(response.status)) {
+    const reason = `Render respondió con código ${response.status} (Servicio no disponible)`;
+    console.warn(`[EventHive API] ${reason}. Conmutando automáticamente a backend local (http://localhost:8080/api)...`);
+    switchToLocalFallback(reason);
+    return request(path, { method, params, body, isFormData, _retried, _fallbackAttempted: true });
   }
 
   // 2. MANEJO REACTIVO DE 401 UNAUTHORIZED:
