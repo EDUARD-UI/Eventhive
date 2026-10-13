@@ -61,11 +61,11 @@ export default function ModeradorMotivosView({ motivos = [], loading = false }) 
                 Catálogo de Motivos Oficiales
               </h2>
               <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-brand/10 text-brand">
-                {motivos.length} configurados en API
+                {motivos.length} motivos registrados
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Criterios estandarizados provistos por el endpoint <code className="font-mono bg-slate-100 px-1 py-0.5 rounded">/api/enums/motivos-rechazos</code>
+              Criterios estandarizados oficiales de la plataforma para moderación y control de calidad.
             </p>
           </div>
 
@@ -88,7 +88,7 @@ export default function ModeradorMotivosView({ motivos = [], loading = false }) 
           <FiInfo size={17} className="text-brand shrink-0 mt-0.5" />
           <p className="leading-relaxed">
             Estos motivos son obligatorios al emitir una solicitud de corrección o un rechazo. Al seleccionar uno,
-            el sistema lo envía en el payload del endpoint <code className="font-mono bg-white/70 px-1 py-0.5 rounded text-blue-950 font-bold">PATCH /api/moderaciones/eventos/{'{id}'}/solicitar-correccion</code> o rechazar.
+            el sistema lo adjunta automáticamente en la notificación oficial que recibe el organizador.
           </p>
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function ModeradorMotivosView({ motivos = [], loading = false }) 
           <p className="text-xs text-slate-500 mt-1">
             {searchTerm
               ? 'Intenta con otro término de búsqueda.'
-              : 'No hay motivos retornados por el servidor.'}
+              : 'No hay motivos registrados en la plataforma.'}
           </p>
         </div>
       ) : (
@@ -119,7 +119,7 @@ export default function ModeradorMotivosView({ motivos = [], loading = false }) 
             const info = GUIA_MOTIVOS[motivoCode] || {
               titulo: motivoCode.replace(/_/g, ' '),
               descripcion:
-                'Criterio oficial registrado en el backend para la moderación técnica de eventos.',
+                'Criterio oficial registrado en la plataforma para la moderación técnica de eventos.',
               tipo: 'Criterio estándar del sistema',
             };
 

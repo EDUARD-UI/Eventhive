@@ -11,17 +11,21 @@ import {
   Image as ImageIcon,
   Edit3,
   Plus,
-  Trash2,
   X,
   Check,
   Calendar,
   Layers,
+  AlertCircle,
+  Loader2,
+  Save,
+  Star,
+  FileText,
+  Share2,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import EventDetailView from '../Organizador/EventDetailView.jsx';
-import { httpClient } from '../../services/httpClient.js';
 import { formatPrice } from '../../utils/formatters.js';
 import { promotionPlanService } from '../../services/promotionPlanService.js';
 
@@ -37,83 +41,76 @@ export default function MarketingPromocionesView() {
   // Modal a la derecha: Detalle de evento
   const [selectedEventId, setSelectedEventId] = useState(null);
 
-  // Modal a la derecha: Asignar imagen promocional
+  // Modal a la derecha: Asignar imagen destacada (Solo planes Premium)
   const [promoImageModalEvent, setPromoImageModalEvent] = useState(null);
   const [inputPromoImage, setInputPromoImage] = useState('');
   const [savingPromoImage, setSavingPromoImage] = useState(false);
+  const [promoImageError, setPromoImageError] = useState(null);
 
   // Gestión de Planes de Promoción
   const [planes, setPlanes] = useState([]);
-  const [editingPlan, setEditingPlan] = useState(null); // null o plan object
+  const [loadingPlanes, setLoadingPlanes] = useState(false);
+  const [planDrawerOpen, setPlanDrawerOpen] = useState(false);
+  const [editingPlanId, setEditingPlanId] = useState(null); // null = nuevo
+  const [planForm, setPlanForm] = useState({
+    nombre: '',
+    codigo: '',
+    detallePublicidad: '',
+    precio: '',
+    pautaRedes: false,
+    premium: false,
+  });
+  const [savingPlan, setSavingPlan] = useState(false);
+  const [planFormError, setPlanFormError] = useState(null);
 
-  const loadPlanes = useCallback(() => {
-    setPlanes(promotionPlanService.getPlanes());
+  // Cargar planes reales desde el backend
+  const loadPlanes = useCallback(async () => {
+    try {
+      setLoadingPlanes(true);
+      const data = await promotionPlanService.getPlanesMarketing();
+      setPlanes(data);
+    } catch (err) {
+      console.warn('Error al cargar planes de promoción:', err);
+    } finally {
+      setLoadingPlanes(false);
+    }
   }, []);
 
-  // Cargar promociones reales desde el backend (GET /api/promociones y GET /api/eventos/destacados)
+  // Cargar eventos promocionados reales desde el backend
   const fetchPromociones = useCallback(async () => {
     try {
       setLoading(true);
-      const [promosRes, destacadosRes] = await Promise.allSettled([
-        httpClient.get('/promociones', { page: 0, size: 50 }),
-        httpClient.get('/eventos/destacados', { page: 0, size: 50 }),
-      ]);
+      const rawEvents = await promotionPlanService.getEventosPromocionados();
 
-      const promosList =
-        promosRes.status === 'fulfilled'
-          ? Array.isArray(promosRes.value)
-            ? promosRes.value
-            : promosRes.value?.content || promosRes.value?.data || []
-          : [];
-
-      const destacadosList =
-        destacadosRes.status === 'fulfilled'
-          ? Array.isArray(destacadosRes.value)
-            ? destacadosRes.value
-            : destacadosRes.value?.content || destacadosRes.value?.data || []
-          : [];
-
-      const mergedItems = [];
-      const seenEventIds = new Set();
-
-      promosList.forEach((p) => {
+      const mapped = (Array.isArray(rawEvents) ? rawEvents : []).map((p) => {
         const evId = p.eventoId || p.id;
-        seenEventIds.add(String(evId));
-        mergedItems.push({
+        const planObj = p.plan || p.promocionPlan || {};
+        const isPremium = Boolean(p.premium || planObj.premium || p.tipoPlan === 'PREMIUM');
+        const planNombre = p.planNombre || planObj.nombre || p.plan || (isPremium ? 'Posicionamiento Premium' : 'Destacado Estándar');
+        const precio = Number(p.precio || p.montoPagado || planObj.precio || 0);
+
+        return {
           id: p.id || evId,
           eventoId: evId,
           eventoNombre: p.eventoNombre || p.eventoTitulo || p.titulo || 'Evento Cultural',
-          organizacionNombre: p.organizacionNombre || p.organizacion?.razonSocial || 'Organización Aliada',
-          plan: p.plan || p.tipoPlan || (p.descuento ? `Plan Descuento ${p.descuento}%` : 'Destacado Home'),
-          precio: p.precio || p.montoPagado || 50000,
-          fechaInicio: p.fechaInicio || p.fecha || '2026-10-01',
-          fechaFinal: p.fechaFinal || p.fechaFin || '2026-10-31',
+          organizacionNombre:
+            p.organizacionNombre ||
+            p.organizacion?.razonSocial ||
+            p.organizacion?.nombre ||
+            'Organización Aliada',
+          plan: planNombre,
+          precio,
+          premium: isPremium,
+          pautaRedes: Boolean(p.pautaRedes || planObj.pautaRedes),
+          fechaInicio: p.fechaInicio || p.fecha || '—',
+          fechaFinal: p.fechaFinal || p.fechaFin || '—',
           estado: (p.estado || (p.activo !== false ? 'ACTIVO' : 'FINALIZADO')).toUpperCase(),
           foto: p.foto || p.imagenUrl || null,
           urlImagenDestacado: p.urlImagenDestacado || p.imagenPromocional || null,
-        });
+        };
       });
 
-      destacadosList.forEach((d) => {
-        if (!seenEventIds.has(String(d.id))) {
-          seenEventIds.add(String(d.id));
-          mergedItems.push({
-            id: `dest-${d.id}`,
-            eventoId: d.id,
-            eventoNombre: d.titulo || d.title || 'Evento Destacado',
-            organizacionNombre: d.organizacionNombre || d.organizacion?.razonSocial || 'Organización Cultural',
-            plan: 'Posicionamiento Premium',
-            precio: 100000,
-            fechaInicio: d.fecha || '2026-10-01',
-            fechaFinal: '2026-10-30',
-            estado: 'ACTIVO',
-            foto: d.foto || d.imagenUrl || null,
-            urlImagenDestacado: d.urlImagenDestacado || d.imagenPromocional || null,
-          });
-        }
-      });
-
-      setPromociones(mergedItems);
+      setPromociones(mapped);
     } catch (err) {
       console.warn('Error al cargar promociones de marketing:', err);
     } finally {
@@ -126,14 +123,11 @@ export default function MarketingPromocionesView() {
     loadPlanes();
   }, [fetchPromociones, loadPlanes]);
 
-  // Filtrado de eventos
+  // Filtrado de eventos promocionados
   const filteredPromociones = useMemo(() => {
     return promociones.filter((p) => {
-      const matchPlan =
-        selectedPlanFilter === 'TODOS' ||
-        p.plan.toLowerCase().includes(selectedPlanFilter.toLowerCase());
-
-      if (!matchPlan) return false;
+      if (selectedPlanFilter === 'PREMIUM' && !p.premium) return false;
+      if (selectedPlanFilter === 'ESTANDAR' && p.premium) return false;
 
       if (!searchTerm.trim()) return true;
       const term = searchTerm.toLowerCase();
@@ -151,97 +145,159 @@ export default function MarketingPromocionesView() {
     return filteredPromociones.slice(start, start + pageSize);
   }, [filteredPromociones, currentPage, pageSize]);
 
-  // Abrir modal de asignación de imagen promocional
+  // Abrir drawer para asignar imagen destacada (solo para planes Premium)
   const handleOpenPromoImageModal = (item) => {
+    if (!item.premium) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Plan Estándar',
+        text: 'La carga de imagen de banner está reservada exclusivamente para planes contratados con beneficio Premium.',
+      });
+      return;
+    }
     setPromoImageModalEvent(item);
-    setInputPromoImage(item.urlImagenDestacado || item.foto || '');
+    setInputPromoImage(item.urlImagenDestacado || '');
+    setPromoImageError(null);
   };
 
-  // Guardar imagen promocional
+  // Guardar imagen destacada (PUT /api/promociones/eventos/{id}/posicionar)
   const handleSavePromoImage = async () => {
     if (!promoImageModalEvent) return;
-    if (!inputPromoImage.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'URL requerida',
-        text: 'Por favor ingresa la URL de la imagen promocional.',
-      });
+    const urlTrimmed = inputPromoImage.trim();
+
+    if (!urlTrimmed) {
+      setPromoImageError('Por favor ingresa la URL de la imagen para el banner.');
       return;
     }
 
     try {
       setSavingPromoImage(true);
+      setPromoImageError(null);
       await promotionPlanService.asignarImagenPromocional(
         promoImageModalEvent.eventoId,
-        inputPromoImage.trim()
+        urlTrimmed
       );
 
-      // Actualizar localmente
+      // Actualizar listado localmente
       setPromociones((prev) =>
         prev.map((item) =>
           item.eventoId === promoImageModalEvent.eventoId
-            ? { ...item, urlImagenDestacado: inputPromoImage.trim() }
+            ? { ...item, urlImagenDestacado: urlTrimmed }
             : item
         )
       );
 
       Swal.fire({
         icon: 'success',
-        title: '¡Imagen Promocional Asignada!',
-        text: 'La imagen ha sido asignada al evento y se mostrará en los espacios destacados.',
+        title: '¡Foto para Banner Guardada!',
+        text: 'La imagen destacada ha sido asociada y se mostrará en el carrusel principal.',
         timer: 2000,
         confirmButtonColor: '#0B1B3D',
       });
 
       setPromoImageModalEvent(null);
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: err?.message || 'No se pudo guardar la imagen promocional.',
-      });
+      setPromoImageError(
+        err?.response?.data?.message || err?.message || 'No se pudo guardar la imagen destacada.'
+      );
     } finally {
       setSavingPromoImage(false);
     }
   };
 
-  // Guardar edición o nuevo plan de promoción
-  const handleSavePlan = (e) => {
+  // Abrir drawer para crear o editar plan
+  const handleOpenCreatePlan = () => {
+    setEditingPlanId(null);
+    setPlanForm({
+      nombre: '',
+      codigo: '',
+      detallePublicidad: '',
+      precio: '',
+      pautaRedes: false,
+      premium: false,
+    });
+    setPlanFormError(null);
+    setPlanDrawerOpen(true);
+  };
+
+  const handleOpenEditPlan = (plan) => {
+    setEditingPlanId(plan.id);
+    setPlanForm({
+      nombre: plan.nombre || '',
+      codigo: plan.codigo || '',
+      detallePublicidad: plan.detallePublicidad || '',
+      precio: plan.precio !== undefined ? String(plan.precio) : '',
+      pautaRedes: Boolean(plan.pautaRedes),
+      premium: Boolean(plan.premium),
+    });
+    setPlanFormError(null);
+    setPlanDrawerOpen(true);
+  };
+
+  // Guardar Plan mediante el backend
+  const handleSavePlanSubmit = async (e) => {
     e.preventDefault();
-    if (!editingPlan?.nombre?.trim() || !editingPlan?.precio) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Campos requeridos',
-        text: 'Nombre y precio son obligatorios para el plan.',
-      });
+    setPlanFormError(null);
+
+    const nombreTrimmed = planForm.nombre.trim();
+    const codigoTrimmed = planForm.codigo.trim().toUpperCase();
+    const precioNum = Number(planForm.precio);
+
+    if (!nombreTrimmed) {
+      setPlanFormError('El nombre del plan es obligatorio.');
       return;
     }
 
-    const formattedPrice = `$${Number(editingPlan.precio).toLocaleString('es-CO')} COP`;
-    const planToSave = {
-      ...editingPlan,
-      precio: Number(editingPlan.precio),
-      precioFormateado: formattedPrice,
-      duracion: `${editingPlan.dias || 30} días`,
-      beneficios: Array.isArray(editingPlan.beneficios)
-        ? editingPlan.beneficios
-        : (editingPlan.beneficiosText || '')
-            .split('\n')
-            .map((b) => b.trim())
-            .filter(Boolean),
+    if (!codigoTrimmed) {
+      setPlanFormError('El código del plan es obligatorio.');
+      return;
+    }
+
+    if (isNaN(precioNum) || precioNum < 0) {
+      setPlanFormError('El precio de pago fijo debe ser un valor numérico mayor o igual a 0.');
+      return;
+    }
+
+    const payload = {
+      nombre: nombreTrimmed,
+      codigo: codigoTrimmed,
+      detallePublicidad: planForm.detallePublicidad.trim(),
+      precio: precioNum,
+      pautaRedes: Boolean(planForm.pautaRedes),
+      premium: Boolean(planForm.premium),
     };
 
-    promotionPlanService.savePlan(planToSave);
-    loadPlanes();
-    setEditingPlan(null);
+    try {
+      setSavingPlan(true);
+      if (editingPlanId) {
+        await promotionPlanService.actualizarPlan(editingPlanId, payload);
+        Swal.fire({
+          icon: 'success',
+          title: 'Plan actualizado',
+          text: `El plan "${nombreTrimmed}" ha sido actualizado exitosamente.`,
+          timer: 1800,
+          confirmButtonColor: '#0B1B3D',
+        });
+      } else {
+        await promotionPlanService.crearPlan(payload);
+        Swal.fire({
+          icon: 'success',
+          title: 'Plan creado',
+          text: `El plan "${nombreTrimmed}" ha sido registrado exitosamente.`,
+          timer: 1800,
+          confirmButtonColor: '#0B1B3D',
+        });
+      }
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Plan guardado',
-      text: 'El plan de promoción ha sido actualizado con éxito.',
-      timer: 1800,
-      confirmButtonColor: '#0B1B3D',
-    });
+      setPlanDrawerOpen(false);
+      await loadPlanes();
+    } catch (err) {
+      setPlanFormError(
+        err?.response?.data?.message || err?.message || 'Error al guardar el plan de promoción.'
+      );
+    } finally {
+      setSavingPlan(false);
+    }
   };
 
   return (
@@ -254,18 +310,21 @@ export default function MarketingPromocionesView() {
             Marketing & Promoción de Eventos
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Supervisa los eventos promocionados para planear campañas, asignar imágenes de destacado y gestionar los planes de posicionamiento.
+            Supervisa los eventos con contratación pagada de promoción, gestiona las imágenes para carrusel premium y administra las tarifas de posicionamiento.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={fetchPromociones}
+            onClick={() => {
+              fetchPromociones();
+              loadPlanes();
+            }}
             title="Recargar datos"
             className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
           >
-            <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+            <RefreshCw size={15} className={loading || loadingPlanes ? 'animate-spin' : ''} />
           </button>
         </div>
       </div>
@@ -298,7 +357,7 @@ export default function MarketingPromocionesView() {
           }`}
         >
           <Award size={14} />
-          <span>Planes de Posicionamiento</span>
+          <span>Planes de Promoción</span>
           <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-500 text-[10px]">
             {planes.length}
           </span>
@@ -315,7 +374,7 @@ export default function MarketingPromocionesView() {
                 <Award size={22} />
               </div>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Planes Contratados</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Promociones Pagadas</p>
                 <p className="text-2xl font-black text-slate-900 leading-tight">{promociones.length}</p>
               </div>
             </div>
@@ -333,13 +392,13 @@ export default function MarketingPromocionesView() {
             </div>
 
             <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center font-bold">
-                <DollarSign size={22} />
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center font-bold">
+                <Star size={22} />
               </div>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Ingresos Estimados</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Con Beneficio Premium</p>
                 <p className="text-2xl font-black text-slate-900 leading-tight">
-                  {formatPrice(promociones.reduce((acc, p) => acc + (p.precio || 50000), 0))}
+                  {promociones.filter((p) => p.premium).length}
                 </p>
               </div>
             </div>
@@ -362,36 +421,40 @@ export default function MarketingPromocionesView() {
             </div>
 
             <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold gap-1 w-full md:w-auto overflow-x-auto">
-              {['TODOS', 'Destacado Home', 'Posicionamiento Premium'].map((planFilter) => (
+              {[
+                { label: 'Todos los Planes', val: 'TODOS' },
+                { label: 'Planes Premium', val: 'PREMIUM' },
+                { label: 'Planes Estándar', val: 'ESTANDAR' },
+              ].map((f) => (
                 <button
-                  key={planFilter}
+                  key={f.val}
                   type="button"
                   onClick={() => {
-                    setSelectedPlanFilter(planFilter);
+                    setSelectedPlanFilter(f.val);
                     setCurrentPage(1);
                   }}
                   className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
-                    selectedPlanFilter === planFilter
+                    selectedPlanFilter === f.val
                       ? 'bg-white text-slate-950 shadow-xs'
                       : 'text-slate-500 hover:text-slate-900'
                   }`}
                 >
-                  {planFilter}
+                  {f.label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* TABLA DE PROMOCIONES */}
+          {/* TABLA DE PROMOCIONES PAGADAS */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
             {loading ? (
               <div className="p-12 text-center text-slate-400 text-xs font-medium">
                 <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-slate-400" />
-                Cargando promociones de organizaciones...
+                Cargando eventos promocionados...
               </div>
             ) : filteredPromociones.length === 0 ? (
               <div className="p-12 text-center text-slate-400 text-xs font-medium">
-                No se encontraron eventos promocionados registrados que coincidan con la búsqueda.
+                No se encontraron eventos con promociones pagadas registradas.
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -401,15 +464,15 @@ export default function MarketingPromocionesView() {
                       <th className="py-3.5 px-4">Evento</th>
                       <th className="py-3.5 px-4">Organización</th>
                       <th className="py-3.5 px-4">Plan Contratado</th>
-                      <th className="py-3.5 px-4">Imagen Promocional</th>
-                      <th className="py-3.5 px-4">Vigencia / Estado</th>
+                      <th className="py-3.5 px-4">Tipo / Atributos</th>
+                      <th className="py-3.5 px-4">Precio Pagado</th>
+                      <th className="py-3.5 px-4">Estado</th>
                       <th className="py-3.5 px-4 text-right">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {paginatedPromociones.map((p) => {
-                      const isPremium = p.plan.toLowerCase().includes('premium');
-                      const isActivo = p.estado === 'ACTIVO' || p.estado === 'VIGENTE';
+                      const isActivo = p.estado === 'ACTIVO' || p.estado === 'VIGENTE' || p.estado === 'CONFIRMADO';
                       const hasPromoImage = Boolean(p.urlImagenDestacado);
 
                       return (
@@ -429,7 +492,7 @@ export default function MarketingPromocionesView() {
                                 )}
                               </div>
                               <div>
-                                <p className="font-bold text-slate-900 line-clamp-1 max-w-[240px]">
+                                <p className="font-bold text-slate-900 line-clamp-1 max-w-[220px]">
                                   {p.eventoNombre}
                                 </p>
                                 <span className="text-[10px] text-slate-400">ID #{p.eventoId}</span>
@@ -441,69 +504,65 @@ export default function MarketingPromocionesView() {
                           <td className="py-3.5 px-4 font-medium text-slate-700">
                             <div className="flex items-center gap-1.5">
                               <Building2 size={13} className="text-slate-400 shrink-0" />
-                              <span className="truncate max-w-[180px]">{p.organizacionNombre}</span>
+                              <span className="truncate max-w-[170px]">{p.organizacionNombre}</span>
                             </div>
                           </td>
 
-                          {/* Plan */}
-                          <td className="py-3.5 px-4">
-                            <span
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] font-black uppercase tracking-wider ${
-                                isPremium
-                                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-xs border border-amber-500/80'
-                                  : 'bg-amber-100/90 text-amber-900 border border-amber-300'
-                              }`}
-                            >
-                              <Award size={12} />
-                              <span>{p.plan}</span>
-                            </span>
+                          {/* Plan Contratado */}
+                          <td className="py-3.5 px-4 font-semibold text-slate-800">
+                            <span>{p.plan}</span>
                           </td>
 
-                          {/* Imagen Promocional */}
+                          {/* Tipo / Atributos (Distinción Destacado vs Premium) */}
                           <td className="py-3.5 px-4">
-                            {hasPromoImage ? (
-                              <div className="flex items-center gap-2">
-                                <img
-                                  src={p.urlImagenDestacado}
-                                  alt="Banner"
-                                  className="w-12 h-7 rounded-lg object-cover border border-amber-300 shadow-2xs"
-                                />
-                                <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
-                                  <Check size={11} /> Asignada
+                            <div className="flex flex-col gap-1 items-start">
+                              {/* Todo evento con promo pagada y activa es Destacado */}
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-900 border border-amber-200">
+                                <Award size={10} />
+                                <span>Destacado</span>
+                              </span>
+
+                              {/* Si es Premium */}
+                              {p.premium ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-2xs">
+                                  <Star size={10} />
+                                  <span>Premium (Carrusel)</span>
                                 </span>
-                              </div>
-                            ) : (
-                              <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md font-semibold border border-amber-200">
-                                Sin imagen de promo
-                              </span>
-                            )}
+                              ) : (
+                                <span className="text-[10px] text-slate-400 font-medium">
+                                  Plan Estándar
+                                </span>
+                              )}
+                            </div>
                           </td>
 
-                          {/* Vigencia */}
+                          {/* Precio Pagado */}
+                          <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
+                            {formatPrice(p.precio)}
+                          </td>
+
+                          {/* Estado */}
                           <td className="py-3.5 px-4">
-                            <div className="flex flex-col gap-0.5">
-                              <Badge variant={isActivo ? 'success' : 'neutral'} size="sm">
-                                {isActivo ? 'Vigente' : 'Finalizado'}
-                              </Badge>
-                              <span className="text-[10px] text-slate-400">
-                                Hasta {p.fechaFinal}
-                              </span>
-                            </div>
+                            <Badge variant={isActivo ? 'success' : 'neutral'} size="xs">
+                              {isActivo ? 'ACTIVA' : p.estado}
+                            </Badge>
                           </td>
 
                           {/* Acciones */}
                           <td className="py-3.5 px-4 text-right">
                             <div className="inline-flex items-center gap-2">
-                              {/* Botón Asignar Imagen Promocional */}
-                              <button
-                                type="button"
-                                onClick={() => handleOpenPromoImageModal(p)}
-                                title="Asignar o editar imagen de promocionado"
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-[11px] uppercase tracking-wider border border-amber-300 transition-all cursor-pointer"
-                              >
-                                <ImageIcon size={12} className="text-amber-600" />
-                                <span>Imagen Promo</span>
-                              </button>
+                              {/* SOLO si el plan tiene premium = true se muestra "Agregar foto para banner" */}
+                              {p.premium && isActivo && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenPromoImageModal(p)}
+                                  title="Agregar o actualizar foto para el banner del carrusel"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-[11px] uppercase tracking-wider border border-amber-300 transition-all cursor-pointer shadow-2xs"
+                                >
+                                  <ImageIcon size={12} className="text-amber-600" />
+                                  <span>{hasPromoImage ? 'Editar Banner' : 'Agregar foto para banner'}</span>
+                                </button>
+                              )}
 
                               {/* Botón Detalle Evento */}
                               <button
@@ -543,31 +602,21 @@ export default function MarketingPromocionesView() {
         </div>
       )}
 
-      {/* VISTA 2: GESTIÓN DE PLANES DE PROMOCIÓN */}
+      {/* VISTA 2: TABLA DE PLANES DE PROMOCIÓN (SECCIÓN 12) */}
       {activeSubTab === 'planes' && (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
             <div>
               <h3 className="font-bold text-base text-slate-900">
-                Planes de Promoción y Posicionamiento para Organizaciones
+                Catálogo Oficial de Planes de Promoción
               </h3>
-              <p className="text-xs text-slate-500">
-                Define las tarifas, duración y beneficios de los planes disponibles para los organizadores de eventos.
+              <p className="text-xs text-slate-500 mt-0.5">
+                Planes y tarifas oficiales de posicionamiento en la plataforma.
               </p>
             </div>
             <button
               type="button"
-              onClick={() =>
-                setEditingPlan({
-                  id: `PLAN_${Date.now()}`,
-                  nombre: '',
-                  precio: 60000,
-                  dias: 30,
-                  popular: false,
-                  descripcion: '',
-                  beneficiosText: 'Aparición destacada\nBadge de promoción\nSoporte prioritario',
-                })
-              }
+              onClick={handleOpenCreatePlan}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-400 font-bold text-xs uppercase tracking-wider shadow-sm transition-all cursor-pointer"
             >
               <Plus size={15} />
@@ -575,187 +624,444 @@ export default function MarketingPromocionesView() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {planes.map((plan) => (
-              <div
-                key={plan.id}
-                className="bg-white border-2 border-slate-200 hover:border-amber-400 rounded-3xl p-6 shadow-xs flex flex-col justify-between transition-all"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-[10px] font-black uppercase tracking-wider">
-                      {plan.duracion || `${plan.dias || 30} días`}
-                    </span>
-                    {plan.popular && (
-                      <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-wider">
-                        Popular
-                      </span>
-                    )}
-                  </div>
-
-                  <h4 className="font-display text-lg font-black text-slate-900 mb-1">
-                    {plan.nombre}
-                  </h4>
-                  <p className="text-2xl font-black text-amber-600 mb-3">
-                    {plan.precioFormateado || formatPrice(plan.precio)}
-                  </p>
-                  <p className="text-xs text-slate-500 mb-4">{plan.descripcion}</p>
-
-                  <div className="border-t border-slate-100 pt-3 mb-5">
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                      Beneficios incluidos:
-                    </p>
-                    <ul className="space-y-1.5">
-                      {(plan.beneficios || []).map((b, i) => (
-                        <li key={i} className="flex items-start gap-2 text-xs text-slate-600">
-                          <Check size={13} className="text-emerald-500 mt-0.5 shrink-0" />
-                          <span>{b}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between gap-2 pt-4 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const updated = promotionPlanService.deletePlan(plan.id);
-                      setPlanes(updated);
-                      Swal.fire({
-                        icon: 'info',
-                        title: 'Plan eliminado',
-                        timer: 1500,
-                      });
-                    }}
-                    className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
-                    title="Eliminar plan"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditingPlan({
-                        ...plan,
-                        beneficiosText: (plan.beneficios || []).join('\n'),
-                      })
-                    }
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
-                  >
-                    <Edit3 size={13} />
-                    <span>Editar Plan</span>
-                  </button>
-                </div>
+          {/* TABLA DE 7 COLUMNAS REQUERIDA (SECCIÓN 12.2) */}
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            {loadingPlanes ? (
+              <div className="p-12 text-center text-slate-400 text-xs font-medium">
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-slate-400" />
+                Cargando planes de promoción...
               </div>
-            ))}
+            ) : planes.length === 0 ? (
+              <div className="p-12 text-center text-slate-400 text-xs font-medium">
+                No hay planes de promoción registrados en el catálogo.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-slate-700">
+                  <thead className="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                    <tr>
+                      <th className="py-3.5 px-4">1. Nombre</th>
+                      <th className="py-3.5 px-4">2. Código</th>
+                      <th className="py-3.5 px-4">3. Detalle de Publicidad</th>
+                      <th className="py-3.5 px-4 text-center">4. Lleva Pauta de Redes</th>
+                      <th className="py-3.5 px-4 text-center">5. Premium</th>
+                      <th className="py-3.5 px-4 text-right">6. Precio de Pago Fijo</th>
+                      <th className="py-3.5 px-4 text-right">7. Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {planes.map((plan) => (
+                      <tr key={plan.id || plan.codigo} className="hover:bg-slate-50/80 transition-colors">
+                        {/* 1. Nombre */}
+                        <td className="py-4 px-4 font-bold text-slate-900">
+                          {plan.nombre}
+                        </td>
+
+                        {/* 2. Código */}
+                        <td className="py-4 px-4 font-mono font-bold text-slate-600">
+                          <span className="px-2 py-1 rounded-md bg-slate-100 border border-slate-200 text-[11px]">
+                            {plan.codigo}
+                          </span>
+                        </td>
+
+                        {/* 3. Detalle de publicidad */}
+                        <td className="py-4 px-4 text-slate-600 max-w-xs">
+                          <p className="line-clamp-2">
+                            {plan.detallePublicidad || '—'}
+                          </p>
+                        </td>
+
+                        {/* 4. Lleva pauta de redes: Sí/No */}
+                        <td className="py-4 px-4 text-center font-bold">
+                          {plan.pautaRedes ? (
+                            <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs">
+                              Sí
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg text-xs">
+                              No
+                            </span>
+                          )}
+                        </td>
+
+                        {/* 5. Premium: Sí/No */}
+                        <td className="py-4 px-4 text-center font-bold">
+                          {plan.premium ? (
+                            <span className="text-amber-900 bg-amber-400/30 border border-amber-400 px-2.5 py-1 rounded-lg text-xs">
+                              Sí
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg text-xs">
+                              No
+                            </span>
+                          )}
+                        </td>
+
+                        {/* 6. Precio de pago fijo (formato monetario) */}
+                        <td className="py-4 px-4 text-right font-mono font-black text-slate-900 text-sm">
+                          {formatPrice(plan.precio)}
+                        </td>
+
+                        {/* 7. Acciones existentes y permitidas */}
+                        <td className="py-4 px-4 text-right">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditPlan(plan)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                          >
+                            <Edit3 size={13} />
+                            <span>Editar</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* DRAWER MODAL A LA DERECHA: ASIGNAR IMAGEN PROMOCIONAL */}
-      {promoImageModalEvent && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-300 border-l border-slate-200">
-            {/* Header del Modal */}
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center font-bold">
-                  <ImageIcon size={18} />
+      {/* DRAWER MODAL LATERAL DERECHO: CREAR / EDITAR PLAN (SECCIÓN 12.1) */}
+      {planDrawerOpen && (
+        <div className="fixed inset-0 z-[9999] flex justify-end">
+          <div
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
+            onClick={() => setPlanDrawerOpen(false)}
+          />
+
+          <div
+            className="relative z-50 w-full sm:w-[500px] md:w-[540px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              {/* Cabecera del drawer */}
+              <div className="bg-[#131b2e] p-6 text-white flex items-center justify-between border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-400">
+                    <Award size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-base sm:text-lg font-bold text-white leading-tight">
+                      {editingPlanId ? 'Editar Plan de Promoción' : 'Crear Plan de Promoción'}
+                    </h3>
+                    <p className="text-xs text-slate-300 mt-0.5">
+                      Tarifa y parámetros de posicionamiento para organizaciones
+                    </p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setPlanDrawerOpen(false)}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Formulario con campos requeridos */}
+              <form id="plan-drawer-form" onSubmit={handleSavePlanSubmit} className="p-6 space-y-4">
+                {planFormError && (
+                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-800 flex items-center gap-2">
+                    <AlertCircle size={16} className="text-rose-600 shrink-0" />
+                    <span>{planFormError}</span>
+                  </div>
+                )}
+
+                {/* 1. Nombre */}
                 <div>
-                  <h3 className="font-bold text-slate-900 text-base leading-tight">
-                    Imagen de Evento Promocionado
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Espacio publicitario oficial de EventHive
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                    Nombre del Plan <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={planForm.nombre}
+                    onChange={(e) => setPlanForm({ ...planForm, nombre: e.target.value })}
+                    placeholder="Ej. Plan Banner Premium"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none"
+                  />
+                </div>
+
+                {/* 2. Código Textual */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                    Código Textual <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={planForm.codigo}
+                    onChange={(e) => setPlanForm({ ...planForm, codigo: e.target.value.toUpperCase() })}
+                    placeholder="EJ: PLAN_BANNER_PREMIUM"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none font-mono"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">Identificador único del plan en mayúsculas.</p>
+                </div>
+
+                {/* 3. Detalle de Publicidad */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                    Detalle de Publicidad
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={planForm.detallePublicidad}
+                    onChange={(e) => setPlanForm({ ...planForm, detallePublicidad: e.target.value })}
+                    placeholder="Detalles sobre los beneficios publicitarios que ofrece este plan a la organización..."
+                    className="w-full p-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none resize-none"
+                  />
+                </div>
+
+                {/* 4. Precio de Pago Fijo */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                    Precio de Pago Fijo (COP) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    step="1"
+                    value={planForm.precio}
+                    onChange={(e) => setPlanForm({ ...planForm, precio: e.target.value })}
+                    placeholder="100000"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none font-mono"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Precio final en COP. No se añade comisión comercial adicional.
                   </p>
                 </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPromoImageModalEvent(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <X size={18} />
-              </button>
+
+                {/* Booleans: Lleva pauta de redes y Premium */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 block">
+                        Lleva Pauta de Redes
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        ¿Incluye difusión activa en canales de redes sociales?
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPlanForm({ ...planForm, pautaRedes: true })}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          planForm.pautaRedes
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'bg-white border border-slate-200 text-slate-600'
+                        }`}
+                      >
+                        Sí
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPlanForm({ ...planForm, pautaRedes: false })}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          !planForm.pautaRedes
+                            ? 'bg-slate-700 text-white shadow-xs'
+                            : 'bg-white border border-slate-200 text-slate-600'
+                        }`}
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-200 pt-3 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 block">
+                        Plan Premium
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        Habilita la aparición en el Carrusel Principal del Home
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPlanForm({ ...planForm, premium: true })}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          planForm.premium
+                            ? 'bg-amber-500 text-slate-950 shadow-xs'
+                            : 'bg-white border border-slate-200 text-slate-600'
+                        }`}
+                      >
+                        Sí
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPlanForm({ ...planForm, premium: false })}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          !planForm.premium
+                            ? 'bg-slate-700 text-white shadow-xs'
+                            : 'bg-white border border-slate-200 text-slate-600'
+                        }`}
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </form>
             </div>
 
-            {/* Contenido del Modal */}
-            <div className="p-6 overflow-y-auto space-y-5 flex-1">
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
-                <span className="text-[10px] font-black uppercase tracking-wider text-amber-600">
-                  Evento Seleccionado
-                </span>
-                <h4 className="font-bold text-sm text-slate-900">
-                  {promoImageModalEvent.eventoNombre}
-                </h4>
-                <p className="text-xs text-slate-500">
-                  Organización: <strong className="text-slate-800">{promoImageModalEvent.organizacionNombre}</strong> · Plan: <strong className="text-slate-800">{promoImageModalEvent.plan}</strong>
-                </p>
+            {/* Footer fijo del drawer */}
+            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setPlanDrawerOpen(false)}
+                disabled={savingPlan}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-200 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                form="plan-drawer-form"
+                type="submit"
+                disabled={savingPlan}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-300 font-bold text-xs uppercase tracking-wider shadow-sm hover:shadow-md transition-all disabled:opacity-50 cursor-pointer"
+              >
+                {savingPlan ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>Guardando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save size={14} />
+                    <span>Guardar Plan</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DRAWER MODAL LATERAL DERECHO: ASIGNAR FOTO PARA BANNER (SECCIÓN 13) */}
+      {promoImageModalEvent && (
+        <div className="fixed inset-0 z-[9999] flex justify-end">
+          <div
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
+            onClick={() => setPromoImageModalEvent(null)}
+          />
+
+          <div
+            className="relative z-50 w-full sm:w-[500px] md:w-[540px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              {/* Header del Modal */}
+              <div className="bg-[#131b2e] p-6 text-white flex items-center justify-between border-b border-white/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-400">
+                    <ImageIcon size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-display font-bold text-white text-base leading-tight">
+                      Foto para Banner del Carrusel
+                    </h3>
+                    <p className="text-xs text-slate-300 mt-0.5">
+                      Solo eventos con plan Premium pagado y activo
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPromoImageModalEvent(null)}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+                >
+                  <X size={18} />
+                </button>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                  URL de Imagen / Banner Promocional <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="url"
-                  value={inputPromoImage}
-                  onChange={(e) => setInputPromoImage(e.target.value)}
-                  placeholder="https://images.unsplash.com/photo-..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-xs sm:text-sm text-slate-800 transition-all outline-none"
-                />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Recomendado: proporción horizontal 16:9 o 21:9 en alta resolución.
-                </p>
-              </div>
+              {/* Contenido */}
+              <div className="p-6 space-y-5">
+                {promoImageError && (
+                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-800 flex items-center gap-2">
+                    <AlertCircle size={16} className="text-rose-600 shrink-0" />
+                    <span>{promoImageError}</span>
+                  </div>
+                )}
 
-              {/* Previsualización */}
-              <div className="space-y-2">
-                <span className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Previsualización de Destacado:
-                </span>
-                <div className="relative aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 flex items-center justify-center">
-                  {inputPromoImage.trim() ? (
-                    <>
-                      <img
-                        src={inputPromoImage}
-                        alt="Previsualización"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80';
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
-                      <span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow-md border border-amber-300 flex items-center gap-1">
-                        <span>★</span> PROMOCIONADO
-                      </span>
-                      <div className="absolute bottom-3 left-3 right-3 text-white">
-                        <p className="font-black text-sm drop-shadow-sm line-clamp-1">
-                          {promoImageModalEvent.eventoNombre}
-                        </p>
-                        <p className="text-[11px] text-amber-300 font-medium drop-shadow-sm">
-                          {promoImageModalEvent.organizacionNombre}
-                        </p>
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-600">
+                    Evento Elegible
+                  </span>
+                  <h4 className="font-bold text-sm text-slate-900">
+                    {promoImageModalEvent.eventoNombre}
+                  </h4>
+                  <p className="text-xs text-slate-500">
+                    Organización: <strong className="text-slate-800">{promoImageModalEvent.organizacionNombre}</strong> · Plan: <strong className="text-slate-800">{promoImageModalEvent.plan}</strong>
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                    URL de la Imagen para Banner Destacado <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={inputPromoImage}
+                    onChange={(e) => setInputPromoImage(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 transition-all outline-none"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Esta imagen se asignará a <code>url_imagen_destacado</code> y se utilizará en el carrusel principal.
+                  </p>
+                </div>
+
+                {/* Previsualización del Banner */}
+                <div className="space-y-2">
+                  <span className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Vista previa de banner horizontal:
+                  </span>
+                  <div className="relative aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 flex items-center justify-center">
+                    {inputPromoImage.trim() ? (
+                      <>
+                        <img
+                          src={inputPromoImage}
+                          alt="Banner Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
+                        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow-md border border-amber-300 flex items-center gap-1">
+                          <span>★</span> BANNER PREMIUM
+                        </span>
+                        <div className="absolute bottom-3 left-3 right-3 text-white">
+                          <p className="font-black text-sm drop-shadow-sm line-clamp-1">
+                            {promoImageModalEvent.eventoNombre}
+                          </p>
+                          <p className="text-[11px] text-amber-300 font-medium drop-shadow-sm">
+                            {promoImageModalEvent.organizacionNombre}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center p-6 text-slate-400 text-xs">
+                        Ingresa una URL de imagen válida para previsualizar el banner.
                       </div>
-                    </>
-                  ) : (
-                    <div className="text-center p-6 text-slate-400 text-xs">
-                      Ingresa una URL de imagen válida para previsualizar el banner publicitario.
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Footer del Modal */}
-            <div className="p-6 border-t border-slate-100 flex items-center justify-between gap-3 bg-slate-50/50">
+            {/* Footer */}
+            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setPromoImageModalEvent(null)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-100 transition-colors cursor-pointer"
+                disabled={savingPromoImage}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-200 transition-colors"
               >
                 Cancelar
               </button>
@@ -763,151 +1069,26 @@ export default function MarketingPromocionesView() {
                 type="button"
                 onClick={handleSavePromoImage}
                 disabled={savingPromoImage || !inputPromoImage.trim()}
-                className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-400 font-black text-xs uppercase tracking-wider shadow-sm transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-300 font-bold text-xs uppercase tracking-wider shadow-sm transition-all disabled:opacity-50 cursor-pointer"
               >
                 {savingPromoImage ? (
-                  <RefreshCw size={13} className="animate-spin" />
+                  <>
+                    <Loader2 size={13} className="animate-spin" />
+                    <span>Guardando...</span>
+                  </>
                 ) : (
-                  <Check size={14} />
+                  <>
+                    <Check size={14} />
+                    <span>Guardar Foto para Banner</span>
+                  </>
                 )}
-                <span>Guardar Imagen Promocional</span>
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL / DRAWER A LA DERECHA: EDITAR / CREAR PLAN DE PROMOCIÓN */}
-      {editingPlan && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-300 border-l border-slate-200">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center font-bold">
-                  <Award size={18} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-base leading-tight">
-                    {editingPlan.id ? 'Editar Plan de Promoción' : 'Nuevo Plan de Promoción'}
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Configuración de beneficios y tarifas oficiales
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditingPlan(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSavePlan} className="p-6 overflow-y-auto space-y-4 flex-1">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Nombre del Plan *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editingPlan.nombre || ''}
-                  onChange={(e) => setEditingPlan({ ...editingPlan, nombre: e.target.value })}
-                  placeholder="Ej. Destacado Platino"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-xs text-slate-800 outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Precio (COP) *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    value={editingPlan.precio || ''}
-                    onChange={(e) => setEditingPlan({ ...editingPlan, precio: e.target.value })}
-                    placeholder="75000"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-xs text-slate-800 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Duración (Días) *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    value={editingPlan.dias || 30}
-                    onChange={(e) => setEditingPlan({ ...editingPlan, dias: Number(e.target.value) })}
-                    placeholder="30"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-xs text-slate-800 outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Descripción Corta
-                </label>
-                <textarea
-                  rows={2}
-                  value={editingPlan.descripcion || ''}
-                  onChange={(e) => setEditingPlan({ ...editingPlan, descripcion: e.target.value })}
-                  placeholder="Breve resumen del plan para las organizaciones..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-xs text-slate-800 outline-none resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Beneficios (Uno por línea)
-                </label>
-                <textarea
-                  rows={4}
-                  value={editingPlan.beneficiosText || ''}
-                  onChange={(e) => setEditingPlan({ ...editingPlan, beneficiosText: e.target.value })}
-                  placeholder="Aparición en Home&#10;Primer lugar en búsquedas&#10;Badge Dorado VIP"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-xs text-slate-800 outline-none"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="chkPopular"
-                  checked={Boolean(editingPlan.popular)}
-                  onChange={(e) => setEditingPlan({ ...editingPlan, popular: e.target.checked })}
-                  className="rounded text-amber-500 focus:ring-amber-400"
-                />
-                <label htmlFor="chkPopular" className="text-xs font-bold text-slate-700 cursor-pointer">
-                  Marcar como "Recomendado / Popular"
-                </label>
-              </div>
-
-              <div className="pt-6 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setEditingPlan(null)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-100 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-400 font-black text-xs uppercase tracking-wider shadow-sm transition-all"
-                >
-                  Guardar Plan
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal / Drawer a la derecha con el detalle del evento */}
+      {/* Modal Drawer a la derecha con el detalle del evento */}
       {selectedEventId && (
         <EventDetailView
           eventId={selectedEventId}

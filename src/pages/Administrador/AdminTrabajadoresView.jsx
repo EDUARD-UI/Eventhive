@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
-import AdminInfoAlert from '../../components/componentsAdmin/AdminInfoAlert.jsx';
 import ModalEnviarCorreo from '../../components/Shared/ModalEnviarCorreo.jsx';
 import ModalInvitarTrabajadorAdmin from '../../components/componentsAdmin/ModalInvitarTrabajadorAdmin.jsx';
 import adminService from '../../features/admin/services/adminService.js';
@@ -49,12 +48,13 @@ export default function AdminTrabajadoresView({
   // Modal revocar moderador
   const [modalRevocar, setModalRevocar] = useState(null);
 
-  // Carga reactiva de trabajadores desde endpoints reales (GET /moderaciones/moderadores y GET /usuarios)
+  // Carga reactiva de trabajadores desde endpoints reales (GET /moderaciones/moderadores y GET /usuarios/trabajadores/marketing)
   const fetchTrabajadores = useCallback(async () => {
     try {
       setLoading(true);
-      const [modsRes, usersRes] = await Promise.allSettled([
+      const [modsRes, mktgRes, usersRes] = await Promise.allSettled([
         adminService.getModeradores({ page: 0, size: 100 }),
+        adminService.getTrabajadoresMarketing({ page: 0, size: 100 }),
         adminService.getUsuarios({ page: 0, size: 100 }),
       ]);
 
@@ -63,12 +63,17 @@ export default function AdminTrabajadoresView({
           ? modsRes.value.data
           : [];
 
+      const mktgList =
+        mktgRes.status === 'fulfilled' && mktgRes.value?.success
+          ? mktgRes.value.data
+          : [];
+
       const usersList =
         usersRes.status === 'fulfilled' && usersRes.value?.success
           ? usersRes.value.data
           : [];
 
-      // Mapear moderadores
+      // Mapear moderadores reales
       const formattedMods = modsList.map((m) => ({
         id: m.id,
         nombre: m.nombre || m.name || 'Moderador',
@@ -78,11 +83,24 @@ export default function AdminTrabajadoresView({
         activo: m.activo !== false,
       }));
 
-      // Extraer usuarios con rol MARKETING o MODERADOR que no estén duplicados
-      const formattedMarketingAndStaff = usersList
+      // Mapear trabajadores de marketing desde el endpoint específico /api/usuarios/trabajadores/marketing
+      const formattedMktg = mktgList.map((m) => ({
+        id: m.id,
+        nombre: m.nombre || m.name || 'Especialista Marketing',
+        correo: m.correo || m.email || '',
+        telefono: m.telefono || m.phone || 'No registrado',
+        rolNombre: 'MARKETING',
+        activo: m.activo !== false,
+      }));
+
+      // Extraer otros trabajadores de staff de la lista general sin duplicados
+      const formattedOtherStaff = usersList
         .filter((u) => {
           const r = normalizeRole(u.rolNombre || u.rol || u.role);
-          return r === 'MARKETING' || (r === 'MODERADOR' && !formattedMods.some((m) => m.id === u.id));
+          const isStaff = r === 'MARKETING' || r === 'MODERADOR';
+          const alreadyInMods = formattedMods.some((m) => m.id === u.id);
+          const alreadyInMktg = formattedMktg.some((m) => m.id === u.id);
+          return isStaff && !alreadyInMods && !alreadyInMktg;
         })
         .map((u) => ({
           id: u.id,
@@ -95,7 +113,7 @@ export default function AdminTrabajadoresView({
 
       // Combinar listas sin duplicados por ID
       const mergedMap = new Map();
-      [...formattedMods, ...formattedMarketingAndStaff].forEach((t) => {
+      [...formattedMods, ...formattedMktg, ...formattedOtherStaff].forEach((t) => {
         if (!mergedMap.has(t.id)) {
           mergedMap.set(t.id, t);
         }
@@ -178,13 +196,6 @@ export default function AdminTrabajadoresView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Alerta Informativa Inicial */}
-      <AdminInfoAlert
-        id="trabajadores"
-        title="Directorio de Trabajadores del Sistema"
-        description="Esta sección lista el personal con roles operativos y de moderación en la plataforma (MODERADOR y MARKETING). Puedes invitar a nuevos colaboradores eligiendo su rol, comunicarte individualmente o gestionar sus permisos institucionales."
-      />
-
       {feedbackMsg && (
         <div
           className={`p-4 rounded-2xl flex items-center justify-between text-xs font-semibold ${

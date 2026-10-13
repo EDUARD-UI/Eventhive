@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiMail, FiSend, FiUser, FiCheckCircle, FiFileText } from 'react-icons/fi';
 import Swal from 'sweetalert2';
+import adminService from '../../features/admin/services/adminService.js';
 
 /**
  * ModalEnviarCorreo
@@ -68,13 +69,16 @@ export default function ModalEnviarCorreo({
 
     try {
       setLoading(true);
-      // Simular latencia de red para despacho de correo
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const res = await adminService.enviarCorreoAdmin({
+        destinatario: emailTrimmed,
+        asunto: asuntoTrimmed,
+        mensaje: mensajeTrimmed,
+      });
 
       await Swal.fire({
         icon: 'success',
-        title: 'Correo enviado exitosamente',
-        text: `El correo con asunto "${asuntoTrimmed}" ha sido despachado a ${emailTrimmed}.`,
+        title: 'Solicitud de envío aceptada',
+        text: res?.mensaje || `La solicitud para despachar el correo a ${emailTrimmed} ha sido aceptada por el servidor.`,
         confirmButtonColor: '#0f172a',
       });
 
@@ -86,8 +90,11 @@ export default function ModalEnviarCorreo({
     } catch (err) {
       Swal.fire({
         icon: 'error',
-        title: 'Error al enviar',
-        text: err?.message || 'No fue posible enviar el correo. Inténtalo nuevamente.',
+        title: 'Error al procesar el envío',
+        text:
+          err?.response?.data?.message ||
+          err?.message ||
+          'No fue posible procesar la solicitud de envío de correo. Verifique sus credenciales.',
       });
     } finally {
       setLoading(false);

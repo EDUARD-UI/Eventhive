@@ -12,6 +12,7 @@ import PosicionamientoView from './PosicionamientoView.jsx';
 import EntradasView from './EntradasView.jsx';
 import PerfilOrganizador from './PerfilOrganizador.jsx';
 import EventDetailView from './EventDetailView.jsx';
+import { formatHora23 } from '../../utils/formatters.js';
 import {
   FiCalendar,
   FiCheck,
@@ -209,7 +210,7 @@ function OrgEventsCalendar({ events = [], onSelectEvent }) {
                   <p className="text-xs font-bold text-slate-900 truncate">{ev.titulo}</p>
                   <p className="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5">
                     <FiClock size={10} className="text-amber-600" />
-                    <span>{ev.hora ? String(ev.hora).slice(0, 5) : 'Hora por confirmar'}</span>
+                    <span>{ev.hora ? formatHora23(ev.hora) : 'Hora por confirmar'}</span>
                     <span>•</span>
                     <span className="truncate">{ev.lugar || 'Ubicación registrada'}</span>
                   </p>
@@ -295,10 +296,11 @@ export default function OrganizadorIndex() {
   // Lista completa de eventos de la organización
   const [allOrgEvents, setAllOrgEvents] = useState([]);
 
-  // Estadísticas brutas entregadas por backend (Requerimiento 1)
+  // Estadísticas oficiales entregadas por backend (GET /api/organizaciones/mi-organizacion/estadisticas)
   const [estadisticasBackend, setEstadisticasBackend] = useState({
-    totalBoletasVendidas: 0,
-    totalIngresos: 0,
+    totalBoletasVendidasPorEventosPublicados: 0,
+    ingresosNetos: 0,
+    totalEventosActivos: 0,
     eventos: [],
   });
 
@@ -347,11 +349,13 @@ export default function OrganizadorIndex() {
       .getEstadisticasMiOrganizacion()
       .then((res) => {
         if (res) {
-          const itemsEventos = res.eventos || res.estadisticasEventos || res.listaEventos || [];
+          const rawItems = res.eventos?.content || (Array.isArray(res.eventos) ? res.eventos : res.estadisticasEventos || res.listaEventos || []);
           setEstadisticasBackend({
-            totalBoletasVendidas: res.totalBoletasVendidas ?? res.boletasVendidas ?? 0,
-            totalIngresos: res.totalIngresos ?? res.ingresosTotales ?? 0,
-            eventos: Array.isArray(itemsEventos) ? itemsEventos : [],
+            totalBoletasVendidasPorEventosPublicados:
+              res.totalBoletasVendidasPorEventosPublicados ?? res.totalBoletas ?? res.totalBoletasVendidas ?? 0,
+            ingresosNetos: res.ingresosNetos ?? res.totalIngresos ?? 0,
+            totalEventosActivos: res.totalEventosActivos ?? 0,
+            eventos: Array.isArray(rawItems) ? rawItems : [],
           });
         }
       })
@@ -450,11 +454,11 @@ export default function OrganizadorIndex() {
     });
   }, [estadisticasBackend.eventos, allOrgEvents]);
 
-  // Total boletas e ingresos brutos (Requerimiento 1: Sin descontar comisión)
+  // Total boletas e ingresos de la organización (Requerimiento 2.1)
   const totalBoletasVendidasGlobal =
-    estadisticasBackend.totalBoletasVendidas || stats.entradasVendidas;
-  const totalIngresosGlobalBruto =
-    estadisticasBackend.totalIngresos || stats.totalRecaudo;
+    estadisticasBackend.totalBoletasVendidasPorEventosPublicados || stats.entradasVendidas;
+  const totalIngresosGlobalNeto =
+    estadisticasBackend.ingresosNetos || stats.totalRecaudo;
 
   // Cartelera columns
   const carteleraColumns = [
@@ -525,7 +529,7 @@ export default function OrganizadorIndex() {
                     ¡Hola, {representativeName}!
                   </h2>
                   <p className="text-slate-800 text-xs sm:text-sm font-medium leading-relaxed">
-                    Gestiona los eventos culturales de {orgName}, supervisa las boletas emitidas y consulta los ingresos brutos generados.
+                    Gestiona los eventos culturales de {orgName}, supervisa las boletas emitidas y consulta los ingresos generados por tu organización.
                   </p>
                 </div>
 
@@ -549,7 +553,7 @@ export default function OrganizadorIndex() {
                 </div>
               </div>
 
-              {/* Tarjetas KPI Requerimiento 1: Total Boletas Vendidas e Ingresos Brutos */}
+              {/* Tarjetas KPI Requerimiento 2.1 */}
               <div className="space-y-3">
                 <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -558,14 +562,14 @@ export default function OrganizadorIndex() {
                     </div>
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        Total Boletas Vendidas
+                        Total de boletas vendidas por eventos publicados
                       </span>
                       <strong className="text-lg font-black text-slate-900">
                         {totalBoletasVendidasGlobal.toLocaleString('es-CO')}
                       </strong>
                     </div>
                   </div>
-                  <span className="text-[11px] font-semibold text-brand">Total</span>
+                  <span className="text-[11px] font-semibold text-brand">Publicados</span>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-center justify-between gap-3">
@@ -575,15 +579,15 @@ export default function OrganizadorIndex() {
                     </div>
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        Ingresos Brutos Totales
+                        Ingresos totales de la organización
                       </span>
                       <strong className="text-lg font-black text-emerald-700">
-                        {formatPrice(totalIngresosGlobalBruto)}
+                        {formatPrice(totalIngresosGlobalNeto)}
                       </strong>
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
-                    Valor Bruto
+                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded" title="Descontando comisiones de EventHive">
+                    Neto org
                   </span>
                 </div>
 
@@ -597,12 +601,12 @@ export default function OrganizadorIndex() {
                         Eventos Activos
                       </span>
                       <strong className="text-lg font-black text-slate-900">
-                        {stats.eventosActivos}
+                        {estadisticasBackend.totalEventosActivos || stats.eventosActivos}
                       </strong>
                     </div>
                   </div>
-                  <Badge tone={stats.eventosActivos > 0 ? 'active' : 'neutral'}>
-                    {stats.eventosActivos > 0 ? 'En cartelera' : '0 activos'}
+                  <Badge tone={(estadisticasBackend.totalEventosActivos || stats.eventosActivos) > 0 ? 'active' : 'neutral'}>
+                    {(estadisticasBackend.totalEventosActivos || stats.eventosActivos) > 0 ? 'En cartelera' : '0 activos'}
                   </Badge>
                 </div>
               </div>

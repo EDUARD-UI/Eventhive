@@ -122,13 +122,6 @@ export default function AdminOrganizacionesView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Alerta Informativa Inicial (Requisito 10) */}
-      <AdminInfoAlert
-        id="organizaciones"
-        title="Directorio y Supervisión de Organizaciones"
-        description="Consulte el listado oficial de organizaciones con paginación desde el backend. Las suspensiones administrativas requieren justificación vinculante para auditoría. Utilice los filtros para consultar exclusivamente organizaciones aprobadas o en revisión."
-      />
-
       {/* Contadores Rápidos y Filtros de Estado */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <button
@@ -282,7 +275,7 @@ export default function AdminOrganizacionesView({
                     : org.fechaRegistro || '—';
                   const rating = org.promedioRating ?? org.ratingPromedio ?? 0;
                   const totalReviews = org.totalValoraciones ?? org.totalReviews ?? 0;
-                  const cantEventos = org.totalEventosCreados ?? org.cantidadEventos ?? 0;
+                  const cantEventos = org.eventosActivos ?? org.totalEventosCreados ?? org.cantidadEventos ?? org.eventsCount ?? 0;
 
                   return (
                     <tr
@@ -311,7 +304,7 @@ export default function AdminOrganizacionesView({
 
                       {/* Nombre del Representante */}
                       <td className="py-4 px-4 text-slate-700">
-                        <div className="font-semibold">{org.representante || '—'}</div>
+                        <div className="font-semibold">{org.representante || org.representanteLegal || '—'}</div>
                         <span className="text-[11px] text-slate-400">{org.email || org.correoContacto || ''}</span>
                       </td>
 
@@ -331,9 +324,9 @@ export default function AdminOrganizacionesView({
                         </span>
                       </td>
 
-                      {/* Cantidad de Eventos */}
+                      {/* Cantidad de Eventos Activos */}
                       <td className="py-4 px-4 text-center">
-                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-xs">
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-xs" title="Eventos activos de la organización">
                           {cantEventos}
                         </span>
                       </td>
@@ -349,51 +342,22 @@ export default function AdminOrganizacionesView({
                         </div>
                       </td>
 
-                      {/* Estado de la Organización (Visualización clara según Requisito 2) */}
+                      {/* Estado de la Organización */}
                       <td className="py-4 px-4 text-center">
                         {getDisplayBadge(org)}
                       </td>
 
-                      {/* Acciones */}
+                      {/* Acciones Reales Soportadas (Requerimiento 7.3) */}
                       <td className="py-4 px-4 text-right">
                         <div className="inline-flex items-center gap-1">
                           <button
                             type="button"
                             onClick={() => onVerPerfil(org)}
-                            className="p-2 rounded-xl text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors"
-                            title="Ver Perfil Administrativo"
+                            className="p-2 rounded-xl text-slate-500 hover:text-brand hover:bg-blue-50 transition-colors cursor-pointer"
+                            title="Ver Detalle de Organización"
                           >
                             <Eye className="w-4 h-4" strokeWidth={1.75} />
                           </button>
-
-                          <button
-                            type="button"
-                            onClick={() => onVerHistorial(org)}
-                            className="p-2 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                            title="Consultar Historial"
-                          >
-                            <History className="w-4 h-4" strokeWidth={1.75} />
-                          </button>
-
-                          {isSuspendida ? (
-                            <button
-                              type="button"
-                              onClick={() => onReactivar(org)}
-                              className="p-2 rounded-xl text-emerald-600 hover:bg-emerald-50 transition-colors"
-                              title="Reactivar Organización"
-                            >
-                              <CheckCircle2 className="w-4 h-4" strokeWidth={1.75} />
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => onSuspender(org)}
-                              className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-colors"
-                              title="Suspender Organización Administrativamente"
-                            >
-                              <Ban className="w-4 h-4" strokeWidth={1.75} />
-                            </button>
-                          )}
                         </div>
                       </td>
                     </tr>

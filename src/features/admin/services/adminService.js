@@ -77,6 +77,7 @@ export const adminService = {
         catsEventsRes,
         topEventsRes,
         topOrgsRes,
+        ingresosPlatRes,
       ] = await Promise.allSettled([
         organizationService.listOrganizations({ page: 0, size: 1 }),
         httpClient.get('/verificacion/pendientes', { page: 0, size: 1 }),
@@ -90,6 +91,7 @@ export const adminService = {
         httpClient.get('/admin/estadisticas/eventos-por-categoria'),
         httpClient.get('/admin/estadisticas/top-eventos-ventas'),
         httpClient.get('/admin/estadisticas/top-organizaciones-ventas'),
+        httpClient.get('/admin/estadisticas/ingresos-plataforma'),
       ]);
 
       const orgsValData = orgsValRes.status === 'fulfilled' ? orgsValRes.value : null;
@@ -97,6 +99,7 @@ export const adminService = {
       const catsEventsData = catsEventsRes.status === 'fulfilled' && Array.isArray(catsEventsRes.value) ? catsEventsRes.value : [];
       const topEventsData = topEventsRes.status === 'fulfilled' && Array.isArray(topEventsRes.value) ? topEventsRes.value : [];
       const topOrgsData = topOrgsRes.status === 'fulfilled' && Array.isArray(topOrgsRes.value) ? topOrgsRes.value : [];
+      const ingresosData = ingresosPlatRes.status === 'fulfilled' ? ingresosPlatRes.value : null;
 
       const totalOrganizaciones =
         orgsValData?.total ?? (orgsRes.status === 'fulfilled' ? orgsRes.value?.total || 0 : 0);
@@ -144,6 +147,10 @@ export const adminService = {
       const orgSuspendidas = orgsValData?.porEstado?.find((e) => e.estado === 'SUSPENDIDA')?.cantidad ?? 0;
       const orgPendientes = orgsValData?.porEstado?.find((e) => e.estado === 'PENDIENTE_REVISION' || e.estado === 'PENDIENTE')?.cantidad ?? solicitudesPendientes;
 
+      const ventaBrutaTotal = Number(ingresosData?.ventaBrutaTotal || 0);
+      const comisionesVentas = Number(ingresosData?.comisionesVentas || 0);
+      const ingresosPagoPromocion = Number(ingresosData?.ingresosPagoPromocion || 0);
+
       return {
         success: true,
         metrics: {
@@ -158,11 +165,17 @@ export const adminService = {
           totalModeradores,
           totalCategorias,
           totalPromociones,
+          comisionesVentas,
+          ventaBrutaTotal,
+          ingresosPagoPromocion,
         },
         organizacionesPorValidacion: orgsValData,
         eventosPorEstado: eventsEstadoData,
         eventosPorCategoria: catsEventsData,
         commercial: {
+          ventaBrutaTotal,
+          comisionesVentas,
+          ingresosPagoPromocion,
           topEventos: topEventsData,
           topOrganizaciones: topOrgsData,
         },
@@ -529,6 +542,62 @@ export const adminService = {
       success: true,
       data: [],
     };
+  },
+
+  // 10. INGRESOS DE PLATAFORMA (Sección 19 de Documentacion_Endpoints.md)
+  async getIngresosPlataforma() {
+    try {
+      const data = await httpClient.get('/admin/estadisticas/ingresos-plataforma');
+      return {
+        success: true,
+        data: {
+          ventaBrutaTotal: data?.ventaBrutaTotal ?? 0,
+          comisionesVentas: data?.comisionesVentas ?? 0,
+          ingresosPagoPromocion: data?.ingresosPagoPromocion ?? 0,
+        },
+      };
+    } catch (err) {
+      console.warn('Error en /admin/estadisticas/ingresos-plataforma:', err);
+      return {
+        success: true,
+        data: {
+          ventaBrutaTotal: 0,
+          comisionesVentas: 0,
+          ingresosPagoPromocion: 0,
+        },
+      };
+    }
+  },
+
+  // 11. REVOCACIÓN DE ROL DE MARKETING (PATCH /api/usuarios/{id}/revocar-marketing)
+  async revocarRolMarketing(usuarioId) {
+    return httpClient.patch(`/usuarios/${usuarioId}/revocar-marketing`);
+  },
+
+  // 12. TRABAJADORES DE MARKETING (GET /api/usuarios/trabajadores/marketing)
+  async getTrabajadoresMarketing({ page = 0, size = 50 } = {}) {
+    try {
+      const res = await httpClient.get('/usuarios/trabajadores/marketing', { page, size });
+      const content = res?.content || (Array.isArray(res) ? res : []);
+      return {
+        success: true,
+        data: content,
+        total: res?.totalElements ?? content.length,
+      };
+    } catch (err) {
+      console.warn('Error consultando trabajadores de marketing:', err);
+      return { success: true, data: [], total: 0 };
+    }
+  },
+
+  // 13. ENVÍO DE CORREOS ADMINISTRATIVOS (POST /api/admin/correos/enviar)
+  async enviarCorreoAdmin({ destinatario, asunto, mensaje }) {
+    return httpClient.post('/admin/correos/enviar', { destinatario, asunto, mensaje });
+  },
+
+  // 14. CONSULTA PROTEGIDA DEL RUT (GET /api/organizaciones/{id}/rut-url)
+  async getRutUrl(orgId) {
+    return httpClient.get(`/organizaciones/${orgId}/rut-url`);
   },
 };
 

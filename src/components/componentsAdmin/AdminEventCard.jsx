@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, MapPin, Eye, Ban, CheckCircle2, Ticket, History } from 'lucide-react';
 import Badge from '../Shared/Badge.jsx';
+import { formatHora23 } from '../../utils/formatters.js';
 
 export default function AdminEventCard({
   evento,
@@ -74,7 +75,7 @@ export default function AdminEventCard({
                 <Calendar className="w-3.5 h-3.5" strokeWidth={1.75} />
               </div>
               <span>
-                {evento.fecha} · {evento.hora}
+                {evento.fecha} {evento.hora ? `· ${formatHora23(evento.hora)}` : ''}
               </span>
             </div>
 

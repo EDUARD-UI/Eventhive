@@ -13,6 +13,7 @@ import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import moderationService from '../../services/moderationService.js';
 import categoryService from '../../services/categoryService.js';
+import { formatHora23 } from '../../utils/formatters.js';
 
 const ESTADOS_DISPONIBLES = [
   { value: 'TODOS', label: 'Todos los estados' },
@@ -282,7 +283,7 @@ export default function ModeradorHistorialView({
                       {/* Fecha y Hora */}
                       <td className="px-5 py-4 text-slate-600">
                         {evento.fecha || '—'}
-                        {evento.hora ? ` · ${evento.hora}` : ''}
+                        {evento.hora ? ` · ${formatHora23(evento.hora)}` : ''}
                       </td>
 
                       {/* Estado */}

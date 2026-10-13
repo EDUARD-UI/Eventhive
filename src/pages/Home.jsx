@@ -21,7 +21,7 @@ import Navbar from '../components/usersComponets/Navbar.jsx';
 import CustomSelect from '../components/common/CustomSelect.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
 import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
-import { getFeaturedEvents, getMapEvents, getUpcomingEvents } from '../services/eventService.js';
+import { getCarouselEvents, getFeaturedEvents, getMapEvents, getUpcomingEvents } from '../services/eventService.js';
 import { getCategoryNames } from '../services/categoryService.js';
 import { useTheme } from '../context/ThemeContext.jsx';
 
@@ -86,7 +86,7 @@ function MapViewController({ center, zoom }) {
 }
 
 export default function Home() {
-  const [featuredEvents, setFeaturedEvents] = useState([]);
+  const [carouselEvents, setCarouselEvents] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [mapEvents, setMapEvents] = useState([]);
@@ -100,13 +100,13 @@ export default function Home() {
     setIsLoadingEvents(true);
 
     Promise.allSettled([
-      getFeaturedEvents(),
+      getCarouselEvents(),
       getUpcomingEvents(),
       getMapEvents(),
       getCategoryNames(),
-    ]).then(([featuredRes, upcomingRes, mapRes, catNamesRes]) => {
-      if (featuredRes.status === 'fulfilled' && Array.isArray(featuredRes.value)) {
-        setFeaturedEvents(featuredRes.value);
+    ]).then(([carouselRes, upcomingRes, mapRes, catNamesRes]) => {
+      if (carouselRes.status === 'fulfilled' && Array.isArray(carouselRes.value)) {
+        setCarouselEvents(carouselRes.value);
       }
       if (upcomingRes.status === 'fulfilled' && Array.isArray(upcomingRes.value)) {
         setUpcomingEvents(upcomingRes.value);
@@ -254,32 +254,21 @@ export default function Home() {
       {/* Hero Principal con Buscador Integrado */}
       <Hero />
 
-      {/* 2. Eventos Destacados */}
-      <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-3 pb-8 sm:pt-5 sm:pb-12 max-w-[1850px] mx-auto relative z-10 transition-colors duration-200">
-        {(() => {
-          const carouselEvents = featuredEvents.length > 0 ? featuredEvents : upcomingEvents;
-          if (carouselEvents.length > 0) {
-            return <FeaturedEventsCarousel events={carouselEvents} />;
-          }
-          if (isLoadingEvents) {
-            return (
-              <div className="w-full rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[340px] max-h-[480px] bg-slate-200 dark:bg-slate-800/80 border border-slate-300/40 dark:border-slate-700/60 animate-pulse relative overflow-hidden flex flex-col justify-end p-6 sm:p-12 shadow-sm">
-                <div className="w-28 h-6 bg-slate-300 dark:bg-slate-700 rounded-md mb-4" />
-                <div className="w-2/3 h-8 sm:h-10 bg-slate-300 dark:bg-slate-700 rounded-lg mb-3" />
-                <div className="w-1/2 h-4 bg-slate-300 dark:bg-slate-700/80 rounded mb-6 hidden sm:block" />
-                <div className="w-36 h-10 bg-slate-300 dark:bg-slate-700 rounded-xl" />
-              </div>
-            );
-          }
-          return (
-            <HiveEmptyState
-              title="Estamos preparando la cartelera para este fin de semana en Cartagena."
-              subtitle="¡Vuelve pronto para conocer los eventos más esperados!"
-              showAction={false}
-            />
-          );
-        })()}
-      </section>
+      {/* 2. Carrusel Principal de Eventos Premium */}
+      {(isLoadingEvents || carouselEvents.length > 0) && (
+        <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-3 pb-8 sm:pt-5 sm:pb-12 max-w-[1850px] mx-auto relative z-10 transition-colors duration-200">
+          {isLoadingEvents ? (
+            <div className="w-full rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[340px] max-h-[480px] bg-slate-200 dark:bg-slate-800/80 border border-slate-300/40 dark:border-slate-700/60 animate-pulse relative overflow-hidden flex flex-col justify-end p-6 sm:p-12 shadow-sm">
+              <div className="w-28 h-6 bg-slate-300 dark:bg-slate-700 rounded-md mb-4" />
+              <div className="w-2/3 h-8 sm:h-10 bg-slate-300 dark:bg-slate-700 rounded-lg mb-3" />
+              <div className="w-1/2 h-4 bg-slate-300 dark:bg-slate-700/80 rounded mb-6 hidden sm:block" />
+              <div className="w-36 h-10 bg-slate-300 dark:bg-slate-700 rounded-xl" />
+            </div>
+          ) : (
+            <FeaturedEventsCarousel events={carouselEvents} />
+          )}
+        </section>
+      )}
 
       {/* Cintas Cruzadas entre el Carrusel Principal y los Eventos Próximos */}
       <CrossedRibbonsBanner badgeText="Conecta al ritmo de la ciudad" />

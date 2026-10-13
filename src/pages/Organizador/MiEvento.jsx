@@ -15,6 +15,7 @@ import Badge from '../../components/Shared/Badge.jsx';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import { organizerService } from '../../services/organizerService.js';
 import { getCategoryNames } from '../../services/categoryService.js';
+import { formatHora23 } from '../../utils/formatters.js';
 import Swal from 'sweetalert2';
 
 const toneMap = {
@@ -63,7 +64,8 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
           title: e.titulo || e.title || 'Sin título',
           category: typeof e.categoria === 'string' ? e.categoria : e.categoria?.nombre || e.nombreCategoria || 'Evento',
           date: e.fecha || e.date || 'Próximamente',
-          time: e.hora || e.time || '7:00 PM',
+          time: formatHora23(e.hora || e.time) || 'Hora por confirmar',
+          hora: formatHora23(e.hora || e.time) || 'Hora por confirmar',
           location: e.lugar || e.ubicacion || e.location || '',
           status: e.estado || 'BORRADOR',
           rawStatus: e.estado || 'BORRADOR',
@@ -90,8 +92,14 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
   // Filtrado de eventos
   const filteredEvents = useMemo(() => {
     return organizerEvents.filter((event) => {
-      const matchesCategory = category === 'Todos' || event.category === category;
-      const matchesStatus = statusFilter === 'Todos' || event.status === statusFilter;
+      const matchesCategory =
+        category === 'Todos' ||
+        event.category === category ||
+        (event.categoria && (event.categoria === category || event.categoria?.nombre === category));
+      const matchesStatus =
+        statusFilter === 'Todos' ||
+        event.rawStatus === statusFilter ||
+        event.estado === statusFilter;
       const term = effectiveSearch.toLowerCase().trim();
       const matchesSearch =
         !term ||
@@ -296,11 +304,13 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
               className="bg-transparent font-bold text-slate-800 outline-none cursor-pointer"
             >
               <option value="Todos">Todos</option>
-              <option value="Activo">Activos</option>
-              <option value="Borrador">Borradores</option>
-              <option value="Finalizado">Finalizados</option>
-              <option value="En revisión">En revisión</option>
-              <option value="Suspendido">Suspendidos</option>
+              <option value="PUBLICADO">Publicados (Activos)</option>
+              <option value="BORRADOR">Borrador</option>
+              <option value="PENDIENTE_REVISION">En revisión</option>
+              <option value="FINALIZADO">Finalizados</option>
+              <option value="CANCELADO">Cancelados</option>
+              <option value="SUSPENDIDO">Suspendidos</option>
+              <option value="EN_CORRECCION">En corrección</option>
             </select>
           </div>
         </div>

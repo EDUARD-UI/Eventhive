@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   User,
   ShieldCheck,
@@ -16,18 +17,20 @@ import {
   Ticket,
   Heart,
   DollarSign,
-  ExternalLink,
   Receipt,
-  Sparkles,
+  Camera,
+  Loader2,
   AlertCircle,
+  X,
+  Edit2,
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
-import AdminInfoAlert from '../../components/componentsAdmin/AdminInfoAlert.jsx';
 import { session } from '../../services/session.js';
 import userService from '../../services/userService.js';
 
 export default function AdminPerfilView({ onNavigateTab, showToast = () => {} }) {
   const sessionUser = session.getUser();
+  const fileInputRef = useRef(null);
 
   // Estados del perfil
   const [perfil, setPerfil] = useState(null);
@@ -37,9 +40,17 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
   const [telefono, setTelefono] = useState('');
   const [cargo, setCargo] = useState('Administrador General');
   const [fotoUrl, setFotoUrl] = useState(sessionUser?.fotoUrl || sessionUser?.foto || '');
-  const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState(null);
 
-  // Estados de actividad de comprador (Punto 13)
+  // Modal lateral derecho para edición de datos de perfil
+  const [showEditDrawer, setShowEditDrawer] = useState(false);
+  const [editNombre, setEditNombre] = useState('');
+  const [editTelefono, setEditTelefono] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState(null);
+
+  // Estados de actividad de comprador
   const [actividad, setActividad] = useState({
     comprasConfirmadas: 0,
     entradasCompradas: 0,
@@ -60,7 +71,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
   const [passwordError, setPasswordError] = useState('');
 
   // Pestaña interna: perfil o compras/actividad
-  const [activeTab, setActiveTab] = useState('perfil'); // 'perfil' | 'compras'
+  const [activeTab, setActiveTab] = useState('perfil');
 
   // Cargar perfil y actividad desde el backend
   useEffect(() => {
@@ -80,9 +91,15 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
         if (perfilRes.status === 'fulfilled' && perfilRes.value) {
           const p = perfilRes.value;
           setPerfil(p);
-          if (p.nombre) setNombre(p.nombre);
+          if (p.nombre) {
+            setNombre(p.nombre);
+            setEditNombre(p.nombre);
+          }
           if (p.correo) setEmail(p.correo);
-          if (p.telefono) setTelefono(p.telefono);
+          if (p.telefono) {
+            setTelefono(p.telefono);
+            setEditTelefono(p.telefono);
+          }
           const photo = p.fotoUrl || p.foto || p.imagenUrl || p.imagen || p.avatarUrl || p.avatar || '';
           if (photo) setFotoUrl(photo);
         }
@@ -116,15 +133,63 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
     };
   }, []);
 
+  // Manejo de carga de fotografía de perfil
+  const handlePhotoSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('Por favor selecciona un archivo de imagen válido.', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('La imagen no debe superar los 5MB.', 'error');
+      return;
+    }
+
+    // Vista previa local
+    const previewUrl = URL.createObjectURL(file);
+    setPhotoPreview(previewUrl);
+
+    try {
+      setUploadingPhoto(true);
+      const res = await userService.uploadFotoPerfil(file);
+      const newUrl = res?.fotoUrl || res?.url || res?.imagenUrl || previewUrl;
+      setFotoUrl(newUrl);
+      session.updateUser({ fotoUrl: newUrl });
+      showToast('Fotografía de perfil actualizada exitosamente.', 'success');
+    } catch (err) {
+      setPhotoPreview(null);
+      showToast(
+        err?.response?.data?.message || err?.message || 'Error al subir la fotografía de perfil.',
+        'error'
+      );
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const openEditDrawer = () => {
+    setEditNombre(nombre);
+    setEditTelefono(telefono || '');
+    setEditError(null);
+    setShowEditDrawer(true);
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     try {
       setSaving(true);
-      await userService.updatePerfil({ nombre, telefono });
-      session.updateUser({ name: nombre, telefono });
+      setEditError(null);
+      await userService.updatePerfil({ nombre: editNombre.trim(), telefono: editTelefono.trim() });
+      setNombre(editNombre.trim());
+      setTelefono(editTelefono.trim());
+      session.updateUser({ name: editNombre.trim(), telefono: editTelefono.trim() });
       showToast('Perfil de administrador actualizado correctamente.', 'success');
+      setShowEditDrawer(false);
     } catch (err) {
-      showToast(err.message || 'Error al actualizar perfil.', 'error');
+      setEditError(err?.response?.data?.message || err?.message || 'Error al actualizar perfil.');
     } finally {
       setSaving(false);
     }
@@ -152,7 +217,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
       setConfirmPassword('');
       showToast('Contraseña de administrador actualizada exitosamente.', 'success');
     } catch (err) {
-      setPasswordError(err.message || 'Error al cambiar la contraseña.');
+      setPasswordError(err?.response?.data?.message || err?.message || 'Error al cambiar la contraseña.');
     } finally {
       setPasswordLoading(false);
     }
@@ -165,27 +230,38 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
       maximumFractionDigits: 0,
     }).format(val || 0);
 
+  const displayPhoto = photoPreview || fotoUrl;
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Alerta Informativa Descartable y Persistente */}
-      <AdminInfoAlert
-        alertId="perfil"
-        title="Mi Perfil de Administrador y Cuenta de Usuario"
-        description="Consulta y administra los datos de tu cuenta administrativa. En EventHive los roles no restringen la compra de boleterías: como Administrador también puedes adquirir boletos para cualquier evento y consultar tu historial personal de compras y actividades."
-      />
-
-      {/* Banner Principal del Perfil */}
+      {/* Banner Principal del Perfil - Sin fondo azul detrás del avatar */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-[#0b1329] via-[#132247] to-[#087fea]" />
+        {/* Cabecera neutra pizarra/oscura */}
+        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900" />
 
         <div className="relative pt-10 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            {/* Avatar con Foto del Backend o Iniciales */}
+            {/* Input de archivo oculto para la fotografía */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handlePhotoSelect}
+              accept="image/*"
+              className="hidden"
+            />
+
+            {/* Círculo de la Fotografía - Clickeable para seleccionar archivo */}
             <div className="relative group">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-[#087fea] text-white flex items-center justify-center font-display font-black text-2xl sm:text-3xl shadow-xl ring-4 ring-white border-2 border-[#087fea]/20 overflow-hidden shrink-0">
-                {fotoUrl ? (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingPhoto}
+                title="Haga clic para cambiar su foto de perfil"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 flex items-center justify-center font-display font-black text-2xl sm:text-3xl shadow-xl ring-4 ring-white border-2 border-slate-200 overflow-hidden shrink-0 cursor-pointer transition-all active:scale-95 group-hover:brightness-95 relative"
+              >
+                {displayPhoto ? (
                   <img
-                    src={fotoUrl}
+                    src={displayPhoto}
                     alt={nombre}
                     className="w-full h-full object-cover object-center"
                     onError={(e) => {
@@ -196,18 +272,32 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                     }}
                   />
                 ) : null}
+
                 <span
-                  style={{ display: fotoUrl ? 'none' : 'flex' }}
-                  className="w-full h-full items-center justify-center"
+                  style={{ display: displayPhoto ? 'none' : 'flex' }}
+                  className="w-full h-full items-center justify-center text-slate-700"
                 >
                   {nombre ? nombre.substring(0, 2).toUpperCase() : 'AD'}
                 </span>
-              </div>
+
+                {/* Overlay de cámara al pasar el ratón */}
+                <div className="absolute inset-0 bg-black/40 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  {uploadingPhoto ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <>
+                      <Camera size={20} />
+                      <span className="text-[9px] font-bold mt-0.5 uppercase tracking-wider">Cambiar</span>
+                    </>
+                  )}
+                </div>
+              </button>
+
               <span
-                className="absolute -bottom-1 -right-1 p-1.5 rounded-xl bg-emerald-500 text-white ring-2 ring-white shadow-sm"
+                className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-emerald-500 text-white ring-2 ring-white shadow-sm"
                 title="Sesión Verificada"
               >
-                <CheckCircle2 className="w-4 h-4" strokeWidth={2.5} />
+                <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2.5} />
               </span>
             </div>
 
@@ -235,6 +325,15 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
           </div>
 
           <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
+            <button
+              type="button"
+              onClick={openEditDrawer}
+              className="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-black text-amber-300 text-xs font-bold transition-all flex items-center gap-2 active:scale-95 shadow-xs cursor-pointer uppercase tracking-wider"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+              <span>Editar Perfil</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setShowPasswordModal(true)}
@@ -266,7 +365,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
             onClick={() => setActiveTab('compras')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
               activeTab === 'compras'
-                ? 'bg-[#087fea] text-white shadow-xs'
+                ? 'bg-slate-900 text-white shadow-xs'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -281,100 +380,63 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
         </div>
       </div>
 
-      {/* VISTA 1: DATOS DE LA CUENTA ADMINISTRATIVA */}
+      {/* VISTA 1: RESUMEN DE DATOS DE LA CUENTA */}
       {activeTab === 'perfil' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Formulario de Datos Personales */}
           <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-6">
-            <div className="border-b border-slate-100 pb-4">
-              <h3 className="font-display font-bold text-base text-slate-900 flex items-center gap-2">
-                <User className="w-5 h-5 text-indigo-600" strokeWidth={1.75} />
-                <span>Información Personal y de Contacto</span>
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Datos sincronizados con el backend de EventHive
-              </p>
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="font-display font-bold text-base text-slate-900 flex items-center gap-2">
+                  <User className="w-5 h-5 text-primary" strokeWidth={1.75} />
+                  <span>Información Personal Registrada</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Información oficial sincronizada en tiempo real
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={openEditDrawer}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <Edit2 size={13} />
+                <span>Modificar</span>
+              </button>
             </div>
 
-            <form onSubmit={handleSaveProfile} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                    Nombre Completo *
-                  </label>
-                  <input
-                    type="text"
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                    Correo Institucional
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    disabled
-                    className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed outline-none"
-                    title="El correo institucional está protegido y se gestiona mediante soporte técnico."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                    Teléfono de Contacto
-                  </label>
-                  <input
-                    type="text"
-                    value={telefono}
-                    onChange={(e) => setTelefono(e.target.value)}
-                    placeholder="+57 300 123 4567"
-                    className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                    Rol en la Plataforma
-                  </label>
-                  <input
-                    type="text"
-                    value={perfil?.rolNombre || 'ADMINISTRADOR'}
-                    disabled
-                    className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed outline-none uppercase font-mono"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                    Fotografía de Perfil (Enlace provisto por Backend)
-                  </label>
-                  <input
-                    type="text"
-                    value={fotoUrl || ''}
-                    readOnly
-                    placeholder="El backend suministrará el enlace público de la fotografía de perfil"
-                    className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed outline-none font-mono text-[11px] truncate"
-                    title="Este enlace es suministrado y gestionado por los servicios del backend de EventHive."
-                  />
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider block">
+                  Nombre Completo
+                </span>
+                <p className="text-sm font-bold text-slate-800 mt-1">{nombre}</p>
               </div>
 
-              <div className="pt-2 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="py-2.5 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-md transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50"
-                >
-                  <Save className="w-4 h-4" strokeWidth={2} />
-                  <span>{saving ? 'Guardando...' : 'Guardar Cambios'}</span>
-                </button>
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider block">
+                  Correo Electrónico Institucional
+                </span>
+                <p className="text-sm font-bold text-slate-800 mt-1">{email}</p>
               </div>
-            </form>
+
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider block">
+                  Teléfono de Contacto
+                </span>
+                <p className="text-sm font-bold text-slate-800 mt-1">{telefono || 'No registrado'}</p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider block">
+                  Rol del Usuario
+                </span>
+                <div className="mt-1">
+                  <Badge variant="danger" size="xs">
+                    {perfil?.rolNombre || 'ADMINISTRADOR'}
+                  </Badge>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Columna Derecha: Privilegios y Alcance */}
@@ -390,7 +452,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                   Acceso Total al Sistema
                 </span>
                 <p className="text-[11px] text-emerald-800 mt-0.5 leading-relaxed">
-                  Supervisión general, admisión y verificación de organizaciones por RUT, revocatoria de moderadores, auditoría y estadísticas.
+                  Supervisión general, admisión y verificación de organizaciones por RUT, auditoría de métricas y comisiones de plataforma.
                 </p>
               </div>
 
@@ -405,7 +467,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>Revocación de rol a moderadores</span>
+                  <span>Revocación de rol a moderadores y marketing</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
@@ -421,25 +483,24 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
         </div>
       )}
 
-      {/* VISTA 2: ACTIVIDAD COMO COMPRADOR (PUNTO 13) */}
+      {/* VISTA 2: ACTIVIDAD COMO COMPRADOR */}
       {activeTab === 'compras' && (
         <div className="space-y-6">
-          {/* Banner de Aclaración de Roles y Compra Libre */}
-          <div className="p-6 rounded-3xl bg-gradient-to-r from-blue-50/90 via-indigo-50/80 to-purple-50/70 border border-indigo-200">
+          <div className="p-6 rounded-3xl bg-slate-900 text-white border border-slate-800 shadow-sm">
             <div className="flex items-start gap-4">
-              <div className="p-3 rounded-2xl bg-[#087fea] text-white shrink-0 shadow-md">
+              <div className="p-3 rounded-2xl bg-white/10 text-amber-400 shrink-0 border border-white/10">
                 <Ticket className="w-6 h-6" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-bold text-slate-900">
+                  <h3 className="text-base font-bold text-white">
                     Boletería y Compra de Entradas (Rol Comprador)
                   </h3>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300">
                     Acceso Universal
                   </span>
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed mt-1 max-w-4xl">
+                <p className="text-xs text-slate-300 leading-relaxed mt-1 max-w-4xl">
                   En EventHive, <strong>los roles de plataforma no restringen la compra de boleterías</strong>.
                   Como Administrador puedes adquirir entradas de cualquier organización, guardar tus eventos favoritos
                   y consultar tus compras con la misma experiencia y libertad que un cliente o representante.
@@ -509,7 +570,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
           <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-7">
             <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
+                <div className="p-2 rounded-xl bg-slate-100 text-slate-800">
                   <Receipt className="w-5 h-5" />
                 </div>
                 <div>
@@ -593,6 +654,117 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
         </div>
       )}
 
+      {/* DRAWER MODAL LATERAL DERECHO: EDICIÓN DE PERFIL */}
+      {showEditDrawer && (
+        <div className="fixed inset-0 z-[9999] flex justify-end">
+          <div
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
+            onClick={() => setShowEditDrawer(false)}
+          />
+
+          <div
+            className="relative z-50 w-full sm:w-[480px] md:w-[520px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <div className="bg-[#131b2e] p-6 text-white flex items-center justify-between border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-400">
+                    <Edit2 size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-base sm:text-lg font-bold text-white leading-tight">
+                      Editar Perfil de Administrador
+                    </h3>
+                    <p className="text-xs text-slate-300 mt-0.5">
+                      Actualización de datos personales y credenciales
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowEditDrawer(false)}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form id="edit-profile-drawer-form" onSubmit={handleSaveProfile} className="p-6 space-y-4">
+                {editError && (
+                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-800 flex items-center gap-2">
+                    <AlertCircle size={16} className="text-rose-600 shrink-0" />
+                    <span>{editError}</span>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                    Nombre Completo *
+                  </label>
+                  <input
+                    type="text"
+                    value={editNombre}
+                    onChange={(e) => setEditNombre(e.target.value)}
+                    required
+                    className="w-full text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                    Correo Institucional
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    disabled
+                    className="w-full text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed outline-none"
+                    title="El correo institucional está protegido por el sistema central."
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    El correo institucional no puede modificarse de forma directa.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                    Teléfono de Contacto
+                  </label>
+                  <input
+                    type="text"
+                    value={editTelefono}
+                    onChange={(e) => setEditTelefono(e.target.value)}
+                    placeholder="+57 300 123 4567"
+                    className="w-full text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition-all"
+                  />
+                </div>
+              </form>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowEditDrawer(false)}
+                disabled={saving}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                form="edit-profile-drawer-form"
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-300 font-bold text-xs uppercase tracking-wider shadow-sm hover:shadow-md transition-all disabled:opacity-50 cursor-pointer"
+              >
+                <Save size={14} />
+                <span>{saving ? 'Guardando...' : 'Guardar Cambios'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Cambio de Contraseña */}
       {showPasswordModal && (
         <div
@@ -605,7 +777,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+                <div className="p-2 rounded-xl bg-slate-100 text-slate-800">
                   <Key className="w-5 h-5" strokeWidth={1.75} />
                 </div>
                 <div>
@@ -626,7 +798,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-600"
+                  className="w-full text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-slate-900"
                   required
                 />
               </div>
@@ -639,7 +811,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-600"
+                  className="w-full text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-slate-900"
                   required
                 />
                 <p className="text-[10px] text-slate-400 mt-1">Mínimo 8 caracteres alfanuméricos.</p>
@@ -653,7 +825,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-600"
+                  className="w-full text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-slate-900"
                   required
                 />
               </div>
@@ -676,7 +848,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 <button
                   type="submit"
                   disabled={passwordLoading}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-md transition-all active:scale-95 disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-300 text-xs font-bold shadow-md transition-all active:scale-95 disabled:opacity-50"
                 >
                   {passwordLoading ? 'Actualizando...' : 'Actualizar'}
                 </button>

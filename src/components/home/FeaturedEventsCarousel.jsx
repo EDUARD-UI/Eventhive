@@ -17,7 +17,22 @@ import ImageWithFallback from '../common/ImageWithFallback.jsx';
  * - Deslizamiento suave y controles accesibles con transiciones de 200ms.
  */
 export default function FeaturedEventsCarousel({ events = [] }) {
-  const displayEvents = events.slice(0, 8);
+  // Solo eventos elegibles devueltos por GET /api/eventos/carrusel con imagen destacada válida
+  const displayEvents = (Array.isArray(events) ? events : [])
+    .filter((e) => {
+      const src =
+        typeof e === 'string'
+          ? e
+          : e?.url_imagen_promocionado ||
+            e?.urlImagenPromocionado ||
+            e?.url_imagen_destacado ||
+            e?.urlImagenDestacado ||
+            e?.photo ||
+            e?.imagen;
+      return Boolean(src);
+    })
+    .slice(0, 10);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [manualInteraction, setManualInteraction] = useState(false);
@@ -120,9 +135,21 @@ export default function FeaturedEventsCarousel({ events = [] }) {
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
         {displayEvents.map((event, idx) => {
-          const { id, category, title, description, date, location, photo } = event;
-          const fallbackDesc =
-            'Vive esta experiencia cultural en Cartagena de Indias. Conoce los detalles de programación, localidades y asegura tu entrada.';
+          const { id, eventoId, category, title, description, date, location, photo, hora } = event;
+          const imageUrl =
+            event.url_imagen_promocionado ||
+            event.urlImagenPromocionado ||
+            event.url_imagen_destacado ||
+            event.urlImagenDestacado ||
+            photo;
+
+          const hasRealId = eventoId || (id && !String(id).startsWith('carrusel-'));
+          const targetUrl = hasRealId ? `/eventos/${eventoId || id}` : '/eventos';
+
+          const hasTitle = Boolean(title && title.trim() && title !== 'Evento Destacado');
+          const hasCategory = Boolean(category && category.trim() && category !== 'Evento Destacado');
+          const hasMeta = Boolean(date || location || hora);
+          const hasOverlayContent = hasTitle || hasCategory || hasMeta;
 
           return (
             <div
@@ -130,57 +157,71 @@ export default function FeaturedEventsCarousel({ events = [] }) {
               className="w-full min-w-full flex-shrink-0 relative aspect-[16/9] sm:aspect-[21/9] min-h-[340px] max-h-[480px] overflow-hidden bg-[#0A1122]"
             >
               <Link
-                to={`/eventos/${id}`}
+                to={targetUrl}
                 className="group block w-full h-full relative overflow-hidden"
               >
-                {/* Portada / Imagen con object-cover centrado sin deformaciones */}
+                {/* Portada / Banner asignado por Marketing: sin deformaciones */}
                 <ImageWithFallback
-                  src={photo}
-                  alt={title}
+                  src={imageUrl}
+                  alt={title || 'Banner promocional de evento'}
                   className="absolute inset-0 w-full h-full"
                   imgClassName="w-full h-full object-cover object-center group-hover:scale-103 transition-transform duration-700 ease-out"
                   fallbackClassName="absolute inset-0 w-full h-full bg-[#0B132B]"
-                  fallbackText={title}
+                  fallbackText={title || 'Banner Destacado'}
                   showText={false}
                   iconSize={0}
                 />
 
-                {/* Overlays oscuros sobrios sin gradientes */}
-                <div className="absolute inset-0 bg-[#060B18]/65 group-hover:bg-[#060B18]/55 transition-colors duration-300 pointer-events-none" />
+                {/* Si hay contenido textual oficial, mostramos overlay degradado legible; si es solo la foto de marketing, no oscurecemos la pieza publicitaria */}
+                {hasOverlayContent ? (
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#060B18]/85 via-[#060B18]/25 to-transparent pointer-events-none" />
 
-                {/* Badge de Categoría: solo en desktop */}
-                <div className="hidden lg:block absolute top-6 left-8 z-20">
-                  <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-slate-900/90 text-amber-400 border border-slate-700 backdrop-blur-sm shadow-sm">
-                    <span>{category}</span>
-                  </span>
-                </div>
-
-                {/* Contenido principal del slide */}
-                <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8 md:p-10 lg:p-12 z-10 pb-8 sm:pb-10 lg:pb-14">
-                  <div className="max-w-xl md:max-w-2xl space-y-2">
-                    {/* Título: Siempre visible */}
-                    <h3 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white leading-snug tracking-tight drop-shadow-sm group-hover:text-amber-300 transition-colors duration-200 line-clamp-2 uppercase">
-                      {title}
-                    </h3>
-
-                    {/* Descripción: Solo en desktop (oculta en tablets y móviles) */}
-                    <p className="hidden lg:block text-slate-300 text-xs sm:text-sm leading-relaxed line-clamp-2 max-w-xl font-normal">
-                      {description || fallbackDesc}
-                    </p>
-
-                    {/* Metadatos (Fecha y Ubicación): Solo en desktop (ocultos en tablets y móviles) */}
-                    <div className="hidden lg:flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-300 pt-1">
-                      <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-sm px-3 py-1 rounded-lg border border-slate-700">
-                        <FiCalendar className="text-amber-400 shrink-0" size={13.5} />
-                        <span className="font-semibold text-white">{date}</span>
+                    {hasCategory && (
+                      <div className="hidden lg:block absolute top-6 left-8 z-20">
+                        <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-slate-900/90 text-amber-400 border border-slate-700 backdrop-blur-sm shadow-sm">
+                          <span>{category}</span>
+                        </span>
                       </div>
-                      <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-sm px-3 py-1 rounded-lg border border-slate-700">
-                        <FiMapPin className="text-slate-400 shrink-0" size={13.5} />
-                        <span className="font-medium text-slate-200">{location}</span>
+                    )}
+
+                    <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8 md:p-10 lg:p-12 z-10 pb-8 sm:pb-10 lg:pb-14">
+                      <div className="max-w-xl md:max-w-2xl space-y-2">
+                        {hasTitle && (
+                          <h3 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white leading-snug tracking-tight drop-shadow-sm group-hover:text-amber-300 transition-colors duration-200 line-clamp-2 uppercase">
+                            {title}
+                          </h3>
+                        )}
+
+                        {description && (
+                          <p className="hidden lg:block text-slate-300 text-xs sm:text-sm leading-relaxed line-clamp-2 max-w-xl font-normal">
+                            {description}
+                          </p>
+                        )}
+
+                        {hasMeta && (
+                          <div className="hidden lg:flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-300 pt-1">
+                            {date && (
+                              <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-sm px-3 py-1 rounded-lg border border-slate-700">
+                                <FiCalendar className="text-amber-400 shrink-0" size={13.5} />
+                                <span className="font-semibold text-white">{date}</span>
+                              </div>
+                            )}
+                            {location && (
+                              <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-sm px-3 py-1 rounded-lg border border-slate-700">
+                                <FiMapPin className="text-slate-400 shrink-0" size={13.5} />
+                                <span className="font-medium text-slate-200">{location}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                </div>
+                  </>
+                ) : (
+                  /* Banner puro colocado por marketing: degradado inferior sutil para la barra de navegación */
+                  <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#060B18]/60 to-transparent pointer-events-none" />
+                )}
               </Link>
             </div>
           );

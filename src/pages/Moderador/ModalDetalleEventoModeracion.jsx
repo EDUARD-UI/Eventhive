@@ -17,6 +17,7 @@ import {
 } from 'react-icons/fi';
 import Badge from '../../components/Shared/Badge.jsx';
 import moderationService from '../../services/moderationService.js';
+import { formatHora23 } from '../../utils/formatters.js';
 
 export default function ModalDetalleEventoModeracion({
   evento,
@@ -222,7 +223,7 @@ export default function ModalDetalleEventoModeracion({
               </div>
               <div>
                 <p className="text-[10px] uppercase font-bold text-slate-400">Hora</p>
-                <p className="font-semibold text-slate-800">{evento.hora || 'Sin hora'}</p>
+                <p className="font-semibold text-slate-800">{evento.hora ? formatHora23(evento.hora) : 'Sin hora'}</p>
               </div>
             </div>
 

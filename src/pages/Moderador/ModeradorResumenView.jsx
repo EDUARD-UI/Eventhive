@@ -17,6 +17,7 @@ import {
 } from 'react-icons/fi';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
+import { formatHora23 } from '../../utils/formatters.js';
 
 export default function ModeradorResumenView({
   stats = {},
@@ -214,7 +215,7 @@ export default function ModeradorResumenView({
                         {evento.fecha && (
                           <span className="flex items-center gap-1">
                             <FiCalendar className="text-brand" size={13} />
-                            {evento.fecha} {evento.hora ? `· ${evento.hora}` : ''}
+                            {evento.fecha} {evento.hora ? `· ${formatHora23(evento.hora)}` : ''}
                           </span>
                         )}
                         {evento.lugar && (

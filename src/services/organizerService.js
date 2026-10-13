@@ -332,6 +332,26 @@ export const organizerService = {
   eliminarDeseo(eventoId) {
     return httpClient.delete(`/deseos/${eventoId}`);
   },
+
+  /** GET /api/verificacion/mi-solicitud */
+  getMiSolicitudVerificacion() {
+    return httpClient.get('/verificacion/mi-solicitud');
+  },
+
+  /** POST /api/verificacion/solicitar (multipart con archivo 'rut') */
+  solicitarVerificacion(formData) {
+    return httpClient.post('/verificacion/solicitar', formData, { isFormData: true });
+  },
+
+  /** PATCH /api/verificacion/{solicitudId}/subir-rut (multipart con archivo 'rut') */
+  subirRut(solicitudId, formData) {
+    return httpClient.patch(`/verificacion/${solicitudId}/subir-rut`, formData, { isFormData: true });
+  },
+
+  /** GET /api/organizaciones/{orgId}/rut-url - Consulta segura de URL temporal del RUT */
+  getRutUrl(orgId) {
+    return httpClient.get(`/organizaciones/${orgId}/rut-url`);
+  },
 };
 
 export default organizationService;

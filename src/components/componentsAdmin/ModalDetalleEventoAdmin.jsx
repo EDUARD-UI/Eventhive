@@ -2,6 +2,7 @@ import { createPortal } from 'react-dom';
 import React from 'react';
 import { X, Calendar, Clock, MapPin, Building2, Ticket, ShieldCheck, Ban, CheckCircle2, History } from 'lucide-react';
 import Badge from '../Shared/Badge.jsx';
+import { formatHora23 } from '../../utils/formatters.js';
 
 export default function ModalDetalleEventoAdmin({
   evento,
@@ -60,7 +61,7 @@ export default function ModalDetalleEventoAdmin({
               <div>
                 <p className="text-[10px] text-slate-400 font-bold uppercase">Fecha y Hora</p>
                 <p className="font-semibold text-slate-800">
-                  {evento.fecha} · {evento.hora}
+                  {evento.fecha} {evento.hora ? `· ${formatHora23(evento.hora)}` : ''}
                 </p>
               </div>
             </div>

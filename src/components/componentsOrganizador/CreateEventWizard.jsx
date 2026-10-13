@@ -19,7 +19,7 @@ import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import Swal from 'sweetalert2';
 import { organizerService } from '../../services/organizerService.js';
-import { formatPrice } from '../../utils/formatters.js';
+import { formatPrice, formatHora23 } from '../../utils/formatters.js';
 import StyledDatePicker from '../common/StyledDatePicker.jsx';
 
 // Pin temático ámbar colmena para Leaflet
@@ -78,39 +78,70 @@ const STEPS = [
   { id: 5, label: 'Revisión y creación' },
 ];
 
-export default function CreateEventWizard({ onBack, onSave, isDrawer = false }) {
+export default function CreateEventWizard({
+  onBack,
+  onSave,
+  isDrawer = false,
+  initialEvent = null,
+}) {
   const [currentStep, setCurrentStep] = useState(1);
   const [categories, setCategories] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Fecha y hora actual del cliente
+  const now = new Date();
+  const todayStr = (() => {
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  })();
+
+  const currentTimeStr = (() => {
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  })();
+
+  // Detectar si es un evento histórico pasado en modo edición
+  const isHistoricalEvent = Boolean(
+    initialEvent?.fecha && initialEvent.fecha < todayStr
+  );
+
   // Formulario con los datos requeridos por el backend
   const [form, setForm] = useState({
-    titulo: '',
-    descripcion: '',
-    categoriaId: '',
-    fecha: '',
-    hora: '',
-    lugar: '',
-    latitud: 10.4236, // Coordenadas de Cartagena de Indias por defecto
-    longitud: -75.5478,
+    titulo: initialEvent?.titulo || initialEvent?.nombre || '',
+    descripcion: initialEvent?.descripcion || '',
+    categoriaId: initialEvent?.categoriaId || initialEvent?.categoria?.id || '',
+    fecha: initialEvent?.fecha || '',
+    hora: initialEvent?.hora ? formatHora23(initialEvent.hora) : '',
+    lugar: initialEvent?.lugar || '',
+    latitud: initialEvent?.latitud || 10.4236,
+    longitud: initialEvent?.longitud || -75.5478,
   });
 
   const [fotoFile, setFotoFile] = useState(null);
-  const [fotoPreview, setFotoPreview] = useState(null);
+  const [fotoPreview, setFotoPreview] = useState(
+    initialEvent?.foto || initialEvent?.imagenUrl || null
+  );
 
-  const [localidades, setLocalidades] = useState([
-    { nombre: 'General', precio: 50000, capacidad: 100 },
-  ]);
+  const [localidades, setLocalidades] = useState(
+    initialEvent?.localidades && initialEvent.localidades.length > 0
+      ? initialEvent.localidades
+      : [{ nombre: 'General', precio: 50000, capacidad: 100 }]
+  );
 
-const DEFAULT_CATEGORIES = [
-  { id: 1, nombre: 'Música y Conciertos' },
-  { id: 2, nombre: 'Arte y Cultura' },
-  { id: 3, nombre: 'Gastronomía y Sabores' },
-  { id: 4, nombre: 'Deportes y Bienestar' },
-  { id: 5, nombre: 'Festivales y Tradición' },
-  { id: 6, nombre: 'Teatro y Espectáculos' },
-  { id: 7, nombre: 'Tecnología y Ferias' },
-];
+  const [dateTimeError, setDateTimeError] = useState(null);
+
+  const DEFAULT_CATEGORIES = [
+    { id: 1, nombre: 'Música y Conciertos' },
+    { id: 2, nombre: 'Arte y Cultura' },
+    { id: 3, nombre: 'Gastronomía y Sabores' },
+    { id: 4, nombre: 'Deportes y Bienestar' },
+    { id: 5, nombre: 'Festivales y Tradición' },
+    { id: 6, nombre: 'Teatro y Espectáculos' },
+    { id: 7, nombre: 'Tecnología y Ferias' },
+  ];
 
   // Cargar categorías
   useEffect(() => {
@@ -237,8 +268,24 @@ const DEFAULT_CATEGORIES = [
         Swal.fire({ icon: 'warning', title: 'Fecha requerida', text: 'Indica la fecha del evento.' });
         return false;
       }
+      if (!isHistoricalEvent && form.fecha < todayStr) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Fecha inválida',
+          text: 'No es posible seleccionar una fecha pasada para el inicio del evento.',
+        });
+        return false;
+      }
       if (!form.hora) {
         Swal.fire({ icon: 'warning', title: 'Hora requerida', text: 'Indica la hora de inicio del evento.' });
+        return false;
+      }
+      if (!isHistoricalEvent && form.fecha === todayStr && form.hora < currentTimeStr) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Hora inválida',
+          text: `La hora seleccionada (${form.hora}) ya ha transcurrido el día de hoy. Por favor selecciona una hora posterior a las ${currentTimeStr}.`,
+        });
         return false;
       }
     }
@@ -301,7 +348,7 @@ const DEFAULT_CATEGORIES = [
         descripcion: form.descripcion.trim(),
         lugar: form.lugar.trim(),
         fecha: form.fecha,
-        hora: form.hora.length === 5 ? `${form.hora}:00` : form.hora,
+        hora: `${formatHora23(form.hora)}:00`,
         categoriaId: Number(form.categoriaId),
         latitud: Number(form.latitud),
         longitud: Number(form.longitud),
@@ -514,8 +561,13 @@ const DEFAULT_CATEGORIES = [
                     label="Fecha"
                     required
                     value={form.fecha}
+                    allowPast={isHistoricalEvent}
                     onChange={(e) => updateForm('fecha', e.target.value)}
-                    helperText="Solo fechas desde hoy hacia adelante"
+                    helperText={
+                      isHistoricalEvent
+                        ? 'Evento histórico en edición (fecha pasada permitida)'
+                        : 'Solo fechas desde hoy en adelante'
+                    }
                   />
                 </div>
 
@@ -526,10 +578,24 @@ const DEFAULT_CATEGORIES = [
                   <input
                     type="time"
                     value={form.hora}
+                    min={!isHistoricalEvent && form.fecha === todayStr ? currentTimeStr : undefined}
                     onChange={(e) => updateForm('hora', e.target.value)}
-                    className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
+                    className={`w-full text-xs font-semibold px-4 py-2.5 rounded-xl border bg-slate-50 outline-none transition-all cursor-pointer ${
+                      !isHistoricalEvent && form.fecha === todayStr && form.hora && form.hora < currentTimeStr
+                        ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-200'
+                        : 'border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/20'
+                    }`}
                     required
                   />
+                  {!isHistoricalEvent && form.fecha === todayStr && (
+                    <p className={`text-[10px] mt-1 font-semibold ${
+                      form.hora && form.hora < currentTimeStr ? 'text-rose-600' : 'text-slate-400'
+                    }`}>
+                      {form.hora && form.hora < currentTimeStr
+                        ? `La hora debe ser posterior a las ${currentTimeStr}`
+                        : `Evento para hoy: hora mínima ${currentTimeStr}`}
+                    </p>
+                  )}
                 </div>
               </div>
 

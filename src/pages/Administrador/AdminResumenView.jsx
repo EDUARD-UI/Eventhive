@@ -94,13 +94,6 @@ export default function AdminResumenView({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Alerta Informativa Inicial (Requisito 10) */}
-      <AdminInfoAlert
-        id="resumen"
-        title="Centro de Control Administrativo de Eventhive"
-        description="Este panel consolida en tiempo real los indicadores agregados del sistema: validación de RUT empresarial, estados de eventos, distribución por categorías y facturación general."
-      />
-
       {/* Encabezado Principal */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 md:p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
@@ -139,7 +132,7 @@ export default function AdminResumenView({
         </div>
       </div>
 
-      {/* Indicadores Agregados de la Plataforma */}
+      {/* Indicadores Agregados de la Plataforma (Requerimiento 6) */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -148,40 +141,40 @@ export default function AdminResumenView({
               <span>Indicadores Agregados de Plataforma</span>
             </h2>
             <p className="text-xs text-slate-500">
-              Métricas consolidadas y agregadas de la plataforma en tiempo real
+              Métricas consolidadas de la plataforma en tiempo real
             </p>
           </div>
         </div>
 
-        {/* Grid de 4 KPIs Macro */}
+        {/* Grid de 4 KPIs Oficiales */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <StatCard
-            title="Total Usuarios"
-            value={(metrics?.totalUsuarios || 0).toLocaleString('es-CO')}
-            subtitle="Cuentas registradas en plataforma"
-            icon={Users}
+            title="Número de organizaciones"
+            value={totalOrgs}
+            subtitle={`${aprobadasCount} activas/aprobadas`}
+            icon={Building2}
             color="primary"
           />
           <StatCard
-            title="Total Organizaciones"
-            value={totalOrgs}
-            subtitle={`${aprobadasCount} aprobadas • ${pendientesValidacionRut} por validar`}
-            icon={Building2}
-            color="emerald"
-          />
-          <StatCard
-            title="Tickets Vendidos"
-            value={(metrics?.ticketsVendidos || 0).toLocaleString('es-CO')}
-            subtitle="Entradas emitidas con QR"
-            icon={Ticket}
-            color="violet"
-          />
-          <StatCard
-            title="Ventas Totales"
-            value={formatCOP(metrics?.ventasTotales || 0)}
-            subtitle="Recaudo registrado"
-            icon={DollarSign}
+            title="Organizaciones pendientes de validar el RUT"
+            value={pendientesValidacionRut}
+            subtitle="Documento RUT en espera de validación"
+            icon={Clock}
             color="amber"
+          />
+          <StatCard
+            title="Organizaciones que no han cargado el RUT"
+            value={sinRutCount}
+            subtitle="Sin documento RUT registrado"
+            icon={AlertTriangle}
+            color="rose"
+          />
+          <StatCard
+            title="Comisiones de EventHive"
+            value={formatCOP(commercialMetrics?.comisionesVentas ?? metrics?.comisionesVentas ?? 0)}
+            subtitle="Comisiones comerciales sobre ventas"
+            icon={DollarSign}
+            color="emerald"
           />
         </div>
 

@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
-import AdminInfoAlert from '../../components/componentsAdmin/AdminInfoAlert.jsx';
 import ModalDetalleUsuarioAdmin from '../../components/componentsAdmin/ModalDetalleUsuarioAdmin.jsx';
 import ModalEnviarCorreo from '../../components/Shared/ModalEnviarCorreo.jsx';
 import adminService from '../../features/admin/services/adminService.js';
@@ -116,13 +115,6 @@ export default function AdminUsuariosView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Alerta Informativa Inicial */}
-      <AdminInfoAlert
-        id="usuarios"
-        title="Directorio Central de Usuarios"
-        description="Consulte la lista paginada de cuentas registradas en Eventhive, su rol asignado en la plataforma y la organización a la que están vinculados. Puede ver el detalle de cada usuario, editar sus permisos o enviarle una comunicación vía correo en el panel lateral derecho."
-      />
-
       {/* Encabezado y Barra de Filtros */}
       <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
@@ -311,20 +303,12 @@ export default function AdminUsuariosView({
         />
       </div>
 
-      {/* Modal Drawer a la Derecha para Detalle y Edición de Usuario */}
+      {/* Modal Drawer a la Derecha para Consulta de Usuario */}
       {selectedUserForDrawer && (
         <ModalDetalleUsuarioAdmin
           usuario={selectedUserForDrawer}
           onClose={() => setSelectedUserForDrawer(null)}
-          onSave={handleSaveUser}
-          onOpenSendMail={(mailData) => {
-            setMailModal({
-              isOpen: true,
-              email: mailData.email,
-              name: mailData.name,
-              subject: `Comunicación para ${mailData.name}`,
-            });
-          }}
+          onUserUpdated={fetchUsuarios}
         />
       )}
 

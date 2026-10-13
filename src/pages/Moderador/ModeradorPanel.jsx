@@ -208,7 +208,7 @@ export default function ModeradorPanel() {
     },
     motivos: {
       title: 'Catálogo de Motivos Oficiales',
-      subtitle: 'Criterios normativos provistos por el backend para correcciones y rechazos',
+      subtitle: 'Criterios normativos oficiales para correcciones y rechazos',
     },
   };
 

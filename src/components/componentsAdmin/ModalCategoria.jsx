@@ -124,7 +124,7 @@ export default function ModalCategoria({ categoria, onClose, onSave }) {
                     {fotoFile ? fotoFile.name : 'Haz clic o arrastra una imagen aquí'}
                   </p>
                   <p className="text-[11px] text-slate-400">
-                    PNG, JPG o WEBP (el almacenamiento y URL serán generados por el backend)
+                    PNG, JPG o WEBP (máx. 5MB)
                   </p>
                 </div>
               </div>
@@ -144,7 +144,7 @@ export default function ModalCategoria({ categoria, onClose, onSave }) {
                     {nombre || 'Nombre de la categoría'}
                   </span>
                   <span className="text-[10px] text-slate-300">
-                    {fotoFile ? 'Nueva imagen seleccionada' : 'Imagen actual proporcionada por backend'}
+                    {fotoFile ? 'Nueva imagen seleccionada' : 'Imagen actual de la categoría'}
                   </span>
                 </div>
               </div>

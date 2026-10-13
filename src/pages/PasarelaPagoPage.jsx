@@ -137,8 +137,10 @@ export default function PasarelaPagoPage() {
   const cleanCardDigits = cardForm.numero.replace(/\D/g, '');
   const lastFourDigits = cleanCardDigits.slice(-4) || '5678';
 
-  const precioUnitario = Number(selectedLocalidad?.precio || event?.price || 0);
-  const total = precioUnitario * cantidad;
+  const precioBaseUnitario = Number(selectedLocalidad?.precio || event?.price || 0);
+  const precioBaseTotal = precioBaseUnitario * cantidad;
+  const comisionServicio = Math.round(precioBaseTotal * 0.10); // Comisión del 10% de EventHive
+  const total = precioBaseTotal + comisionServicio;
   const orderNumber = orderReference || `1266${(event?.id || 201).toString().padStart(3, '0')}`;
 
   // Procesar pago exclusivamente con Tarjeta
@@ -250,6 +252,14 @@ export default function PasarelaPagoPage() {
               <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                 <span className="text-slate-500 font-medium">Tarjeta</span>
                 <span className="font-mono font-bold text-slate-950">Tarjeta •••• {lastFourDigits}</span>
+              </div>
+              <div className="flex items-center justify-between pb-1 text-slate-600">
+                <span>Precio base ({cantidad} boleta{cantidad > 1 ? 's' : ''})</span>
+                <span className="font-semibold text-slate-900">${Number(precioBaseTotal).toLocaleString('es-CO')} COP</span>
+              </div>
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 text-slate-600">
+                <span>Comisión de servicio EventHive (10%)</span>
+                <span className="font-semibold text-slate-900">${Number(comisionServicio).toLocaleString('es-CO')} COP</span>
               </div>
               <div className="flex items-center justify-between pt-1">
                 <span className="text-slate-900 font-extrabold text-sm">Total Cobrado</span>
@@ -606,6 +616,20 @@ export default function PasarelaPagoPage() {
                   <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                     <span>Cantidad</span>
                     <span className="font-bold text-slate-800 dark:text-white">{cantidad} boleta{cantidad > 1 ? 's' : ''}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+                    <span>Precio base</span>
+                    <span className="font-semibold text-slate-800 dark:text-white">
+                      ${Number(precioBaseTotal).toLocaleString('es-CO')}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+                    <span>Comisión EventHive (10%)</span>
+                    <span className="font-semibold text-slate-800 dark:text-white">
+                      ${Number(comisionServicio).toLocaleString('es-CO')}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">

@@ -31,7 +31,7 @@ import { userService } from '../services/userService.js';
 import { organizerService } from '../services/organizerService.js';
 import { normalizeEvent } from '../services/eventService.js';
 import { session } from '../services/session.js';
-import { formatPrice, getCategoryGradient } from '../utils/formatters.js';
+import { formatPrice, getCategoryGradient, formatHora23 } from '../utils/formatters.js';
 import { sanitizeText, sanitizePhone } from '../utils/sanitizer.js';
 
 const TABS = [
@@ -197,7 +197,7 @@ export default function PerfilUsuario() {
             evento: b.eventoTitulo || evento.titulo || compra.eventoTitulo || 'Evento EventHive',
             eventoId: evento.id || b.eventoId,
             fecha: evento.fecha || compra.fechaCompra || 'Fecha por confirmar',
-            hora: evento.hora || 'Hora por confirmar',
+            hora: evento.hora ? formatHora23(evento.hora) : 'Hora por confirmar',
             lugar: evento.lugar || evento.ubicacion || 'Cartagena de Indias',
             zona: b.localidadNombre || localidad.nombre || 'Entrada General',
             asiento: b.asiento || b.numeroAsiento || 'Acceso General',
@@ -219,7 +219,7 @@ export default function PerfilUsuario() {
             evento: evento.titulo || compra.eventoTitulo || 'Evento EventHive',
             eventoId: evento.id || compra.eventoId,
             fecha: evento.fecha || compra.fechaCompra || 'Fecha por confirmar',
-            hora: evento.hora || 'Hora por confirmar',
+            hora: evento.hora ? formatHora23(evento.hora) : 'Hora por confirmar',
             lugar: evento.lugar || evento.ubicacion || 'Cartagena de Indias',
             zona: localidad.nombre || compra.localidadNombre || 'Entrada General',
             asiento: `Boleto #${i}`,

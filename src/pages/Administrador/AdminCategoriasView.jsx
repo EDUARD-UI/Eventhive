@@ -68,7 +68,7 @@ export default function AdminCategoriasView({
       <AdminInfoAlert
         id="categorias"
         title="Catálogo Oficial de Categorías"
-        description="Gestione las categorías temáticas de eventos. Cada categoría cuenta con ID, nombre y fotografía procesada y almacenada por el backend. Si una categoría posee eventos asociados, es recomendable desactivarla para preservar la integridad transaccional."
+        description="Gestione las categorías temáticas de eventos. Cada categoría cuenta con ID, nombre y fotografía asociada. Si una categoría posee eventos asociados, es recomendable desactivarla para preservar la integridad transaccional."
       />
 
       {/* Encabezado Principal y Acción Crear */}

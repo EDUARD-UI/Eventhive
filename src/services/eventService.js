@@ -1,4 +1,5 @@
 import { httpClient } from './httpClient.js';
+import { formatHora23 } from '../utils/formatters.js';
 
 const parseDateSafe = (dateString, timeString) => {
   if (!dateString) return null;
@@ -36,22 +37,19 @@ export const formatDisplayDate = (dateString, timeString) => {
 
 export const formatDisplayTime = (timeString, dateString) => {
   if (!timeString && !dateString) return '';
-  const date = parseDateSafe(dateString || '2026-01-01', timeString);
-  if (!date && timeString) return timeString.slice(0, 5);
-  if (!date) return '';
-
-  return date
-    .toLocaleTimeString('es-ES', { hour: 'numeric', minute: '2-digit', hour12: true })
-    .toLowerCase();
+  return formatHora23(timeString || dateString);
 };
 
 export const normalizeEvent = (event) => {
   const shortDate = formatDisplayDate(event.fecha, event.hora);
-  const formattedTime = formatDisplayTime(event.hora, event.fecha);
+  const cleanHora = formatHora23(event.hora);
+  const formattedTime = cleanHora;
 
   return {
     ...event,
     id: String(event.id),
+    hora: cleanHora,
+    time: cleanHora || formatHora23(event.time),
     title: event.titulo || event.title || 'Evento sin título',
     description: event.descripcion || event.description || '',
     category:
@@ -63,7 +61,7 @@ export const normalizeEvent = (event) => {
     shortDate,
     formattedTime,
     date: formattedTime ? `${shortDate} · ${formattedTime}` : shortDate,
-    startsAt: event.fecha ? `${event.fecha}T${event.hora || '00:00:00'}` : null,
+    startsAt: event.fecha ? `${event.fecha}T${cleanHora ? `${cleanHora}:00` : '00:00:00'}` : null,
     lat: event.latitud,
     lng: event.longitud,
     promocionado: Boolean(event.promocionado || event.destacado || event.urlImagenDestacado || event.imagenPromocional),
@@ -81,9 +79,110 @@ export const normalizeEvent = (event) => {
 };
 
 /**
- * Eventos destacados para el carrusel (GET /api/eventos/destacados).
- * Devuelve eventos PUBLICADO con promocionado=true ordenados por fecha, hora e ID.
- * Si la lista está vacía, recurre a los eventos próximos como fallback elegante.
+ * Eventos exclusivos para el carrusel principal (GET /api/eventos/carrusel).
+ * Reglas: estado PUBLICADO, promoción con pago CONFIRMADO, plan con premium=true
+ * y url_imagen_destacado válida asignada por Marketing.
+ * Devuelve la imagen destacada de banner colocada por Marketing.
+ */
+export async function getCarouselEvents() {
+  try {
+    const data = await httpClient.get('/eventos/carrusel');
+    const content = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+      ? data.data
+      : Array.isArray(data?.content)
+      ? data.content
+      : [];
+
+    return content
+      .map((item, idx) => {
+        const imageUrl =
+          typeof item === 'string'
+            ? item
+            : item?.url_imagen_promocionado ||
+              item?.urlImagenPromocionado ||
+              item?.url_imagen_destacado ||
+              item?.urlImagenDestacado ||
+              item?.url_imagen ||
+              item?.urlImagen ||
+              item?.url ||
+              item?.imagen ||
+              item?.foto ||
+              item?.photo ||
+              '';
+
+        if (!imageUrl) return null;
+
+        const rawId =
+          typeof item === 'object' && item !== null
+            ? item.eventoId || item.evento_id || item.id || null
+            : null;
+
+        const hasRealId =
+          rawId !== null &&
+          rawId !== undefined &&
+          !String(rawId).startsWith('carrusel-');
+        const id = hasRealId ? String(rawId) : `carrusel-${idx}`;
+        const eventoId = hasRealId ? rawId : null;
+
+        const rawTitle =
+          typeof item === 'object' && item !== null
+            ? item.titulo || item.title || item.nombre || ''
+            : '';
+        const titulo = rawTitle === 'Evento Destacado' ? '' : rawTitle;
+
+        const rawCat =
+          typeof item === 'object' && item !== null
+            ? item.categoria || item.category || item.categoriaNombre || ''
+            : '';
+        const categoria = rawCat === 'Evento Destacado' ? '' : rawCat;
+
+        const lugar =
+          typeof item === 'object' && item !== null
+            ? item.lugar || item.ubicacion || item.location || ''
+            : '';
+
+        const fecha =
+          typeof item === 'object' && item !== null
+            ? item.fecha || item.date || ''
+            : '';
+
+        const hora =
+          typeof item === 'object' && item !== null
+            ? formatHora23(item.hora)
+            : '';
+
+        return {
+          id,
+          eventoId,
+          titulo,
+          title: titulo,
+          description: item?.descripcion || item?.description || '',
+          url_imagen_promocionado: imageUrl,
+          url_imagen_destacado: imageUrl,
+          photo: imageUrl,
+          categoria,
+          category: categoria,
+          lugar,
+          location: lugar,
+          fecha,
+          date: fecha,
+          hora,
+          premium: true,
+        };
+      })
+      .filter(Boolean);
+  } catch (err) {
+    console.warn('No se pudo consultar /eventos/carrusel:', err?.message);
+    return [];
+  }
+}
+
+
+/**
+ * Eventos destacados para cartelera (GET /api/eventos/destacados).
+ * Devuelve eventos PUBLICADO con promoción pagada y confirmada (promocionado=true).
  */
 export async function getFeaturedEvents({ page = 0, size = 10, sort } = {}) {
   try {
@@ -91,42 +190,25 @@ export async function getFeaturedEvents({ page = 0, size = 10, sort } = {}) {
     if (sort) params.sort = sort;
     const data = await httpClient.get('/eventos/destacados', params);
     const content = Array.isArray(data) ? data : data?.content || [];
-    if (content.length > 0) {
-      return content.map(normalizeEvent);
-    }
+    return content.map(normalizeEvent);
   } catch (err) {
-    console.warn('Fallback: no se pudo consultar /eventos/destacados:', err?.message);
-  }
-
-  // Fallback seguro a /eventos si aún no hay destacados configurados
-  try {
-    const fallbackData = await httpClient.get('/eventos', { page: 0, size: 8, sort: 'fecha,asc' });
-    const fallbackList = Array.isArray(fallbackData) ? fallbackData : fallbackData?.content || [];
-    return fallbackList.map(normalizeEvent);
-  } catch {
+    console.warn('Error consultando /eventos/destacados:', err?.message);
     return [];
   }
 }
 
 /**
- * Próximos eventos para la cartelera semanal (GET /api/eventos/proximos o fallback a GET /api/eventos).
+ * Próximos eventos para la cartelera (GET /api/eventos/proximos).
+ * Ordenados estrictamente por proximidad temporal ascendente (fecha ASC, hora ASC, id ASC).
+ * No se reorganizan ni priorizan eventos promocionados ni premium.
  */
 export async function getUpcomingEvents({ page = 0, size = 8 } = {}) {
   try {
     const proximosData = await httpClient.get('/eventos/proximos', { page, size });
     const content = Array.isArray(proximosData) ? proximosData : proximosData?.content || [];
-    if (content.length > 0) {
-      return content.map(normalizeEvent);
-    }
-  } catch {
-    // Continuar a fallback
-  }
-
-  try {
-    const data = await httpClient.get('/eventos', { page, size, sort: 'fecha,asc' });
-    const content = Array.isArray(data) ? data : data?.content || [];
     return content.map(normalizeEvent);
-  } catch {
+  } catch (err) {
+    console.warn('Error consultando /eventos/proximos:', err?.message);
     return [];
   }
 }

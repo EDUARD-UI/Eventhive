@@ -15,6 +15,7 @@ import {
 import Badge from '../../components/Shared/Badge.jsx';
 import { organizerService } from '../../services/organizerService.js';
 import Swal from 'sweetalert2';
+import { formatHora23 } from '../../utils/formatters.js';
 
 const toneMap = {
   PUBLICADO: 'active',
@@ -214,7 +215,7 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
                 <FiClock size={15} className="text-amber-600 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <span className="text-[10px] text-slate-400 uppercase font-bold block">Hora</span>
-                  <span className="font-bold text-slate-800 truncate block">{event.hora || 'No definida'}</span>
+                  <span className="font-bold text-slate-800 truncate block">{event.hora ? formatHora23(event.hora) : 'No definida'}</span>
                 </div>
               </div>
 
