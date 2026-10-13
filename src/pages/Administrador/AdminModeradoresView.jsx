@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ShieldCheck,
   UserCheck,
@@ -252,8 +253,8 @@ export default function AdminModeradoresView({
 
       {/* Modal Confirmar Revocación de Rol */}
       {modalRevocar && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+        createPortal(<div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
           onClick={() => setModalRevocar(null)}
         >
           <div
@@ -297,7 +298,7 @@ export default function AdminModeradoresView({
               </div>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
     </div>
   );

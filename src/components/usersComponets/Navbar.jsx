@@ -62,7 +62,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
         }`}
       >
         <div
-          className={`mx-auto flex w-full items-center justify-between ${
+          className={`mx-auto flex w-full items-center justify-between lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] ${
             embedded
               ? `max-w-7xl gap-4 px-4 py-4 sm:px-6 sm:py-5 md:px-8 xl:px-12 ${
                   isDark ? 'text-white' : 'text-slate-800'
@@ -71,7 +71,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
           }`}
         >
           {/* Logo de Marca y Buscador */}
-          <div className="flex items-center gap-3 sm:gap-5 min-w-0">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-5 lg:justify-self-start">
             <Link to="/" className="flex shrink-0 items-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-lg">
               <AppLogo
                 className="h-8 sm:h-9 w-fit"
@@ -85,7 +85,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
           </div>
 
           {/* Menú de Navegación Central */}
-          <nav className="hidden min-w-0 items-center justify-center gap-4 text-sm font-medium xl:gap-6 lg:flex">
+          <nav className="hidden min-w-0 items-center justify-center gap-4 text-sm font-medium xl:gap-6 lg:flex lg:justify-self-center">
             {NAV_LINKS.map((link) => {
               const isActive = location.pathname === link.href;
               return link.label === "Ayuda" ? (
@@ -122,7 +122,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
           </nav>
 
           {/* Acciones, Botón Tema y Autenticación */}
-          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5 lg:justify-self-end">
             {/* Botón de alternar Tema Claro / Oscuro con estados accesibles y alto contraste */}
             <button
               type="button"

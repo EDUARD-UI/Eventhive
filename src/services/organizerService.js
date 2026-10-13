@@ -26,12 +26,12 @@ const createOrganizerEvent = (formData) =>
   httpClient.post('/eventos', formData, { isFormData: true });
 
 export const organizationService = {
-  async listOrganizations({ page = 0, size = 12, estado } = {}) {
+  async listOrganizations({ page = 0, size = 12, estado, skipAuth = false } = {}) {
     const params = { page, size };
     if (estado && estado !== 'TODOS') {
       params.estado = estado;
     }
-    const data = await httpClient.get('/organizaciones', params);
+    const data = await httpClient.get('/organizaciones', params, { skipAuth });
     return { organizations: getPageContent(data), total: data?.totalElements ?? 0 };
   },
 
@@ -42,10 +42,13 @@ export const organizationService = {
 
   async searchOrganizations(razonSocial, { page = 0, size = 12 } = {}) {
     try {
-      const data = await httpClient.post('/organizaciones/buscar', { razonSocial }, { params: { page, size } });
+      const data = await httpClient.post('/organizaciones/buscar', { razonSocial }, {
+        params: { page, size },
+        skipAuth: true,
+      });
       return { organizations: getPageContent(data), total: data?.totalElements ?? 0 };
     } catch {
-      const all = await this.listOrganizations({ page: 0, size: 50 });
+      const all = await this.listOrganizations({ page: 0, size: 50, skipAuth: true });
       const term = (razonSocial || '').toLowerCase();
       const filtered = all.organizations.filter(
         (o) =>
@@ -355,4 +358,3 @@ export const organizerService = {
 };
 
 export default organizationService;
-
