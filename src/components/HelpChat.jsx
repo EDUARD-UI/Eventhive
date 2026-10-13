@@ -175,7 +175,7 @@ export default function HelpChat({
               {/* Avatar con isotipo hexagonal de ticket */}
               <div className="relative w-10 h-10 rounded-full bg-[#132047] border border-amber-500/30 flex items-center justify-center shrink-0 shadow-inner">
                 <img
-                  src="/LOGO 32x32.png"
+                  src="/LOGO32x32.png"
                   alt="Isotipo EventHive"
                   className="w-5 h-5 object-contain drop-shadow-xs"
                 />

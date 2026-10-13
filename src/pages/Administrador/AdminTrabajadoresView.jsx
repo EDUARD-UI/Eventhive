@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Users,
   ShieldCheck,
@@ -419,7 +420,7 @@ export default function AdminTrabajadoresView({
 
       {/* Modal Confirmar Revocación */}
       {modalRevocar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        createPortal(<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
               <UserX size={24} />
@@ -450,7 +451,7 @@ export default function AdminTrabajadoresView({
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
 
       {/* Modal Genérico de Enviar Correo (Se abre a la derecha) */}

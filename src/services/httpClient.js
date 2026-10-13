@@ -87,7 +87,7 @@ function cerrarSesionYRedirigir() {
   }
 }
 
-async function request(path, { method = 'GET', params, body, isFormData = false, _retried = false, _fallbackAttempted = false } = {}) {
+async function request(path, { method = 'GET', params, body, isFormData = false, skipAuth = false, _retried = false, _fallbackAttempted = false } = {}) {
   // Rutas de autenticación pública que no deben pasar por refresh de token ni enviar Authorization
   const esRutaAuthPublica =
     path === '/auth/login' ||
@@ -95,12 +95,13 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
     path === '/auth/registro' ||
     path.startsWith('/auth/verificar-codigo') ||
     path.startsWith('/auth/reenviar-codigo');
+  const omitirAutenticacion = skipAuth || esRutaAuthPublica;
 
   let token = session.getToken();
 
   // 1. REFRESH PREVENTIVO: Si el token existe pero está expirado o vence en < 15s,
   // refrescarlo silenciosamente ANTES de disparar la petición para evitar errores 401 en consola.
-  if (!esRutaAuthPublica && token && isTokenExpired(token)) {
+  if (!omitirAutenticacion && token && isTokenExpired(token)) {
     const sesionRenovada = await intentarRefrescarToken();
     if (sesionRenovada) {
       token = session.getToken();
@@ -118,7 +119,7 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
 
   const headers = {};
   if (!isFormData) headers['Content-Type'] = 'application/json';
-  if (token && token !== 'dev-session-token') {
+  if (!omitirAutenticacion && token && token !== 'dev-session-token') {
     headers.Authorization = `Bearer ${token}`;
   }
 
@@ -145,7 +146,7 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
         : 'No se pudo conectar con el servidor de Render';
       console.warn(`[EventHive API] ${reason}. Conmutando automáticamente a backend local (http://localhost:8080/api)...`);
       switchToLocalFallback(reason);
-      return request(path, { method, params, body, isFormData, _retried, _fallbackAttempted: true });
+      return request(path, { method, params, body, isFormData, skipAuth, _retried, _fallbackAttempted: true });
     }
 
     if (err.name === 'AbortError') {
@@ -159,16 +160,16 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
     const reason = `Render respondió con código ${response.status} (Servicio no disponible)`;
     console.warn(`[EventHive API] ${reason}. Conmutando automáticamente a backend local (http://localhost:8080/api)...`);
     switchToLocalFallback(reason);
-    return request(path, { method, params, body, isFormData, _retried, _fallbackAttempted: true });
+    return request(path, { method, params, body, isFormData, skipAuth, _retried, _fallbackAttempted: true });
   }
 
   // 2. MANEJO REACTIVO DE 401 UNAUTHORIZED:
   // Si el servidor rechaza por token expirado/inválido en vuelo:
-  if (response.status === 401 && !esRutaAuthPublica) {
+  if (response.status === 401 && !omitirAutenticacion) {
     if (!_retried) {
       const sesionRenovada = await intentarRefrescarToken();
       if (sesionRenovada) {
-        return request(path, { method, params, body, isFormData, _retried: true });
+        return request(path, { method, params, body, isFormData, skipAuth, _retried: true });
       }
     }
 
@@ -197,7 +198,7 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
 }
 
 export const httpClient = {
-  get: (path, params) => request(path, { method: 'GET', params }),
+  get: (path, params, options = {}) => request(path, { method: 'GET', params, ...options }),
   post: (path, body, options = {}) => request(path, { method: 'POST', body, ...options }),
   put: (path, body, options = {}) => request(path, { method: 'PUT', body, ...options }),
   patch: (path, body, options = {}) => request(path, { method: 'PATCH', body, ...options }),

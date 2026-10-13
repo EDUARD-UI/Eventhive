@@ -50,6 +50,7 @@ export default function OrganizadoresPage() {
           page: currentPage - 1,
           size: PAGE_SIZE,
           estado: 'APROBADA',
+          skipAuth: true,
         });
         return res;
       } catch (err) {
@@ -87,48 +88,43 @@ export default function OrganizadoresPage() {
       <Navbar />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-w-0 max-w-full relative z-10">
-        {/* Cabecera / Título de la sección + Buscador integrado */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 pb-6 border-b border-slate-200/80 dark:border-slate-800">
-          <div className="space-y-1.5 max-w-xl min-w-0">
-            <div className="flex items-center flex-wrap gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase break-words">
-                Organizaciones y Productores
-              </h1>
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 shadow-2xs">
-                {loading ? (
-                  <span className="inline-block animate-pulse">Cargando...</span>
-                ) : (
-                  `${totalElements} ${totalElements === 1 ? 'registrado' : 'registrados'}`
-                )}
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-normal leading-relaxed">
+        {/* Encabezado del directorio y búsqueda, agrupados y centrados */}
+        <header className="relative mb-8 overflow-hidden rounded-3xl border border-slate-200/80 bg-white/85 px-5 py-8 text-center shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-[#0B1428]/85 sm:px-8 sm:py-10">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" />
+          <div className="relative flex flex-col items-center">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl lg:text-5xl">
+              Organizaciones y Productores
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400 sm:text-base">
               Directorio oficial de colectivos, promotores y productores culturales en Cartagena.
             </p>
-          </div>
 
-          {/* Buscador Rápido con ancho óptimo y sin truncamiento */}
-          <div className="relative w-full md:w-80 lg:w-96 max-w-full shrink-0">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              placeholder="Buscar organización por nombre..."
-              className="w-full h-11 bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 focus:border-amber-500 rounded-xl pl-10 pr-9 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all shadow-xs"
-            />
-            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none" />
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={() => setSearchTerm('')}
-                aria-label="Limpiar búsqueda"
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
-              >
-                ✕
-              </button>
-            )}
+            <div role="search" className="relative mt-6 w-full max-w-xl">
+              <label htmlFor="organization-search" className="sr-only">
+                Buscar organización por nombre
+              </label>
+              <input
+                id="organization-search"
+                type="text"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                placeholder="Buscar organización por nombre..."
+                className="h-12 w-full rounded-2xl border border-slate-300 bg-white pl-11 pr-11 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 hover:border-slate-400 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-500/10 dark:border-slate-700 dark:bg-[#0B0F19] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600"
+              />
+              <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  aria-label="Limpiar búsqueda"
+                  className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        </header>
 
         {/* Barra de Filtros: Tabs segmentados a la izquierda y Botón de Acción destacado a la derecha */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 mb-8">
@@ -142,7 +138,7 @@ export default function OrganizadoresPage() {
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60'
               }`}
             >
-              Directorio
+              Directorios
             </button>
             <button
               type="button"
@@ -153,7 +149,7 @@ export default function OrganizadoresPage() {
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60'
               }`}
             >
-              Información para Productores
+              Información
             </button>
           </div>
 

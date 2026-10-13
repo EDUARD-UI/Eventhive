@@ -242,15 +242,48 @@ export default function BuscarEventosPage() {
       <Navbar />
 
       <main className="flex-1 max-w-[1900px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-8 sm:py-12 relative z-10">
-        {/* Cabecera / Título Principal Centrado */}
-        <div className="mb-8 pb-4 border-b border-slate-200/70 dark:border-slate-800 text-center flex flex-col items-center">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0B132B] dark:text-white tracking-tight mb-2">
-            Eventos en Cartagena
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-normal leading-relaxed max-w-xl mx-auto">
-            Descubre conciertos, festivales, experiencias culturales y deportivas en La Heroica.
-          </p>
-        </div>
+        {/* Encabezado centrado, en armonía con el directorio de organizaciones */}
+        <header className="relative mb-8 overflow-hidden rounded-3xl border border-slate-200/80 bg-white/80 px-5 py-7 text-center shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-[#0B1428]/80 sm:px-8 sm:py-9">
+          <div aria-hidden="true" className="pointer-events-none absolute -left-16 -top-20 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" />
+          <div className="relative flex flex-col items-center">
+            <h1 className="text-3xl font-extrabold tracking-tight text-[#0B132B] dark:text-white sm:text-4xl md:text-5xl">
+              Eventos en Cartagena
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400 sm:text-base">
+              Descubre conciertos, festivales, experiencias culturales y deportivas en La Heroica.
+            </p>
+            <form role="search" onSubmit={handleSearchSubmit} className="relative mt-6 w-full max-w-xl">
+              <label htmlFor="event-search" className="sr-only">
+                Buscar eventos por nombre
+              </label>
+              <input
+                id="event-search"
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Buscar eventos por nombre..."
+                className="h-12 w-full rounded-2xl border border-slate-300 bg-white pl-11 pr-11 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 hover:border-slate-400 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-500/10 dark:border-slate-700 dark:bg-[#0B0F19] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600"
+              />
+              <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchInput('');
+                    const next = new URLSearchParams(searchParams);
+                    next.delete('titulo');
+                    next.delete('page');
+                    setSearchParams(next);
+                  }}
+                  aria-label="Limpiar búsqueda"
+                  className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                >
+                  ✕
+                </button>
+              )}
+            </form>
+          </div>
+        </header>
 
         {/* Layout de 2 columnas: Filtros Sticky a la izquierda y Eventos con Scroll a la derecha */}
         <div className="flex flex-col lg:flex-row items-start gap-8">
@@ -405,7 +438,7 @@ export default function BuscarEventosPage() {
 
                 {/* Componente de Paginación Minimalista y Centrado */}
                 {totalElements > pageSize && (
-                  <div className="mt-12 flex justify-center w-full">
+                  <div className="mt-12 w-full max-w-lg mx-auto lg:-translate-x-40 xl:-translate-x-44 flex justify-center">
                     <Pagination
                       currentPage={pageParam + 1}
                       totalItems={totalElements}
@@ -417,7 +450,7 @@ export default function BuscarEventosPage() {
                 )}
               </>
             ) : (
-              <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-12 text-center max-w-lg mx-auto shadow-sm my-8">
+              <div className="w-full max-w-lg mx-auto lg:-translate-x-40 xl:-translate-x-44 flex flex-col items-center rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-12 text-center shadow-sm my-8">
                 <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                   <FiCalendar size={24} />
                 </div>

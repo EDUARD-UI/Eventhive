@@ -656,7 +656,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
 
       {/* DRAWER MODAL LATERAL DERECHO: EDICIÓN DE PERFIL */}
       {showEditDrawer && (
-        <div className="fixed inset-0 z-[9999] flex justify-end">
+        createPortal(<div className="fixed inset-0 z-[9999] flex justify-end">
           <div
             className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
             onClick={() => setShowEditDrawer(false)}
@@ -762,12 +762,12 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
 
       {/* Modal de Cambio de Contraseña */}
       {showPasswordModal && (
-        <div
+        createPortal(<div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-200"
           onClick={() => setShowPasswordModal(false)}
         >
@@ -855,7 +855,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
               </div>
             </form>
           </div>
-        </div>
+        </div>, document.body)
       )}
     </div>
   );

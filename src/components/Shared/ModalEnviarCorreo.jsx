@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FiX, FiMail, FiSend, FiUser, FiCheckCircle, FiFileText } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import adminService from '../../features/admin/services/adminService.js';
@@ -101,7 +102,7 @@ export default function ModalEnviarCorreo({
     }
   };
 
-  return (
+  return createPortal((
     <div className="fixed inset-0 z-[9999] flex justify-end">
       {/* Backdrop */}
       <div
@@ -220,5 +221,5 @@ export default function ModalEnviarCorreo({
         </div>
       </div>
     </div>
-  );
+  ), document.body);
 }
