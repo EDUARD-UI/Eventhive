@@ -255,20 +255,18 @@ export default function Home() {
       <Hero />
 
       {/* 2. Carrusel Principal de Eventos Premium */}
-      {(isLoadingEvents || carouselEvents.length > 0) && (
-        <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-3 pb-8 sm:pt-5 sm:pb-12 max-w-[1850px] mx-auto relative z-10 transition-colors duration-200">
-          {isLoadingEvents ? (
-            <div className="w-full rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[340px] max-h-[480px] bg-slate-200 dark:bg-slate-800/80 border border-slate-300/40 dark:border-slate-700/60 animate-pulse relative overflow-hidden flex flex-col justify-end p-6 sm:p-12 shadow-sm">
-              <div className="w-28 h-6 bg-slate-300 dark:bg-slate-700 rounded-md mb-4" />
-              <div className="w-2/3 h-8 sm:h-10 bg-slate-300 dark:bg-slate-700 rounded-lg mb-3" />
-              <div className="w-1/2 h-4 bg-slate-300 dark:bg-slate-700/80 rounded mb-6 hidden sm:block" />
-              <div className="w-36 h-10 bg-slate-300 dark:bg-slate-700 rounded-xl" />
-            </div>
-          ) : (
-            <FeaturedEventsCarousel events={carouselEvents} />
-          )}
-        </section>
-      )}
+      <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-3 pb-8 sm:pt-5 sm:pb-12 max-w-[1850px] mx-auto relative z-10 transition-colors duration-200">
+        {isLoadingEvents ? (
+          <div className="w-full rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[340px] max-h-[480px] bg-slate-200 dark:bg-slate-800/80 border border-slate-300/40 dark:border-slate-700/60 animate-pulse relative overflow-hidden flex flex-col justify-end p-6 sm:p-12 shadow-sm">
+            <div className="w-28 h-6 bg-slate-300 dark:bg-slate-700 rounded-md mb-4" />
+            <div className="w-2/3 h-8 sm:h-10 bg-slate-300 dark:bg-slate-700 rounded-lg mb-3" />
+            <div className="w-1/2 h-4 bg-slate-300 dark:bg-slate-700/80 rounded mb-6 hidden sm:block" />
+            <div className="w-36 h-10 bg-slate-300 dark:bg-slate-700 rounded-xl" />
+          </div>
+        ) : (
+          <FeaturedEventsCarousel events={carouselEvents} />
+        )}
+      </section>
 
       {/* Cintas Cruzadas entre el Carrusel Principal y los Eventos Próximos */}
       <CrossedRibbonsBanner badgeText="Conecta al ritmo de la ciudad" />

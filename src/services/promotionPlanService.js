@@ -19,12 +19,9 @@ export const promotionPlanService = {
         comisionPorcentaje: Number(p.comisionPorcentaje || 0),
         premium: Boolean(p.premium),
         pautaRedes: Boolean(p.pautaRedes || p.llevaPautaRedes),
-        duracion: p.duracion || '30 días',
-        dias: p.dias || 30,
         popular: Boolean(p.premium),
         beneficios: [
           p.premium ? 'Banner rotativo en el Carrusel Principal del Home' : 'Destacado en cartelera y catálogo',
-          p.pautaRedes ? 'Pauta y difusión publicitaria en redes sociales' : 'Visibilidad orgánica prioritara',
           `Comisión comercial de ${p.comisionPorcentaje || 0}%`,
           p.detallePublicidad || 'Posicionamiento oficial garantizado',
         ],

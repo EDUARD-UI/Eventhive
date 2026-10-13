@@ -6,6 +6,7 @@ import {
   FiArrowRight,
   FiChevronLeft,
   FiChevronRight,
+  FiImage,
 } from 'react-icons/fi';
 import ImageWithFallback from '../common/ImageWithFallback.jsx';
 
@@ -118,7 +119,35 @@ export default function FeaturedEventsCarousel({ events = [] }) {
     touchEndX.current = 0;
   };
 
-  if (!displayEvents || displayEvents.length === 0) return null;
+  if (!displayEvents || displayEvents.length === 0) {
+    return (
+      <div className="relative w-full rounded-3xl overflow-hidden shadow-xl border border-slate-800 bg-[#0B132B] aspect-[16/9] sm:aspect-[21/9] min-h-[340px] max-h-[480px] flex flex-col items-center justify-center p-6 sm:p-12 text-center select-none">
+        {/* Fondo azul profundo institucional con gradiente */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0B132B] via-[#0D1D45] to-[#060B18]" />
+
+        {/* Resplandores azul y ámbar sutiles */}
+        <div className="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-blue-600/15 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col items-center justify-center max-w-lg space-y-3">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-amber-400 shadow-inner">
+            <FiImage size={28} className="text-amber-400/90" />
+          </div>
+          <div className="space-y-1.5">
+            <span className="inline-flex items-center px-3 py-1 rounded-md text-[11px] font-black uppercase tracking-wider bg-slate-900/90 text-amber-400 border border-slate-700/80">
+              Carrusel Principal
+            </span>
+            <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+              Espacio para banners destacados
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-400 max-w-sm mx-auto">
+              Aún no hay imágenes asignadas por marketing para este carrusel.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

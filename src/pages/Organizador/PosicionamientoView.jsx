@@ -3,7 +3,6 @@ import {
   FiAward,
   FiZap,
   FiCheckCircle,
-  FiClock,
   FiTrendingUp,
   FiCheck,
   FiShield,
@@ -305,22 +304,22 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
         )}
       </div>
 
-      {/* 4. Planes de Promoción Disponibles (Requerimiento 2.3: Consulta al backend) */}
+      {/* 4. Planes Disponibles (Consulta al backend) */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
         <h3 className="font-display text-base font-bold text-slate-900 flex items-center gap-2">
           <span className="w-6 h-6 rounded-full bg-[#0B1B3D] text-amber-300 flex items-center justify-center text-xs font-black">
             2
           </span>
-          <span>Elige el plan de promoción</span>
+          <span>Elige tu plan</span>
         </h3>
 
         {loadingPlanes ? (
           <div className="p-8 text-center text-xs text-slate-500 italic bg-slate-50 rounded-xl">
-            Cargando planes de promoción...
+            Cargando planes...
           </div>
         ) : planes.length === 0 ? (
           <div className="p-6 text-center text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl">
-            No hay planes de promoción activos disponibles en este momento.
+            No hay planes activos disponibles en este momento.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -357,14 +356,6 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
                     </p>
 
                     <div className="space-y-1.5 text-xs text-slate-500 mb-5">
-                      <div className="flex items-center gap-2">
-                        <FiClock size={12} className="text-slate-400" />
-                        <span>Duración: <strong className="text-slate-800">{plan.duracionDias || plan.duracion || '30'} días</strong></span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <FiCheck size={12} className={plan.pautaRedes ? 'text-emerald-600' : 'text-slate-400'} />
-                        <span>Pauta en redes: <strong className="text-slate-800">{plan.pautaRedes ? 'Sí' : 'No'}</strong></span>
-                      </div>
                       <div className="flex items-center gap-2">
                         <FiCheck size={12} className={plan.premium ? 'text-amber-600' : 'text-slate-400'} />
                         <span>Banner en Carrusel Home: <strong className="text-slate-800">{plan.premium ? 'Sí (Premium)' : 'No (Estándar)'}</strong></span>
@@ -406,7 +397,7 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
             {selectedEvento?.titulo || 'Selecciona un evento publicado'}
           </h4>
           <p className="text-xs text-slate-300 mt-0.5">
-            Plan: <strong>{selectedPlan?.nombre || 'Ninguno'}</strong> ({selectedPlan?.duracionDias || selectedPlan?.duracion || '30'} días) · Precio fijo:{' '}
+            Plan: <strong>{selectedPlan?.nombre || 'Ninguno'}</strong> · Precio fijo:{' '}
             <strong className="text-amber-300">{formatPrice(selectedPlan?.precio || 0)}</strong>
           </p>
         </div>
@@ -425,7 +416,7 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
           ) : (
             <>
               <FiAward size={15} />
-              <span>Contratar y pagar promoción</span>
+              <span>Contratar plan</span>
               <FiArrowRight size={14} />
             </>
           )}
