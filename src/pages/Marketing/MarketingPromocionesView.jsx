@@ -25,6 +25,7 @@ import {
 import Swal from 'sweetalert2';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
+import PlanCard from '../../components/Shared/PlanCard.jsx';
 import EventDetailView from '../Organizador/EventDetailView.jsx';
 import { formatPrice } from '../../utils/formatters.js';
 import { promotionPlanService } from '../../services/promotionPlanService.js';
@@ -232,6 +233,17 @@ export default function MarketingPromocionesView() {
     });
     setPlanFormError(null);
     setPlanDrawerOpen(true);
+  };
+
+  // Reordenar planes dinámicamente (movibles)
+  const handleMovePlan = (fromIndex, toIndex) => {
+    if (toIndex < 0 || toIndex >= planes.length) return;
+    setPlanes((prev) => {
+      const updated = [...prev];
+      const [moved] = updated.splice(fromIndex, 1);
+      updated.splice(toIndex, 0, moved);
+      return updated;
+    });
   };
 
   // Guardar Plan mediante el backend
@@ -602,7 +614,7 @@ export default function MarketingPromocionesView() {
         </div>
       )}
 
-      {/* VISTA 2: TABLA DE PLANES DE PROMOCIÓN (SECCIÓN 12) */}
+      {/* VISTA 2: PLANES DE PROMOCIÓN (SECCIÓN 12) */}
       {activeSubTab === 'planes' && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
@@ -624,8 +636,57 @@ export default function MarketingPromocionesView() {
             </button>
           </div>
 
+          {/* VISTA DINÁMICA DE TARJETAS HORIZONTALES (ESTILO IMAGEN 1 - MOVIBLES Y EDITABLES) */}
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
+              <div>
+                <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                  <Sparkles size={16} className="text-amber-500" />
+                  <span>Visualización y Reordenamiento de Planes</span>
+                </h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Los planes son dinámicos, puedes mover su orden con los botones y editarlos con el modal a la derecha.
+                </p>
+              </div>
+              <span className="text-[11px] font-semibold text-slate-400">
+                Desliza horizontalmente para comparar planes →
+              </span>
+            </div>
+
+            {loadingPlanes ? (
+              <div className="p-12 text-center text-slate-400 text-xs font-medium">
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-slate-400" />
+                Cargando planes de promoción...
+              </div>
+            ) : planes.length === 0 ? (
+              <div className="p-12 text-center text-slate-400 text-xs font-medium">
+                No hay planes de promoción registrados en el catálogo.
+              </div>
+            ) : (
+              <div className="overflow-x-auto pb-4 pt-2 -mx-2 px-2 flex items-stretch gap-6 scroll-smooth scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
+                {planes.map((plan, index) => {
+                  const isHighlighted = Boolean(plan.premium) || (planes.length >= 3 && index === 1);
+                  return (
+                    <PlanCard
+                      key={plan.id || plan.codigo || index}
+                      plan={plan}
+                      isHighlighted={isHighlighted}
+                      mode="manage"
+                      onEdit={() => handleOpenEditPlan(plan)}
+                      onMoveLeft={() => handleMovePlan(index, index - 1)}
+                      onMoveRight={() => handleMovePlan(index, index + 1)}
+                      canMoveLeft={index > 0}
+                      canMoveRight={index < planes.length - 1}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* TABLA DE 7 COLUMNAS REQUERIDA (SECCIÓN 12.2) */}
           <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+
             {loadingPlanes ? (
               <div className="p-12 text-center text-slate-400 text-xs font-medium">
                 <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-slate-400" />

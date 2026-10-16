@@ -17,6 +17,7 @@ import { organizerService } from '../../services/organizerService.js';
 import { promotionPlanService } from '../../services/promotionPlanService.js';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
+import PlanCard from '../../components/Shared/PlanCard.jsx';
 import { formatPrice } from '../../utils/formatters.js';
 
 export default function PosicionamientoView({ onPromotionSuccess }) {
@@ -305,87 +306,52 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
       </div>
 
       {/* 4. Planes Disponibles (Consulta al backend) */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-        <h3 className="font-display text-base font-bold text-slate-900 flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-[#0B1B3D] text-amber-300 flex items-center justify-center text-xs font-black">
-            2
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
+          <h3 className="font-display text-base font-bold text-slate-900 flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-[#0B1B3D] text-amber-300 flex items-center justify-center text-xs font-black">
+              2
+            </span>
+            <span>Elige tu plan de posicionamiento</span>
+          </h3>
+          <span className="text-[11px] font-semibold text-slate-400">
+            Desliza horizontalmente para comparar planes →
           </span>
-          <span>Elige tu plan</span>
-        </h3>
+        </div>
 
         {loadingPlanes ? (
-          <div className="p-8 text-center text-xs text-slate-500 italic bg-slate-50 rounded-xl">
+          <div className="p-8 text-center text-xs text-slate-500 italic bg-slate-50 rounded-2xl">
             Cargando planes...
           </div>
         ) : planes.length === 0 ? (
-          <div className="p-6 text-center text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl">
+          <div className="p-6 text-center text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-2xl">
             No hay planes activos disponibles en este momento.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {planes.map((plan) => {
-              const isSelected = selectedPlan?.id === plan.id;
-              return (
-                <div
-                  key={plan.id}
-                  onClick={() => setSelectedPlan(plan)}
-                  className={`p-6 rounded-2xl border-2 transition-all cursor-pointer relative flex flex-col justify-between ${
-                    isSelected
-                      ? 'border-[#0B1B3D] bg-gradient-to-b from-blue-50/40 to-white shadow-md'
-                      : 'border-slate-200 hover:border-slate-300 bg-white'
-                  }`}
-                >
-                  {plan.premium && (
-                    <span className="absolute -top-3 right-4 px-3 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-xs">
-                      ★ Banner Premium
-                    </span>
-                  )}
+          <div className="relative">
+            {/* Contenedor horizontal con scroll */}
+            <div className="overflow-x-auto pb-4 pt-2 -mx-2 px-2 flex items-stretch gap-6 scroll-smooth scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
+              {planes.map((plan, index) => {
+                const isSelected = selectedPlan?.id === plan.id;
+                // Si el plan es premium o es el segundo plan (estilo centro en imagen 1), destacarlo en oscuro
+                const isHighlighted = Boolean(plan.premium) || (planes.length >= 3 && index === 1);
 
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-display text-base font-bold text-slate-900">
-                        {plan.nombre}
-                      </h4>
-                      <span className="text-base font-black text-amber-600">
-                        {formatPrice(plan.precio)}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-slate-600 font-medium mb-3">
-                      {plan.detallePublicidad || 'Posicionamiento garantizado en la cartelera.'}
-                    </p>
-
-                    <div className="space-y-1.5 text-xs text-slate-500 mb-5">
-                      <div className="flex items-center gap-2">
-                        <FiCheck size={12} className={plan.premium ? 'text-amber-600' : 'text-slate-400'} />
-                        <span>Banner en Carrusel Home: <strong className="text-slate-800">{plan.premium ? 'Sí (Premium)' : 'No (Estándar)'}</strong></span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    className={`w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-                      isSelected
-                        ? 'bg-[#0B1B3D] text-amber-300 shadow-xs'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                    }`}
-                  >
-                    {isSelected ? (
-                      <>
-                        <FiCheck size={14} />
-                        <span>Plan Seleccionado</span>
-                      </>
-                    ) : (
-                      <span>Seleccionar este plan</span>
-                    )}
-                  </button>
-                </div>
-              );
-            })}
+                return (
+                  <PlanCard
+                    key={plan.id || plan.codigo || index}
+                    plan={plan}
+                    isSelected={isSelected}
+                    isHighlighted={isHighlighted}
+                    onSelect={() => setSelectedPlan(plan)}
+                    mode="select"
+                  />
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
+
 
       {/* 5. Resumen de Contratación y Acción de Pago */}
       <div className="bg-[#0B1B3D] text-white rounded-2xl p-6 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-5">
