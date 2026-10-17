@@ -16,8 +16,9 @@ import OrganizationListCard from '../components/common/OrganizationListCard.jsx'
 import OrganizationCardSkeleton from '../components/common/OrganizationCardSkeleton.jsx';
 import Pagination from '../components/Shared/Pagination.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
+import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 6;
 
 export default function OrganizadoresPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -87,7 +88,7 @@ export default function OrganizadoresPage() {
       {/* Navbar idéntico */}
       <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-w-0 max-w-full relative z-10">
+      <main className="flex-1 w-[94%] sm:w-[90%] lg:w-[85%] max-w-7xl mx-auto py-8 sm:py-12 min-w-0 relative z-10">
         {/* Encabezado del directorio y búsqueda, agrupados y centrados */}
         <header className="relative mb-8 overflow-hidden rounded-3xl border border-slate-200/80 bg-white/85 px-5 py-8 text-center shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-[#0B1428]/85 sm:px-8 sm:py-10">
           <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" />
@@ -109,7 +110,7 @@ export default function OrganizadoresPage() {
                 value={searchTerm}
                 onChange={handleSearchChange}
                 placeholder="Buscar organización por nombre..."
-                className="h-12 w-full rounded-2xl border border-slate-300 bg-white pl-11 pr-11 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 hover:border-slate-400 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-500/10 dark:border-slate-700 dark:bg-[#0B0F19] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600"
+                className="h-12 w-full rounded-2xl border-2 border-slate-900 dark:border-white bg-white pl-11 pr-11 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-amber-500 dark:focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/15 dark:bg-[#0B0F19] dark:text-white dark:placeholder:text-slate-500"
               />
               <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               {searchTerm && (
@@ -167,18 +168,18 @@ export default function OrganizadoresPage() {
           </div>
         </div>
 
-        {/* Tab Directorio: Feed Vertical de Organizaciones idéntico a la imagen de referencia */}
+        {/* Tab Directorio: Grid de Organizaciones (2 luego 2) */}
         {activeTab === 'directorio' && (
-          <section className="max-w-4xl mx-auto w-full">
+          <section className="w-full">
             {loading ? (
-              <div className="flex flex-col space-y-4 sm:space-y-5 w-full">
-                {[1, 2, 3, 4, 5].map((n) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 w-full">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
                   <OrganizationCardSkeleton key={n} />
                 ))}
               </div>
             ) : organizations.length > 0 ? (
               <>
-                <div className="flex flex-col space-y-4 sm:space-y-5 w-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 w-full">
                   {organizations.map((org) => (
                     <OrganizationListCard key={org.id} org={org} />
                   ))}
@@ -293,6 +294,9 @@ export default function OrganizadoresPage() {
           </section>
         )}
       </main>
+
+      {/* Pre-Footer compartido */}
+      <CityRhythmPreFooter />
 
       {/* Footer idéntico */}
       <Footer />

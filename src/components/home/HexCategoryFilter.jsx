@@ -68,8 +68,8 @@ export function HexCategoryCard({ category, onSelect }) {
             style={{ backgroundImage: `url(${imageUrl})` }}
           />
 
-          {/* Gradiente oscuro superpuesto para legibilidad óptima */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#060D1E] via-[#0B1325]/70 to-[#0B1325]/40 group-hover:via-[#0B1325]/50 transition-colors" />
+          {/* Gradiente sutil inferior para legibilidad sin apagar la vivacidad de los colores */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#060D1E]/85 via-transparent to-transparent group-hover:from-[#060D1E]/75 transition-colors" />
 
           {/* ========================================================
               MICROANIMACIÓN DE MIEL: SE LLENA DE ABAJO HACIA ARRIBA

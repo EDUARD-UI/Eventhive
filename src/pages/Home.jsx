@@ -13,6 +13,7 @@ import Hero from '../components/Hero.jsx';
 import FeaturedEventsCarousel from '../components/home/FeaturedEventsCarousel.jsx';
 import CrossedRibbonsBanner from '../components/home/CrossedRibbonsBanner.jsx';
 import CategoryTickerCarousel from '../components/home/CategoryTickerCarousel.jsx';
+import CategoryRibbonBanner from '../components/home/CategoryRibbonBanner.jsx';
 import HiveEmptyState from '../components/home/HiveEmptyState.jsx';
 import HomeBannersSection from '../components/home/HomeBannersSection.jsx';
 import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
@@ -479,13 +480,9 @@ export default function Home() {
 
 
 
-      {/* 5. Carrusel de Categorías */}
-      <section className="w-full py-8 sm:py-12 bg-transparent transition-colors duration-200">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
-            Categorías
-          </h2>
-        </div>
+      {/* 5. Carrusel de Categorías con Barra Dorada Recta Estática */}
+      <section className="w-full py-6 sm:py-10 bg-transparent transition-colors duration-200">
+        <CategoryRibbonBanner />
         <CategoryTickerCarousel />
       </section>
       <br></br><br></br><br></br>

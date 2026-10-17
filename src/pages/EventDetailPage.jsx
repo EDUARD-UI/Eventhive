@@ -16,6 +16,7 @@ import HiveEventCard from '../components/home/HiveEventCard.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
 import PasarelaPagoSimuladaModal from '../components/common/PasarelaPagoSimuladaModal.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
+import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 import { getCategoryGradient } from '../utils/formatters.js';
 
 /**
@@ -408,8 +409,6 @@ export default function EventDetailPage() {
                 fallbackText={event.title}
                 iconSize={42}
               >
-                <div className="absolute inset-0 bg-black/40 pointer-events-none" />
-
                 {/* Badge flotante de fecha en la esquina inferior izquierda */}
                 {event.date && (
                   <div className="absolute bottom-4 left-4 z-10 flex items-center gap-3 bg-white/95 dark:bg-[#0B1428]/95 backdrop-blur-md p-2.5 sm:p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
@@ -435,7 +434,7 @@ export default function EventDetailPage() {
             </div>
 
             {/* Tarjeta: Sobre el Evento */}
-            <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-6 sm:p-8 shadow-sm space-y-4">
+            <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-5 sm:p-7 md:p-8 shadow-sm space-y-4">
               <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
                 <h2 className="text-xl sm:text-2xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
                   Sobre el Evento
@@ -446,95 +445,93 @@ export default function EventDetailPage() {
               </p>
             </section>
 
-            {/* Tarjeta: Organizador Responsable */}
-            <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-6 sm:p-7 shadow-sm space-y-4">
-              <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
-                <h2 className="text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
-                  Organizador Responsable
-                </h2>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="relative w-14 h-14 shrink-0 rounded-2xl overflow-hidden bg-slate-900 text-amber-400 border border-slate-200 dark:border-slate-800 flex items-center justify-center font-black text-lg shadow-xs">
-                    {orgAvatar ? (
-                      <img
-                        src={orgAvatar}
-                        alt={orgName}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <span>{orgName ? orgName.slice(0, 2).toUpperCase() : 'EH'}</span>
-                    )}
+            {/* Organizador y Ubicación: en 2 columnas en pantallas medianas (tablets) para no cargar todo en vertical infinito */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6 items-stretch">
+              {/* Tarjeta: Organizador Responsable */}
+              <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-5 sm:p-6 shadow-sm flex flex-col justify-between space-y-4">
+                <div>
+                  <div className="border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
+                    <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
+                      Organizador Responsable
+                    </h2>
                   </div>
 
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-extrabold text-slate-950 dark:text-white text-base truncate">
-                        {orgName}
-                      </span>
-                      <FiCheckCircle className="text-amber-500 shrink-0" size={16} title="Organizador Verificado" />
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="relative w-14 h-14 shrink-0 rounded-2xl overflow-hidden bg-slate-900 text-amber-400 border border-slate-200 dark:border-slate-800 flex items-center justify-center font-black text-lg shadow-xs">
+                      {orgAvatar ? (
+                        <img
+                          src={orgAvatar}
+                          alt={orgName}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <span>{orgName ? orgName.slice(0, 2).toUpperCase() : 'EH'}</span>
+                      )}
                     </div>
-                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block">
-                      Organizador Oficial EventHive Cartagena
-                    </span>
+
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-slate-950 dark:text-white text-base truncate">
+                          {orgName}
+                        </span>
+                        <FiCheckCircle className="text-amber-500 shrink-0" size={16} title="Organizador Verificado" />
+                      </div>
+                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block truncate">
+                        Organizador Oficial EventHive
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 <button
                   type="button"
                   onClick={handleToggleFollow}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${isFollowing
+                  className={`w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer self-start ${isFollowing
                       ? 'bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
                       : 'bg-slate-950 dark:bg-amber-500 hover:bg-amber-500 dark:hover:bg-amber-400 hover:text-slate-950 text-white dark:text-slate-950 font-black shadow-sm active:scale-95'
                     }`}
                 >
-                  {isFollowing ? 'Siguiendo' : 'Seguir'}
+                  {isFollowing ? 'Siguiendo' : 'Seguir organizador'}
                 </button>
-              </div>
-            </section>
+              </section>
 
-            {/* Tarjeta: Ubicación y Mapa */}
-            <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-6 sm:p-7 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <h2 className="text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
-                  Ubicación del Evento
-                </h2>
-                {event.location && (
-                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 hidden sm:inline max-w-xs truncate">
-                    {event.location}
-                  </span>
-                )}
-              </div>
-
-              {event.location && (
-                <div className="flex items-start sm:items-center gap-2.5 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 min-w-0 max-w-full overflow-hidden">
-                  <FiMapPin className="text-amber-500 shrink-0 mt-0.5 sm:mt-0" size={17} />
-                  <span className="font-semibold text-slate-900 dark:text-white break-words leading-snug min-w-0 flex-1">{event.location}</span>
+              {/* Tarjeta: Ubicación y Mapa */}
+              <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-5 sm:p-6 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
+                    Ubicación del Evento
+                  </h2>
                 </div>
-              )}
 
-              {/* Contenedor del Mapa con OSM estándar */}
-              <div className="relative z-0 isolate overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner h-72 sm:h-80 w-full bg-slate-100 dark:bg-slate-900">
-                <MapContainer
-                  center={mapCenter}
-                  zoom={15}
-                  scrollWheelZoom={false}
-                  className="h-full w-full"
-                >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    maxZoom={19}
-                  />
-                  <Marker position={mapCenter} icon={amberHivePinIcon()} />
-                </MapContainer>
-              </div>
-            </section>
+                {event.location && (
+                  <div className="flex items-start gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 min-w-0 max-w-full overflow-hidden">
+                    <FiMapPin className="text-amber-500 shrink-0 mt-0.5" size={16} />
+                    <span className="font-semibold text-slate-900 dark:text-white break-words leading-snug min-w-0 flex-1">{event.location}</span>
+                  </div>
+                )}
+
+                {/* Contenedor del Mapa con OSM estándar */}
+                <div className="relative z-0 isolate overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner h-60 sm:h-72 w-full bg-slate-100 dark:bg-slate-900">
+                  <MapContainer
+                    center={mapCenter}
+                    zoom={15}
+                    scrollWheelZoom={false}
+                    className="h-full w-full"
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      maxZoom={19}
+                    />
+                    <Marker position={mapCenter} icon={amberHivePinIcon()} />
+                  </MapContainer>
+                </div>
+              </section>
+            </div>
           </div>
 
           {/* Columna Derecha: Aside Flotante de Compra en formato BOLETO */}
@@ -721,6 +718,32 @@ export default function EventDetailPage() {
           </section>
         )}
       </main>
+
+      {/* Barra móvil fija de compra rápida para evitar scroll vertical infinito en teléfonos */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-[#0B1428]/95 backdrop-blur-md border-t border-slate-200/90 dark:border-slate-800 p-3 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block truncate">
+            {selectedLocalidad?.nombre || 'General'} · Entrada
+          </span>
+          <div className="flex items-baseline gap-1">
+            <span className="text-base sm:text-lg font-black text-slate-950 dark:text-amber-400">
+              ${displayedPrice.toLocaleString('es-CO')}
+            </span>
+            <span className="text-[10px] font-bold text-slate-500">COP</span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={handlePurchase}
+          className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md flex items-center gap-1.5 active:scale-95 shrink-0"
+        >
+          <Sparkles size={14} className="fill-current" />
+          <span>Comprar boletos</span>
+        </button>
+      </div>
+
+      {/* Pre-Footer compartido */}
+      <CityRhythmPreFooter />
 
       <Footer />
     </div>

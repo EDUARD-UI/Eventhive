@@ -114,7 +114,63 @@ export default function Hero() {
         }}
         className="relative z-10 mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12 py-8 sm:py-10 lg:py-12 transition-all duration-75"
       >
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+        {/* =========================================================
+            VISTA RESPONSIVE PARA DISPOSITIVOS PEQUEÑOS (< lg):
+            Video integrado como fondo dinámico de alto impacto con gradiente
+            y textos/acciones directamente superpuestos (sin desplazar el video abajo)
+           ========================================================= */}
+        <div className="lg:hidden relative rounded-3xl overflow-hidden border border-white/10 dark:border-white/10 shadow-2xl p-6 sm:p-10 text-left bg-slate-950 flex flex-col justify-end min-h-[460px] sm:min-h-[500px]">
+          {/* Video de fondo continuo */}
+          <div className="absolute inset-0 z-0">
+            <video
+              src={promocionalVideo}
+              poster={colombiaImg}
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+              className="w-full h-full object-cover object-center"
+            />
+            {/* Gradiente oscuro cinematográfico que garantiza legibilidad óptima de los textos */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/70 to-slate-950/40 pointer-events-none" />
+          </div>
+
+          {/* Contenido en primer plano */}
+          <div className="relative z-10 flex flex-col items-start space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 backdrop-blur-md">
+              <FiMapPin className="text-amber-400" size={13} />
+              <span>Cartagena de Indias, Colombia</span>
+            </div>
+
+            <h1 className="font-display font-black text-3xl sm:text-5xl leading-tight text-white tracking-tight drop-shadow-md">
+              Conéctate al <br />
+              <span className="text-amber-400 drop-shadow-sm">ritmo de la ciudad</span>
+            </h1>
+
+            <p className="text-xs sm:text-base text-slate-200 leading-relaxed max-w-md font-normal drop-shadow-xs">
+              Descubre festivales, conciertos, arte, gastronomía y vida nocturna en la mágica Cartagena de Indias.
+            </p>
+
+            <div className="pt-2">
+              <Link
+                to="/buscar"
+                className="inline-flex items-center gap-3 px-6 py-3.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg active:scale-95 transition-all"
+              >
+                <span>Ver catálogo</span>
+                <span className="w-7 h-7 rounded-full bg-white text-slate-950 flex items-center justify-center shadow-xs">
+                  <FiArrowRight size={14} strokeWidth={2.8} />
+                </span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* =========================================================
+            VISTA DESKTOP (>= lg):
+            Diseño original en 2 columnas con silueta orgánica asimétrica del video
+           ========================================================= */}
+        <div className="hidden lg:grid lg:grid-cols-12 gap-10 lg:gap-8 items-center">
           
           {/* Columna Izquierda: Textos y Botón Ver Catálogo */}
           <div className="lg:col-span-5 flex flex-col items-start text-left relative z-20">

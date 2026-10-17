@@ -44,11 +44,17 @@ export default function FeaturedEventBanner() {
   return (
     <section className="w-full py-10 sm:py-14 px-4 sm:px-6 md:px-8 lg:px-12 max-w-7xl mx-auto">
       <div className="group relative w-full h-72 sm:h-80 md:h-88 lg:h-96 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 bg-slate-900 transition-all duration-300 hover:shadow-2xl">
-        {/* Imagen de fondo panorámica con object-cover */}
+        {/* Imagen de fondo panorámica que se adapta sin salirse de los márgenes en móviles */}
+        <img
+          src={activeBanner.imagenUrl}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-110 sm:hidden pointer-events-none"
+        />
         <ImageWithFallback
           src={activeBanner.imagenUrl}
           alt={activeBanner.titulo}
-          className="w-full h-full object-cover object-center group-hover:scale-103 transition-transform duration-700 ease-out"
+          className="relative z-0 w-full h-full object-contain sm:object-cover object-center group-hover:scale-103 transition-transform duration-700 ease-out"
           fallbackText={activeBanner.titulo}
           iconSize={48}
         />

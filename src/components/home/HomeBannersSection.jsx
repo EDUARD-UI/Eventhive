@@ -93,16 +93,25 @@ export default function HomeBannersSection() {
       >
         <CardWrapper
           {...wrapperProps}
-          className="block relative w-full h-[320px] sm:h-[390px] lg:h-[450px] overflow-hidden bg-slate-900 cursor-pointer"
+          className="block relative w-full h-[280px] sm:h-[390px] lg:h-[450px] overflow-hidden bg-slate-950 cursor-pointer"
         >
           {banner.imagenUrl ? (
-            <ImageWithFallback
-              src={banner.imagenUrl}
-              alt={banner.titulo}
-              className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
-              fallbackText={banner.titulo}
-              iconSize={36}
-            />
+            <>
+              {/* Fondo ambiental difuminado para móviles que mantiene la atmósfera del banner */}
+              <img
+                src={banner.imagenUrl}
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-110 sm:hidden pointer-events-none"
+              />
+              <ImageWithFallback
+                src={banner.imagenUrl}
+                alt={banner.titulo}
+                className="relative z-0 w-full h-full object-contain sm:object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                fallbackText={banner.titulo}
+                iconSize={36}
+              />
+            </>
           ) : (
             /* Imagen de sombra neutral sin gradiente si no hay imagen cargada */
             <div className="w-full h-full bg-[#0D1527] relative" />

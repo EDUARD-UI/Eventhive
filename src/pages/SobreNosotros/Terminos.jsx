@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { FiExternalLink } from 'react-icons/fi';
 import Navbar from '../../components/usersComponets/Navbar.jsx';
 import Footer from '../../components/usersComponets/Footer.jsx';
+import FloatingDotsBackground from '../../components/common/FloatingDotsBackground.jsx';
+import CityRhythmPreFooter from '../../components/home/CityRhythmPreFooter.jsx';
 
 /* ─── Estructura de secciones ───────────────────────────────────────── */
 const SECTIONS = [
@@ -18,14 +20,14 @@ const SECTIONS = [
 /* ─── Componente de sección legal ───────────────────────────────────── */
 function LegalSection({ id, title, children }) {
   return (
-    <section id={id} className="scroll-mt-24 mb-12" aria-labelledby={`${id}-heading`}>
+    <section id={id} className="scroll-mt-28 mb-12" aria-labelledby={`${id}-heading`}>
       <h2
         id={`${id}-heading`}
-        className="text-lg sm:text-xl font-black text-[#0a1838] mb-4 pb-3 border-b border-slate-200"
+        className="text-lg sm:text-xl font-black text-slate-950 dark:text-white uppercase tracking-tight mb-4 pb-3 border-b border-slate-200/80 dark:border-slate-800"
       >
         {title}
       </h2>
-      <div className="text-sm sm:text-base text-slate-600 leading-relaxed space-y-4">
+      <div className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed space-y-4 font-normal">
         {children}
       </div>
     </section>
@@ -43,27 +45,28 @@ export default function Terminos() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-white text-slate-900">
+    <div className="w-full min-h-screen bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body relative transition-colors duration-200">
+      <FloatingDotsBackground />
       <Navbar />
 
-      <main>
+      <main className="flex-1 relative z-10">
         {/* ── ENCABEZADO ────────────────────────────────────────────── */}
-        <header className="bg-[#0a1838] text-white py-14 sm:py-20 px-6 sm:px-12 lg:px-20">
-          <div className="max-w-5xl mx-auto">
-            <span className="inline-block px-3 py-1 rounded-full text-[10.5px] font-extrabold uppercase tracking-widest bg-accent/20 text-accent border border-accent/30 mb-5">
+        <header className="bg-gradient-to-b from-[#0B132B] via-[#0E1A38] to-[#070D1B] text-white py-14 sm:py-20 px-6 sm:px-12 lg:px-20 border-b border-slate-800 text-center">
+          <div className="max-w-4xl mx-auto">
+            <span className="inline-block px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-amber-500/20 text-amber-300 border border-amber-400/30 mb-5 shadow-xs">
               Marco Legal
             </span>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-3">
+            <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight mb-4">
               Términos y Condiciones
             </h1>
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
+            <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
               El acceso y uso de la plataforma EventHive implica la aceptación plena de los
               presentes términos y condiciones de servicio. Léalos detenidamente antes de
-              utilizar nuestros servicios.
+              utilizar nuestros servicios en Cartagena.
             </p>
             <p className="text-xs text-slate-400 mt-4 font-medium">
               Última actualización:{' '}
-              <time dateTime="2026-09-01" className="text-slate-300">
+              <time dateTime="2026-09-01" className="text-amber-400 font-semibold">
                 Septiembre de 2026
               </time>
             </p>
@@ -71,24 +74,24 @@ export default function Terminos() {
         </header>
 
         {/* ── LAYOUT: SIDEBAR + CUERPO ──────────────────────────────── */}
-        <div className="max-w-5xl mx-auto px-6 sm:px-12 lg:px-8 py-14 sm:py-20 flex flex-col lg:flex-row gap-12">
+        <div className="max-w-5xl mx-auto px-6 sm:px-10 lg:px-8 py-12 sm:py-16 flex flex-col lg:flex-row gap-10 lg:gap-12 items-start">
           {/* Sidebar de navegación interna */}
-          <aside className="lg:w-64 shrink-0" aria-label="Índice de secciones">
-            <div className="lg:sticky lg:top-24 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-500 mb-4">
+          <aside className="lg:w-64 w-full shrink-0" aria-label="Índice de secciones">
+            <div className="lg:sticky lg:top-24 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-[#0B1428]/90 p-5 shadow-xs">
+              <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
                 Cláusulas
               </h3>
               <nav>
-                <ul className="space-y-1" role="list">
+                <ul className="space-y-1.5" role="list">
                   {SECTIONS.map((sec) => (
                     <li key={sec.id}>
                       <button
                         type="button"
                         onClick={() => handleNavClick(sec.id)}
-                        className={`w-full text-left text-xs sm:text-sm px-3 py-2 rounded-xl transition-colors font-medium ${
+                        className={`w-full text-left text-xs sm:text-sm px-3.5 py-2.5 rounded-xl transition-all font-bold cursor-pointer ${
                           activeSection === sec.id
-                            ? 'bg-brand text-white font-semibold'
-                            : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                            ? 'bg-amber-500 text-slate-950 shadow-xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
                         }`}
                         aria-current={activeSection === sec.id ? 'true' : undefined}
                       >
@@ -99,10 +102,10 @@ export default function Terminos() {
                 </ul>
               </nav>
 
-              <div className="mt-6 pt-5 border-t border-slate-200">
+              <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-slate-800">
                 <Link
                   to="/privacidad"
-                  className="text-xs text-brand font-semibold hover:underline"
+                  className="text-xs text-amber-600 dark:text-amber-400 font-bold hover:underline block"
                 >
                   Ver Política de Privacidad →
                 </Link>
@@ -111,200 +114,85 @@ export default function Terminos() {
           </aside>
 
           {/* Cuerpo de lectura */}
-          <article className="flex-1 max-w-3xl">
-            {/* Aviso legal */}
-            <div className="rounded-2xl bg-amber-50 border border-amber-200 p-5 mb-10 text-amber-900 text-sm leading-relaxed">
-              <strong>Aviso importante:</strong> Estos términos constituyen un acuerdo legal
-              vinculante entre usted y EventHive Cartagena S.A.S. Al crear una cuenta, comprar
-              un boleto o publicar un evento, usted declara haber leído, entendido y aceptado
-              todas las cláusulas aquí contenidas.
-            </div>
-
+          <article className="flex-1 max-w-3xl min-w-0">
             <LegalSection id="aceptacion" title="1. Aceptación de los Términos">
               <p>
-                Los presentes Términos y Condiciones (en adelante, "los Términos") regulan el
-                acceso y uso de la plataforma web y servicios digitales de{' '}
-                <strong className="text-slate-800">EventHive Cartagena S.A.S.</strong> (en
-                adelante, "EventHive"), disponibles en{' '}
-                <a href="https://eventhive.co" className="text-brand hover:underline font-semibold">
-                  eventhive.co
-                </a>{' '}
-                y sus subdominios.
+                Al acceder, navegar o utilizar la plataforma EventHive (en adelante, la "Plataforma"),
+                usted declara que es mayor de edad o cuenta con la debida autorización legal, y que
+                acepta sujetarse a estos Términos y Condiciones, así como a nuestra Política de Privacidad.
               </p>
               <p>
-                Los Términos aplican a todos los usuarios, ya sean{' '}
-                <strong className="text-slate-800">Asistentes</strong> (personas que buscan,
-                siguen y compran boletos de eventos) u{' '}
-                <strong className="text-slate-800">Organizadores</strong> (personas naturales o
-                jurídicas que publican y gestionan eventos en la plataforma).
-              </p>
-              <p>
-                Si no está de acuerdo con alguna de estas cláusulas, por favor absténgase de
-                usar la plataforma. El uso continuado de EventHive tras la publicación de
-                modificaciones implica la aceptación de los nuevos términos.
+                Si no está de acuerdo con alguno de los términos aquí estipulados, debe abstenerse
+                de utilizar la Plataforma y sus servicios.
               </p>
             </LegalSection>
 
             <LegalSection id="cuentas" title="2. Cuentas de Usuario">
               <p>
-                Para acceder a las funcionalidades completas de EventHive, deberá crear una
-                cuenta proporcionando información veraz, completa y actualizada. Usted es el
-                único responsable de la custodia de sus credenciales de acceso.
+                Para acceder a determinadas funciones (compra de entradas, registro de organizador,
+                panel de métricas), es necesario crear una cuenta de usuario proporcionando información
+                veraz, exacta y actualizada.
               </p>
-              <div className="space-y-3">
-                {[
-                  {
-                    title: '2.1 Requisitos de Registro',
-                    text: 'Debe ser mayor de 14 años. Los menores de edad requieren autorización de sus padres o representantes legales para usar la plataforma.',
-                  },
-                  {
-                    title: '2.2 Veracidad de la Información',
-                    text: 'Queda prohibido proporcionar información falsa, usurpar identidades o crear cuentas con datos de terceros sin su autorización. EventHive podrá suspender o eliminar cuentas que incumplan esta cláusula.',
-                  },
-                  {
-                    title: '2.3 Seguridad de la Cuenta',
-                    text: 'Usted es responsable de todas las actividades realizadas desde su cuenta. Si detecta acceso no autorizado, deberá notificarnos de inmediato a soporte@eventhive.co.',
-                  },
-                  {
-                    title: '2.4 Suspensión y Cancelación',
-                    text: 'EventHive se reserva el derecho de suspender o cancelar cuentas que violen estos Términos, la Política de Privacidad o las normas de convivencia de la comunidad.',
-                  },
-                ].map(({ title, text }) => (
-                  <div key={title} className="rounded-xl border border-slate-200 p-4">
-                    <h4 className="font-bold text-slate-800 text-sm mb-1">{title}</h4>
-                    <p className="text-sm text-slate-600">{text}</p>
-                  </div>
-                ))}
-              </div>
+              <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm">
+                <li>Usted es el único responsable de mantener la confidencialidad de sus credenciales.</li>
+                <li>Cualquier actividad realizada bajo su cuenta se presumirá efectuada por usted.</li>
+                <li>EventHive se reserva el derecho de suspender cuentas que vulneren estas normas.</li>
+              </ul>
             </LegalSection>
 
-            <LegalSection id="eventos" title="3. Publicación y Gestión de Eventos (Organizadores)">
+            <LegalSection id="eventos" title="3. Publicación y Gestión de Eventos">
               <p>
-                Los Organizadores son los únicos responsables del contenido, logística y
-                ejecución de los eventos que publiquen en la plataforma. EventHive actúa como
-                intermediario tecnológico y no es coproductor de ningún evento.
+                Los organizadores son los únicos responsables de la veracidad, legalidad, licencias,
+                aforos, derechos de autor y seguridad de los eventos que publiquen en EventHive.
               </p>
-              <ol className="list-decimal list-inside space-y-3 text-sm text-slate-600 pl-2">
-                <li>
-                  <strong className="text-slate-800">Veracidad del contenido:</strong> Los datos
-                  del evento (fecha, lugar, precio, aforo y artistas) deben ser precisos y
-                  actualizados. Información falsa o engañosa es motivo de suspensión inmediata.
-                </li>
-                <li>
-                  <strong className="text-slate-800">Cancelaciones y modificaciones:</strong> Ante
-                  cualquier cambio o cancelación, el Organizador debe notificar a EventHive con
-                  al menos <strong>48 horas de anticipación</strong> para gestionar la
-                  comunicación con los asistentes y, de ser el caso, los reembolsos.
-                </li>
-                <li>
-                  <strong className="text-slate-800">Autorizaciones municipales:</strong> El
-                  Organizador es responsable de obtener los permisos, licencias y autorizaciones
-                  requeridos por el Distrito de Cartagena de Indias (Alcaldía, ICULTUR, Policía
-                  Metropolitana, entre otras entidades), así como el cumplimiento de la
-                  normatividad de aforo y seguridad.
-                </li>
-                <li>
-                  <strong className="text-slate-800">Comisión por servicio:</strong> EventHive
-                  aplica una tarifa de servicio por cada transacción procesada a través de la
-                  plataforma, según la tabla de tarifas vigente disponible en el panel del
-                  Organizador.
-                </li>
-                <li>
-                  <strong className="text-slate-800">Propiedad del contenido:</strong> El
-                  Organizador garantiza que las imágenes, videos y textos publicados son de su
-                  autoría o cuenta con las licencias necesarias para su uso.
-                </li>
-              </ol>
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#0B1428]/80 p-4 text-xs sm:text-sm">
+                EventHive actúa como intermediario tecnológico para la difusión y boletería digital,
+                y no asume responsabilidad directa por la cancelación o modificación de espectáculos
+                por causas imputables al organizador o de fuerza mayor.
+              </div>
             </LegalSection>
 
             <LegalSection id="boletos" title="4. Boletos y Códigos QR">
               <p>
-                EventHive emite entradas digitales con un código QR único e intransferible
-                vinculado al comprador y al evento. Su uso inadecuado podrá resultar en la
-                anulación del acceso sin derecho a reembolso.
+                Cada boleto emitido incluye un código QR único e intransferible. El código QR es
+                el único comprobante válido para el ingreso al evento.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { label: 'Validez', text: 'Cada código QR es de un solo uso y se invalida automáticamente al escanear en puerta.' },
-                  { label: 'Transferencia', text: 'Los boletos no son transferibles salvo que el Organizador habilite explícitamente esta opción.' },
-                  { label: 'Duplicados', text: 'EventHive no es responsable de pérdidas derivadas de compartir el código QR con terceros.' },
-                  { label: 'Reembolsos', text: 'Las políticas de reembolso son definidas por cada Organizador. EventHive gestiona la mediación según lo pactado.' },
-                  { label: 'Reventa', text: 'Queda prohibida la reventa de boletos adquiridos en EventHive a precios superiores al valor facial (anti-scalping).' },
-                  { label: 'Formato', text: 'Los boletos se entregan en formato digital (PDF o pantalla). No se emiten físicos salvo indicación del Organizador.' },
-                ].map(({ label, text }) => (
-                  <div key={label} className="rounded-xl border border-slate-200 p-4">
-                    <h4 className="font-bold text-slate-800 text-sm mb-1">{label}</h4>
-                    <p className="text-xs text-slate-500">{text}</p>
-                  </div>
-                ))}
-              </div>
+              <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm">
+                <li>No comparta su código QR en redes sociales o con terceros para evitar duplicidades.</li>
+                <li>El escaneo en la puerta del evento registrará el primer ingreso como válido.</li>
+              </ul>
             </LegalSection>
 
             <LegalSection id="propiedad" title="5. Propiedad Intelectual">
               <p>
-                Todos los elementos que conforman la identidad visual y el contenido propio de
-                EventHive —incluyendo el logotipo, la marca "EventHive", la interfaz gráfica,
-                el código fuente, los textos editoriales y los algoritmos de recomendación—
-                son propiedad exclusiva de EventHive Cartagena S.A.S. y están protegidos por
-                la legislación colombiana de propiedad intelectual (Ley 23 de 1982 y normas
-                concordantes).
+                Todo el contenido, marcas, isotipos, logotipos, diseños de interfaz, código fuente
+                y arquitectura de EventHive son propiedad exclusiva de EventHive Cartagena S.A.S.
+                o de sus respectivos licenciantes, protegidos por las leyes de propiedad intelectual de Colombia.
               </p>
-              <p>
-                Queda estrictamente prohibido reproducir, modificar, distribuir, vender o
-                crear obras derivadas de cualquier elemento propiedad de EventHive sin
-                autorización escrita previa. Las infracciones serán perseguidas conforme a la
-                ley colombiana.
-              </p>
-              <div className="rounded-xl bg-slate-100 border border-slate-200 p-4 text-slate-700 text-sm">
-                El contenido generado por los Organizadores (fotos, descripciones, logos de
-                eventos) sigue siendo propiedad de su respectivo autor. No obstante, al
-                publicarlo en EventHive, el Organizador otorga a EventHive una licencia
-                no exclusiva, gratuita y mundial para mostrarlo en la plataforma.
-              </div>
             </LegalSection>
 
             <LegalSection id="responsabilidad" title="6. Limitación de Responsabilidad">
               <p>
-                EventHive actúa exclusivamente como plataforma tecnológica de intermediación.
-                En consecuencia, no asume responsabilidad por:
-              </p>
-              <ul className="space-y-2 text-sm text-slate-600">
-                {[
-                  'Cancelación de eventos por decisión unilateral del Organizador o por causas de fuerza mayor (fenómenos climáticos, actos de terceros, disposiciones gubernamentales, etc.).',
-                  'Calidad artística o gastronómica de los eventos publicados por terceros.',
-                  'Lesiones, pérdidas materiales o daños que ocurran durante el desarrollo de un evento.',
-                  'Fallas en la conectividad del usuario que impidan la descarga o visualización del boleto digital.',
-                  'Uso fraudulento del código QR derivado del extravío o divulgación del boleto por parte del usuario.',
-                  'Incumplimiento de las condiciones de acceso impuestas por el recinto o el Organizador (aforo, restricciones de edad, vestuario, etc.).',
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-2">
-                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <p>
-                La responsabilidad máxima de EventHive ante cualquier reclamación estará
-                limitada al valor del boleto adquirido a través de la plataforma para el
-                evento en cuestión.
+                EventHive realiza sus mejores esfuerzos por mantener la disponibilidad ininterrumpida
+                de los servicios, pero no garantiza la ausencia total de errores técnicos o caídas
+                temporales de servidores de terceros.
               </p>
             </LegalSection>
 
             <LegalSection id="ley" title="7. Ley Aplicable y Jurisdicción">
               <p>
-                Los presentes Términos se rigen por las leyes de la República de Colombia. Para
-                cualquier controversia derivada de su interpretación o ejecución, las partes se
-                someten a la jurisdicción de los jueces y tribunales competentes de la ciudad
-                de Cartagena de Indias, Bolívar, renunciando a cualquier otro fuero que pudiera
-                corresponderles.
+                Estos Términos y Condiciones se rigen e interpretan conforme a las leyes de la
+                República de Colombia. Cualquier controversia será resuelta ante los jueces competentes
+                del Distrito Judicial de Cartagena de Indias.
               </p>
-              <div className="rounded-xl bg-slate-100 border border-slate-200 p-4 text-slate-700 text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <span>¿Tienes preguntas sobre estos términos?</span>
+              <div className="rounded-2xl bg-white dark:bg-[#0B1428] border border-slate-200 dark:border-slate-800 p-4 text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs mt-6">
+                <span className="font-medium text-slate-700 dark:text-slate-300">¿Tienes preguntas sobre los términos legales?</span>
                 <Link
                   to="/contacto"
-                  className="inline-flex items-center gap-1.5 text-brand font-bold hover:underline text-sm shrink-0"
+                  className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold hover:underline text-xs uppercase tracking-wider shrink-0"
                 >
-                  Contactar soporte <FiExternalLink size={13} />
+                  <span>Contáctanos</span>
+                  <FiExternalLink size={13} />
                 </Link>
               </div>
             </LegalSection>
@@ -312,6 +200,7 @@ export default function Terminos() {
         </div>
       </main>
 
+      <CityRhythmPreFooter />
       <Footer />
     </div>
   );

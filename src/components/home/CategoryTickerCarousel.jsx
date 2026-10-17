@@ -68,13 +68,13 @@ export default function CategoryTickerCarousel() {
               to={`/buscar?categoriaId=${cat.id}`}
               className="relative flex-shrink-0 w-[250px] sm:w-[290px] h-[135px] sm:h-[155px] rounded-2xl bg-white dark:bg-[#151D2F] border border-slate-200 dark:border-white/[0.07] hover:border-slate-300 hover:dark:bg-slate-800 hover:dark:border-white/15 shadow-sm hover:shadow-md transition-all duration-300 ease-out overflow-hidden flex flex-col justify-end p-4 text-left group/item hover:scale-[1.02]"
             >
-              {/* Fotografía de la categoría nítida y visible */}
+              {/* Fotografía de la categoría nítida, colorida y claramente visible */}
               {imageUrl ? (
                 <div className="absolute inset-0">
                   <ImageWithFallback
                     src={imageUrl}
                     alt={cat.nombre}
-                    className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500 ease-out opacity-80 group-hover/item:opacity-95"
+                    className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500 ease-out opacity-100 saturate-105"
                     showText={false}
                   />
                 </div>
@@ -82,11 +82,11 @@ export default function CategoryTickerCarousel() {
                 <div className="absolute inset-0 bg-slate-200 dark:bg-[#0F1D38]" />
               )}
 
-              {/* Máscara de degradado linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.85) 100%) para legibilidad óptima */}
+              {/* Máscara suave en el borde inferior para legibilidad del texto sin apagar los colores */}
               <div
-                className="absolute inset-0 pointer-events-none opacity-85 group-hover/item:opacity-95 transition-opacity duration-300"
+                className="absolute inset-0 pointer-events-none opacity-80 group-hover/item:opacity-90 transition-opacity duration-300"
                 style={{
-                  background: 'linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.85) 100%)',
+                  background: 'linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.75) 100%)',
                 }}
               />
 

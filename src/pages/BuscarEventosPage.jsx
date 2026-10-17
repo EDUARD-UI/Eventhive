@@ -12,6 +12,7 @@ import { getCategoryNames, getFeaturedCategories } from '../services/categorySer
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 import StyledDatePicker from '../components/common/StyledDatePicker.jsx';
+import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 
 
@@ -246,12 +247,9 @@ export default function BuscarEventosPage() {
         <header className="relative mb-8 overflow-hidden rounded-3xl border border-slate-200/80 bg-white/80 px-5 py-7 text-center shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-[#0B1428]/80 sm:px-8 sm:py-9">
           <div aria-hidden="true" className="pointer-events-none absolute -left-16 -top-20 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" />
           <div className="relative flex flex-col items-center">
-            <h1 className="text-3xl font-extrabold tracking-tight text-[#0B132B] dark:text-white sm:text-4xl md:text-5xl">
-              Eventos en Cartagena
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400 sm:text-base">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white max-w-3xl text-center leading-snug">
               Descubre conciertos, festivales, experiencias culturales y deportivas en La Heroica.
-            </p>
+            </h1>
             <form role="search" onSubmit={handleSearchSubmit} className="relative mt-6 w-full max-w-xl">
               <label htmlFor="event-search" className="sr-only">
                 Buscar eventos por nombre
@@ -262,7 +260,7 @@ export default function BuscarEventosPage() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Buscar eventos por nombre..."
-                className="h-12 w-full rounded-2xl border border-slate-300 bg-white pl-11 pr-11 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 hover:border-slate-400 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-500/10 dark:border-slate-700 dark:bg-[#0B0F19] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600"
+                className="h-12 w-full rounded-2xl border-2 border-slate-900 dark:border-white bg-white pl-11 pr-11 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-amber-500 dark:focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/15 dark:bg-[#0B0F19] dark:text-white dark:placeholder:text-slate-500"
               />
               <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               {searchInput && (
@@ -475,8 +473,8 @@ export default function BuscarEventosPage() {
 
       {/* 2. Sección de Categorías Destacadas (Ocupa todo el ancho de la pantalla en pantallas grandes) */}
       {featuredCategories.length > 0 && (
-        <section className="w-full py-10 sm:py-14 px-4 sm:px-6 md:px-8 lg:px-8 xl:px-10 border-t border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-[#0B1428]/80 backdrop-blur-xs relative z-10 transition-colors duration-200">
-          <div className="w-full mb-6 sm:mb-8">
+        <section className="w-full py-10 sm:py-14 px-4 sm:px-6 md:px-8 lg:px-8 xl:px-10 border-t border-slate-200/80 dark:border-transparent bg-white/70 dark:bg-transparent relative z-10 transition-colors duration-200">
+          <div className="w-full mb-6 sm:mb-8 text-center max-w-2xl mx-auto">
             <h3 className="text-xl sm:text-2xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
               Categorías Destacadas
             </h3>
@@ -505,18 +503,19 @@ export default function BuscarEventosPage() {
                       <ImageWithFallback
                         src={imageUrl}
                         alt={cat.nombre}
-                        className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300"
+                        className="w-full h-full object-cover opacity-100 group-hover:scale-105 transition-transform duration-500"
                         showText={false}
                       />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-slate-950/65 pointer-events-none" />
+                  {/* Máscara inferior suave para legibilidad sin oscurecer la imagen completa */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
 
                   <div className="relative z-10 w-full min-w-0">
-                    <h4 className="text-sm sm:text-base font-extrabold uppercase text-white truncate tracking-tight group-hover:text-amber-300 transition-colors">
+                    <h4 className="text-sm sm:text-base font-extrabold uppercase text-white truncate tracking-tight group-hover:text-amber-300 transition-colors drop-shadow-sm">
                       {cat.nombre}
                     </h4>
-                    <span className="text-xs text-slate-300 font-semibold block mt-1">
+                    <span className="text-xs text-slate-200 font-semibold block mt-1 drop-shadow-xs">
                       {cat.totalEventos ?? 0} {(cat.totalEventos ?? 0) === 1 ? 'evento' : 'eventos'}
                     </span>
                   </div>
@@ -526,6 +525,9 @@ export default function BuscarEventosPage() {
           </div>
         </section>
       )}
+
+      {/* Pre-Footer compartido */}
+      <CityRhythmPreFooter />
 
       {/* Footer idéntico */}
       <Footer />

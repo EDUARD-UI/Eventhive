@@ -34,11 +34,11 @@ export default function CategoryCard({ category }) {
           </div>
         )}
 
-        {/* Máscara linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.85) 100%) */}
+        {/* Máscara suave en el borde inferior para contraste del texto sin oscurecer la foto */}
         <div
-          className="absolute inset-0 pointer-events-none opacity-85 group-hover:opacity-95 transition-opacity duration-300"
+          className="absolute inset-0 pointer-events-none opacity-80 group-hover:opacity-90 transition-opacity duration-300"
           style={{
-            background: 'linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.85) 100%)',
+            background: 'linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.75) 100%)',
           }}
         />
 

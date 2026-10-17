@@ -78,13 +78,6 @@ export default function OrganizationListCard({ org }) {
       {/* 2. CUERPO: TÍTULO, DESCRIPCIÓN Y NOMBRE DEL REPRESENTANTE */}
       <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
         <div>
-          {/* Badge superior de categoría */}
-          <div className="flex items-center gap-2 mb-2">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 border border-indigo-500/20">
-              <FiAward size={12} />
-              <span>{orgCategory}</span>
-            </span>
-          </div>
 
           {/* Título de la organización */}
           <Link to={`/organizaciones/${id}`} className="block group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
