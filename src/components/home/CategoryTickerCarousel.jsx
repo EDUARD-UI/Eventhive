@@ -56,8 +56,8 @@ export default function CategoryTickerCarousel() {
   const loopList = [...categories, ...categories, ...categories];
 
   return (
-    <div className="w-full relative overflow-hidden py-4 select-none group">
-      {/* Tira animada continua */}
+    <div className="w-full relative overflow-hidden py-4 select-none group [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]">
+      {/* Tira animada continua sin sensación de recuadro */}
       <div className="animate-marquee flex items-center gap-4 w-max">
         {loopList.map((cat, index) => {
           const imageUrl = cat.imagenUrl || cat.urlFoto || cat.foto || cat.imagen;
@@ -66,7 +66,7 @@ export default function CategoryTickerCarousel() {
             <Link
               key={`${cat.id}-${index}`}
               to={`/buscar?categoriaId=${cat.id}`}
-              className="relative flex-shrink-0 w-[250px] sm:w-[290px] h-[135px] sm:h-[155px] rounded-2xl bg-white dark:bg-[#151D2F] border border-slate-200 dark:border-white/[0.07] hover:border-slate-300 hover:dark:bg-slate-800 hover:dark:border-white/15 shadow-sm hover:shadow-md transition-all duration-300 ease-out overflow-hidden flex flex-col justify-end p-4 text-left group/item hover:scale-[1.02]"
+              className="relative flex-shrink-0 w-[250px] sm:w-[290px] h-[135px] sm:h-[155px] rounded-2xl bg-slate-900 border-0 shadow-md hover:shadow-xl transition-all duration-300 ease-out overflow-hidden flex flex-col justify-end p-4 text-left group/item hover:scale-[1.03]"
             >
               {/* Fotografía de la categoría nítida, colorida y claramente visible */}
               {imageUrl ? (

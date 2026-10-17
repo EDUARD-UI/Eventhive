@@ -255,8 +255,8 @@ export default function Home() {
       {/* Hero Principal con Buscador Integrado */}
       <Hero />
 
-      {/* 2. Carrusel Principal de Eventos Premium */}
-      <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-3 pb-8 sm:pt-5 sm:pb-12 max-w-[1850px] mx-auto relative z-10 transition-colors duration-200">
+      {/* 2. Carrusel Principal de Eventos Premium con Ancla de Desplazamiento Suave */}
+      <section id="carousel-section" className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-6 pb-8 sm:pt-10 sm:pb-12 max-w-[1850px] mx-auto relative z-10 scroll-mt-20 transition-colors duration-200">
         {isLoadingEvents ? (
           <div className="w-full rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[200px] sm:min-h-[280px] lg:min-h-[360px] max-h-[480px] bg-slate-200 dark:bg-slate-800/80 border border-slate-300/40 dark:border-slate-700/60 animate-pulse relative overflow-hidden flex flex-col justify-end p-5 sm:p-10 shadow-sm">
             <div className="w-24 sm:w-28 h-5 sm:h-6 bg-slate-300 dark:bg-slate-700 rounded-md mb-3" />
@@ -476,26 +476,26 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <br></br><br></br>
-
-
-
-      {/* 5. Carrusel de Categorías con Barra Dorada Recta Estática */}
-      <section className="w-full py-6 sm:py-10 bg-transparent transition-colors duration-200">
+      {/* 5. Carrusel de Categorías con Barra Inclinada y Ticker sin recuadros */}
+      <section className="w-full py-8 sm:py-12 bg-transparent transition-colors duration-200">
         <CategoryRibbonBanner />
         <CategoryTickerCarousel />
       </section>
-      <br></br><br></br><br></br>
 
-      {/* 6. Banners Asimétricos */}
-      <HomeBannersSection />
+      {/* 6. Banners Asimétricos con Ancla para Desplazamiento Suave */}
+      <section id="banners-section" className="relative scroll-mt-20 my-10 sm:my-14">
+        <HomeBannersSection />
+      </section>
 
-      <br></br><br></br><br></br>
       {/* 7. Pre-Footer "Conéctate al ritmo de la ciudad" con cartas coleccionables y festón de picos */}
-      <CityRhythmPreFooter />
+      <section id="prefooter-section" className="relative scroll-mt-16">
+        <CityRhythmPreFooter />
+      </section>
 
       {/* Pie de Página */}
-      <Footer />
+      <footer id="footer-section">
+        <Footer />
+      </footer>
     </div>
   );
 }
