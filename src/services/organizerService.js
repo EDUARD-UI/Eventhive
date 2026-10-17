@@ -4,18 +4,32 @@ import { normalizeEvent } from './eventService.js';
 const normalizeOrganization = (organization) => ({
   ...organization,
   id: String(organization.id),
-  name: organization.nombre || organization.razonSocial || 'Organización',
-  category: organization.categoria?.nombre || organization.categoria || 'Organización',
+  name: organization.razonSocial || organization.nombre || 'Organización',
+  razonSocial: organization.razonSocial || organization.nombre || 'Organización',
+  category: organization.categoria?.nombre || organization.categoria || 'Productor Cultural',
   description: organization.descripcion || '',
-  avatar: organization.logo || organization.imagen || organization.foto || null,
-  verified: organization.estado === 'VERIFICADA',
-  rating: organization.valoracion ?? organization.rating ?? null,
-  eventsCount: organization.eventosCount ?? organization.cantidadEventos ?? 0,
-  followers: organization.seguidoresCount ?? organization.seguidores ?? 0,
+  avatar:
+    organization.urlLogo ||
+    organization.imagenPerfil ||
+    organization.logo ||
+    organization.imagen ||
+    organization.foto ||
+    null,
+  representante: organization.representante || organization.nombreRepresentante || '',
+  verified: organization.estado === 'VERIFICADA' || organization.estado === 'APROBADA',
+  rating: organization.promedioRating ?? organization.valoracion ?? organization.rating ?? null,
+  eventsCount: organization.totalEventosCreados ?? organization.eventosCount ?? organization.cantidadEventos ?? 0,
+  followers: organization.totalSeguidores ?? organization.seguidoresCount ?? organization.seguidores ?? 0,
   targetCategory: organization.categoria?.nombre || organization.categoria || '',
 });
 
-const getPageContent = (data) => (data?.content || []).map(normalizeOrganization);
+const getPageContent = (data) => {
+  const content = data?.data?.content || data?.content || (Array.isArray(data) ? data : []);
+  return content.map(normalizeOrganization);
+};
+
+const getTotalElements = (data) =>
+  data?.data?.totalElements ?? data?.totalElements ?? (Array.isArray(data) ? data.length : 0);
 
 const getOrganizerEvents = async ({ page = 0, size = 50 } = {}) => {
   const data = await httpClient.get('/eventos/organizador', { page, size });
@@ -26,13 +40,13 @@ const createOrganizerEvent = (formData) =>
   httpClient.post('/eventos', formData, { isFormData: true });
 
 export const organizationService = {
-  async listOrganizations({ page = 0, size = 12, estado, skipAuth = false } = {}) {
+  async listOrganizations({ page = 0, size = 5, estado, skipAuth = false } = {}) {
     const params = { page, size };
     if (estado && estado !== 'TODOS') {
       params.estado = estado;
     }
     const data = await httpClient.get('/organizaciones', params, { skipAuth });
-    return { organizations: getPageContent(data), total: data?.totalElements ?? 0 };
+    return { organizations: getPageContent(data), total: getTotalElements(data) };
   },
 
   async listTopOrganizations({ page = 0, size = 4 } = {}) {
@@ -40,13 +54,13 @@ export const organizationService = {
     return { organizations: getPageContent(data), total: data?.totalElements ?? 0 };
   },
 
-  async searchOrganizations(razonSocial, { page = 0, size = 12 } = {}) {
+  async searchOrganizations(razonSocial, { page = 0, size = 5 } = {}) {
     try {
       const data = await httpClient.post('/organizaciones/buscar', { razonSocial }, {
         params: { page, size },
         skipAuth: true,
       });
-      return { organizations: getPageContent(data), total: data?.totalElements ?? 0 };
+      return { organizations: getPageContent(data), total: getTotalElements(data) };
     } catch {
       const all = await this.listOrganizations({ page: 0, size: 50, skipAuth: true });
       const term = (razonSocial || '').toLowerCase();

@@ -1,51 +1,31 @@
-export default function OrganizationCardSkeleton({ notchBg = 'bg-[#F8FAFC]' }) {
+import React from 'react';
+
+export default function OrganizationCardSkeleton() {
   return (
-    <div className="relative bg-white rounded-3xl border border-slate-200/90 shadow-sm flex flex-col justify-between overflow-hidden animate-pulse">
-      {/* Cabecera Skeleton */}
-      <div className="p-5 pb-3">
-        <div className="flex items-center gap-3.5 mb-3">
-          <div className="w-14 h-14 shrink-0 rounded-2xl bg-slate-200" />
-          <div className="space-y-2 flex-1">
-            <div className="h-5 bg-slate-200 rounded w-3/4" />
-            <div className="h-3.5 bg-slate-100 rounded w-1/2" />
-          </div>
-        </div>
-        <div className="h-7 bg-slate-100 rounded-xl w-full" />
-      </div>
+    <div className="relative bg-white dark:bg-[#0D1527] rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-slate-800/90 p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:gap-6 items-stretch sm:items-center shadow-md animate-pulse overflow-hidden">
+      {/* Thumbnail a la izquierda */}
+      <div className="w-full sm:w-36 md:w-44 h-44 sm:h-36 md:h-40 rounded-xl sm:rounded-2xl bg-slate-200 dark:bg-slate-800 shrink-0" />
 
-      {/* Perforación 1 */}
-      <div className="relative flex items-center w-full my-1">
-        <div className={`absolute -left-3 w-6 h-6 rounded-full ${notchBg} border-r border-slate-200 z-10`} />
-        <div className="w-full border-b-2 border-dashed border-slate-200 mx-3" />
-        <div className={`absolute -right-3 w-6 h-6 rounded-full ${notchBg} border-l border-slate-200 z-10`} />
-      </div>
-
-      {/* Métricas Skeleton */}
-      <div className="px-5 py-3 space-y-2.5">
-        <div className="flex justify-between">
-          <div className="h-4 bg-slate-100 rounded w-20" />
-          <div className="h-4 bg-slate-100 rounded w-14" />
+      {/* Cuerpo central */}
+      <div className="flex-1 flex flex-col justify-between py-1 space-y-2">
+        <div>
+          <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded-md mb-2" />
+          <div className="h-6 w-3/4 bg-slate-300 dark:bg-slate-700 rounded-lg mb-2" />
+          <div className="h-3.5 w-full bg-slate-200 dark:bg-slate-800 rounded mb-1.5" />
+          <div className="h-3.5 w-2/3 bg-slate-200 dark:bg-slate-800 rounded" />
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="h-10 bg-slate-100 rounded-xl" />
-          <div className="h-10 bg-slate-100 rounded-xl" />
+
+        {/* Representante */}
+        <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+          <div className="h-4 w-40 bg-slate-200 dark:bg-slate-800 rounded" />
         </div>
       </div>
 
-      {/* Perforación 2 */}
-      <div className="relative flex items-center w-full my-1">
-        <div className={`absolute -left-3 w-6 h-6 rounded-full ${notchBg} border-r border-slate-200 z-10`} />
-        <div className="w-full border-b-2 border-dashed border-slate-200 mx-3" />
-        <div className={`absolute -right-3 w-6 h-6 rounded-full ${notchBg} border-l border-slate-200 z-10`} />
-      </div>
-
-      {/* Barcode + Botones Skeleton */}
-      <div className="px-5 pt-3 pb-5 flex flex-col items-center gap-3">
-        <div className="h-6 w-36 bg-slate-200 rounded" />
-        <div className="grid grid-cols-2 gap-2 w-full">
-          <div className="h-9 bg-slate-200 rounded-xl" />
-          <div className="h-9 bg-slate-200 rounded-xl" />
-        </div>
+      {/* Botones a la derecha */}
+      <div className="flex sm:flex-col items-center justify-center gap-2.5 sm:self-center shrink-0 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800/80">
+        <div className="w-full sm:w-32 h-9 bg-amber-400/20 dark:bg-amber-500/20 rounded-xl" />
+        <div className="w-full sm:w-32 h-9 bg-slate-200 dark:bg-slate-800 rounded-xl" />
       </div>
     </div>
   );

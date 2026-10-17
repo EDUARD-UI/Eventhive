@@ -39,8 +39,8 @@ export const normalizeBanner = (banner) => {
  */
 export async function getHomeBanners() {
   try {
-    const data = await httpClient.get('/banners-home');
-    const list = Array.isArray(data) ? data : data?.content || [];
+    const res = await httpClient.get('/banners-home');
+    const list = Array.isArray(res) ? res : res?.data || res?.content || [];
     return list.map(normalizeBanner).sort((a, b) => a.posicion - b.posicion);
   } catch (err) {
     console.warn('No se pudieron obtener los banners del home:', err?.message);
@@ -54,8 +54,8 @@ export async function getHomeBanners() {
  */
 export async function getAdminBanners() {
   try {
-    const data = await httpClient.get('/banners-home/admin');
-    const list = Array.isArray(data) ? data : data?.content || [];
+    const res = await httpClient.get('/banners-home/admin');
+    const list = Array.isArray(res) ? res : res?.data || res?.content || [];
     if (list.length > 0) {
       return list.map((b) => ({
         ...normalizeBanner(b),

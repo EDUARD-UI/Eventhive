@@ -1,17 +1,20 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiEye, FiCheckCircle, FiCalendar, FiUsers, FiUserCheck, FiUserPlus, FiCheck } from 'react-icons/fi';
+import { FiEye, FiUserCheck, FiUserPlus, FiCheck, FiAward } from 'react-icons/fi';
 import ImageWithFallback from './ImageWithFallback.jsx';
 
 /**
  * OrganizationListCard
- * Card vertical estilo Pase/Boleto de Credencial de Organización:
- * - Basado fielmente en el diseño de ticket con muescas circulares laterales y perforaciones dashed.
- * - Cabecera con avatar institucional, razón social y verificación.
- * - Bloque de datos con PASS ID, Representante y Métricas reales (eventos y seguidores).
- * - Talón inferior con código de barras y botones "Seguir" y "Ver perfil".
+ * Tarjeta horizontal de Organización estilo feed (basada en la imagen de referencia):
+ * - Imagen a la izquierda (thumbnail redondeado generoso).
+ * - Lado derecho:
+ *   - Badge superior de categoría / tipo.
+ *   - Título de la organización en negrita.
+ *   - Descripción resumida.
+ *   - Nombre del representante con avatar/ícono.
+ *   - Solo botones: Seguir y Ver.
  */
-export default function OrganizationListCard({ org, notchBg = 'bg-[#F8FAFC]' }) {
+export default function OrganizationListCard({ org }) {
   if (!org) return null;
 
   const {
@@ -22,202 +25,122 @@ export default function OrganizationListCard({ org, notchBg = 'bg-[#F8FAFC]' }) 
     avatar,
     logo,
     imagen,
+    urlLogo,
+    imagenPerfil,
+    description,
+    descripcion,
+    category,
+    categoria,
     verified,
     estado,
-    followers,
-    totalSeguidores,
-    eventsCount,
-    totalEventosCreados,
-    category,
   } = org;
 
   const [isFollowing, setIsFollowing] = useState(false);
-  const [followersCount, setFollowersCount] = useState(followers ?? totalSeguidores ?? 0);
 
-  const title = razonSocial || name || 'Organización Cultural';
-  const imgUrl = avatar || logo || imagen || null;
+  const title = razonSocial || name || 'Organización';
+  const desc = descripcion || description || 'Organización cultural y productora de eventos en Cartagena de Indias.';
+  const repName = representante || org.nombreRepresentante || 'Representante oficial';
+  const imgUrl = urlLogo || imagenPerfil || avatar || logo || imagen || null;
+  const orgCategory = (typeof categoria === 'object' ? categoria?.nombre : categoria) || category || 'Organización';
   const isVerified = verified || estado === 'APROBADA' || estado === 'VERIFICADA';
-  const eventosCountNum = eventsCount ?? totalEventosCreados ?? 0;
-  const ticketFolio = `ORG-${String(id).padStart(8, '0')}`;
 
   const handleFollowToggle = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsFollowing((prev) => {
-      const next = !prev;
-      setFollowersCount((c) => (next ? c + 1 : Math.max(0, c - 1)));
-      return next;
-    });
+    setIsFollowing((prev) => !prev);
   };
 
   return (
-    <article className="group relative bg-white rounded-3xl border border-slate-200/90 hover:border-slate-400/80 transition-all duration-300 ease-out shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.09)] hover:-translate-y-1 flex flex-col justify-between overflow-hidden">
+    <article className="group relative bg-white dark:bg-[#0D1527] rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-slate-800/90 p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:gap-6 items-stretch sm:items-center shadow-md hover:shadow-xl hover:border-amber-400/60 dark:hover:border-amber-500/50 hover:-translate-y-1 transition-all duration-300 ease-out overflow-hidden">
       
-      {/* SECCIÓN SUPERIOR: Logo + Identidad */}
-      <div className="p-5 pb-3">
-        <div className="flex items-center gap-3.5 mb-3">
-          {/* Avatar institucional */}
-          <div className="w-14 h-14 shrink-0 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/80 flex items-center justify-center p-1 relative">
-            <ImageWithFallback
-              src={imgUrl}
-              alt={title}
-              className="w-full h-full object-cover rounded-xl"
-              showText={false}
-              iconSize={22}
-            />
-          </div>
-
-          {/* Nombre y Verificación */}
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <Link to={`/organizaciones/${id}`} className="block truncate group-hover:text-amber-600 transition-colors">
-                <h3 className="font-extrabold text-slate-950 text-base uppercase tracking-tight truncate leading-snug">
-                  {title}
-                </h3>
-              </Link>
-              {isVerified && (
-                <FiCheckCircle
-                  className="text-amber-500 shrink-0"
-                  size={15}
-                  title="Organizador Verificado"
-                />
-              )}
-            </div>
-
-            <span className="text-[11px] font-semibold text-slate-500 block truncate mt-0.5">
-              {category || 'Productor Cultural Oficial'}
-            </span>
-          </div>
-        </div>
-
-        {/* Representante si existe */}
-        {representante && (
-          <p className="text-xs text-slate-600 truncate flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-100">
-            <FiUserCheck className="text-amber-500 shrink-0" size={13} />
-            <span className="truncate">Representante: <strong className="font-bold text-slate-800">{representante}</strong></span>
-          </p>
-        )}
-      </div>
-
-      {/* PRIMERA PERFORACIÓN DE BOLETO */}
-      <div className="relative flex items-center w-full my-1">
-        <div className={`absolute -left-3 w-6 h-6 rounded-full ${notchBg} border-r border-slate-200 shadow-[inset_-2px_0_4px_rgba(0,0,0,0.03)] z-10 pointer-events-none`} />
-        <div className="w-full border-b-2 border-dashed border-slate-200 mx-3" />
-        <div className={`absolute -right-3 w-6 h-6 rounded-full ${notchBg} border-l border-slate-200 shadow-[inset_2px_0_4px_rgba(0,0,0,0.03)] z-10 pointer-events-none`} />
-      </div>
-
-      {/* SECCIÓN INTERMEDIA: Métricas del Pase */}
-      <div className="px-5 py-3 space-y-3">
-        <div className="flex items-center justify-between text-xs">
-          <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              PASS ID
-            </span>
-            <span className="font-mono font-black text-slate-800 text-xs">
-              {ticketFolio}
-            </span>
-          </div>
-
-          <div className="text-right">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              ESTADO
-            </span>
-            <span className="inline-flex items-center gap-1 text-[11px] font-black uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Activo
-            </span>
-          </div>
-        </div>
-
-        {/* Estadísticas de Eventos y Seguidores */}
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="p-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2">
-            <FiCalendar className="text-amber-500 shrink-0" size={14} />
-            <div className="min-w-0">
-              <span className="text-[10px] font-bold text-slate-400 block leading-tight">Cartelera</span>
-              <span className="font-black text-slate-800 text-xs truncate block">{eventosCountNum} evento{eventosCountNum === 1 ? '' : 's'}</span>
-            </div>
-          </div>
-
-          <div className="p-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2">
-            <FiUsers className="text-amber-500 shrink-0" size={14} />
-            <div className="min-w-0">
-              <span className="text-[10px] font-bold text-slate-400 block leading-tight">Comunidad</span>
-              <span className="font-black text-slate-800 text-xs truncate block">{followersCount} seguidor{followersCount === 1 ? '' : 'es'}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* SEGUNDA PERFORACIÓN DE BOLETO */}
-      <div className="relative flex items-center w-full my-1">
-        <div className={`absolute -left-3 w-6 h-6 rounded-full ${notchBg} border-r border-slate-200 shadow-[inset_-2px_0_4px_rgba(0,0,0,0.03)] z-10 pointer-events-none`} />
-        <div className="w-full border-b-2 border-dashed border-slate-200 mx-3" />
-        <div className={`absolute -right-3 w-6 h-6 rounded-full ${notchBg} border-l border-slate-200 shadow-[inset_2px_0_4px_rgba(0,0,0,0.03)] z-10 pointer-events-none`} />
-      </div>
-
-      {/* SECCIÓN INFERIOR: Código de Barras + Botones */}
-      <div className="px-5 pt-3 pb-5 flex flex-col items-center gap-3">
-        {/* Código de barras */}
-        <div className="w-full flex flex-col items-center">
-          <svg viewBox="0 0 160 30" className="w-40 h-7 text-slate-800 fill-current opacity-90">
-            <rect x="0" y="0" width="3" height="30" />
-            <rect x="6" y="0" width="1.5" height="30" />
-            <rect x="11" y="0" width="3.5" height="30" />
-            <rect x="17" y="0" width="2" height="30" />
-            <rect x="22" y="0" width="4" height="30" />
-            <rect x="29" y="0" width="1.5" height="30" />
-            <rect x="34" y="0" width="3" height="30" />
-            <rect x="40" y="0" width="2" height="30" />
-            <rect x="46" y="0" width="4" height="30" />
-            <rect x="53" y="0" width="1.5" height="30" />
-            <rect x="58" y="0" width="3.5" height="30" />
-            <rect x="65" y="0" width="2" height="30" />
-            <rect x="70" y="0" width="4" height="30" />
-            <rect x="77" y="0" width="1.5" height="30" />
-            <rect x="82" y="0" width="3" height="30" />
-            <rect x="88" y="0" width="2" height="30" />
-            <rect x="93" y="0" width="4" height="30" />
-            <rect x="100" y="0" width="1.5" height="30" />
-            <rect x="105" y="0" width="3" height="30" />
-            <rect x="111" y="0" width="2" height="30" />
-            <rect x="116" y="0" width="4" height="30" />
-            <rect x="123" y="0" width="1.5" height="30" />
-            <rect x="128" y="0" width="3.5" height="30" />
-            <rect x="135" y="0" width="2" height="30" />
-            <rect x="141" y="0" width="3" height="30" />
-            <rect x="147" y="0" width="4" height="30" />
-            <rect x="154" y="0" width="2" height="30" />
-          </svg>
-          <span className="text-[10px] font-mono tracking-widest text-slate-400 mt-1 font-semibold">
-            ORG &nbsp; {String(id).padStart(6, '9')} &nbsp; PASS
+      {/* 1. IMAGEN / LOGO A LA IZQUIERDA */}
+      <Link
+        to={`/organizaciones/${id}`}
+        className="w-full sm:w-36 md:w-44 h-44 sm:h-36 md:h-40 rounded-xl sm:rounded-2xl overflow-hidden shrink-0 bg-slate-900 border border-slate-200/70 dark:border-slate-800/80 relative block group/img"
+      >
+        <ImageWithFallback
+          src={imgUrl}
+          alt={title}
+          className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500 ease-out"
+          fallbackText={title}
+          iconSize={32}
+        />
+        {isVerified && (
+          <span
+            title="Organización Verificada"
+            className="absolute top-2.5 right-2.5 bg-amber-500 text-slate-950 p-1 rounded-full shadow-md text-xs"
+          >
+            <FiCheck size={12} strokeWidth={3} />
           </span>
+        )}
+      </Link>
+
+      {/* 2. CUERPO: TÍTULO, DESCRIPCIÓN Y NOMBRE DEL REPRESENTANTE */}
+      <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
+        <div>
+          {/* Badge superior de categoría */}
+          <div className="flex items-center gap-2 mb-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 border border-indigo-500/20">
+              <FiAward size={12} />
+              <span>{orgCategory}</span>
+            </span>
+          </div>
+
+          {/* Título de la organización */}
+          <Link to={`/organizaciones/${id}`} className="block group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+            <h3 className="font-black text-slate-950 dark:text-white text-base sm:text-lg md:text-xl tracking-tight leading-snug line-clamp-1 uppercase">
+              {title}
+            </h3>
+          </Link>
+
+          {/* Descripción */}
+          <p className="mt-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+            {desc}
+          </p>
         </div>
 
-        {/* Acciones: Seguir y Ver Perfil */}
-        <div className="grid grid-cols-2 gap-2 w-full">
-          <button
-            type="button"
-            onClick={handleFollowToggle}
-            className={`py-2 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 shadow-xs cursor-pointer ${
-              isFollowing
-                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                : 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold'
-            }`}
-          >
-            {isFollowing ? <FiCheck size={13} /> : <FiUserPlus size={13} />}
-            <span>{isFollowing ? 'Siguiendo' : 'Seguir'}</span>
-          </button>
-
-          <Link
-            to={`/organizaciones/${id}`}
-            className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 border border-slate-200 text-center"
-          >
-            <FiEye size={13} />
-            <span>Perfil</span>
-          </Link>
+        {/* Fila inferior: Nombre del representante */}
+        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+              <FiUserCheck size={13} />
+            </div>
+            <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
+              Representante:{' '}
+              <strong className="font-bold text-slate-800 dark:text-slate-200">
+                {repName}
+              </strong>
+            </span>
+          </div>
         </div>
       </div>
+
+      {/* 3. SOLO BOTONES SEGUIR / VER (A la derecha en desktop, al pie en móviles) */}
+      <div className="flex sm:flex-col items-center justify-center gap-2.5 sm:self-center shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800/80 w-full sm:w-auto">
+        {/* Botón Seguir */}
+        <button
+          type="button"
+          onClick={handleFollowToggle}
+          className={`w-full sm:w-32 py-2 px-3.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 shadow-xs cursor-pointer ${
+            isFollowing
+              ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+              : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+          }`}
+        >
+          {isFollowing ? <FiCheck size={14} strokeWidth={2.5} /> : <FiUserPlus size={14} />}
+          <span>{isFollowing ? 'Siguiendo' : 'Seguir'}</span>
+        </button>
+
+        {/* Botón Ver */}
+        <Link
+          to={`/organizaciones/${id}`}
+          className="w-full sm:w-32 py-2 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 border border-slate-200/90 dark:border-slate-700/80 text-center"
+        >
+          <FiEye size={14} />
+          <span>Ver</span>
+        </Link>
+      </div>
+
     </article>
   );
 }

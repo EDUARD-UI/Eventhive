@@ -17,7 +17,7 @@ import OrganizationCardSkeleton from '../components/common/OrganizationCardSkele
 import Pagination from '../components/Shared/Pagination.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 5;
 
 export default function OrganizadoresPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -167,26 +167,26 @@ export default function OrganizadoresPage() {
           </div>
         </div>
 
-        {/* Tab Directorio: Grilla de Credenciales / Boletos Verticales */}
+        {/* Tab Directorio: Feed Vertical de Organizaciones idéntico a la imagen de referencia */}
         {activeTab === 'directorio' && (
-          <section>
+          <section className="max-w-4xl mx-auto w-full">
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
-                {[1, 2, 3, 4, 5, 6].map((n) => (
-                  <OrganizationCardSkeleton key={n} notchBg="bg-[#F8FAFC] dark:bg-[#070D1B]" />
+              <div className="flex flex-col space-y-4 sm:space-y-5 w-full">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <OrganizationCardSkeleton key={n} />
                 ))}
               </div>
             ) : organizations.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+                <div className="flex flex-col space-y-4 sm:space-y-5 w-full">
                   {organizations.map((org) => (
-                    <OrganizationListCard key={org.id} org={org} notchBg="bg-[#F8FAFC] dark:bg-[#070D1B]" />
+                    <OrganizationListCard key={org.id} org={org} />
                   ))}
                 </div>
 
                 {/* Paginación Minimalista y Centrada */}
                 {totalElements > PAGE_SIZE && (
-                  <div className="mt-12 flex justify-center w-full">
+                  <div className="mt-10 flex justify-center w-full">
                     <Pagination
                       currentPage={currentPage}
                       totalItems={totalElements}
