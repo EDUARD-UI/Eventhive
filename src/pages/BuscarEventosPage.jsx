@@ -14,6 +14,7 @@ import FloatingDotsBackground from '../components/common/FloatingDotsBackground.
 import StyledDatePicker from '../components/common/StyledDatePicker.jsx';
 import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
+import { useLenisScroll } from '../hooks/useLenisScroll.js';
 
 
 const SORT_OPTIONS = [
@@ -24,6 +25,7 @@ const SORT_OPTIONS = [
 ];
 
 export default function BuscarEventosPage() {
+  useLenisScroll();
   const { isDark } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();

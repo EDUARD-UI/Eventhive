@@ -18,6 +18,7 @@ import PasarelaPagoSimuladaModal from '../components/common/PasarelaPagoSimulada
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 import { getCategoryGradient } from '../utils/formatters.js';
+import { useLenisScroll } from '../hooks/useLenisScroll.js';
 
 /**
  * Pin temático de panal ámbar/dorado para Leaflet
@@ -63,6 +64,7 @@ function HoneycombDateBadge({ dateStr }) {
 }
 
 export default function EventDetailPage() {
+  useLenisScroll();
   const { id } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
@@ -258,7 +260,7 @@ export default function EventDetailPage() {
     return (
       <div className="min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 font-body transition-colors duration-200">
         <Navbar />
-        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-pulse">
+        <main className="flex-1 w-[94%] sm:w-[90%] lg:w-[85%] max-w-7xl mx-auto py-8 sm:py-10 space-y-8 animate-pulse">
           <div className="space-y-3">
             <div className="h-6 w-32 bg-slate-200 dark:bg-slate-800 rounded-md" />
             <div className="h-10 w-2/3 bg-slate-200 dark:bg-slate-800 rounded-xl" />
@@ -307,9 +309,9 @@ export default function EventDetailPage() {
       <FloatingDotsBackground />
       <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 min-w-0 relative z-10">
+      <main className="flex-1 w-[94%] sm:w-[90%] lg:w-[85%] max-w-7xl mx-auto py-6 sm:py-8 space-y-6 min-w-0 relative z-10">
         {/* Enlace discreto de retorno */}
-        <div>
+        <div className="flex items-center justify-between">
           <button
             type="button"
             onClick={() => {
@@ -326,78 +328,13 @@ export default function EventDetailPage() {
           </button>
         </div>
 
-        {/* Encabezado Principal del Evento */}
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            {/* Badges de Categoría y Cartelera Oficial */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              {event.category && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-slate-900 dark:bg-amber-500 text-amber-400 dark:text-slate-950 border border-slate-800 dark:border-amber-400 shadow-xs">
-                  <span>{event.category}</span>
-                </span>
-              )}             
-            </div>
-
-            {/* Acciones del evento: Compartir y Guardar */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleShare}
-                className="inline-flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-[#0B1428] hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-2xs"
-                title="Compartir evento"
-              >
-                <FiShare2 size={13} className="text-amber-500" />
-                <span>Compartir</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleToggleFavorite}
-                className={`inline-flex items-center gap-1.5 border rounded-full px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer shadow-2xs ${
-                  isFavorite
-                    ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-800 font-bold'
-                    : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 bg-white dark:bg-[#0B1428] hover:bg-slate-50 dark:hover:bg-slate-800'
-                }`}
-                title={isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
-              >
-                <FiHeart
-                  size={13}
-                  className={isFavorite ? 'fill-amber-500 text-amber-500' : 'text-slate-400'}
-                />
-                <span>{isFavorite ? 'Guardado' : 'Guardar'}</span>
-              </button>
-            </div>
-          </div>
-
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase leading-tight break-words">
-            {event.title}
-          </h1>
-
-          {/* Fila de metadatos: fecha y ubicación */}
-          <div className="flex flex-wrap items-center gap-y-3 gap-x-6 text-sm text-slate-600 dark:text-slate-400 pt-1">
-            {event.date && (
-              <div className="flex items-center gap-2 font-semibold shrink-0">
-                <FiCalendar className="text-amber-500 shrink-0" size={18} />
-                <span className="text-slate-900 dark:text-white">{event.date}</span>
-              </div>
-            )}
-
-            {event.location && (
-              <div className="flex items-start sm:items-center gap-2 font-medium min-w-0 max-w-full">
-                <FiMapPin className="text-amber-500 shrink-0 mt-0.5 sm:mt-0" size={18} />
-                <span className="text-slate-800 dark:text-slate-200 break-words leading-snug min-w-0 flex-1">{event.location}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Rejilla de contenido principal: Columna izquierda (Detalles) + Columna derecha (Aside Ticket Compra) */}
+        {/* Rejilla de contenido principal: Columna izquierda (Detalles) + Columna derecha (Aside Ticket Compra y Acciones Elevado) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
 
           {/* Contenido izquierdo */}
           <div className="lg:col-span-8 space-y-8">
 
-            {/* Imagen Principal del Evento con encaje impecable */}
+            {/* Imagen Principal del Evento con encaje impecable y limpia de superposiciones */}
             <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1428] shadow-md group">
               <ImageWithFallback
                 src={event.photo}
@@ -408,51 +345,48 @@ export default function EventDetailPage() {
                 fallbackGradient={getCategoryGradient(event.category)}
                 fallbackText={event.title}
                 iconSize={42}
-              >
-                {/* Badge flotante de fecha en la esquina inferior izquierda */}
-                {event.date && (
-                  <div className="absolute bottom-4 left-4 z-10 flex items-center gap-3 bg-white/95 dark:bg-[#0B1428]/95 backdrop-blur-md p-2.5 sm:p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
-                    <div className="w-12 h-14 rounded-xl bg-slate-950 dark:bg-amber-500 text-amber-400 dark:text-slate-950 flex flex-col items-center justify-center text-center font-black">
-                      <span className="text-[10px] tracking-wider uppercase leading-none">
-                        {(event.date.split(' ').find((p) => p.length === 3 && isNaN(p)) || 'FECHA').slice(0, 3)}
-                      </span>
-                      <span className="text-lg leading-tight mt-0.5 text-white dark:text-slate-950">
-                        {event.date.split(' ').find((p) => /^\d{1,2}$/.test(p)) || ''}
-                      </span>
-                    </div>
-                    <div className="pr-3">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-                        Fecha Programada
-                      </span>
-                      <p className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white leading-tight">
-                        {event.date}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </ImageWithFallback>
+              />
             </div>
 
-            {/* Tarjeta: Sobre el Evento */}
-            <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-5 sm:p-7 md:p-8 shadow-sm space-y-4">
-              <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
-                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
+            {/* Tarjeta: Sobre el Evento (Contiene de forma exclusiva Título, Fecha y Descripción) */}
+            <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-6 sm:p-8 shadow-sm space-y-5">
+              <div className="border-b border-slate-100 dark:border-slate-800 pb-5 space-y-3">
+                {event.category && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-slate-900 dark:bg-amber-500 text-amber-400 dark:text-slate-950 border border-slate-800 dark:border-amber-400 shadow-xs">
+                    <span>{event.category}</span>
+                  </span>
+                )}
+
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase leading-tight break-words">
+                  {event.title}
+                </h1>
+
+                {event.date && (
+                  <div className="flex items-center gap-2 font-semibold text-sm sm:text-base text-slate-700 dark:text-slate-300 pt-1">
+                    <FiCalendar className="text-amber-500 shrink-0" size={18} />
+                    <span>{event.date}</span>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h2 className="text-xs sm:text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">
                   Sobre el Evento
                 </h2>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm sm:text-base whitespace-pre-line font-normal">
+                  {event.description || 'Disfruta de esta enriquecedora experiencia cultural en el corazón de Cartagena de Indias. Todos los protocolos y localidades están coordinados por la organización oficial.'}
+                </p>
               </div>
-              <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm sm:text-base whitespace-pre-line font-normal">
-                {event.description || 'Disfruta de esta enriquecedora experiencia cultural en el corazón de Cartagena de Indias. Todos los protocolos y localidades están coordinados por la organización oficial.'}
-              </p>
             </section>
 
-            {/* Organizador y Ubicación: en 2 columnas en pantallas medianas (tablets) para no cargar todo en vertical infinito */}
+            {/* Organización y Ubicación */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6 items-stretch">
-              {/* Tarjeta: Organizador Responsable */}
+              {/* Tarjeta: Organización Responsable */}
               <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-5 sm:p-6 shadow-sm flex flex-col justify-between space-y-4">
                 <div>
                   <div className="border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
                     <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
-                      Organizador Responsable
+                      Organización Responsable
                     </h2>
                   </div>
 
@@ -478,10 +412,10 @@ export default function EventDetailPage() {
                         <span className="font-extrabold text-slate-950 dark:text-white text-base truncate">
                           {orgName}
                         </span>
-                        <FiCheckCircle className="text-amber-500 shrink-0" size={16} title="Organizador Verificado" />
+                        <FiCheckCircle className="text-amber-500 shrink-0" size={16} title="Organización Verificada" />
                       </div>
                       <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block truncate">
-                        Organizador Oficial EventHive
+                        Organización Oficial EventHive
                       </span>
                     </div>
                   </div>
@@ -495,7 +429,7 @@ export default function EventDetailPage() {
                       : 'bg-slate-950 dark:bg-amber-500 hover:bg-amber-500 dark:hover:bg-amber-400 hover:text-slate-950 text-white dark:text-slate-950 font-black shadow-sm active:scale-95'
                     }`}
                 >
-                  {isFollowing ? 'Siguiendo' : 'Seguir organizador'}
+                  {isFollowing ? 'Siguiendo' : 'Seguir organización'}
                 </button>
               </section>
 
@@ -503,14 +437,14 @@ export default function EventDetailPage() {
               <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-5 sm:p-6 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                   <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
-                    Ubicación del Evento
+                    Ubicación
                   </h2>
                 </div>
 
                 {event.location && (
-                  <div className="flex items-start gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 min-w-0 max-w-full overflow-hidden">
-                    <FiMapPin className="text-amber-500 shrink-0 mt-0.5" size={16} />
-                    <span className="font-semibold text-slate-900 dark:text-white break-words leading-snug min-w-0 flex-1">{event.location}</span>
+                  <div className="flex items-start gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 min-w-0 max-w-full overflow-hidden">
+                    <FiMapPin className="text-amber-500 shrink-0 mt-0.5" size={17} />
+                    <span className="font-bold text-slate-900 dark:text-white break-words leading-snug min-w-0 flex-1">{event.location}</span>
                   </div>
                 )}
 
@@ -657,7 +591,7 @@ export default function EventDetailPage() {
                 </div>
               </div>
 
-              {/* Botones de Acción */}
+              {/* Botones de Acción: Comprar, Guardar en Favoritos y Compartir justo debajo */}
               <div className="space-y-3 pt-2">
                 <button
                   type="button"
@@ -678,6 +612,16 @@ export default function EventDetailPage() {
                 >
                   <FiHeart className={isFavorite ? 'fill-amber-600 text-amber-600' : 'text-slate-500'} size={15} />
                   <span>{isFavorite ? 'Guardado en favoritos' : 'Guardar en favoritos'}</span>
+                </button>
+
+                {/* Botón Compartir ubicado justo debajo de Guardar en favoritos */}
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="w-full py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 hover:border-slate-400 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                >
+                  <FiShare2 size={15} className="text-amber-500" />
+                  <span>Compartir evento</span>
                 </button>
               </div>
 

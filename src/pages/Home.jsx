@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
 import { Link } from 'react-router-dom';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
@@ -25,6 +25,8 @@ import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
 import { getCarouselEvents, getFeaturedEvents, getMapEvents, getUpcomingEvents } from '../services/eventService.js';
 import { getCategoryNames } from '../services/categoryService.js';
 import { useTheme } from '../context/ThemeContext.jsx';
+import Lenis from 'lenis';
+import 'lenis/dist/lenis.css';
 
 const DISTANCE_OPTIONS = [
   { value: 'all', label: 'Todas las distancias' },
@@ -96,6 +98,12 @@ export default function Home() {
   const [selectedDistance, setSelectedDistance] = useState('all');
   const [userLocation, setUserLocation] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [mapRevealed, setMapRevealed] = useState(false);
+  const [footerGroupRevealed, setFooterGroupRevealed] = useState(false);
+  const [carouselRevealed, setCarouselRevealed] = useState(false);
+  const mapSectionRef = useRef(null);
+  const footerGroupRef = useRef(null);
+  const carouselSectionRef = useRef(null);
 
   useEffect(() => {
     setIsLoadingEvents(true);
@@ -246,6 +254,178 @@ export default function Home() {
 
   const { isDark } = useTheme();
 
+  // Smooth scroll cinemático con Lenis y animaciones de aparición suave
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.4,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      syncTouch: true,
+      syncTouchLerp: 0.08,
+      wheelMultiplier: 1.05,
+      touchMultiplier: 1.8,
+      touchInertiaMultiplier: 40,
+      infinite: false,
+    });
+
+    let animationFrameId;
+    function raf(time) {
+      lenis.raf(time);
+      animationFrameId = requestAnimationFrame(raf);
+    }
+    animationFrameId = requestAnimationFrame(raf);
+
+    // Animación de aparición suave sincronizada con el scroll de Lenis
+    const checkReveals = () => {
+      const triggerThreshold = window.innerHeight * 0.90;
+      const mapTriggerThreshold = window.innerHeight * 0.78;
+
+      if (carouselSectionRef.current) {
+        const rect = carouselSectionRef.current.getBoundingClientRect();
+        if (rect.top <= triggerThreshold) {
+          setCarouselRevealed(true);
+        }
+      }
+
+      if (mapSectionRef.current) {
+        const rect = mapSectionRef.current.getBoundingClientRect();
+        if (rect.top <= mapTriggerThreshold) {
+          setMapRevealed(true);
+        }
+      }
+
+      if (footerGroupRef.current) {
+        const rect = footerGroupRef.current.getBoundingClientRect();
+        if (rect.top <= triggerThreshold) {
+          setFooterGroupRevealed(true);
+        }
+      }
+    };
+
+    lenis.on('scroll', checkReveals);
+    requestAnimationFrame(checkReveals);
+
+    // Desplazamiento cinemático suave (Hero -> Carrusel y Próximos -> Mapa)
+    let isTransitioningHero = false;
+    let heroTimer = null;
+    let isTransitioningMap = false;
+    let mapTimer = null;
+
+    const handleWheel = (e) => {
+      // 1. Descenso fluido desde Hero a Carrusel
+      if (!isTransitioningHero && window.scrollY < 80 && e.deltaY > 15) {
+        isTransitioningHero = true;
+        setCarouselRevealed(true);
+        lenis.scrollTo('#carousel-section', {
+          offset: -65,
+          duration: 1.3,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        });
+        heroTimer = setTimeout(() => {
+          isTransitioningHero = false;
+        }, 1350);
+        return;
+      }
+
+      // 2. Transición cinemática asistida al descender hacia el Mapa de Eventos
+      if (!isTransitioningMap && mapSectionRef.current && e.deltaY > 15) {
+        const mapRect = mapSectionRef.current.getBoundingClientRect();
+        if (mapRect.top > 80 && mapRect.top < window.innerHeight * 0.72) {
+          isTransitioningMap = true;
+          setMapRevealed(true);
+          lenis.scrollTo('#mapa', {
+            offset: -35,
+            duration: 1.45,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          });
+          mapTimer = setTimeout(() => {
+            isTransitioningMap = false;
+          }, 1500);
+        }
+      }
+    };
+
+    let touchStartY = 0;
+    const handleTouchStart = (e) => {
+      if (e.touches && e.touches.length > 0) {
+        touchStartY = e.touches[0].clientY;
+      }
+    };
+
+    const handleTouchMove = (e) => {
+      if (e.touches && e.touches.length > 0) {
+        const diffY = touchStartY - e.touches[0].clientY;
+
+        // 1. Táctil: Hero -> Carrusel
+        if (!isTransitioningHero && window.scrollY < 80 && diffY > 20) {
+          isTransitioningHero = true;
+          setCarouselRevealed(true);
+          lenis.scrollTo('#carousel-section', {
+            offset: -65,
+            duration: 1.3,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          });
+          heroTimer = setTimeout(() => {
+            isTransitioningHero = false;
+          }, 1350);
+          return;
+        }
+
+        // 2. Táctil: Descenso hacia el Mapa de Eventos
+        if (!isTransitioningMap && mapSectionRef.current && diffY > 20) {
+          const mapRect = mapSectionRef.current.getBoundingClientRect();
+          if (mapRect.top > 80 && mapRect.top < window.innerHeight * 0.72) {
+            isTransitioningMap = true;
+            setMapRevealed(true);
+            lenis.scrollTo('#mapa', {
+              offset: -35,
+              duration: 1.45,
+              easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            });
+            mapTimer = setTimeout(() => {
+              isTransitioningMap = false;
+            }, 1500);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+    // Observer nativo complementario para máxima reactividad
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (entry.target === carouselSectionRef.current) setCarouselRevealed(true);
+            if (entry.target === mapSectionRef.current) setMapRevealed(true);
+            if (entry.target === footerGroupRef.current) setFooterGroupRevealed(true);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -50px 0px' }
+    );
+
+    if (carouselSectionRef.current) observer.observe(carouselSectionRef.current);
+    if (mapSectionRef.current) observer.observe(mapSectionRef.current);
+    if (footerGroupRef.current) observer.observe(footerGroupRef.current);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      if (heroTimer) clearTimeout(heroTimer);
+      if (mapTimer) clearTimeout(mapTimer);
+      observer.disconnect();
+      lenis.destroy();
+    };
+  }, []);
+
   return (
     <div className="w-full min-h-screen bg-slate-50 dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 selection:bg-amber-400 selection:text-slate-950 font-body overflow-x-clip transition-colors duration-200">
 
@@ -255,8 +435,16 @@ export default function Home() {
       {/* Hero Principal con Buscador Integrado */}
       <Hero />
 
-      {/* 2. Carrusel Principal de Eventos Premium con Ancla de Desplazamiento Suave */}
-      <section id="carousel-section" className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-6 pb-8 sm:pt-10 sm:pb-12 max-w-[1850px] mx-auto relative z-10 scroll-mt-20 transition-colors duration-200">
+      {/* 2. Carrusel Principal de Eventos Premium con Ancla de Desplazamiento Suave y Animación de Entrada */}
+      <section
+        id="carousel-section"
+        ref={carouselSectionRef}
+        className={`w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-6 pb-8 sm:pt-10 sm:pb-12 max-w-[1850px] mx-auto relative z-10 scroll-mt-20 transition-all duration-1000 ease-out transform ${
+          carouselRevealed
+            ? 'opacity-100 translate-y-0 filter blur-0 scale-100'
+            : 'opacity-0 translate-y-12 filter blur-[2px] scale-[0.98]'
+        }`}
+      >
         {isLoadingEvents ? (
           <div className="w-full rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[200px] sm:min-h-[280px] lg:min-h-[360px] max-h-[480px] bg-slate-200 dark:bg-slate-800/80 border border-slate-300/40 dark:border-slate-700/60 animate-pulse relative overflow-hidden flex flex-col justify-end p-5 sm:p-10 shadow-sm">
             <div className="w-24 sm:w-28 h-5 sm:h-6 bg-slate-300 dark:bg-slate-700 rounded-md mb-3" />
@@ -322,11 +510,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Mapa de Eventos en Cartagena */}
-      <section id="mapa" className="w-full bg-slate-100 dark:bg-[#0B0F19] text-slate-900 dark:text-white px-6 sm:px-12 lg:px-20 py-16 sm:py-20 relative z-0 isolate overflow-hidden border-y border-slate-200 dark:border-white/[0.08] transition-colors duration-200">
+      {/* 4. Mapa de Eventos en Cartagena con Animación de Aparición Suave */}
+      <section
+        id="mapa"
+        ref={mapSectionRef}
+        className={`w-full bg-slate-100 dark:bg-[#0B0F19] text-slate-900 dark:text-white px-6 sm:px-12 lg:px-20 py-16 sm:py-20 relative z-0 isolate overflow-hidden border-y border-slate-200 dark:border-white/[0.08] transition-all duration-1000 ease-out transform ${
+          mapRevealed
+            ? 'opacity-100 translate-y-0 filter blur-0 scale-100'
+            : 'opacity-0 translate-y-16 filter blur-[3px] scale-[0.98]'
+        }`}
+      >
 
         <div className="max-w-7xl mx-auto relative z-10 isolate">
-          <div className="mb-8 flex flex-col items-center justify-center text-center">
+          <div className={`mb-8 flex flex-col items-center justify-center text-center transition-all duration-700 ease-out transform ${
+            mapRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-6">
               Mapa de Eventos
             </h2>
@@ -385,8 +583,12 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Contenedor del Mapa */}
-          <div className="relative z-0 isolate overflow-hidden rounded-3xl border border-slate-300 dark:border-white/10 shadow-2xl h-[440px] sm:h-[500px] bg-slate-100">
+          {/* Contenedor del Mapa con elevación y retraso escalonado fluido */}
+          <div className={`relative z-0 isolate overflow-hidden rounded-3xl border border-slate-300 dark:border-white/10 shadow-2xl h-[440px] sm:h-[500px] bg-slate-100 transition-all duration-1000 delay-150 ease-out transform ${
+            mapRevealed
+              ? 'opacity-100 translate-y-0 scale-100'
+              : 'opacity-40 translate-y-12 scale-[0.97]'
+          }`}>
             <MapContainer
               center={userLocation ? [userLocation.lat, userLocation.lng] : [10.415, -75.54]}
               zoom={13}
@@ -487,15 +689,24 @@ export default function Home() {
         <HomeBannersSection />
       </section>
 
-      {/* 7. Pre-Footer "Conéctate al ritmo de la ciudad" con cartas coleccionables y festón de picos */}
-      <section id="prefooter-section" className="relative scroll-mt-16">
-        <CityRhythmPreFooter />
-      </section>
+      {/* 7. Bloque Unificado: Pre-Footer y Footer con Animación de Aparición Suave Conjunta */}
+      <div
+        id="footer-unified-group"
+        ref={footerGroupRef}
+        className={`w-full transition-all duration-1000 ease-out transform ${
+          footerGroupRevealed
+            ? 'opacity-100 translate-y-0 filter blur-0 scale-100'
+            : 'opacity-0 translate-y-14 filter blur-[2px] scale-[0.98]'
+        }`}
+      >
+        <section id="prefooter-section" className="relative scroll-mt-16">
+          <CityRhythmPreFooter />
+        </section>
 
-      {/* Pie de Página */}
-      <footer id="footer-section">
-        <Footer />
-      </footer>
+        <footer id="footer-section">
+          <Footer />
+        </footer>
+      </div>
     </div>
   );
 }

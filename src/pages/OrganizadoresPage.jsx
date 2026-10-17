@@ -17,10 +17,12 @@ import OrganizationCardSkeleton from '../components/common/OrganizationCardSkele
 import Pagination from '../components/Shared/Pagination.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
+import { useLenisScroll } from '../hooks/useLenisScroll.js';
 
 const PAGE_SIZE = 6;
 
 export default function OrganizadoresPage() {
+  useLenisScroll();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState('directorio'); // 'directorio' | 'informacion'

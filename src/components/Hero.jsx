@@ -5,7 +5,6 @@ import BeeParticles from './home/BeeParticles.jsx';
 import CartagenaHiveSkyline from './home/CartagenaHiveSkyline.jsx';
 import HexagonalHivePattern from './common/HexagonalHivePattern.jsx';
 import promocionalVideo from '../assets/promocional.mp4';
-import colombiaImg from '../assets/Colombia.jpg';
 import { useTheme } from '../context/ThemeContext.jsx';
 
 /**
@@ -120,11 +119,10 @@ export default function Hero() {
             y textos/acciones directamente superpuestos
            ========================================================= */}
         <div className="lg:hidden relative rounded-3xl overflow-hidden border border-white/10 dark:border-white/10 shadow-2xl p-6 sm:p-12 text-left bg-slate-950 flex flex-col justify-end min-h-[calc(100dvh-130px)] sm:min-h-[calc(100dvh-130px)]">
-          {/* Video de fondo continuo */}
+          {/* Video de fondo continuo que inicia inmediatamente sin imagen estática de reemplazo */}
           <div className="absolute inset-0 z-0">
             <video
               src={promocionalVideo}
-              poster={colombiaImg}
               autoPlay
               loop
               muted
@@ -257,7 +255,6 @@ export default function Hero() {
                   <video
                     ref={videoRef}
                     src={promocionalVideo}
-                    poster={colombiaImg}
                     autoPlay
                     loop
                     muted

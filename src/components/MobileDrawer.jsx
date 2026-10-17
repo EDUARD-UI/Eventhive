@@ -1,30 +1,16 @@
-import { useState } from 'react';
-import { FiX, FiSearch, FiSun, FiMoon } from 'react-icons/fi';
-import { Link, useNavigate } from 'react-router-dom';
+import { FiX, FiSun, FiMoon } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
 import { NAV_LINKS } from '../constants/navigation.js';
 import { getDashboardPathForRole, normalizeRole } from '../services/session.js';
 import { useTheme } from '../context/ThemeContext.jsx';
 
 export default function MobileDrawer({ isOpen, onClose, onHelpClick, currentUser, onLogout }) {
-  const navigate = useNavigate();
-  const [mobileSearch, setMobileSearch] = useState('');
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { toggleTheme, isDark } = useTheme();
 
   if (!isOpen) return null;
 
   const userRole = normalizeRole(currentUser?.role || currentUser?.rol);
   const accountPath = currentUser ? getDashboardPathForRole(userRole) : '/perfil';
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    onClose();
-    const query = mobileSearch.trim();
-    if (query) {
-      navigate(`/buscar?titulo=${encodeURIComponent(query)}`);
-    } else {
-      navigate('/buscar');
-    }
-  };
 
   return (
     <div
@@ -37,7 +23,7 @@ export default function MobileDrawer({ isOpen, onClose, onHelpClick, currentUser
         aria-label="Menú de navegación"
         className="absolute bottom-0 right-0 top-0 z-[70] flex w-[85%] max-w-[360px] flex-col gap-2 overflow-y-auto bg-white dark:bg-[#0B0F19] text-slate-900 dark:text-slate-100 p-5 shadow-2xl border-l border-slate-200 dark:border-white/[0.08] transition-colors duration-200"
       >
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-4">
           {/* Botón de alternar tema con buen contraste */}
           <button
             type="button"
@@ -66,18 +52,6 @@ export default function MobileDrawer({ isOpen, onClose, onHelpClick, currentUser
             <FiX size={18} />
           </button>
         </div>
-
-        {/* Buscador móvil con contraste calibrado */}
-        <form onSubmit={handleSearchSubmit} className="relative w-full mb-3">
-          <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={15} />
-          <input
-            type="text"
-            value={mobileSearch}
-            onChange={(e) => setMobileSearch(e.target.value)}
-            placeholder="Buscar eventos..."
-            className="w-full h-10 pl-9.5 pr-3 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-white/10 text-xs font-medium text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
-          />
-        </form>
 
         <div className="flex flex-col">
           {NAV_LINKS.map((link) => (
