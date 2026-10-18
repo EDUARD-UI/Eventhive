@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { FiMail, FiLock } from 'react-icons/fi';
 import Swal from 'sweetalert2';
@@ -6,28 +7,33 @@ import InputField from '../components/common/InputField.jsx';
 import useForm from '../hooks/useForm.js';
 import { authService } from '../services/authService.js';
 import { session, normalizeRole, getDashboardPathForRole } from '../services/session.js';
-
-const validateLogin = (values) => {
-  const errors = {};
-  if (!values.email) {
-    errors.email = 'El correo electrónico es requerido.';
-  } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
-    errors.email = 'Ingresa un formato de correo válido.';
-  }
-
-  if (!values.password) {
-    errors.password = 'La contraseña es requerida.';
-  } else if (values.password.length < 6) {
-    errors.password = 'La contraseña debe tener al menos 6 caracteres.';
-  }
-
-  return errors;
-};
+import { useLanguage } from '../context/LanguageContext.jsx';
 
 export default function InicioSesion() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const sessionExpired = searchParams.get('session_expired') === 'true';
+  const { t } = useLanguage();
+
+  const validateLogin = useCallback(
+    (values) => {
+      const errors = {};
+      if (!values.email) {
+        errors.email = t('auth.errEmailReq');
+      } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+        errors.email = t('auth.errEmailInvalid');
+      }
+
+      if (!values.password) {
+        errors.password = t('auth.errPasswordReq');
+      } else if (values.password.length < 6) {
+        errors.password = t('auth.errPasswordMin');
+      }
+
+      return errors;
+    },
+    [t]
+  );
 
   const {
     values,
@@ -52,8 +58,8 @@ export default function InicioSesion() {
 
     await Swal.fire({
       icon: 'success',
-      title: '¡Bienvenido de nuevo!',
-      text: 'Has iniciado sesión correctamente.',
+      title: t('auth.welcomeBackTitle'),
+      text: t('auth.welcomeBackText'),
       timer: 1200,
       showConfirmButton: false,
       customClass: {
@@ -92,12 +98,12 @@ export default function InicioSesion() {
 
   return (
     <AuthLayout
-      title="Inicia sesión en EventHive"
-      subtitle="Accede a tus eventos guardados, compras y organizaciones favoritas."
+      title={t('auth.loginTitle')}
+      subtitle={t('auth.loginSubtitle')}
       errorBanner={
         submitError ||
         (sessionExpired
-          ? 'Tu sesión ha expirado o el token ya no es válido. Por favor, ingresa tus credenciales nuevamente.'
+          ? t('auth.sessionExpired')
           : null)
       }
     >
@@ -107,8 +113,8 @@ export default function InicioSesion() {
             id="email"
             name="email"
             type="email"
-            label="Correo electrónico"
-            placeholder="ejemplo@cartagena.co"
+            label={t('auth.emailLabel')}
+            placeholder={t('auth.emailPlaceholder')}
             icon={FiMail}
             value={values.email}
             onChange={handleChange}
@@ -123,7 +129,7 @@ export default function InicioSesion() {
             id="password"
             name="password"
             type="password"
-            label="Contraseña"
+            label={t('auth.passwordLabel')}
             placeholder="••••••••"
             icon={FiLock}
             value={values.password}
@@ -144,14 +150,14 @@ export default function InicioSesion() {
                 onChange={handleChange}
                 className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-600 text-amber-500 focus:ring-amber-500/20 accent-amber-500 rounded-sm cursor-pointer"
               />
-              <span>Recordar sesión</span>
+              <span>{t('auth.rememberSession')}</span>
             </label>
 
             <Link
               to="/recuperar-contrasena"
               className="text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
             >
-              ¿Olvidaste tu contraseña?
+              {t('auth.forgotPassword')}
             </Link>
           </div>
 
@@ -163,17 +169,17 @@ export default function InicioSesion() {
             {isSubmitting ? (
               <>
                 <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                <span>Iniciando sesión...</span>
+                <span>{t('auth.loggingIn')}</span>
               </>
             ) : (
-              'Ingresar a mi cuenta'
+              t('auth.loginButton')
             )}
           </button>
         </form>
         <div className="flex justify-end items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 pt-0.5">
-          <span>¿Aún no tienes cuenta?</span>
+          <span>{t('auth.noAccount')}</span>
           <Link to="/registro" className="font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors">
-            Regístrate
+            {t('auth.registerLink')}
           </Link>
         </div>
       </div>

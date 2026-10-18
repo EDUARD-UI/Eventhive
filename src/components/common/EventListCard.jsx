@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { FiMapPin, FiEye, FiCalendar, FiClock, FiStar } from 'react-icons/fi';
 import ImageWithFallback from './ImageWithFallback.jsx';
 import { formatHora23 } from '../../utils/formatters.js';
+import { useLanguage } from '../../context/LanguageContext.jsx';
 
 /**
  * EventListCard
@@ -15,6 +16,8 @@ export default function EventListCard({
   notchBg = 'bg-[#F8FAFC]',
   aspectVariant = 'standard',
 }) {
+  const { t } = useLanguage();
+
   if (!event) return null;
 
   const {
@@ -30,7 +33,7 @@ export default function EventListCard({
   } = event;
 
   const isGolden = Boolean(promocionado);
-  const displayDate = shortDate || date || 'Fecha por confirmar';
+  const displayDate = shortDate || date || t('eventCard.dateTbd');
   const displayTime = formattedTime ? formatHora23(formattedTime) : (event.hora ? formatHora23(event.hora) : null);
 
   const aspectClass =
@@ -55,7 +58,7 @@ export default function EventListCard({
               src={photo}
               alt={title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-              fallbackText={category || 'Evento'}
+              fallbackText={category || t('eventCard.defaultCategory')}
               iconSize={24}
             />
 
@@ -81,7 +84,7 @@ export default function EventListCard({
           {isGolden && (
             <span className="absolute top-2.5 right-2.5 bg-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-sm flex items-center gap-1 border border-amber-400">
               <FiStar size={11} className="fill-slate-950 text-slate-950" />
-              <span>Destacado</span>
+              <span>{t('eventCard.featuredBadge')}</span>
             </span>
           )}
         </div>
@@ -109,7 +112,7 @@ export default function EventListCard({
         {/* FECHA Y HORA */}
         <div>
           <span className="text-[10px] uppercase tracking-wider block font-bold text-slate-400 dark:text-slate-400">
-            FECHA Y HORA
+            {t('eventCard.dateAndTime')}
           </span>
           <div className="flex items-center gap-1.5 text-xs mt-0.5 font-bold text-slate-800 dark:text-slate-200">
             <FiCalendar className="text-amber-600 dark:text-amber-400 shrink-0" size={13} />
@@ -127,7 +130,7 @@ export default function EventListCard({
         {/* Cápsula de Ubicación */}
         <div className="flex items-center gap-2 p-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-white/[0.06] text-slate-700 dark:text-slate-300">
           <FiMapPin className="text-amber-600 dark:text-amber-400 shrink-0" size={13} />
-          <span className="truncate">{location || 'Cartagena de Indias'}</span>
+          <span className="truncate">{location || t('eventCard.defaultCity')}</span>
         </div>
       </div>
 
@@ -143,7 +146,7 @@ export default function EventListCard({
           className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer bg-slate-950 hover:bg-slate-800 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-slate-950 shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
         >
           <FiEye size={14} />
-          <span>Ver evento</span>
+          <span>{t('eventCard.viewEvent')}</span>
         </Link>
       </div>
     </article>

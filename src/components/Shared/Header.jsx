@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiBell, FiMenu, FiSearch, FiUser, FiLogOut, FiChevronDown, FiCheck, FiTrash2, FiClock } from 'react-icons/fi';
 import { session } from '../../services/session.js';
 import notificationService from '../../services/notificationService.js';
+import LanguageSwitcher from '../common/LanguageSwitcher.jsx';
 
 export default function Header({
   title,
@@ -228,6 +229,8 @@ export default function Header({
             />
           </div>
         )}
+
+        <LanguageSwitcher />
 
         {showNotifications && (
           <div ref={notificationsRef} className="relative flex items-center">

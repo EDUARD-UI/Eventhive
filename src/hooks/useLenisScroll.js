@@ -1,46 +1,40 @@
 import { useEffect, useRef } from 'react';
-import Lenis from 'lenis';
-import 'lenis/dist/lenis.css';
+
 
 /**
  * useLenisScroll
- * Hook reutilizable para activar desplazamiento ultra-fluido (Smooth Scroll)
- * cinemático con Lenis en cualquier vista o página de EventHive.
+ * Hook reutilizable para activar desplazamiento fluido (Smooth Scroll)
+ * nativo y ligero sin requerir dependencias externas en cualquier vista de EventHive.
  *
- * @param {Object} options - Opciones de configuración adicionales de Lenis.
- * @returns {React.MutableRefObject<Lenis|null>} Referencia a la instancia activa de Lenis.
+ * @param {Object} options - Opciones de configuración adicionales.
+ * @returns {React.MutableRefObject<Object|null>} Referencia al controlador de scroll.
  */
 export function useLenisScroll(options = {}) {
   const lenisRef = useRef(null);
 
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: 'vertical',
-      gestureOrientation: 'vertical',
-      smoothWheel: true,
-      syncTouch: true,
-      syncTouchLerp: 0.08,
-      wheelMultiplier: 1,
-      touchMultiplier: 1.8,
-      touchInertiaMultiplier: 35,
-      infinite: false,
-      ...options,
-    });
+    const html = document.documentElement;
+    const prevScrollBehavior = html.style.scrollBehavior;
+    html.style.scrollBehavior = 'smooth';
 
-    lenisRef.current = lenis;
-
-    let animationFrameId;
-    function raf(time) {
-      lenis.raf(time);
-      animationFrameId = requestAnimationFrame(raf);
-    }
-    animationFrameId = requestAnimationFrame(raf);
+    lenisRef.current = {
+      scrollTo: (target, opts = {}) => {
+        if (typeof target === 'number') {
+          window.scrollTo({ top: target, behavior: opts.immediate ? 'auto' : 'smooth' });
+        } else if (typeof target === 'string') {
+          const el = document.querySelector(target);
+          if (el) el.scrollIntoView({ behavior: opts.immediate ? 'auto' : 'smooth' });
+        } else if (target instanceof HTMLElement) {
+          target.scrollIntoView({ behavior: opts.immediate ? 'auto' : 'smooth' });
+        }
+      },
+      destroy: () => {
+        html.style.scrollBehavior = prevScrollBehavior;
+      },
+    };
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
-      lenis.destroy();
+      html.style.scrollBehavior = prevScrollBehavior;
       lenisRef.current = null;
     };
   }, []);
@@ -49,3 +43,4 @@ export function useLenisScroll(options = {}) {
 }
 
 export default useLenisScroll;
+

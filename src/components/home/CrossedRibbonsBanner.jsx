@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../../context/LanguageContext.jsx';
 
 /**
  * CrossedRibbonsBanner
@@ -6,9 +7,11 @@ import React from 'react';
  * ubicadas entre el carrusel principal y los eventos próximos.
  * Sin gradientes y sin emojis.
  */
-export default function CrossedRibbonsBanner({ badgeText = 'CARTAGENA EN VIVO' }) {
-  const phrase1 = 'CARTAGENA EN VIVO • VIVE LA EXPERIENCIA • ARTE Y CULTURA • MÚSICA EN VIVO • GASTRONOMÍA • ';
-  const phrase2 = 'CONÉCTATE AL RITMO DE LA CIUDAD • TU BOLETERÍA DIGITAL • EXPERIENCIAS EXCLUSIVAS • CARTAGENA DE INDIAS • ';
+export default function CrossedRibbonsBanner({ badgeText }) {
+  const { t } = useLanguage();
+  const resolvedBadge = badgeText || t('home.crossedRibbonDefault');
+  const phrase1 = t('home.ribbonPhrase1');
+  const phrase2 = t('home.ribbonPhrase2');
 
   // Repetir el texto ampliamente para garantizar cobertura total sin espacios vacíos en cualquier resolución
   const fullText1 = Array(8).fill(phrase1).join('');
@@ -42,7 +45,7 @@ export default function CrossedRibbonsBanner({ badgeText = 'CARTAGENA EN VIVO' }
         {/* Insignia central en el cruce de las líneas con el título "PRÓXIMOS EVENTOS" */}
         <div className="relative z-10 px-6 sm:px-8 py-2.5 sm:py-3 rounded-2xl bg-white dark:bg-white border-2 border-slate-950 dark:border-slate-950 shadow-2xl transform hover:scale-105 transition-transform duration-200">
           <span className="text-xs sm:text-sm lg:text-base font-black text-slate-950 tracking-widest uppercase">
-            {badgeText}
+            {resolvedBadge}
           </span>
         </div>
       </div>

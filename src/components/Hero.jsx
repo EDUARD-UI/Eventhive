@@ -6,6 +6,7 @@ import CartagenaHiveSkyline from './home/CartagenaHiveSkyline.jsx';
 import HexagonalHivePattern from './common/HexagonalHivePattern.jsx';
 import promocionalVideo from '../assets/promocional.mp4';
 import { useTheme } from '../context/ThemeContext.jsx';
+import { useLanguage } from '../context/LanguageContext.jsx';
 
 /**
  * 4-point sparkle star matching the reference design (vector limpio, sin emojis)
@@ -29,6 +30,7 @@ const HERO_SHAPE_PATH =
 
 export default function Hero() {
   const { isDark } = useTheme();
+  const { t } = useLanguage();
   const [scrollY, setScrollY] = useState(0);
   const videoRef = useRef(null);
 
@@ -138,16 +140,16 @@ export default function Hero() {
           <div className="relative z-10 flex flex-col items-start space-y-5">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 backdrop-blur-md">
               <FiMapPin className="text-amber-400 shrink-0" size={14} />
-              <span>Cartagena de Indias, Colombia</span>
+              <span>{t('hero.badge')}</span>
             </div>
 
             <h1 className="font-display font-black text-4xl sm:text-6xl leading-[1.08] text-white tracking-tight drop-shadow-md">
-              Conéctate al <br />
-              <span className="text-amber-400 drop-shadow-sm">ritmo de la ciudad</span>
+              {t('hero.titleLine1')} <br />
+              <span className="text-amber-400 drop-shadow-sm">{t('hero.titleLine2')}</span>
             </h1>
 
             <p className="text-sm sm:text-lg text-slate-200 leading-relaxed max-w-lg font-normal drop-shadow-xs">
-              Descubre festivales, conciertos, arte, gastronomía y vida nocturna en la mágica Cartagena de Indias.
+              {t('hero.subtitleMobile')}
             </p>
 
             <div className="pt-2">
@@ -155,7 +157,7 @@ export default function Hero() {
                 to="/buscar"
                 className="inline-flex items-center gap-3 px-7 py-4 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg active:scale-95 transition-all"
               >
-                <span>Ver catálogo</span>
+                <span>{t('hero.cta')}</span>
                 <span className="w-7 h-7 rounded-full bg-white text-slate-950 flex items-center justify-center shadow-xs">
                   <FiArrowRight size={14} strokeWidth={2.8} />
                 </span>
@@ -182,7 +184,7 @@ export default function Hero() {
               }`}
             >
               <FiMapPin className="text-amber-600 dark:text-amber-400 shrink-0" size={15} />
-              <span>Cartagena de Indias, Colombia</span>
+              <span>{t('hero.badge')}</span>
             </div>
 
             {/* Título Principal Ampliado */}
@@ -191,15 +193,15 @@ export default function Hero() {
                 isDark ? 'text-white' : 'text-slate-950'
               }`}
             >
-              Conéctate al <br />
+              {t('hero.titleLine1')} <br />
               <span className="text-amber-700 dark:text-amber-400 drop-shadow-xs">
-                ritmo de la ciudad
+                {t('hero.titleLine2')}
               </span>
             </h1>
 
             {/* Subtítulo descriptivo ampliado */}
             <p className="max-w-xl text-base sm:text-lg lg:text-xl leading-relaxed font-normal mb-8 sm:mb-10 text-slate-600 dark:text-slate-300">
-              Descubre festivales, conciertos, arte, gastronomía y vida nocturna en la mágica Cartagena de Indias. Vive cada momento al máximo.
+              {t('hero.subtitle')}
             </p>
 
             {/* Botón Ver Catálogo */}
@@ -208,7 +210,7 @@ export default function Hero() {
                 to="/buscar"
                 className="group relative inline-flex items-center gap-4 px-8 py-4 sm:px-9 sm:py-4.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl dark:shadow-amber-500/15 hover:scale-[1.03] active:scale-95 transition-all duration-300 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
               >
-                <span>Ver catálogo</span>
+                <span>{t('hero.cta')}</span>
                 <span className="w-8 h-8 rounded-full bg-white text-slate-950 flex items-center justify-center shadow-md group-hover:translate-x-1 transition-transform duration-200">
                   <FiArrowRight size={16} strokeWidth={2.8} />
                 </span>

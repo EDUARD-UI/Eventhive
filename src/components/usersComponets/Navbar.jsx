@@ -6,12 +6,14 @@ import MobileDrawer from "../MobileDrawer.jsx";
 import HelpChat from "../HelpChat.jsx";
 import { useDisclosure } from "../../hooks/useDisclosure.js";
 import AppLogo from "../common/AppLogo.jsx";
+import LanguageSwitcher from "../common/LanguageSwitcher.jsx";
 import { session, normalizeRole, getDashboardPathForRole } from "../../services/session.js";
 import { useTheme } from "../../context/ThemeContext.jsx";
+import { useLanguage } from "../../context/LanguageContext.jsx";
 
 /**
  * Navbar Global de EventHive
- * Soporta cambio dinámico de tema claro/oscuro, barra de progreso superior en tiempo real y diseño responsive.
+ * Soporta cambio dinámico de tema claro/oscuro, idioma ES/EN, barra de progreso superior en tiempo real y diseño responsive.
  */
 export default function Navbar({ variant = 'dark', embedded = false }) {
   const { isOpen, open, close } = useDisclosure(false);
@@ -21,6 +23,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
   const [currentUser, setCurrentUser] = useState(null);
   const progressBarRef = useRef(null);
   const { theme, toggleTheme, isDark } = useTheme();
+  const { t } = useLanguage();
 
   // Seguimiento instantáneo y continuo del scroll en tiempo real (60-120 FPS sin retraso CSS)
   useEffect(() => {
@@ -89,7 +92,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
             <div className="relative group/logo">
               <Link
                 to="/"
-                aria-label="Volver al inicio"
+                aria-label={t('navbar.backToHome')}
                 className="flex shrink-0 items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-lg"
               >
                 <AppLogo
@@ -102,7 +105,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
 
               {/* Mensaje emergente en hover: blanco en modo oscuro, azul oscuro en modo claro */}
               <div className="absolute top-full left-0 mt-2 px-2.5 py-1 rounded-md bg-[#0B132B] text-white dark:bg-white dark:text-slate-950 text-[11px] font-bold shadow-md opacity-0 pointer-events-none group-hover/logo:opacity-100 transition-opacity duration-150 whitespace-nowrap z-50">
-                Volver al inicio
+                {t('navbar.backToHome')}
                 <div className="absolute -top-1 left-4 w-2 h-2 bg-[#0B132B] dark:bg-white rotate-45" />
               </div>
             </div>
@@ -112,6 +115,15 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
           <nav className="hidden min-w-0 items-center justify-center gap-4 text-sm font-medium xl:gap-6 lg:flex lg:justify-self-center">
             {NAV_LINKS.map((link) => {
               const isActive = location.pathname === link.href;
+              const translatedLabel =
+                link.label === 'Buscar eventos'
+                  ? t('navbar.searchEvents')
+                  : link.label === 'Organizaciones'
+                    ? t('navbar.organizations')
+                    : link.label === 'Ayuda'
+                      ? t('navbar.help')
+                      : link.label;
+
               return link.label === "Ayuda" ? (
                 <button
                   key={link.label}
@@ -122,7 +134,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
                       : 'text-slate-600 hover:text-[#0B132B] hover:bg-slate-100/70'
                     }`}
                 >
-                  {link.label}
+                  {translatedLabel}
                 </button>
               ) : (
                 <Link
@@ -137,20 +149,23 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
                         : 'text-slate-600 hover:text-[#0B132B] hover:bg-slate-100/70'
                     }`}
                 >
-                  {link.label}
+                  {translatedLabel}
                 </Link>
               );
             })}
           </nav>
 
-          {/* Acciones, Botón Tema y Autenticación */}
+          {/* Acciones, Selector de Idioma, Botón Tema y Autenticación */}
           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5 lg:justify-self-end">
+            {/* Selector de idioma ES / EN al lado del alternador de tema */}
+            <LanguageSwitcher />
+
             {/* Botón de alternar Tema Claro / Oscuro con estados accesibles y alto contraste */}
             <button
               type="button"
               onClick={toggleTheme}
-              title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-              aria-label="Alternar tema claro y oscuro"
+              title={isDark ? t('navbar.lightMode') : t('navbar.darkMode')}
+              aria-label={t('navbar.toggleThemeAria')}
               className={`p-2 rounded-full border transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${isDark
                   ? 'border-white/10 bg-slate-800/60 text-amber-400 hover:bg-slate-800 hover:text-amber-300 hover:border-amber-400/50 focus-visible:ring-offset-[#0B0F19]'
                   : 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-amber-700 hover:border-amber-400/60 focus-visible:ring-offset-white'
@@ -175,7 +190,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
                   <span className="w-6 h-6 rounded-full bg-amber-500 text-[#0B132B] flex items-center justify-center text-[10px] font-black shrink-0">
                     {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                   </span>
-                  <span className="truncate">{currentUser.name || 'Mi Cuenta'}</span>
+                  <span className="truncate">{currentUser.name || t('navbar.myAccount')}</span>
                   {role && role !== 'CLIENTE' && (
                     <span className={`ml-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${isDark
                         ? 'bg-amber-400/20 text-amber-300 border-amber-400/40'
@@ -189,8 +204,8 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  title="Cerrar sesión"
-                  aria-label="Cerrar sesión"
+                  title={t('navbar.logout')}
+                  aria-label={t('navbar.logout')}
                   className={`p-2 rounded-full transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 ${isDark
                       ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-500/10'
                       : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
@@ -210,14 +225,14 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
                       : 'border border-slate-300 text-[#0B132B] hover:border-slate-400 hover:bg-slate-100'
                     }`}
                 >
-                  Iniciar sesión
+                  {t('navbar.login')}
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate("/registro")}
                   className="inline-flex whitespace-nowrap rounded-full px-6 py-2 text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm hover:shadow transition-all duration-200 active:scale-95 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
                 >
-                  Registrarse
+                  {t('navbar.register')}
                 </button>
               </div>
             )}
@@ -226,7 +241,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
             <button
               type="button"
               onClick={open}
-              aria-label="Abrir menú"
+              aria-label={t('navbar.openMenu')}
               aria-expanded={isOpen}
               className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg transition-colors duration-200 cursor-pointer lg:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${isDark
                   ? 'text-slate-200 hover:bg-slate-800 hover:text-white border border-white/10'

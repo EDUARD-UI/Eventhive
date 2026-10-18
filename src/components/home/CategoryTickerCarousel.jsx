@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllCategories } from '../../services/categoryService.js';
 import ImageWithFallback from '../common/ImageWithFallback.jsx';
+import { useLanguage } from '../../context/LanguageContext.jsx';
 
 /**
  * CategoryTickerCarousel
@@ -12,6 +13,7 @@ import ImageWithFallback from '../common/ImageWithFallback.jsx';
  * - Se mueve de manera continua automática (auto-scroll) con pausa suave al hover.
  */
 export default function CategoryTickerCarousel() {
+  const { t } = useLanguage();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -96,7 +98,7 @@ export default function CategoryTickerCarousel() {
                   {cat.nombre}
                 </h4>
                 <p className="text-xs text-slate-200 font-semibold mt-0.5 drop-shadow-xs">
-                  {cat.totalEventos ?? 0} {(cat.totalEventos ?? 0) === 1 ? 'evento' : 'eventos'}
+                  {cat.totalEventos ?? 0} {(cat.totalEventos ?? 0) === 1 ? t('home.eventSingular') : t('home.eventPlural')}
                 </p>
               </div>
             </Link>

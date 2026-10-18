@@ -4,6 +4,7 @@ import { FiArrowRight } from 'react-icons/fi';
 import fuerteImg from '../../assets/fuerte.jpg';
 import torreRelojImg from '../../assets/torre-reloj.png';
 import colombiaImg from '../../assets/Colombia.jpg';
+import { useLanguage } from '../../context/LanguageContext.jsx';
 
 /**
  * CityRhythmPreFooter
@@ -17,6 +18,8 @@ import colombiaImg from '../../assets/Colombia.jpg';
  * - Festón inferior de picos / ondas (scallop) en dorado ámbar hacia el Footer.
  */
 export default function CityRhythmPreFooter() {
+  const { t } = useLanguage();
+
   return (
     <div className="w-full relative select-none mt-20 sm:mt-28 md:mt-36">
       <section className="w-full bg-gradient-to-b from-[#E08500] via-[#D97706] to-[#C86A00] text-slate-950 pt-10 sm:pt-14 pb-12 sm:pb-16 px-6 sm:px-10 lg:px-16 relative overflow-visible shadow-2xl">
@@ -47,10 +50,10 @@ export default function CityRhythmPreFooter() {
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent pointer-events-none" />
                 <div className="absolute bottom-0 inset-x-0 p-2 sm:p-2.5 text-center bg-slate-950/80 backdrop-blur-2xs border-t border-white/20">
                   <span className="text-[9px] sm:text-[10px] md:text-[11px] font-black uppercase tracking-wider text-amber-300 block truncate">
-                    Fuerte San Fernando
+                    {t('home.card1Title')}
                   </span>
                   <span className="text-[8px] sm:text-[9px] text-slate-200 font-semibold block">
-                    Bocachica
+                    {t('home.card1Subtitle')}
                   </span>
                 </div>
               </div>
@@ -71,10 +74,10 @@ export default function CityRhythmPreFooter() {
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent pointer-events-none" />
                 <div className="absolute bottom-0 inset-x-0 p-2 sm:p-2.5 text-center bg-slate-950/85 backdrop-blur-2xs border-t border-amber-400/50">
                   <span className="text-[9px] sm:text-[10px] md:text-[11px] font-black uppercase tracking-wider text-amber-300 block truncate">
-                    Torre del Reloj
+                    {t('home.card2Title')}
                   </span>
                   <span className="text-[8px] sm:text-[9px] text-slate-200 font-semibold block">
-                    Centro Histórico
+                    {t('home.card2Subtitle')}
                   </span>
                 </div>
               </div>
@@ -95,10 +98,10 @@ export default function CityRhythmPreFooter() {
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent pointer-events-none" />
                 <div className="absolute bottom-0 inset-x-0 p-2 sm:p-2.5 text-center bg-slate-950/80 backdrop-blur-2xs border-t border-white/20">
                   <span className="text-[9px] sm:text-[10px] md:text-[11px] font-black uppercase tracking-wider text-amber-300 block truncate">
-                    Bahía de Cartagena
+                    {t('home.card3Title')}
                   </span>
                   <span className="text-[8px] sm:text-[9px] text-slate-200 font-semibold block">
-                    Caribe Colombiano
+                    {t('home.card3Subtitle')}
                   </span>
                 </div>
               </div>
@@ -109,12 +112,12 @@ export default function CityRhythmPreFooter() {
           {/* Columna Derecha: "texto aqui" y "boton aqui" según el diagrama */}
           <div className="lg:col-span-6 flex flex-col items-start text-left space-y-4 lg:pl-6 relative z-10">
             <h2 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl tracking-tight text-slate-950 uppercase leading-tight max-w-lg drop-shadow-2xs">
-              Conéctate al <br />
-              <span className="text-white drop-shadow-xs">ritmo de la ciudad</span>
+              {t('home.preFooterTitle1')} <br />
+              <span className="text-white drop-shadow-xs">{t('home.preFooterTitle2')}</span>
             </h2>
 
             <p className="text-slate-950/85 text-sm sm:text-base font-medium leading-relaxed max-w-lg">
-              Descubre festivales, conciertos, arte, gastronomía y vida nocturna en la mágica Cartagena de Indias. Tu próxima gran experiencia comienza aquí.
+              {t('home.preFooterDescription')}
             </p>
 
             <div className="pt-2">
@@ -122,7 +125,7 @@ export default function CityRhythmPreFooter() {
                 to="/buscar"
                 className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-slate-950 hover:bg-slate-900 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
               >
-                <span>Ver catálogo</span>
+                <span>{t('home.preFooterCta')}</span>
                 <span className="w-7 h-7 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center shadow-xs">
                   <FiArrowRight size={14} strokeWidth={2.8} />
                 </span>

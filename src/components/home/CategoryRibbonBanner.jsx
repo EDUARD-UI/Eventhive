@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../../context/LanguageContext.jsx';
 
 /**
  * CategoryRibbonBanner
@@ -11,6 +12,7 @@ import React from 'react';
  * - Isotipo idéntico al favicon (/LOGO32x32.png).
  */
 export default function CategoryRibbonBanner() {
+  const { t } = useLanguage();
   const repetitions = Array.from({ length: 28 });
 
   return (
@@ -29,7 +31,7 @@ export default function CategoryRibbonBanner() {
           {repetitions.map((_, i) => (
             <React.Fragment key={i}>
               <span className="tracking-widest font-black text-xs sm:text-sm uppercase">
-                CATEGORÍAS
+                {t('home.categoriesBanner')}
               </span>
               <img
                 src="/LOGO32x32.png"

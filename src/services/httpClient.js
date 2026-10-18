@@ -112,6 +112,12 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
   }
 
   const headers = {};
+  try {
+    const activeLang = localStorage.getItem('eventhive_lang');
+    headers['Accept-Language'] = activeLang === 'en' ? 'en' : 'es';
+  } catch {
+    headers['Accept-Language'] = 'es';
+  }
   if (!isFormData) headers['Content-Type'] = 'application/json';
   if (!omitirAutenticacion && token && token !== 'dev-session-token') {
     headers.Authorization = `Bearer ${token}`;

@@ -25,15 +25,7 @@ import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
 import { getCarouselEvents, getFeaturedEvents, getMapEvents, getUpcomingEvents } from '../services/eventService.js';
 import { getCategoryNames } from '../services/categoryService.js';
 import { useTheme } from '../context/ThemeContext.jsx';
-import Lenis from 'lenis';
-import 'lenis/dist/lenis.css';
-
-const DISTANCE_OPTIONS = [
-  { value: 'all', label: 'Todas las distancias' },
-  { value: '5', label: 'Hasta 5 km' },
-  { value: '10', label: 'Hasta 10 km' },
-  { value: '15', label: 'Hasta 15 km' },
-];
+import { useLanguage } from '../context/LanguageContext.jsx';
 
 const toRad = (value) => (value * Math.PI) / 180;
 
@@ -89,6 +81,7 @@ function MapViewController({ center, zoom }) {
 }
 
 export default function Home() {
+  const { t } = useLanguage();
   const [carouselEvents, setCarouselEvents] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
@@ -104,6 +97,16 @@ export default function Home() {
   const mapSectionRef = useRef(null);
   const footerGroupRef = useRef(null);
   const carouselSectionRef = useRef(null);
+
+  const distanceOptions = useMemo(
+    () => [
+      { value: 'all', label: t('home.allDistances') },
+      { value: '5', label: t('home.upTo5km') },
+      { value: '10', label: t('home.upTo10km') },
+      { value: '15', label: t('home.upTo15km') },
+    ],
+    [t]
+  );
 
   useEffect(() => {
     setIsLoadingEvents(true);
@@ -134,8 +137,8 @@ export default function Home() {
     if (!navigator.geolocation) {
       Swal.fire({
         icon: 'warning',
-        title: 'Geolocalización no soportada',
-        text: 'Tu navegador no admite geolocalización para calcular distancias.',
+        title: t('home.geoNotSupportedTitle'),
+        text: t('home.geoNotSupportedText'),
         confirmButtonColor: '#0B132B',
       });
       setSelectedDistance('all');
@@ -158,8 +161,8 @@ export default function Home() {
 
         Swal.fire({
           icon: 'success',
-          title: '¡Ubicación activada!',
-          text: 'El mapa ahora buscará los eventos según tu ubicación actual en Cartagena.',
+          title: t('home.geoActivatedTitle'),
+          text: t('home.geoActivatedText'),
           timer: 2000,
           showConfirmButton: false,
           confirmButtonColor: '#0B132B',
@@ -167,21 +170,21 @@ export default function Home() {
       },
       (error) => {
         setIsLocating(false);
-        let message = 'No fue posible obtener tu ubicación.';
+        let message = t('home.geoErrorDefault');
         if (error.code === error.PERMISSION_DENIED) {
-          message = 'Permiso denegado. Para buscar eventos cercanos, autoriza el acceso a tu ubicación en tu navegador.';
+          message = t('home.geoErrorDenied');
         } else if (error.code === error.POSITION_UNAVAILABLE) {
-          message = 'La señal de tu ubicación no está disponible en este momento.';
+          message = t('home.geoErrorUnavailable');
         } else if (error.code === error.TIMEOUT) {
-          message = 'Se agotó el tiempo esperando tu ubicación.';
+          message = t('home.geoErrorTimeout');
         }
 
         Swal.fire({
           icon: 'warning',
-          title: 'Ubicación requerida',
+          title: t('home.geoRequiredTitle'),
           text: message,
           confirmButtonColor: '#0B132B',
-          confirmButtonText: 'Entendido',
+          confirmButtonText: t('home.understood'),
         });
         setSelectedDistance('all');
       },
@@ -201,13 +204,13 @@ export default function Home() {
 
     if (!userLocation) {
       const distanceLabel =
-        DISTANCE_OPTIONS.find((o) => o.value === distanceValue)?.label.toLowerCase() ||
+        distanceOptions.find((o) => o.value === distanceValue)?.label.toLowerCase() ||
         'esta distancia';
       const result = await showLocationPromptAlert({
-        title: 'Activa tu ubicación',
-        text: `Para buscar eventos a ${distanceLabel}, necesitamos conocer tu ubicación actual. ¿Deseas activarla ahora?`,
-        confirmButtonText: 'Activar ubicación',
-        cancelButtonText: 'Cancelar',
+        title: t('home.activateLocationPromptTitle'),
+        text: t('home.activateLocationPromptText', { distance: distanceLabel }),
+        confirmButtonText: t('home.activateLocationBtn'),
+        cancelButtonText: t('home.cancelBtn'),
       });
 
       if (result.isConfirmed) {
@@ -245,39 +248,24 @@ export default function Home() {
   }, [mapEvents, selectedCategory, selectedDistance, userLocation]);
 
   const categoryOptions = useMemo(() => [
-    { value: 'all', label: 'Todas las categorías' },
+    { value: 'all', label: t('home.allCategories') },
     ...categoryList.map((category) => ({
       value: category.nombre,
       label: category.nombre,
     })),
-  ], [categoryList]);
+  ], [categoryList, t]);
 
   const { isDark } = useTheme();
 
-  // Smooth scroll cinemático con Lenis y animaciones de aparición suave
+  // Animaciones de aparición suave y desplazamiento fluido nativo
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.4,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: 'vertical',
-      gestureOrientation: 'vertical',
-      smoothWheel: true,
-      syncTouch: true,
-      syncTouchLerp: 0.08,
-      wheelMultiplier: 1.05,
-      touchMultiplier: 1.8,
-      touchInertiaMultiplier: 40,
-      infinite: false,
-    });
+    const smoothScrollTo = (selector, offset = 0) => {
+      const el = document.querySelector(selector);
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY + offset;
+      window.scrollTo({ top, behavior: 'smooth' });
+    };
 
-    let animationFrameId;
-    function raf(time) {
-      lenis.raf(time);
-      animationFrameId = requestAnimationFrame(raf);
-    }
-    animationFrameId = requestAnimationFrame(raf);
-
-    // Animación de aparición suave sincronizada con el scroll de Lenis
     const checkReveals = () => {
       const triggerThreshold = window.innerHeight * 0.90;
       const mapTriggerThreshold = window.innerHeight * 0.78;
@@ -304,7 +292,7 @@ export default function Home() {
       }
     };
 
-    lenis.on('scroll', checkReveals);
+    window.addEventListener('scroll', checkReveals, { passive: true });
     requestAnimationFrame(checkReveals);
 
     // Desplazamiento cinemático suave (Hero -> Carrusel y Próximos -> Mapa)
@@ -314,32 +302,22 @@ export default function Home() {
     let mapTimer = null;
 
     const handleWheel = (e) => {
-      // 1. Descenso fluido desde Hero a Carrusel
       if (!isTransitioningHero && window.scrollY < 80 && e.deltaY > 15) {
         isTransitioningHero = true;
         setCarouselRevealed(true);
-        lenis.scrollTo('#carousel-section', {
-          offset: -65,
-          duration: 1.3,
-          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        });
+        smoothScrollTo('#carousel-section', -65);
         heroTimer = setTimeout(() => {
           isTransitioningHero = false;
         }, 1350);
         return;
       }
 
-      // 2. Transición cinemática asistida al descender hacia el Mapa de Eventos
       if (!isTransitioningMap && mapSectionRef.current && e.deltaY > 15) {
         const mapRect = mapSectionRef.current.getBoundingClientRect();
         if (mapRect.top > 80 && mapRect.top < window.innerHeight * 0.72) {
           isTransitioningMap = true;
           setMapRevealed(true);
-          lenis.scrollTo('#mapa', {
-            offset: -35,
-            duration: 1.45,
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-          });
+          smoothScrollTo('#mapa', -35);
           mapTimer = setTimeout(() => {
             isTransitioningMap = false;
           }, 1500);
@@ -358,32 +336,22 @@ export default function Home() {
       if (e.touches && e.touches.length > 0) {
         const diffY = touchStartY - e.touches[0].clientY;
 
-        // 1. Táctil: Hero -> Carrusel
         if (!isTransitioningHero && window.scrollY < 80 && diffY > 20) {
           isTransitioningHero = true;
           setCarouselRevealed(true);
-          lenis.scrollTo('#carousel-section', {
-            offset: -65,
-            duration: 1.3,
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-          });
+          smoothScrollTo('#carousel-section', -65);
           heroTimer = setTimeout(() => {
             isTransitioningHero = false;
           }, 1350);
           return;
         }
 
-        // 2. Táctil: Descenso hacia el Mapa de Eventos
         if (!isTransitioningMap && mapSectionRef.current && diffY > 20) {
           const mapRect = mapSectionRef.current.getBoundingClientRect();
           if (mapRect.top > 80 && mapRect.top < window.innerHeight * 0.72) {
             isTransitioningMap = true;
             setMapRevealed(true);
-            lenis.scrollTo('#mapa', {
-              offset: -35,
-              duration: 1.45,
-              easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            });
+            smoothScrollTo('#mapa', -35);
             mapTimer = setTimeout(() => {
               isTransitioningMap = false;
             }, 1500);
@@ -396,7 +364,6 @@ export default function Home() {
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
 
-    // Observer nativo complementario para máxima reactividad
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -415,14 +382,13 @@ export default function Home() {
     if (footerGroupRef.current) observer.observe(footerGroupRef.current);
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('scroll', checkReveals);
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
       if (heroTimer) clearTimeout(heroTimer);
       if (mapTimer) clearTimeout(mapTimer);
       observer.disconnect();
-      lenis.destroy();
     };
   }, []);
 
@@ -458,14 +424,14 @@ export default function Home() {
       </section>
 
       {/* Cintas Cruzadas entre el Carrusel Principal y los Eventos Próximos */}
-      <CrossedRibbonsBanner badgeText="Conecta al ritmo de la ciudad" />
+      <CrossedRibbonsBanner badgeText={t('home.ribbonText')} />
 
       {/* 3. Próximos Eventos: Título centrado y Grilla de Boletos */}
       <section id="proximos" className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-10 sm:py-14 bg-white/60 dark:bg-slate-900/40 transition-colors duration-200">
         <div className="max-w-[1850px] mx-auto">
           <div className="flex flex-col items-center justify-center mb-10 text-center relative">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
-              Próximos Eventos
+              {t('home.upcomingEvents')}
             </h2>
 
             <div className="mt-3">
@@ -473,7 +439,7 @@ export default function Home() {
                 to="/buscar"
                 className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 group"
               >
-                <span>Ver cartelera completa</span>
+                <span>{t('home.viewFullLineup')}</span>
                 <FiArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
             </div>
@@ -502,8 +468,8 @@ export default function Home() {
             </div>
           ) : (
             <HiveEmptyState
-              title="Pronto verás más eventos programados para los próximos días."
-              subtitle="Las organizaciones están afinando fechas y detalles."
+              title={t('home.emptyUpcomingTitle')}
+              subtitle={t('home.emptyUpcomingSubtitle')}
               showAction={false}
             />
           )}
@@ -526,7 +492,7 @@ export default function Home() {
             mapRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-6">
-              Mapa de Eventos
+              {t('home.eventMap')}
             </h2>
 
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -539,22 +505,22 @@ export default function Home() {
                   ? 'border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-700'
                   : 'border-amber-500 bg-amber-500 hover:bg-amber-400 text-slate-950'
                   }`}
-                title={userLocation ? 'Tu ubicación está activa' : 'Activar mi ubicación'}
+                title={userLocation ? t('home.locationActiveTitle') : t('home.activateMyLocation')}
               >
                 {isLocating ? (
                   <>
                     <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                    <span>Obteniendo ubicación...</span>
+                    <span>{t('home.gettingLocation')}</span>
                   </>
                 ) : userLocation ? (
                   <>
                     <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                    <span>Mi ubicación activa</span>
+                    <span>{t('home.myLocationActive')}</span>
                   </>
                 ) : (
                   <>
                     <FiNavigation className="text-slate-950 shrink-0" size={14} />
-                    <span>Activar mi ubicación</span>
+                    <span>{t('home.activateMyLocation')}</span>
                   </>
                 )}
               </button>
@@ -565,7 +531,7 @@ export default function Home() {
                   value={selectedCategory}
                   onChange={(event) => setSelectedCategory(event.target.value)}
                   options={categoryOptions}
-                  placeholder="Todas las categorías"
+                  placeholder={t('home.allCategories')}
                   variant={isDark ? 'dark' : 'light'}
                 />
               </div>
@@ -575,8 +541,8 @@ export default function Home() {
                 <CustomSelect
                   value={selectedDistance}
                   onChange={(event) => handleDistanceChange(event.target.value)}
-                  options={DISTANCE_OPTIONS}
-                  placeholder="Distancia"
+                  options={distanceOptions}
+                  placeholder={t('home.distance')}
                   variant={isDark ? 'dark' : 'light'}
                 />
               </div>
@@ -620,12 +586,12 @@ export default function Home() {
                   <Popup>
                     <div className="p-2 text-center min-w-[150px]">
                       <span className="font-bold text-xs text-amber-600 block mb-0.5">
-                        Tu ubicación actual
+                        {t('home.yourCurrentLocation')}
                       </span>
                       <span className="text-[11px] text-slate-600 block">
                         {selectedDistance === 'all'
-                          ? 'Ubicación de referencia'
-                          : `Buscando en radio de ${selectedDistance} km`}
+                          ? t('home.referenceLocation')
+                          : t('home.searchingInRadius', { km: selectedDistance })}
                       </span>
                     </div>
                   </Popup>
@@ -666,7 +632,7 @@ export default function Home() {
                           to={`/eventos/${event.id}`}
                           className="text-[11px] font-bold text-amber-600 hover:text-amber-700 inline-flex items-center gap-1 transition-colors"
                         >
-                          <span>Ver evento</span>
+                          <span>{t('home.viewEvent')}</span>
                           <FiArrowRight size={11} />
                         </Link>
                       </div>

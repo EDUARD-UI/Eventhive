@@ -2,10 +2,12 @@ import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { FiCheckCircle, FiSun, FiMoon } from 'react-icons/fi';
 import AppLogo from '../common/AppLogo.jsx';
+import LanguageSwitcher from '../common/LanguageSwitcher.jsx';
 import BeeParticles from '../home/BeeParticles.jsx';
 import HexagonalHivePattern from '../common/HexagonalHivePattern.jsx';
 import cartagenaBg from '../../assets/cartagena-hero.jpg';
 import { useTheme } from '../../context/ThemeContext.jsx';
+import { useLanguage } from '../../context/LanguageContext.jsx';
 
 /**
  * AuthLayout
@@ -26,6 +28,7 @@ export default function AuthLayout({
   errorBanner,
 }) {
   const { isDark, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const panelRef = useRef(null);
   const mousePos = useRef({ x: -9999, y: -9999 });
 
@@ -97,11 +100,11 @@ export default function AuthLayout({
               isDark ? 'text-white' : 'text-slate-950'
             }`}
           >
-            Vive la{' '}
+            {t('auth.leftTitle1')}{' '}
             <span className={isDark ? 'text-amber-400' : 'text-amber-600'}>
-              Magia
+              {t('auth.leftTitleHighlight')}
             </span>{' '}
-            de la Heroica, evento a evento.
+            {t('auth.leftTitle2')}
           </h1>
 
           <p
@@ -109,15 +112,15 @@ export default function AuthLayout({
               isDark ? 'text-slate-300' : 'text-slate-600'
             }`}
           >
-            Descubre música, festivales, gastronomía y cultura local. Gestiona tus entradas o publica tus propios eventos de forma ágil y segura.
+            {t('auth.leftSubtitle')}
           </p>
 
           {/* Lista de características con iconos compactos */}
           <div className="mt-5 space-y-2.5">
             {[
-              'Boletos 100% verificados con código QR digital',
-              'Geolocalización y mapa interactivo en tiempo real',
-              'Comunidad activa de asistentes y organizaciones',
+              t('auth.feature1'),
+              t('auth.feature2'),
+              t('auth.feature3'),
             ].map((feature) => (
               <div
                 key={feature}
@@ -142,9 +145,9 @@ export default function AuthLayout({
 
         {/* Pie de Panel Izquierdo */}
         <div className="relative z-20 flex items-center justify-between text-xs text-slate-400 border-t border-white/10 pt-6">
-          <p>© 2026 EventHive. Todos los derechos reservados.</p>
+          <p>{t('auth.copyright')}</p>
           <Link to="/" className="text-amber-400 hover:text-amber-300 transition-colors font-semibold underline underline-offset-4">
-            Explorar eventos
+            {t('auth.exploreEvents')}
           </Link>
         </div>
       </div>
@@ -178,12 +181,15 @@ export default function AuthLayout({
               </p>
             )}
 
+            {/* Selector de idioma ES / EN */}
+            <LanguageSwitcher />
+
             {/* Alternador de tema Claro / Oscuro con alta visibilidad */}
             <button
               type="button"
               onClick={toggleTheme}
-              title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-              aria-label="Alternar tema claro y oscuro"
+              title={isDark ? t('navbar.lightMode') : t('navbar.darkMode')}
+              aria-label={t('navbar.toggleThemeAria')}
               className={`p-1.5 sm:p-2 rounded-full border transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center ${
                 isDark
                   ? 'border-white/10 bg-slate-800/80 text-amber-400 hover:bg-slate-700 hover:border-amber-400/50'
@@ -223,15 +229,15 @@ export default function AuthLayout({
         {/* Footer Legal con enlaces accesibles */}
         <div className="text-center text-[11px] text-slate-400 dark:text-slate-500 pt-3">
           <p>
-            Al continuar, aceptas los{' '}
+            {t('auth.legalPrefix')}{' '}
             <Link to="/terminos" className="underline hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
-              Términos de Servicio
+              {t('auth.termsLink')}
             </Link>{' '}
-            y la{' '}
+            {t('auth.legalMiddle')}{' '}
             <Link to="/privacidad" className="underline hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
-              Política de Privacidad
-            </Link>{' '}
-            de EventHive.
+              {t('auth.privacyLink')}
+            </Link>
+            {t('auth.legalSuffix').startsWith('.') ? t('auth.legalSuffix') : ` ${t('auth.legalSuffix')}`}
           </p>
         </div>
 

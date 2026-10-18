@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiUser, FiMail, FiLock, FiBriefcase, FiPhone, FiFileText } from 'react-icons/fi';
 import Swal from 'sweetalert2';
@@ -7,73 +8,78 @@ import useForm from '../hooks/useForm.js';
 import { authService } from '../services/authService.js';
 import { session, normalizeRole } from '../services/session.js';
 import { sanitizeText, sanitizePhone, sanitizeEmail } from '../utils/sanitizer.js';
-
-const validateRegister = (values) => {
-  const errors = {};
-  const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-
-  if (values.role === 'organizador') {
-    if (!values.razonSocial?.trim()) {
-      errors.razonSocial = 'La razón social de la organización es obligatoria.';
-    }
-
-    if (!values.nit?.trim()) {
-      errors.nit = 'El NIT es obligatorio.';
-    } else if (values.nit.trim().length < 6) {
-      errors.nit = 'Ingresa un NIT válido (mínimo 6 caracteres).';
-    }
-
-    if (!values.correoEmpresarial?.trim()) {
-      errors.correoEmpresarial = 'El correo institucional o empresarial es obligatorio.';
-    } else if (!emailRegex.test(values.correoEmpresarial)) {
-      errors.correoEmpresarial = 'Ingresa un formato de correo empresarial válido.';
-    }
-
-    if (!values.nombreCompleto?.trim()) {
-      errors.nombreCompleto = 'El nombre completo del representante legal es obligatorio.';
-    }
-
-    if (!values.correoUsuario?.trim()) {
-      errors.correoUsuario = 'El correo de acceso del representante es obligatorio.';
-    } else if (!emailRegex.test(values.correoUsuario)) {
-      errors.correoUsuario = 'Ingresa un formato de correo válido.';
-    }
-  } else {
-    if (!values.name?.trim()) {
-      errors.name = 'Tu nombre completo es obligatorio.';
-    }
-
-    if (!values.email?.trim()) {
-      errors.email = 'El correo electrónico es obligatorio.';
-    } else if (!emailRegex.test(values.email)) {
-      errors.email = 'Ingresa un formato de correo válido.';
-    }
-
-    const cleanPhone = sanitizePhone(values.phone);
-    if (!cleanPhone) {
-      errors.phone = 'El teléfono de contacto es obligatorio.';
-    } else if (cleanPhone.length < 7) {
-      errors.phone = 'Ingresa un número de teléfono válido (mínimo 7 dígitos).';
-    } else if (cleanPhone.length > 10 || (values.phone || '').length > 10) {
-      errors.phone = 'El teléfono no puede superar los 10 dígitos.';
-    }
-  }
-
-  if (!values.password) {
-    errors.password = 'La contraseña es obligatoria.';
-  } else if (values.password.length < 6) {
-    errors.password = 'Debe tener al menos 6 caracteres.';
-  }
-
-  if (values.password !== values.confirmPassword) {
-    errors.confirmPassword = 'Las contraseñas no coinciden.';
-  }
-
-  return errors;
-};
+import { useLanguage } from '../context/LanguageContext.jsx';
 
 export default function Registro() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  const validateRegister = useCallback(
+    (values) => {
+      const errors = {};
+      const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+
+      if (values.role === 'organizador') {
+        if (!values.razonSocial?.trim()) {
+          errors.razonSocial = t('auth.errRazonSocial');
+        }
+
+        if (!values.nit?.trim()) {
+          errors.nit = t('auth.errNitReq');
+        } else if (values.nit.trim().length < 6) {
+          errors.nit = t('auth.errNitMin');
+        }
+
+        if (!values.correoEmpresarial?.trim()) {
+          errors.correoEmpresarial = t('auth.errBusinessEmailReq');
+        } else if (!emailRegex.test(values.correoEmpresarial)) {
+          errors.correoEmpresarial = t('auth.errBusinessEmailInvalid');
+        }
+
+        if (!values.nombreCompleto?.trim()) {
+          errors.nombreCompleto = t('auth.errRepNameReq');
+        }
+
+        if (!values.correoUsuario?.trim()) {
+          errors.correoUsuario = t('auth.errRepEmailReq');
+        } else if (!emailRegex.test(values.correoUsuario)) {
+          errors.correoUsuario = t('auth.errEmailInvalid');
+        }
+      } else {
+        if (!values.name?.trim()) {
+          errors.name = t('auth.errNameReq');
+        }
+
+        if (!values.email?.trim()) {
+          errors.email = t('auth.errEmailReq');
+        } else if (!emailRegex.test(values.email)) {
+          errors.email = t('auth.errEmailInvalid');
+        }
+
+        const cleanPhone = sanitizePhone(values.phone);
+        if (!cleanPhone) {
+          errors.phone = t('auth.errPhoneReq');
+        } else if (cleanPhone.length < 7) {
+          errors.phone = t('auth.errPhoneMin');
+        } else if (cleanPhone.length > 10 || (values.phone || '').length > 10) {
+          errors.phone = t('auth.errPhoneMax');
+        }
+      }
+
+      if (!values.password) {
+        errors.password = t('auth.errPasswordReq');
+      } else if (values.password.length < 6) {
+        errors.password = t('auth.errPasswordMin');
+      }
+
+      if (values.password !== values.confirmPassword) {
+        errors.confirmPassword = t('auth.errPasswordMatch');
+      }
+
+      return errors;
+    },
+    [t]
+  );
 
   const {
     values,
@@ -128,10 +134,10 @@ export default function Registro() {
 
     await Swal.fire({
       icon: 'success',
-      title: '¡Cuenta creada con éxito!',
+      title: t('auth.accountCreatedTitle'),
       text: isOrganizer || userRole === 'REPRESENTANTE' || userRole === 'OPERADOR'
-        ? 'Bienvenido como organización. Tu cuenta ha sido creada con éxito. Te redirigiremos a tu panel.'
-        : 'Bienvenido a EventHive Cartagena. Te redirigiremos a tu perfil.',
+        ? t('auth.accountCreatedOrgText')
+        : t('auth.accountCreatedUserText'),
       timer: 2000,
       showConfirmButton: false,
       customClass: {
@@ -152,9 +158,8 @@ export default function Registro() {
 
   return (
     <AuthLayout
-      title="Crea tu cuenta en EventHive"
-      subtitle="Únete a la mayor comunidad de eventos de Cartagena de Indias."
-
+      title={t('auth.registerTitle')}
+      subtitle={t('auth.registerSubtitle')}
       errorBanner={submitError}
     >
       <div className="space-y-3">
@@ -169,7 +174,7 @@ export default function Registro() {
                 : 'text-slate-600 dark:text-slate-400 hover:text-[#0B132B] dark:hover:text-white font-medium'
             }`}
           >
-            Quiero asistir a eventos
+            {t('auth.roleAttendee')}
           </button>
           <button
             type="button"
@@ -180,7 +185,7 @@ export default function Registro() {
                 : 'text-slate-600 dark:text-slate-400 hover:text-[#0B132B] dark:hover:text-white font-medium'
             }`}
           >
-            Organización de eventos
+            {t('auth.roleOrganizer')}
           </button>
         </div>
 
@@ -189,15 +194,15 @@ export default function Registro() {
             <div className="space-y-2.5 animate-fade-in">
               <div className="flex items-center gap-2 pt-0.5 pb-0.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide border-b border-slate-200 dark:border-slate-800">
                 <FiBriefcase className="text-amber-500" size={13} />
-                <span>Datos de la Organización</span>
+                <span>{t('auth.orgSectionTitle')}</span>
               </div>
 
               <InputField
                 id="razonSocial"
                 name="razonSocial"
                 type="text"
-                label="Razón social de la organización"
-                placeholder="Ej: Cartagena Live Producciones S.A.S."
+                label={t('auth.razonSocialLabel')}
+                placeholder={t('auth.razonSocialPlaceholder')}
                 icon={FiBriefcase}
                 value={values.razonSocial}
                 onChange={handleChange}
@@ -212,8 +217,8 @@ export default function Registro() {
                   id="nit"
                   name="nit"
                   type="text"
-                  label="NIT"
-                  placeholder="Ej: 900.123.456-7"
+                  label={t('auth.nitLabel')}
+                  placeholder={t('auth.nitPlaceholder')}
                   icon={FiFileText}
                   value={values.nit}
                   onChange={handleChange}
@@ -227,8 +232,8 @@ export default function Registro() {
                   id="correoEmpresarial"
                   name="correoEmpresarial"
                   type="email"
-                  label="Correo institucional / empresarial"
-                  placeholder="contacto@organizacion.co"
+                  label={t('auth.businessEmailLabel')}
+                  placeholder={t('auth.businessEmailPlaceholder')}
                   icon={FiMail}
                   value={values.correoEmpresarial}
                   onChange={handleChange}
@@ -241,15 +246,15 @@ export default function Registro() {
 
               <div className="flex items-center gap-2 pt-2 pb-0.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide border-b border-slate-200 dark:border-slate-800">
                 <FiUser className="text-amber-500" size={13} />
-                <span>Datos del Representante</span>
+                <span>{t('auth.repSectionTitle')}</span>
               </div>
 
               <InputField
                 id="nombreCompleto"
                 name="nombreCompleto"
                 type="text"
-                label="Nombre completo del representante legal"
-                placeholder="Ej: Carlos Pérez Martínez"
+                label={t('auth.repNameLabel')}
+                placeholder={t('auth.repNamePlaceholder')}
                 icon={FiUser}
                 value={values.nombreCompleto}
                 onChange={handleChange}
@@ -264,8 +269,8 @@ export default function Registro() {
                 id="correoUsuario"
                 name="correoUsuario"
                 type="email"
-                label="Correo de acceso del representante legal"
-                placeholder="carlos@email.com"
+                label={t('auth.repEmailLabel')}
+                placeholder={t('auth.repEmailPlaceholder')}
                 icon={FiMail}
                 value={values.correoUsuario}
                 onChange={handleChange}
@@ -273,7 +278,7 @@ export default function Registro() {
                 error={errors.correoUsuario}
                 touched={touched.correoUsuario}
                 required
-                helperText="Este correo será tu usuario para iniciar sesión en tu panel."
+                helperText={t('auth.repEmailHelper')}
                 autoComplete="email"
               />
             </div>
@@ -283,8 +288,8 @@ export default function Registro() {
                 id="name"
                 name="name"
                 type="text"
-                label="Nombre y apellido"
-                placeholder="Ej: Sofia Vergara"
+                label={t('auth.fullNameLabel')}
+                placeholder={t('auth.fullNamePlaceholder')}
                 icon={FiUser}
                 value={values.name}
                 onChange={handleChange}
@@ -299,8 +304,8 @@ export default function Registro() {
                 id="email"
                 name="email"
                 type="email"
-                label="Correo electrónico"
-                placeholder="ejemplo@cartagena.co"
+                label={t('auth.emailLabel')}
+                placeholder={t('auth.emailPlaceholder')}
                 icon={FiMail}
                 value={values.email}
                 onChange={handleChange}
@@ -315,8 +320,8 @@ export default function Registro() {
                 id="phone"
                 name="phone"
                 type="tel"
-                label="Teléfono o WhatsApp de contacto (máx. 10 dígitos)"
-                placeholder="Ej: 3001234567"
+                label={t('auth.phoneLabel')}
+                placeholder={t('auth.phonePlaceholder')}
                 icon={FiPhone}
                 value={values.phone}
                 onChange={(e) => {
@@ -338,7 +343,7 @@ export default function Registro() {
               id="password"
               name="password"
               type="password"
-              label="Contraseña"
+              label={t('auth.passwordLabel')}
               placeholder="••••••••"
               icon={FiLock}
               value={values.password}
@@ -354,7 +359,7 @@ export default function Registro() {
               id="confirmPassword"
               name="confirmPassword"
               type="password"
-              label="Confirmar contraseña"
+              label={t('auth.confirmPasswordLabel')}
               placeholder="••••••••"
               icon={FiLock}
               value={values.confirmPassword}
@@ -375,22 +380,22 @@ export default function Registro() {
             {isSubmitting ? (
               <>
                 <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                <span>Creando tu cuenta...</span>
+                <span>{t('auth.creatingAccount')}</span>
               </>
             ) : isOrganizer ? (
-              'Registrar Organización'
+              t('auth.registerOrgBtn')
             ) : (
-              'Crear mi cuenta gratis'
+              t('auth.createFreeAccountBtn')
             )}
           </button>
         </form>
         <div className="flex justify-end items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 pt-0.5">
-          <span>¿Ya tienes una cuenta?</span>
+          <span>{t('auth.alreadyHaveAccount')}</span>
           <Link
             to="/iniciosesion"
             className="font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
           >
-            Inicia sesión
+            {t('auth.loginLink')}
           </Link>
         </div>
       </div>
