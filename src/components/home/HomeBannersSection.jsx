@@ -36,17 +36,17 @@ export default function HomeBannersSection() {
       <section className="w-full py-8 sm:py-12 px-4 sm:px-6 md:px-8 lg:px-10 max-w-none">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-8 items-start">
           {/* Skeleton Banner Izquierdo */}
-          <div className="w-full lg:-translate-y-2 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60 shadow-md animate-pulse h-[320px] sm:h-[390px] lg:h-[450px] relative p-6 sm:p-8 lg:p-10 flex flex-col justify-end">
-            <div className="w-3/4 h-8 sm:h-10 bg-slate-300 dark:bg-slate-800 rounded-xl mb-4" />
-            <div className="w-1/2 h-5 sm:h-6 bg-slate-200 dark:bg-slate-800/70 rounded-lg mb-6" />
-            <div className="w-36 h-10 bg-amber-400/30 dark:bg-amber-500/20 rounded-xl" />
+          <div className="w-full lg:-translate-y-2 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60 shadow-md animate-pulse aspect-[16/10] sm:aspect-[16/9] min-h-[220px] sm:min-h-0 relative p-5 sm:p-7 lg:p-8 flex flex-col justify-end">
+            <div className="w-3/4 h-7 sm:h-9 bg-slate-300 dark:bg-slate-800 rounded-xl mb-3" />
+            <div className="w-1/2 h-4 sm:h-5 bg-slate-200 dark:bg-slate-800/70 rounded-lg mb-4" />
+            <div className="w-32 sm:w-36 h-9 sm:h-10 bg-amber-400/30 dark:bg-amber-500/20 rounded-xl" />
           </div>
 
           {/* Skeleton Banner Derecho */}
-          <div className="w-full lg:translate-y-6 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60 shadow-md animate-pulse h-[320px] sm:h-[390px] lg:h-[450px] relative p-6 sm:p-8 lg:p-10 flex flex-col justify-end">
-            <div className="w-2/3 h-8 sm:h-10 bg-slate-300 dark:bg-slate-800 rounded-xl mb-4" />
-            <div className="w-2/5 h-5 sm:h-6 bg-slate-200 dark:bg-slate-800/70 rounded-lg mb-6" />
-            <div className="w-36 h-10 bg-amber-400/30 dark:bg-amber-500/20 rounded-xl" />
+          <div className="w-full lg:translate-y-6 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60 shadow-md animate-pulse aspect-[16/10] sm:aspect-[16/9] min-h-[220px] sm:min-h-0 relative p-5 sm:p-7 lg:p-8 flex flex-col justify-end">
+            <div className="w-2/3 h-7 sm:h-9 bg-slate-300 dark:bg-slate-800 rounded-xl mb-3" />
+            <div className="w-2/5 h-4 sm:h-5 bg-slate-200 dark:bg-slate-800/70 rounded-lg mb-4" />
+            <div className="w-32 sm:w-36 h-9 sm:h-10 bg-amber-400/30 dark:bg-amber-500/20 rounded-xl" />
           </div>
         </div>
       </section>
@@ -93,25 +93,17 @@ export default function HomeBannersSection() {
       >
         <CardWrapper
           {...wrapperProps}
-          className="block relative w-full h-[280px] sm:h-[390px] lg:h-[450px] overflow-hidden bg-slate-950 cursor-pointer"
+          className="block relative w-full aspect-[16/10] sm:aspect-[16/9] min-h-[220px] sm:min-h-0 overflow-hidden bg-slate-950 cursor-pointer"
         >
           {banner.imagenUrl ? (
-            <>
-              {/* Fondo ambiental difuminado para móviles que mantiene la atmósfera del banner */}
-              <img
-                src={banner.imagenUrl}
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-110 sm:hidden pointer-events-none"
-              />
-              <ImageWithFallback
-                src={banner.imagenUrl}
-                alt={banner.titulo}
-                className="relative z-0 w-full h-full object-contain sm:object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                fallbackText={banner.titulo}
-                iconSize={36}
-              />
-            </>
+            <ImageWithFallback
+              src={banner.imagenUrl}
+              alt={banner.titulo || 'Banner'}
+              className="w-full h-full"
+              imgClassName="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
+              fallbackText={banner.titulo || 'Banner'}
+              iconSize={36}
+            />
           ) : (
             /* Imagen de sombra neutral sin gradiente si no hay imagen cargada */
             <div className="w-full h-full bg-[#0D1527] relative" />
@@ -120,15 +112,17 @@ export default function HomeBannersSection() {
           {/* Sin oscurecer la imagen del banner para que se vea nítida en modo oscuro */}
           
           {/* Contenido textual y botón con sombra de texto de alta legibilidad sin gradiente */}
-          <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-8 lg:p-10 z-10 pointer-events-none">
-            <h3 className="font-extrabold text-white group-hover:text-amber-100 text-xl sm:text-2xl lg:text-3xl leading-snug tracking-tight uppercase mb-4 max-w-lg drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] transition-colors duration-300">
-              {banner.titulo}
-            </h3>
+          <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-7 lg:p-8 z-10 pointer-events-none">
+            {banner.titulo && (
+              <h3 className="font-extrabold text-white group-hover:text-amber-100 text-lg sm:text-xl lg:text-2xl xl:text-3xl leading-snug tracking-tight uppercase mb-3 max-w-lg drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] transition-colors duration-300">
+                {banner.titulo}
+              </h3>
+            )}
 
             {banner.textoBoton && (
               <div>
                 <span
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 group-hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-300 shadow-md group-hover:shadow-lg group-hover:shadow-amber-500/30 group-hover:scale-[1.03] active:scale-95 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-amber-500 group-hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-300 shadow-md group-hover:shadow-lg group-hover:shadow-amber-500/30 group-hover:scale-[1.03] active:scale-95 cursor-pointer"
                 >
                   <span>{banner.textoBoton}</span>
                   <FiArrowRight

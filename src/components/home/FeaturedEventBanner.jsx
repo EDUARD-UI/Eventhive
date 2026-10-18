@@ -54,7 +54,8 @@ export default function FeaturedEventBanner() {
         <ImageWithFallback
           src={activeBanner.imagenUrl}
           alt={activeBanner.titulo}
-          className="relative z-0 w-full h-full object-contain sm:object-cover object-center group-hover:scale-103 transition-transform duration-700 ease-out"
+          className="relative z-0 w-full h-full"
+          imgClassName="w-full h-full object-cover object-center group-hover:scale-103 transition-transform duration-700 ease-out"
           fallbackText={activeBanner.titulo}
           iconSize={48}
         />

@@ -57,6 +57,10 @@ export default function ImageWithFallback({
     );
   }
 
+  const defaultFit = /object-(cover|contain|fill|none|scale-down)/.test(imgClassName)
+    ? ''
+    : 'object-cover';
+
   return (
     <div className={`relative overflow-hidden ${className}`}>
       <img
@@ -64,7 +68,7 @@ export default function ImageWithFallback({
         alt={alt}
         loading="lazy"
         onError={() => setHasError(true)}
-        className={`h-full w-full object-cover transition-all duration-300 ${imgClassName}`}
+        className={`h-full w-full ${defaultFit} transition-all duration-300 ${imgClassName}`}
       />
       {children}
     </div>

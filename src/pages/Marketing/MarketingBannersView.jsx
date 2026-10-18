@@ -214,12 +214,13 @@ export default function MarketingBannersView() {
                 className="group relative overflow-hidden rounded-3xl border border-slate-200/90 shadow-md hover:shadow-xl transition-all duration-300 w-full bg-slate-900 flex flex-col justify-between"
               >
                 {/* Marco de Imagen compacto pero sin espacios faltantes ni sobrantes */}
-                <div className="relative w-full h-[220px] sm:h-[260px] overflow-hidden bg-slate-950">
+                <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] min-h-[200px] overflow-hidden bg-slate-950">
                   {hasImage ? (
                     <ImageWithFallback
                       src={banner.imagenUrl}
                       alt={banner.titulo || 'Banner Home'}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                      className="w-full h-full"
+                      imgClassName="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
                       fallbackText={banner.titulo || 'Banner'}
                       iconSize={32}
                     />
