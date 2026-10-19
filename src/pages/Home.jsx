@@ -26,6 +26,7 @@ import { getCarouselEvents, getFeaturedEvents, getMapEvents, getUpcomingEvents }
 import { getCategoryNames } from '../services/categoryService.js';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useLanguage } from '../context/LanguageContext.jsx';
+import { useLenisScroll } from '../hooks/useLenisScroll.js';
 
 const toRad = (value) => (value * Math.PI) / 180;
 
@@ -257,18 +258,14 @@ export default function Home() {
 
   const { isDark } = useTheme();
 
-  // Animaciones de aparición suave y desplazamiento fluido nativo
-  useEffect(() => {
-    const smoothScrollTo = (selector, offset = 0) => {
-      const el = document.querySelector(selector);
-      if (!el) return;
-      const top = el.getBoundingClientRect().top + window.scrollY + offset;
-      window.scrollTo({ top, behavior: 'smooth' });
-    };
+  // Inicializar smooth scroll con Lenis sin empujar ni forzar la página
+  useLenisScroll();
 
+  // Animaciones de aparición suave al hacer scroll (Reveal en entrada únicamente)
+  useEffect(() => {
     const checkReveals = () => {
-      const triggerThreshold = window.innerHeight * 0.90;
-      const mapTriggerThreshold = window.innerHeight * 0.78;
+      const triggerThreshold = window.innerHeight * 0.92;
+      const mapTriggerThreshold = window.innerHeight * 0.85;
 
       if (carouselSectionRef.current) {
         const rect = carouselSectionRef.current.getBoundingClientRect();
@@ -295,75 +292,6 @@ export default function Home() {
     window.addEventListener('scroll', checkReveals, { passive: true });
     requestAnimationFrame(checkReveals);
 
-    // Desplazamiento cinemático suave (Hero -> Carrusel y Próximos -> Mapa)
-    let isTransitioningHero = false;
-    let heroTimer = null;
-    let isTransitioningMap = false;
-    let mapTimer = null;
-
-    const handleWheel = (e) => {
-      if (!isTransitioningHero && window.scrollY < 80 && e.deltaY > 15) {
-        isTransitioningHero = true;
-        setCarouselRevealed(true);
-        smoothScrollTo('#carousel-section', -65);
-        heroTimer = setTimeout(() => {
-          isTransitioningHero = false;
-        }, 1350);
-        return;
-      }
-
-      if (!isTransitioningMap && mapSectionRef.current && e.deltaY > 15) {
-        const mapRect = mapSectionRef.current.getBoundingClientRect();
-        if (mapRect.top > 80 && mapRect.top < window.innerHeight * 0.72) {
-          isTransitioningMap = true;
-          setMapRevealed(true);
-          smoothScrollTo('#mapa', -35);
-          mapTimer = setTimeout(() => {
-            isTransitioningMap = false;
-          }, 1500);
-        }
-      }
-    };
-
-    let touchStartY = 0;
-    const handleTouchStart = (e) => {
-      if (e.touches && e.touches.length > 0) {
-        touchStartY = e.touches[0].clientY;
-      }
-    };
-
-    const handleTouchMove = (e) => {
-      if (e.touches && e.touches.length > 0) {
-        const diffY = touchStartY - e.touches[0].clientY;
-
-        if (!isTransitioningHero && window.scrollY < 80 && diffY > 20) {
-          isTransitioningHero = true;
-          setCarouselRevealed(true);
-          smoothScrollTo('#carousel-section', -65);
-          heroTimer = setTimeout(() => {
-            isTransitioningHero = false;
-          }, 1350);
-          return;
-        }
-
-        if (!isTransitioningMap && mapSectionRef.current && diffY > 20) {
-          const mapRect = mapSectionRef.current.getBoundingClientRect();
-          if (mapRect.top > 80 && mapRect.top < window.innerHeight * 0.72) {
-            isTransitioningMap = true;
-            setMapRevealed(true);
-            smoothScrollTo('#mapa', -35);
-            mapTimer = setTimeout(() => {
-              isTransitioningMap = false;
-            }, 1500);
-          }
-        }
-      }
-    };
-
-    window.addEventListener('wheel', handleWheel, { passive: true });
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -374,7 +302,7 @@ export default function Home() {
           }
         });
       },
-      { threshold: 0.12, rootMargin: '0px 0px -50px 0px' }
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
     );
 
     if (carouselSectionRef.current) observer.observe(carouselSectionRef.current);
@@ -383,14 +311,10 @@ export default function Home() {
 
     return () => {
       window.removeEventListener('scroll', checkReveals);
-      window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      if (heroTimer) clearTimeout(heroTimer);
-      if (mapTimer) clearTimeout(mapTimer);
       observer.disconnect();
     };
   }, []);
+
 
   return (
     <div className="w-full min-h-screen bg-slate-50 dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 selection:bg-amber-400 selection:text-slate-950 font-body overflow-x-clip transition-colors duration-200">

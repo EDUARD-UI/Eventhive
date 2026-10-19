@@ -189,7 +189,15 @@ export async function getFeaturedEvents({ page = 0, size = 10, sort } = {}) {
     const params = { page, size };
     if (sort) params.sort = sort;
     const data = await httpClient.get('/eventos/destacados', params);
-    const content = Array.isArray(data) ? data : data?.content || [];
+    const content = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data?.content)
+      ? data.data.content
+      : Array.isArray(data?.data)
+      ? data.data
+      : Array.isArray(data?.content)
+      ? data.content
+      : [];
     return content.map(normalizeEvent);
   } catch (err) {
     console.warn('Error consultando /eventos/destacados:', err?.message);
@@ -205,13 +213,22 @@ export async function getFeaturedEvents({ page = 0, size = 10, sort } = {}) {
 export async function getUpcomingEvents({ page = 0, size = 8 } = {}) {
   try {
     const proximosData = await httpClient.get('/eventos/proximos', { page, size });
-    const content = Array.isArray(proximosData) ? proximosData : proximosData?.content || [];
+    const content = Array.isArray(proximosData)
+      ? proximosData
+      : Array.isArray(proximosData?.data?.content)
+      ? proximosData.data.content
+      : Array.isArray(proximosData?.data)
+      ? proximosData.data
+      : Array.isArray(proximosData?.content)
+      ? proximosData.content
+      : [];
     return content.map(normalizeEvent);
   } catch (err) {
     console.warn('Error consultando /eventos/proximos:', err?.message);
     return [];
   }
 }
+
 
 /**
  * Listado general de eventos públicos paginados (GET /api/eventos).

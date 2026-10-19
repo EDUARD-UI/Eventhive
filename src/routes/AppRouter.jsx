@@ -61,6 +61,8 @@ export default function AppRouter() {
 
         {/* Rutas de Nosotros */}
         <Route path="/acerca-de" element={<AcercaDe />} />
+        <Route path="/sobre-nosotros" element={<AcercaDe />} />
+        <Route path="/sobrenosotros" element={<AcercaDe />} />
         <Route path="/privacidad" element={<Privacidad />} />
         <Route path="/terminos" element={<Terminos />} />
         <Route path="/contacto" element={<Contacto />} />

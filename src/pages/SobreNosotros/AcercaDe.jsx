@@ -16,6 +16,7 @@ import Navbar from '../../components/usersComponets/Navbar.jsx';
 import Footer from '../../components/usersComponets/Footer.jsx';
 import FloatingDotsBackground from '../../components/common/FloatingDotsBackground.jsx';
 import CityRhythmPreFooter from '../../components/home/CityRhythmPreFooter.jsx';
+import { useLenisScroll } from '../../hooks/useLenisScroll.js';
 
 /* ─── Datos estáticos ───────────────────────────────────────────────── */
 const VALUES = [
@@ -130,28 +131,110 @@ function AnimatedCounter({ value, label, icon: Icon, suffix = '' }) {
 
 /* ─── Componente principal AcercaDe ─────────────────────────────────── */
 export default function AcercaDe() {
+  const [scrollY, setScrollY] = useState(0);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [velocity, setVelocity] = useState(0);
+
+  // Inicializar motor Lenis con captura continua de desplazamiento, progreso y velocidad
+  useLenisScroll(
+    {
+      duration: 1.25,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      wheelMultiplier: 1.05,
+      touchMultiplier: 1.2,
+    },
+    (e) => {
+      setScrollY(e.scroll || 0);
+      setScrollProgress(e.progress || 0);
+      setVelocity(e.velocity || 0);
+    }
+  );
+
+  const [heroMounted, setHeroMounted] = useState(false);
+  const [mvVisible, setMvVisible] = useState(false);
+  const [valuesVisible, setValuesVisible] = useState(false);
+  const [metricsVisible, setMetricsVisible] = useState(false);
+  const [ctaVisible, setCtaVisible] = useState(false);
+
+  const mvRef = useRef(null);
+  const valuesRef = useRef(null);
+  const metricsRef = useRef(null);
+  const ctaRef = useRef(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setHeroMounted(true), 60);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (entry.target === mvRef.current) setMvVisible(true);
+            if (entry.target === valuesRef.current) setValuesVisible(true);
+            if (entry.target === metricsRef.current) setMetricsVisible(true);
+            if (entry.target === ctaRef.current) setCtaVisible(true);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    if (mvRef.current) observer.observe(mvRef.current);
+    if (valuesRef.current) observer.observe(valuesRef.current);
+    if (metricsRef.current) observer.observe(metricsRef.current);
+    if (ctaRef.current) observer.observe(ctaRef.current);
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="w-full min-h-screen bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body relative transition-colors duration-200">
+      {/* Barra de progreso luminosa vinculada al motor Lenis */}
+      <div
+        aria-hidden="true"
+        className="fixed top-0 left-0 right-0 h-1 z-50 origin-left bg-gradient-to-r from-amber-500 via-amber-300 to-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.8)] pointer-events-none transition-transform duration-75"
+        style={{ transform: `scaleX(${scrollProgress})` }}
+      />
+
       <FloatingDotsBackground />
       <Navbar />
 
       <main className="flex-1 relative z-10">
-        {/* ── HERO ──────────────────────────────────────────────────── */}
+        {/* ── HERO CON PARALAJE FLUIDO LENIS ──────────────────────────── */}
         <section
-          className="relative overflow-hidden bg-gradient-to-b from-[#0B132B] via-[#0E1A38] to-[#070D1B] text-white py-20 sm:py-28 px-6 sm:px-12 lg:px-20 text-center border-b border-slate-800"
+          className="relative overflow-hidden bg-gradient-to-b from-[#0B132B] via-[#0E1A38] to-[#070D1B] text-white py-16 sm:py-24 px-6 sm:px-12 lg:px-20 text-center border-b border-slate-800"
           aria-labelledby="hero-heading"
         >
-          {/* Resplandores ambientales cálidos */}
-          <div aria-hidden className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div aria-hidden className="absolute -bottom-32 -right-32 w-[400px] h-[400px] bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
+          {/* Resplandores ambientales cálidos animados con paralaje Lenis */}
+          <div
+            aria-hidden
+            className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-amber-500/15 rounded-full blur-3xl pointer-events-none transition-transform duration-100 ease-out"
+            style={{ transform: `translate3d(0, ${scrollY * 0.22}px, 0)` }}
+          />
+          <div
+            aria-hidden
+            className="absolute -bottom-32 -right-32 w-[400px] h-[400px] bg-amber-400/15 rounded-full blur-3xl pointer-events-none transition-transform duration-100 ease-out"
+            style={{ transform: `translate3d(0, ${-scrollY * 0.15}px, 0)` }}
+          />
 
-          <div className="max-w-4xl mx-auto relative z-10 text-center">
-            <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-amber-500/20 text-amber-300 border border-amber-400/30 mb-6 shadow-xs">
+          <div
+            style={{
+              transform: `translate3d(0, ${scrollY * 0.08}px, 0)`,
+              opacity: Math.max(0.4, 1 - scrollY * 0.0018),
+            }}
+            className={`max-w-4xl mx-auto relative z-10 text-center transform transition-all duration-1000 ease-out ${
+              heroMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}
+          >
+            <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-amber-500/20 text-amber-300 border border-amber-400/30 mb-6 shadow-xs backdrop-blur-md">
               ¿Quiénes somos?
             </span>
             <h1
               id="hero-heading"
-              className="text-3xl sm:text-5xl lg:text-6xl font-black leading-tight tracking-tight mb-6 text-white uppercase"
+              className="text-3xl sm:text-5xl lg:text-6xl font-black leading-tight tracking-tight mb-6 text-white uppercase drop-shadow-sm"
             >
               Conectando la vibrante{' '}
               <span className="text-amber-400 drop-shadow-sm">escena cultural</span> de Cartagena
@@ -160,10 +243,10 @@ export default function AcercaDe() {
               En EventHive somos el puente entre creadores, organizadores, locales y turistas
               para descubrir y vivir las mejores experiencias del Caribe colombiano.
             </p>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 to="/buscar"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg active:scale-95 transition-all"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg hover:shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all"
               >
                 <span>Explorar cartelera</span>
                 <FiArrowRight size={15} />
@@ -178,9 +261,13 @@ export default function AcercaDe() {
           </div>
         </section>
 
-        {/* ── MISIÓN Y VISIÓN ──────────────────────────────────────── */}
+
+        {/* ── MISIÓN Y VISIÓN CON ANIMACIÓN DE ENTRADA AL SCROLLEAR ───── */}
         <section
-          className="py-16 sm:py-24 px-6 sm:px-12 lg:px-20"
+          ref={mvRef}
+          className={`py-16 sm:py-24 px-6 sm:px-12 lg:px-20 transform transition-all duration-1000 ease-out ${
+            mvVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+          }`}
           aria-labelledby="mv-heading"
         >
           <div className="max-w-5xl mx-auto">
@@ -198,7 +285,11 @@ export default function AcercaDe() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Misión */}
-              <article className="group relative rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B1428]/80 p-8 sm:p-10 shadow-sm hover:shadow-xl hover:border-amber-400/50 transition-all duration-300">
+              <article
+                className={`group relative rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B1428]/80 p-8 sm:p-10 shadow-sm hover:shadow-xl hover:border-amber-400/50 transition-all duration-700 ease-out transform ${
+                  mvVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
+                }`}
+              >
                 <div className="w-14 h-14 rounded-2xl bg-amber-500/15 text-amber-500 flex items-center justify-center mb-6">
                   <FiTarget size={26} aria-hidden />
                 </div>
@@ -211,7 +302,11 @@ export default function AcercaDe() {
               </article>
 
               {/* Visión */}
-              <article className="group relative rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B1428]/80 p-8 sm:p-10 shadow-sm hover:shadow-xl hover:border-amber-400/50 transition-all duration-300">
+              <article
+                className={`group relative rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B1428]/80 p-8 sm:p-10 shadow-sm hover:shadow-xl hover:border-amber-400/50 transition-all duration-700 delay-150 ease-out transform ${
+                  mvVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
+                }`}
+              >
                 <div className="w-14 h-14 rounded-2xl bg-amber-500/15 text-amber-500 flex items-center justify-center mb-6">
                   <FiEye size={26} aria-hidden />
                 </div>
@@ -226,9 +321,12 @@ export default function AcercaDe() {
           </div>
         </section>
 
-        {/* ── VALORES ──────────────────────────────────────────────── */}
+        {/* ── VALORES CON REVELACIÓN ESCALONADA ───────────────────────── */}
         <section
-          className="py-16 sm:py-24 px-6 sm:px-12 lg:px-20 border-y border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#0B132B]/40"
+          ref={valuesRef}
+          className={`py-16 sm:py-24 px-6 sm:px-12 lg:px-20 border-y border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#0B132B]/40 transform transition-all duration-1000 ease-out ${
+            valuesVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+          }`}
           aria-labelledby="values-heading"
         >
           <div className="max-w-6xl mx-auto">
@@ -249,12 +347,17 @@ export default function AcercaDe() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {VALUES.map((val) => {
+              {VALUES.map((val, idx) => {
                 const Icon = val.icon;
+                const delays = ['delay-75', 'delay-150', 'delay-200', 'delay-300'];
                 return (
                   <article
                     key={val.title}
-                    className="group rounded-2xl bg-white dark:bg-[#0B1428] border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm hover:shadow-lg hover:border-amber-400/60 hover:-translate-y-1 transition-all duration-300"
+                    className={`group rounded-2xl bg-white dark:bg-[#0B1428] border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm hover:shadow-lg hover:border-amber-400/60 hover:-translate-y-1 transition-all duration-700 ease-out transform ${
+                      delays[idx % delays.length]
+                    } ${
+                      valuesVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'
+                    }`}
                   >
                     <div className={`w-12 h-12 rounded-xl ${val.badgeBg} flex items-center justify-center mb-5`}>
                       <Icon size={22} aria-hidden />
@@ -268,9 +371,12 @@ export default function AcercaDe() {
           </div>
         </section>
 
-        {/* ── MÉTRICAS CON CONTADOR ANIMADO QUE AUMENTA DESDE 1 ───────── */}
+        {/* ── MÉTRICAS CON CONTADOR ANIMADO ────────────────────────────── */}
         <section
-          className="py-16 sm:py-24 px-6 sm:px-12 lg:px-20 bg-white/70 dark:bg-[#0B1428]/70 border-b border-slate-200 dark:border-slate-800"
+          ref={metricsRef}
+          className={`py-16 sm:py-24 px-6 sm:px-12 lg:px-20 bg-white/70 dark:bg-[#0B1428]/70 border-b border-slate-200 dark:border-slate-800 transform transition-all duration-1000 ease-out ${
+            metricsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+          }`}
           aria-labelledby="metrics-heading"
         >
           <div className="max-w-5xl mx-auto text-center">
@@ -292,9 +398,12 @@ export default function AcercaDe() {
           </div>
         </section>
 
-        {/* ── CTA FINAL ────────────────────────────────────────────── */}
+        {/* ── CTA FINAL CON ANIMACIÓN DE ENTRADA SUAVE ────────────────── */}
         <section
-          className="py-16 sm:py-20 px-6 sm:px-12 lg:px-20"
+          ref={ctaRef}
+          className={`py-16 sm:py-20 px-6 sm:px-12 lg:px-20 transform transition-all duration-1000 ease-out ${
+            ctaVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-10 scale-[0.98]'
+          }`}
           aria-labelledby="cta-heading"
         >
           <div className="max-w-4xl mx-auto rounded-3xl bg-white dark:bg-[#0B1428] border border-slate-200 dark:border-slate-800 p-8 sm:p-14 text-center shadow-md relative overflow-hidden">
@@ -336,3 +445,4 @@ export default function AcercaDe() {
     </div>
   );
 }
+

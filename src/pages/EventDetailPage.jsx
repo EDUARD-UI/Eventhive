@@ -19,6 +19,7 @@ import FloatingDotsBackground from '../components/common/FloatingDotsBackground.
 import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 import { getCategoryGradient } from '../utils/formatters.js';
 import { useLenisScroll } from '../hooks/useLenisScroll.js';
+import { useLanguage } from '../context/LanguageContext.jsx';
 
 /**
  * Pin temático de panal ámbar/dorado para Leaflet
@@ -65,6 +66,7 @@ function HoneycombDateBadge({ dateStr }) {
 
 export default function EventDetailPage() {
   useLenisScroll();
+  const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
@@ -152,6 +154,14 @@ export default function EventDetailPage() {
     }
     return null;
   }, [event]);
+
+  const orgId = useMemo(() => {
+    if (typeof event?.organization === 'object' && event.organization?.id) {
+      return event.organization.id;
+    }
+    return event?.organizacionId || null;
+  }, [event]);
+
 
   const mapCenter = useMemo(() => {
     const lat = Number(event?.lat);
@@ -331,67 +341,17 @@ export default function EventDetailPage() {
         {/* Rejilla de contenido principal: Columna izquierda (Detalles) + Columna derecha (Aside Ticket Compra y Acciones Elevado) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
 
-          {/* Contenido izquierdo */}
+          {/* Contenido izquierdo: Estilo Post de Instagram */}
           <div className="lg:col-span-8 space-y-8">
 
-            {/* Imagen Principal del Evento con encaje impecable y limpia de superposiciones */}
-            <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1428] shadow-md group">
-              <ImageWithFallback
-                src={event.photo}
-                alt={event.title}
-                className="w-full h-72 sm:h-96 md:h-[430px]"
-                imgClassName="w-full h-full object-cover object-center group-hover:scale-102 transition-transform duration-700 ease-out"
-                fallbackClassName="w-full h-72 sm:h-96 md:h-[430px]"
-                fallbackGradient={getCategoryGradient(event.category)}
-                fallbackText={event.title}
-                iconSize={42}
-              />
-            </div>
-
-            {/* Tarjeta: Sobre el Evento (Contiene de forma exclusiva Título, Fecha y Descripción) */}
-            <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-6 sm:p-8 shadow-sm space-y-5">
-              <div className="border-b border-slate-100 dark:border-slate-800 pb-5 space-y-3">
-                {event.category && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-slate-900 dark:bg-amber-500 text-amber-400 dark:text-slate-950 border border-slate-800 dark:border-amber-400 shadow-xs">
-                    <span>{event.category}</span>
-                  </span>
-                )}
-
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase leading-tight break-words">
-                  {event.title}
-                </h1>
-
-                {event.date && (
-                  <div className="flex items-center gap-2 font-semibold text-sm sm:text-base text-slate-700 dark:text-slate-300 pt-1">
-                    <FiCalendar className="text-amber-500 shrink-0" size={18} />
-                    <span>{event.date}</span>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <h2 className="text-xs sm:text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">
-                  Sobre el Evento
-                </h2>
-                <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm sm:text-base whitespace-pre-line font-normal">
-                  {event.description || 'Disfruta de esta enriquecedora experiencia cultural en el corazón de Cartagena de Indias. Todos los protocolos y localidades están coordinados por la organización oficial.'}
-                </p>
-              </div>
-            </section>
-
-            {/* Organización y Ubicación */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6 items-stretch">
-              {/* Tarjeta: Organización Responsable */}
-              <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-5 sm:p-6 shadow-sm flex flex-col justify-between space-y-4">
-                <div>
-                  <div className="border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
-                    <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
-                      Organización Responsable
-                    </h2>
-                  </div>
-
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="relative w-14 h-14 shrink-0 rounded-2xl overflow-hidden bg-slate-900 text-amber-400 border border-slate-200 dark:border-slate-800 flex items-center justify-center font-black text-lg shadow-xs">
+            {/* Tarjeta Post Estilo Instagram */}
+            <article className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] shadow-md overflow-hidden">
+              {/* 1. ENCABEZADO TIPO INSTAGRAM: Logo de la organización, Nombre y Botón Seguir */}
+              <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40">
+                <div className="flex items-center gap-3 min-w-0">
+                  {/* Avatar circular con aro de perfil */}
+                  <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-full p-[2px] bg-gradient-to-tr from-amber-500 via-rose-500 to-amber-300 shadow-xs">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-slate-900 flex items-center justify-center font-black text-xs sm:text-sm text-amber-400">
                       {orgAvatar ? (
                         <img
                           src={orgAvatar}
@@ -406,67 +366,176 @@ export default function EventDetailPage() {
                         <span>{orgName ? orgName.slice(0, 2).toUpperCase() : 'EH'}</span>
                       )}
                     </div>
+                  </div>
 
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-extrabold text-slate-950 dark:text-white text-base truncate">
+                  {/* Nombre y datos de la organización */}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      {orgId ? (
+                        <Link
+                          to={`/organizaciones/${orgId}`}
+                          className="font-bold text-sm sm:text-base text-slate-950 dark:text-white truncate hover:text-amber-500 transition-colors"
+                        >
+                          {orgName}
+                        </Link>
+                      ) : (
+                        <span className="font-bold text-sm sm:text-base text-slate-950 dark:text-white truncate">
                           {orgName}
                         </span>
-                        <FiCheckCircle className="text-amber-500 shrink-0" size={16} title="Organización Verificada" />
-                      </div>
-                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block truncate">
-                        Organización Oficial EventHive
-                      </span>
+                      )}
+                      <FiCheckCircle className="text-amber-500 shrink-0" size={15} title={t('eventDetail.officialOrg')} />
                     </div>
+                    <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block truncate">
+                      {t('eventDetail.officialOrg')}
+                    </span>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleToggleFollow}
-                  className={`w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer self-start ${isFollowing
-                      ? 'bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
-                      : 'bg-slate-950 dark:bg-amber-500 hover:bg-amber-500 dark:hover:bg-amber-400 hover:text-slate-950 text-white dark:text-slate-950 font-black shadow-sm active:scale-95'
+                {/* Botón Seguir estilo Instagram */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleToggleFollow}
+                    className={`px-4 sm:px-5 py-1.5 sm:py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer active:scale-95 shadow-xs ${
+                      isFollowing
+                        ? 'bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
+                        : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/10'
                     }`}
-                >
-                  {isFollowing ? 'Siguiendo' : 'Seguir organización'}
-                </button>
-              </section>
-
-              {/* Tarjeta: Ubicación y Mapa */}
-              <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-5 sm:p-6 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
-                    Ubicación
-                  </h2>
-                </div>
-
-                {event.location && (
-                  <div className="flex items-start gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 min-w-0 max-w-full overflow-hidden">
-                    <FiMapPin className="text-amber-500 shrink-0 mt-0.5" size={17} />
-                    <span className="font-bold text-slate-900 dark:text-white break-words leading-snug min-w-0 flex-1">{event.location}</span>
-                  </div>
-                )}
-
-                {/* Contenedor del Mapa con OSM estándar */}
-                <div className="relative z-0 isolate overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner h-60 sm:h-72 w-full bg-slate-100 dark:bg-slate-900">
-                  <MapContainer
-                    center={mapCenter}
-                    zoom={15}
-                    scrollWheelZoom={false}
-                    className="h-full w-full"
                   >
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      maxZoom={19}
-                    />
-                    <Marker position={mapCenter} icon={amberHivePinIcon()} />
-                  </MapContainer>
+                    {isFollowing ? t('eventDetail.following') : t('eventDetail.followOrg')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    title={t('eventDetail.shareEvent')}
+                    aria-label={t('eventDetail.shareEvent')}
+                  >
+                    <FiShare2 size={18} />
+                  </button>
                 </div>
-              </section>
-            </div>
+              </div>
+
+              {/* 2. IMAGEN DEL EVENTO (CENTRAL) */}
+              <div className="relative overflow-hidden bg-slate-950 group">
+                <ImageWithFallback
+                  src={event.photo}
+                  alt={event.title}
+                  className="w-full h-80 sm:h-96 md:h-[460px]"
+                  imgClassName="w-full h-full object-cover object-center group-hover:scale-102 transition-transform duration-700 ease-out"
+                  fallbackClassName="w-full h-80 sm:h-96 md:h-[460px]"
+                  fallbackGradient={getCategoryGradient(event.category)}
+                  fallbackText={event.title}
+                  iconSize={42}
+                />
+              </div>
+
+              {/* 3. DEBAJO DE LA IMAGEN: Interacciones e Información sobre el Evento */}
+              <div className="p-5 sm:p-7 space-y-5">
+                {/* Fila de interacciones estilo Instagram */}
+                <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/80">
+                  <div className="flex items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={handleToggleFavorite}
+                      className={`inline-flex items-center gap-1.5 transition-transform active:scale-125 cursor-pointer ${
+                        isFavorite ? 'text-rose-500' : 'text-slate-600 dark:text-slate-400 hover:text-rose-500'
+                      }`}
+                      aria-label={isFavorite ? t('eventDetail.savedInFavorites') : t('eventDetail.saveInFavorites')}
+                    >
+                      <FiHeart size={22} className={isFavorite ? 'fill-current' : ''} />
+                      <span className="text-xs font-bold hidden sm:inline">
+                        {isFavorite ? t('eventDetail.savedInFavorites') : t('eventDetail.saveInFavorites')}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleShare}
+                      className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-amber-500 transition-colors cursor-pointer"
+                      aria-label={t('eventDetail.shareEvent')}
+                    >
+                      <FiShare2 size={20} />
+                      <span className="text-xs font-bold hidden sm:inline">{t('eventDetail.shareEvent')}</span>
+                    </button>
+                  </div>
+
+                  {event.category && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-400/30">
+                      <FiTag size={12} />
+                      <span>{event.category}</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* Título y Fechas */}
+                <div className="space-y-3">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase leading-tight break-words">
+                    {event.title}
+                  </h1>
+
+                  {event.date && (
+                    <div className="flex flex-wrap items-center gap-4 font-semibold text-sm sm:text-base text-slate-700 dark:text-slate-300">
+                      <div className="flex items-center gap-2">
+                        <FiCalendar className="text-amber-500 shrink-0" size={18} />
+                        <span>{event.date}</span>
+                      </div>
+                      {event.hora && (
+                        <div className="flex items-center gap-2">
+                          <FiClock className="text-amber-500 shrink-0" size={17} />
+                          <span>{event.hora}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Sección "Sobre el Evento" */}
+                <div className="pt-2">
+                  <h2 className="text-xs sm:text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">
+                    {t('eventDetail.aboutEvent')}
+                  </h2>
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm sm:text-base whitespace-pre-line font-normal">
+                    {event.description || t('eventDetail.defaultDescription')}
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            {/* Tarjeta: Ubicación y Mapa (los demás componentes siguen intactos) */}
+            <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-5 sm:p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
+                  {t('eventDetail.location')}
+                </h2>
+              </div>
+
+              {event.location && (
+                <div className="flex items-start gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 min-w-0 max-w-full overflow-hidden">
+                  <FiMapPin className="text-amber-500 shrink-0 mt-0.5" size={17} />
+                  <span className="font-bold text-slate-900 dark:text-white break-words leading-snug min-w-0 flex-1">{event.location}</span>
+                </div>
+              )}
+
+              {/* Contenedor del Mapa con OSM estándar */}
+              <div className="relative z-0 isolate overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner h-60 sm:h-72 w-full bg-slate-100 dark:bg-slate-900">
+                <MapContainer
+                  center={mapCenter}
+                  zoom={15}
+                  scrollWheelZoom={false}
+                  className="h-full w-full"
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    maxZoom={19}
+                  />
+                  <Marker position={mapCenter} icon={amberHivePinIcon()} />
+                </MapContainer>
+              </div>
+            </section>
           </div>
+
 
           {/* Columna Derecha: Aside Flotante de Compra en formato BOLETO */}
           <aside className="lg:col-span-4 lg:sticky lg:top-20">

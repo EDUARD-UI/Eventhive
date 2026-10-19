@@ -7,12 +7,13 @@ import EventListCard from '../components/common/EventListCard.jsx';
 import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
 import Pagination from '../components/Shared/Pagination.jsx';
 import CustomSelect from '../components/common/CustomSelect.jsx';
-import { searchEvents, getEvents } from '../services/eventService.js';
+import { searchEvents, getEvents, getFeaturedEvents } from '../services/eventService.js';
 import { getCategoryNames, getFeaturedCategories } from '../services/categoryService.js';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 import StyledDatePicker from '../components/common/StyledDatePicker.jsx';
 import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
+import FeaturedEventCountdownBanner from '../components/common/FeaturedEventCountdownBanner.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useLenisScroll } from '../hooks/useLenisScroll.js';
 
@@ -57,17 +58,20 @@ export default function BuscarEventosPage() {
   const [loading, setLoading] = useState(true);
   const [categoryList, setCategoryList] = useState([]);
   const [featuredCategories, setFeaturedCategories] = useState([]);
+  const [featuredEvents, setFeaturedEvents] = useState([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [searchInput, setSearchInput] = useState(tituloParam);
 
-  // Cargar categorías disponibles y destacadas
+  // Cargar categorías disponibles y eventos destacados para el temporizador
   useEffect(() => {
     let isMounted = true;
     Promise.allSettled([
       getCategoryNames(),
       getFeaturedCategories(),
-    ]).then(([namesRes, featRes]) => {
+      getFeaturedEvents({ page: 0, size: 20 }),
+    ]).then(([namesRes, featRes, featEventsRes]) => {
       if (!isMounted) return;
       if (namesRes.status === 'fulfilled' && Array.isArray(namesRes.value)) {
         setCategoryList(namesRes.value);
@@ -75,12 +79,49 @@ export default function BuscarEventosPage() {
       if (featRes.status === 'fulfilled' && Array.isArray(featRes.value)) {
         setFeaturedCategories(featRes.value);
       }
+      if (featEventsRes.status === 'fulfilled' && Array.isArray(featEventsRes.value)) {
+        setFeaturedEvents(featEventsRes.value);
+      }
+      setLoadingFeatured(false);
     });
 
     return () => {
       isMounted = false;
     };
   }, []);
+
+  // Evento destacado más próximo a la fecha actual (con respaldo en eventos generales)
+  const closestFeaturedEvent = useMemo(() => {
+    const list = featuredEvents.length > 0 ? featuredEvents : events;
+    if (!list || list.length === 0) return null;
+    const now = Date.now();
+
+    const sorted = [...list].sort((a, b) => {
+      const timeA = a.startsAt
+        ? new Date(a.startsAt).getTime()
+        : a.fecha
+        ? new Date(`${a.fecha}T${a.hora || '00:00:00'}`).getTime()
+        : 0;
+      const timeB = b.startsAt
+        ? new Date(b.startsAt).getTime()
+        : b.fecha
+        ? new Date(`${b.fecha}T${b.hora || '00:00:00'}`).getTime()
+        : 0;
+
+      const diffA = timeA - now;
+      const diffB = timeB - now;
+
+      // Priorizar eventos futuros más próximos a la fecha actual
+      if (diffA >= 0 && diffB >= 0) return diffA - diffB;
+      if (diffA >= 0) return -1;
+      if (diffB >= 0) return 1;
+      return Math.abs(diffA) - Math.abs(diffB);
+    });
+
+    return sorted[0] || list[0] || null;
+  }, [featuredEvents, events]);
+
+
 
   // Sincronizar input con URL
   useEffect(() => {
@@ -244,46 +285,55 @@ export default function BuscarEventosPage() {
       {/* Navbar idéntico */}
       <Navbar />
 
-      <main className="flex-1 max-w-[1900px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-8 sm:py-12 relative z-10">
-        {/* Encabezado centrado, en armonía con el directorio de organizaciones */}
-        <header className="relative mb-8 overflow-hidden rounded-3xl border border-slate-200/80 bg-white/80 px-5 py-7 text-center shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-[#0B1428]/80 sm:px-8 sm:py-9">
-          <div aria-hidden="true" className="pointer-events-none absolute -left-16 -top-20 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" />
-          <div className="relative flex flex-col items-center">
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white max-w-3xl text-center leading-snug">
-              Descubre conciertos, festivales, experiencias culturales y deportivas en La Heroica.
-            </h1>
-            <form role="search" onSubmit={handleSearchSubmit} className="relative mt-6 w-full max-w-xl">
-              <label htmlFor="event-search" className="sr-only">
-                Buscar eventos por nombre
-              </label>
-              <input
-                id="event-search"
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Buscar eventos por nombre..."
-                className="h-12 w-full rounded-2xl border-2 border-slate-900 dark:border-white bg-white pl-11 pr-11 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-amber-500 dark:focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/15 dark:bg-[#0B0F19] dark:text-white dark:placeholder:text-slate-500"
-              />
-              <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              {searchInput && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchInput('');
-                    const next = new URLSearchParams(searchParams);
-                    next.delete('titulo');
-                    next.delete('page');
-                    setSearchParams(next);
-                  }}
-                  aria-label="Limpiar búsqueda"
-                  className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-                >
-                  ✕
-                </button>
-              )}
-            </form>
+      <main className="flex-1 max-w-[1900px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-8 relative z-10">
+        {/* Encabezado sin recuadro envolvente, limpio y abierto como en categorías destacadas */}
+        <header className="relative mb-8 text-center flex flex-col items-center">
+          {/* Título de tamaño reducido para máxima visibilidad de los eventos */}
+          <h1 className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-slate-800 dark:text-slate-200 max-w-2xl text-center leading-snug">
+            Descubre conciertos, festivales, experiencias culturales y deportivas en La Heroica.
+          </h1>
+
+          {/* Buscador */}
+          <form role="search" onSubmit={handleSearchSubmit} className="relative mt-3.5 w-full max-w-xl">
+            <label htmlFor="event-search" className="sr-only">
+              Buscar eventos por nombre
+            </label>
+            <input
+              id="event-search"
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Buscar eventos por nombre..."
+              className="h-11 w-full rounded-2xl border-2 border-slate-900 dark:border-white bg-white pl-11 pr-11 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-amber-500 dark:focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/15 dark:bg-[#0B0F19] dark:text-white dark:placeholder:text-slate-500"
+            />
+            <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchInput('');
+                  const next = new URLSearchParams(searchParams);
+                  next.delete('titulo');
+                  next.delete('page');
+                  setSearchParams(next);
+                }}
+                aria-label="Limpiar búsqueda"
+                className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              >
+                ✕
+              </button>
+            )}
+          </form>
+
+          {/* Contador de próximo evento destacado en formato más ancho */}
+          <div className="w-full max-w-5xl xl:max-w-6xl mt-4 sm:mt-5">
+            <FeaturedEventCountdownBanner
+              event={closestFeaturedEvent}
+              isLoading={loadingFeatured}
+            />
           </div>
         </header>
+
 
         {/* Layout de 2 columnas: Filtros Sticky a la izquierda y Eventos con Scroll a la derecha */}
         <div className="flex flex-col lg:flex-row items-start gap-8">
