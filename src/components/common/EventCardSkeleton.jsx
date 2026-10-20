@@ -1,13 +1,25 @@
-export default function EventCardSkeleton({ notchBg = 'bg-[#F8FAFC]', aspectVariant = 'standard' }) {
+export default function EventCardSkeleton({
+  notchBg = 'bg-[#F8FAFC]',
+  aspectVariant = 'standard',
+  masonry = false,
+}) {
   const aspectClass =
-    aspectVariant === 'tall'
+    aspectVariant === 'portrait'
+      ? 'aspect-[4/5]'
+      : aspectVariant === 'tall'
       ? 'aspect-[4/3]'
       : aspectVariant === 'wide'
       ? 'aspect-[16/9]'
+      : aspectVariant === 'compact'
+      ? 'aspect-[2/1]'
       : 'aspect-[16/10]';
 
   return (
-    <div className="relative bg-white dark:bg-[#151D2F] rounded-3xl border border-slate-200/90 dark:border-white/[0.07] shadow-sm flex flex-col justify-between overflow-hidden animate-pulse">
+    <div
+      className={`relative bg-white dark:bg-[#151D2F] rounded-3xl border border-slate-200/90 dark:border-white/[0.07] shadow-sm flex flex-col justify-between overflow-hidden animate-pulse ${
+        masonry ? 'h-auto break-inside-avoid' : ''
+      }`}
+    >
       {/* Portada Skeleton */}
       <div className="p-3.5 pb-2">
         <div className={`w-full ${aspectClass} rounded-2xl bg-slate-200 dark:bg-slate-800`} />
