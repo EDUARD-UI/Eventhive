@@ -45,7 +45,7 @@ export default function CustomSelect({
   const isInlinePill = Boolean(inlineLabel || Icon);
 
   return (
-    <div ref={containerRef} className={`relative select-none ${className}`}>
+    <div ref={containerRef} className={`relative select-none ${isOpen ? 'z-50' : 'z-10'} ${className}`}>
       {/* Botón cerrado */}
       {isInlinePill ? (
         <button
@@ -115,7 +115,7 @@ export default function CustomSelect({
       {isOpen && (
         <ul
           role="listbox"
-          className={`absolute left-0 right-0 mt-1.5 max-h-60 overflow-y-auto rounded-xl p-1.5 z-50 shadow-xl transition-all duration-200 ${
+          className={`absolute left-0 right-0 mt-1.5 max-h-60 overflow-y-auto rounded-xl p-1.5 z-[100] shadow-2xl transition-all duration-200 ${
             isDark
               ? 'bg-[#0D182E] border border-slate-700 text-white shadow-[0_10px_30px_rgba(0,0,0,0.6)]'
               : 'bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)]'

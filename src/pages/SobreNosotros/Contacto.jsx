@@ -191,9 +191,7 @@ export default function Contacto() {
         >
           <div aria-hidden className="absolute -top-32 -right-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="max-w-4xl mx-auto relative z-10">
-            <span className="inline-block px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-amber-500/20 text-amber-300 border border-amber-400/30 mb-5 shadow-xs">
-              Estamos aquí
-            </span>
+            
             <h1 id="contact-heading" className="text-3xl sm:text-5xl font-black uppercase tracking-tight mb-4">
               Hablemos
             </h1>

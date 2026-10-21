@@ -42,12 +42,7 @@ export default function CrossedRibbonsBanner({ badgeText }) {
           </div>
         </div>
 
-        {/* Insignia central en el cruce de las líneas con el título "PRÓXIMOS EVENTOS" */}
-        <div className="relative z-10 px-6 sm:px-8 py-2.5 sm:py-3 rounded-2xl bg-white dark:bg-white border-2 border-slate-950 dark:border-slate-950 shadow-2xl transform hover:scale-105 transition-transform duration-200">
-          <span className="text-xs sm:text-sm lg:text-base font-black text-slate-950 tracking-widest uppercase">
-            {resolvedBadge}
-          </span>
-        </div>
+       
       </div>
     </div>
   );

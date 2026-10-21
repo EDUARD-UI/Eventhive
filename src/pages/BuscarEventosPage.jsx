@@ -306,24 +306,7 @@ export default function BuscarEventosPage() {
     { label: 'Eventos (Todas las categorías)', value: '' },
     ...categoryList.map((cat) => ({ label: cat.nombre, value: String(cat.id) })),
   ], [categoryList]);
-
-  // Categorías rápidas dinámicas (prioriza "Conciertos", "Gastronomía", "Deportes" si están presentes)
-  const quickCategories = useMemo(() => {
-    const source = categoryList.length > 0 ? categoryList : featuredCategories;
-    if (!source || source.length === 0) return [];
-    const preferredKeywords = ['concierto', 'gastronom', 'deport', 'cultural', 'festival', 'teatro'];
-    const prioritized = [...source].sort((a, b) => {
-      const nameA = (a.nombre || '').toLowerCase();
-      const nameB = (b.nombre || '').toLowerCase();
-      const idxA = preferredKeywords.findIndex((k) => nameA.includes(k));
-      const idxB = preferredKeywords.findIndex((k) => nameB.includes(k));
-      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-      if (idxA !== -1) return -1;
-      if (idxB !== -1) return 1;
-      return 0;
-    });
-    return prioritized.slice(0, 3);
-  }, [categoryList, featuredCategories]);
+  
 
   const hasActiveFilters = Boolean(
     tituloParam || fechaParam || categoriaIdParam || (sortParam && sortParam !== 'fecha,asc')
@@ -357,7 +340,7 @@ export default function BuscarEventosPage() {
 
       <main className="flex-1 max-w-[1900px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-8 relative z-10">
         {/* Encabezado con tarjeta de búsqueda ancha y filtros integrados justo debajo del buscador */}
-        <header className="relative mb-6 rounded-3xl border border-slate-200/80 bg-white/85 px-5 py-7 sm:px-8 sm:py-9 text-center shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-[#0B1428]/85 max-w-7xl xl:max-w-[1440px] mx-auto w-full transition-colors duration-200">
+        <header className="relative z-30 mb-6 rounded-3xl border border-slate-200/80 bg-white/85 px-5 py-7 sm:px-8 sm:py-9 text-center shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-[#0B1428]/85 max-w-7xl xl:max-w-[1440px] mx-auto w-full transition-colors duration-200">
           {/* Contenedor con overflow-hidden exclusivo para el resplandor de fondo para no cortar los desplegables */}
           <div
             aria-hidden="true"
@@ -407,10 +390,10 @@ export default function BuscarEventosPage() {
             </form>
 
             {/* Filtros Horizontales y Compactos: DENTRO de la tarjeta y justo debajo del buscador */}
-            <div className="w-full mt-6 pt-5 sm:mt-7 sm:pt-6 border-t border-slate-200/60 dark:border-slate-800/80">
+            <div className="w-full mt-6 pt-5 sm:mt-7 sm:pt-6 border-t border-slate-200/60 dark:border-slate-800/80 relative z-30">
               <div className="flex flex-wrap xl:flex-nowrap items-center justify-center gap-2.5 sm:gap-3 w-full">
                 {/* 1. Selector en línea "Categoría" */}
-                <div className="w-full sm:w-[calc(50%-6px)] lg:w-auto lg:min-w-[210px] xl:min-w-[220px] lg:flex-1">
+                <div className="w-full sm:w-[calc(50%-6px)] lg:w-auto lg:min-w-[210px] xl:min-w-[220px] lg:flex-1 relative z-30">
                   <CustomSelect
                     value={categoriaIdParam}
                     onChange={handleCategoryChange}
@@ -423,7 +406,7 @@ export default function BuscarEventosPage() {
                 </div>
 
                 {/* 2. Selector en línea "Fecha" */}
-                <div className="w-full sm:w-[calc(50%-6px)] lg:w-auto lg:min-w-[190px] xl:min-w-[200px] lg:flex-1">
+                <div className="w-full sm:w-[calc(50%-6px)] lg:w-auto lg:min-w-[190px] xl:min-w-[200px] lg:flex-1 relative z-30">
                   <StyledDatePicker
                     id="filtro-fecha"
                     name="filtro-fecha"
@@ -434,35 +417,10 @@ export default function BuscarEventosPage() {
                     placeholder="Cualquier fecha"
                   />
                 </div>
-
-                {/* 3. Sección dinámica de categorías rápidas en forma de chips o botones directos */}
-                <div className="w-full sm:w-[calc(50%-6px)] lg:w-auto lg:flex-1 h-[54px] px-3.5 py-1.5 rounded-2xl bg-white/95 dark:bg-[#0B1428]/95 border border-slate-200/90 dark:border-slate-800 backdrop-blur-md shadow-xs flex flex-col justify-center min-w-[240px]">
-                  <span className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 leading-none mb-1 text-left">
-                    Categorías rápidas
-                  </span>
-                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-                    {quickCategories.map((cat) => {
-                      const isCatActive = String(cat.id) === String(categoriaIdParam);
-                      return (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => handleQuickCategoryToggle(cat.id)}
-                          className={`px-2.5 py-0.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer whitespace-nowrap select-none ${
-                            isCatActive
-                              ? 'bg-amber-500 text-slate-950 font-black shadow-xs ring-1 ring-amber-400'
-                              : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-amber-500/15 hover:text-amber-700 dark:hover:text-amber-300'
-                          }`}
-                        >
-                          {cat.nombre}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                
 
                 {/* 4. Selector en línea "Ordenar Por" */}
-                <div className="w-full sm:w-[calc(50%-6px)] lg:w-auto lg:min-w-[190px] xl:min-w-[200px] lg:flex-1">
+                <div className="w-full sm:w-[calc(50%-6px)] lg:w-auto lg:min-w-[190px] xl:min-w-[200px] lg:flex-1 relative z-20">
                   <CustomSelect
                     value={sortParam}
                     onChange={handleSortChange}
@@ -553,7 +511,7 @@ export default function BuscarEventosPage() {
         </header>
 
         {/* Contador de próximo evento destacado en formato cinemático */}
-        <div className="w-full max-w-7xl xl:max-w-[1440px] mx-auto mt-2 mb-6 sm:mb-8">
+        <div className="w-full max-w-7xl xl:max-w-[1440px] mx-auto mt-2 mb-6 sm:mb-8 relative z-0">
           <FeaturedEventCountdownBanner
             event={closestFeaturedEvent}
             isLoading={loadingFeatured}

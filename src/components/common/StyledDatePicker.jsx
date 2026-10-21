@@ -143,7 +143,7 @@ export default function StyledDatePicker({
   })();
 
   return (
-    <div className={`${inlineLabel ? '' : 'space-y-1.5'} relative ${className}`} ref={containerRef}>
+    <div className={`${inlineLabel ? '' : 'space-y-1.5'} relative ${isOpen ? 'z-50' : 'z-10'} ${className}`} ref={containerRef}>
       {label && !inlineLabel && (
         <label
           htmlFor={id || name}
@@ -247,7 +247,7 @@ export default function StyledDatePicker({
       {/* Calendario Flotante Personalizado */}
       {isOpen && (
         <div
-          className={`absolute left-0 mt-2 z-50 w-72 sm:w-80 rounded-2xl border p-4 shadow-2xl backdrop-blur-md transition-all animate-fade-in-up ${
+          className={`absolute left-0 mt-2 z-[100] w-72 sm:w-80 rounded-2xl border p-4 shadow-2xl backdrop-blur-md transition-all animate-fade-in-up ${
             isDark
               ? 'bg-[#0B1428] border-slate-700/80 text-white shadow-[0_12px_40px_rgba(0,0,0,0.7)]'
               : 'bg-white border-slate-200 text-slate-900 shadow-[0_12px_35px_rgba(15,23,42,0.15)]'

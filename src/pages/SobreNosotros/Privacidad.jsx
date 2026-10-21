@@ -52,9 +52,7 @@ export default function Privacidad() {
         {/* ── ENCABEZADO ────────────────────────────────────────────── */}
         <header className="bg-gradient-to-b from-[#0B132B] via-[#0E1A38] to-[#070D1B] text-white py-14 sm:py-20 px-6 sm:px-12 lg:px-20 border-b border-slate-800 text-center">
           <div className="max-w-4xl mx-auto">
-            <span className="inline-block px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-amber-500/20 text-amber-300 border border-amber-400/30 mb-5 shadow-xs">
-              Marco Legal
-            </span>
+            
             <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight mb-4">
               Política de Privacidad
             </h1>
