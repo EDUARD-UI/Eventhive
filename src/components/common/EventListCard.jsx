@@ -7,9 +7,8 @@ import { useLanguage } from '../../context/LanguageContext.jsx';
 /**
  * EventListCard
  * Card vertical estilo Boleto/Ticket:
- * - Todas las tarjetas con fondo blanco limpio (modo oscuro: #0B1428).
- * - Los eventos destacados se diferencian únicamente por el badge con estrella dorada.
- * - Sin gradientes ni emojis.
+ * - Todas las imágenes se muestran 100% completas (fit="contain") sin importar el tamaño del div.
+ * - Modo oscuro y claro con colores corporativos y contraste impecable.
  */
 export default function EventListCard({
   event,
@@ -56,7 +55,7 @@ export default function EventListCard({
     >
       {/* SECCIÓN SUPERIOR: Portada + Título */}
       <div className="relative z-10">
-        {/* Imagen del evento */}
+        {/* Imagen del evento: Siempre completa sin importar el tamaño del div */}
         <div
           className={`relative ${aspectClass} overflow-hidden rounded-2xl m-3.5 mb-2.5 bg-slate-900 border border-slate-100 dark:border-white/10 shadow-xs`}
         >
@@ -64,16 +63,17 @@ export default function EventListCard({
             <ImageWithFallback
               src={photo}
               alt={title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+              className="w-full h-full"
+              imgClassName="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
               fallbackText={category || t('eventCard.defaultCategory')}
               iconSize={24}
             />
 
-            {/* Máscara linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.85) 100%) */}
+            {/* Máscara suave para garantizar contraste de los badges sin tapar la imagen */}
             <div
-              className="absolute inset-0 pointer-events-none opacity-80 group-hover:opacity-95 transition-opacity duration-300"
+              className="absolute inset-0 pointer-events-none opacity-40 group-hover:opacity-50 transition-opacity duration-300"
               style={{
-                background: 'linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.85) 100%)',
+                background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(0, 0, 0, 0.45) 100%)',
               }}
             />
           </Link>
@@ -81,7 +81,7 @@ export default function EventListCard({
           {/* Categoría Badge */}
           {category && (
             <span
-              className="absolute top-2.5 left-2.5 bg-slate-950/85 text-amber-400 border border-slate-700/80 backdrop-blur-xs text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs font-semibold"
+              className="absolute top-2.5 left-2.5 bg-slate-950/85 text-amber-400 border border-slate-700/80 backdrop-blur-xs text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs font-semibold z-10"
             >
               {category}
             </span>
@@ -89,7 +89,7 @@ export default function EventListCard({
 
           {/* Badge Destacado en dorado limpio con icono FiStar (sin emojis) */}
           {isGolden && (
-            <span className="absolute top-2.5 right-2.5 bg-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-sm flex items-center gap-1 border border-amber-400">
+            <span className="absolute top-2.5 right-2.5 bg-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-sm flex items-center gap-1 border border-amber-400 z-10">
               <FiStar size={11} className="fill-slate-950 text-slate-950" />
               <span>{t('eventCard.featuredBadge')}</span>
             </span>

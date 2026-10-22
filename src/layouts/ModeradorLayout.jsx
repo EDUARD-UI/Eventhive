@@ -9,7 +9,6 @@ export default function ModeradorLayout({
   onSelect,
   title,
   subtitle,
-  badgeText = 'Módulo de Moderación',
   searchTerm,
   onSearchChange,
   searchPlaceholder = 'Buscar en moderación...',
@@ -46,7 +45,6 @@ export default function ModeradorLayout({
           <Header
             title={title}
             subtitle={subtitle}
-            badgeText={badgeText}
             showSearch={Boolean(onSearchChange)}
             searchTerm={searchTerm}
             onSearchChange={onSearchChange}

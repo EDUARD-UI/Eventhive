@@ -92,7 +92,6 @@ export default function MarketingPanel() {
         <div className="shrink-0 z-20">
           <Header
             title={getHeaderTitle()}
-            badgeText="Panel de Marketing"
             userName={userName}
             userInitials={userInitials}
             userPhoto={userPhoto}

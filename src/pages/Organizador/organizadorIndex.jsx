@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import StandardLayout from '../../layouts/StandardLayout.jsx';
+import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import DataTable from '../../components/Shared/DataTable.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
@@ -281,6 +282,7 @@ export default function OrganizadorIndex() {
   }, [isOperador, userPermisos]);
 
   const [activeItem, setActiveItem] = useState('resumen');
+  const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
     // Si la pestaña actual no está permitida para el operador, volver a resumen
@@ -337,7 +339,7 @@ export default function OrganizadorIndex() {
 
   const loadData = useCallback(() => {
     // 1. Datos de la organización
-    organizerService
+    const p1 = organizerService
       .getMiOrganizacion()
       .then((data) => {
         if (data) setOrgData(data);
@@ -345,7 +347,7 @@ export default function OrganizadorIndex() {
       .catch(() => {});
 
     // 2. Estadísticas oficiales de la organización (GET /api/organizaciones/mi-organizacion/estadisticas)
-    organizerService
+    const p2 = organizerService
       .getEstadisticasMiOrganizacion()
       .then((res) => {
         if (res) {
@@ -364,7 +366,7 @@ export default function OrganizadorIndex() {
       });
 
     // 3. Eventos de la organización
-    organizerService
+    const p3 = organizerService
       .getEventosOrganizador({ page: 0, size: 200 })
       .then((events) => {
         const list = events || [];
@@ -394,7 +396,13 @@ export default function OrganizadorIndex() {
       .catch(() => {});
 
     // 4. Cartelera inicial
-    fetchCarteleraPage(0);
+    const p4 = fetchCarteleraPage(0);
+
+    Promise.allSettled([p1, p2, p3, p4]).finally(() => {
+      setTimeout(() => {
+        setPageLoading(false);
+      }, 550);
+    });
   }, [fetchCarteleraPage]);
 
   useEffect(() => {
@@ -701,6 +709,16 @@ export default function OrganizadorIndex() {
 
     return renderDashboardTab();
   };
+
+  if (pageLoading) {
+    return (
+      <HiveBeeLoader
+        text="Cargando..."
+        subtext="Panel de Organización"
+        fullScreen={true}
+      />
+    );
+  }
 
   return (
     <StandardLayout

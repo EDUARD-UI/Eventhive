@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
 import {
   FiCheck,
   FiMail,
@@ -344,6 +345,16 @@ export default function PerfilOrganizador() {
 
   const orgDisplayImage = orgImagePreview || orgProfile.urlLogo;
   const repDisplayImage = repImagePreview || repProfile.urlImagenPerfil || repProfile.imagenPerfil;
+
+  if (orgLoading && repLoading) {
+    return (
+      <HiveBeeLoader
+        text="Cargando..."
+        subtext="Cargando perfil de la organización"
+        fullScreen={false}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

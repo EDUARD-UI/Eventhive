@@ -745,7 +745,6 @@ export default function AdminPanel() {
       activeItem={currentTab}
       onSelect={handleSelectTab}
       title="Administración Central"
-      badgeText="Event Hive Control"
     >
       {/* Toast de Notificaciones Flotante */}
       {toast && (

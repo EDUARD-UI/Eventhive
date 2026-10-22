@@ -70,13 +70,7 @@ export default function Footer({ onHelpClick }) {
                 </Link>
               </li>
               <li>
-                <button
-                  type="button"
-                  onClick={onHelpClick}
-                  className="hover:text-amber-700 dark:hover:text-amber-400 transition-colors duration-200 text-left cursor-pointer"
-                >
-                  {t('footer.helpCenter')}
-                </button>
+
               </li>
             </ul>
           </div>

@@ -81,14 +81,14 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
         </div>
 
         <div
-          className={`mx-auto flex w-full items-center justify-between lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] ${embedded
+          className={`mx-auto flex w-full items-center justify-between xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] ${embedded
               ? `max-w-7xl xl:max-w-[1600px] gap-4 px-4 py-4 sm:px-6 sm:py-5 md:px-8 xl:px-12 ${isDark ? 'text-white' : 'text-slate-800'
               }`
               : 'max-w-7xl xl:max-w-[1600px] gap-4 px-4 py-3 sm:px-6 xl:px-10'
             }`}
         >
           {/* Logo de Marca con Tooltip Explicativo "Volver" */}
-          <div className="flex min-w-0 items-center gap-3 sm:gap-5 lg:justify-self-start">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-5 xl:justify-self-start">
             <div className="relative group/logo">
               <Link
                 to="/"
@@ -112,7 +112,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
           </div>
 
           {/* Menú de Navegación Central */}
-          <nav className="hidden min-w-0 items-center justify-center gap-4 text-sm font-medium xl:gap-6 lg:flex lg:justify-self-center">
+          <nav className="hidden min-w-0 items-center justify-center gap-4 text-sm font-medium xl:flex xl:gap-6 xl:justify-self-center">
             {NAV_LINKS.map((link) => {
               const isActive = location.pathname === link.href;
               const translatedLabel =
@@ -156,7 +156,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
           </nav>
 
           {/* Acciones, Selector de Idioma, Botón Tema y Autenticación */}
-          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5 lg:justify-self-end">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5 xl:justify-self-end">
             {/* Selector de idioma ES / EN al lado del alternador de tema */}
             <LanguageSwitcher />
 
@@ -179,7 +179,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
             </button>
 
             {currentUser ? (
-              <div className="hidden items-center gap-2 lg:flex ml-3 sm:ml-5 xl:ml-7 pl-4 sm:pl-6 border-l border-slate-200 dark:border-white/10">
+              <div className="hidden items-center gap-2 xl:flex ml-3 sm:ml-5 xl:ml-7 pl-4 sm:pl-6 border-l border-slate-200 dark:border-white/10">
                 <Link
                   to={panelPath}
                   className={`flex max-w-[240px] items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${isDark
@@ -215,7 +215,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
                 </button>
               </div>
             ) : (
-              <div className={`hidden items-center gap-3 sm:gap-4 lg:flex ml-3 sm:ml-6 xl:ml-8 pl-4 sm:pl-6 border-l ${isDark ? 'border-white/10' : 'border-slate-200'
+              <div className={`hidden items-center gap-3 sm:gap-4 xl:flex ml-3 sm:ml-6 xl:ml-8 pl-4 sm:pl-6 border-l ${isDark ? 'border-white/10' : 'border-slate-200'
                 }`}>
                 <button
                   type="button"
@@ -243,7 +243,7 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
               onClick={open}
               aria-label={t('navbar.openMenu')}
               aria-expanded={isOpen}
-              className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg transition-colors duration-200 cursor-pointer lg:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${isDark
+              className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg transition-colors duration-200 cursor-pointer xl:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${isDark
                   ? 'text-slate-200 hover:bg-slate-800 hover:text-white border border-white/10'
                   : 'text-[#0B132B] hover:bg-slate-100 border border-slate-200/80'
                 }`}

@@ -8,7 +8,6 @@ export default function AdminLayout({
   activeItem,
   onSelect,
   title,
-  badgeText = 'Panel de Administración',
   searchTerm,
   onSearchChange,
   children,
@@ -42,7 +41,6 @@ export default function AdminLayout({
         <div className="shrink-0 z-20">
           <Header
             title={title}
-            badgeText={badgeText}
             showSearch={Boolean(onSearchChange)}
             searchTerm={searchTerm}
             onSearchChange={onSearchChange}

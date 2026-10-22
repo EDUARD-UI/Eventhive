@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { FiSearch, FiX, FiCalendar, FiSliders, FiGrid } from 'react-icons/fi';
 import Navbar from '../components/usersComponets/Navbar.jsx';
+import HiveBeeLoader from '../components/common/HiveBeeLoader.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
 import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
@@ -28,11 +29,9 @@ const MASONRY_ASPECTS = [
   'standard',
   'tall',
   'wide',
-  'portrait',
   'standard',
-  'wide',
-  'compact',
   'tall',
+  'wide',
 ];
 
 export default function BuscarEventosPage() {
@@ -79,6 +78,7 @@ export default function BuscarEventosPage() {
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initialScreenLoading, setInitialScreenLoading] = useState(true);
   const [categoryList, setCategoryList] = useState([]);
   const [featuredCategories, setFeaturedCategories] = useState([]);
   const [featuredEvents, setFeaturedEvents] = useState([]);
@@ -86,6 +86,16 @@ export default function BuscarEventosPage() {
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [searchInput, setSearchInput] = useState(tituloParam);
+
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => {
+        setInitialScreenLoading(false);
+      }, 550);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
+
 
   // Cargar categorías disponibles y eventos destacados para el temporizador
   useEffect(() => {
@@ -329,6 +339,16 @@ export default function BuscarEventosPage() {
     });
     return cols;
   }, [pageSize, colCount]);
+
+  if (initialScreenLoading) {
+    return (
+      <HiveBeeLoader
+        text="Cargando..."
+        subtext="Cartelera de eventos en Cartagena"
+        fullScreen={true}
+      />
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-slate-50 dark:bg-[#0B0F19] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body relative transition-colors duration-200">
