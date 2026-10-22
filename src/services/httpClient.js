@@ -161,7 +161,13 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
   const payload = await response.json().catch(() => null);
 
   if (!response.ok || payload?.success === false) {
-    const error = new Error(payload?.mensaje || 'Ocurrió un error al procesar la solicitud.');
+    const errorMsg =
+      payload?.mensaje ||
+      payload?.message ||
+      payload?.error ||
+      (typeof payload?.data === 'string' ? payload.data : null) ||
+      'Ocurrió un error al procesar la solicitud.';
+    const error = new Error(errorMsg);
     error.status = response.status;
     error.payload = payload;
     throw error;

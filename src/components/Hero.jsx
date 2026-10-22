@@ -4,8 +4,7 @@ import { FiArrowRight, FiMapPin } from 'react-icons/fi';
 import BeeParticles from './home/BeeParticles.jsx';
 import CartagenaHiveSkyline from './home/CartagenaHiveSkyline.jsx';
 import HexagonalHivePattern from './common/HexagonalHivePattern.jsx';
-import promocionalVideo from '../assets/promocional.mp4';
-import cartagenaHeroPoster from '../assets/cartagena-hero.jpg';
+import promocionalVideo from '../assets/promocional.mov';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useLanguage } from '../context/LanguageContext.jsx';
 
@@ -137,18 +136,10 @@ export default function Hero() {
             isMounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-[0.98]'
           }`}
         >
-          {/* Fondo multimedia: Imagen póster de respaldo inmediata + Video con fade-in */}
+          {/* Fondo multimedia: Video promocional en formato .mov sin imagen estática de respaldo */}
           <div className="absolute inset-0 z-0 overflow-hidden bg-slate-950">
-            <img
-              src={cartagenaHeroPoster}
-              alt="Cartagena de Indias"
-              className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 ease-out ${
-                isVideoReady ? 'opacity-0' : 'opacity-100'
-              }`}
-            />
             <video
               src={promocionalVideo}
-              poster={cartagenaHeroPoster}
               autoPlay
               loop
               muted
@@ -157,9 +148,7 @@ export default function Hero() {
               onLoadedData={() => setIsVideoReady(true)}
               onCanPlay={() => setIsVideoReady(true)}
               onPlaying={() => setIsVideoReady(true)}
-              className={`w-full h-full object-cover object-center transition-opacity duration-700 ease-out ${
-                isVideoReady ? 'opacity-100' : 'opacity-0'
-              }`}
+              className="w-full h-full object-cover object-center"
             />
             {/* Gradiente oscuro cinematográfico que garantiza legibilidad óptima de los textos */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/70 to-slate-950/40 pointer-events-none" />
@@ -299,20 +288,10 @@ export default function Hero() {
                   style={{ clipPath: 'url(#heroMediaShape)' }}
                   className="relative w-full h-full overflow-hidden bg-slate-950 transition-all duration-500 ease-out"
                 >
-                  {/* Póster de alta calidad inmediato para eliminar por completo la pantalla en negro */}
-                  <img
-                    src={cartagenaHeroPoster}
-                    alt="Cartagena de Indias"
-                    className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 ease-out pointer-events-none ${
-                      isVideoReady ? 'opacity-0' : 'opacity-100'
-                    }`}
-                  />
-
-                  {/* Video con transición de fade-in cuando los datos estén listos */}
+                  {/* Video promocional en formato .mov: carga directa sin imagen estática de respaldo */}
                   <video
                     ref={videoRef}
                     src={promocionalVideo}
-                    poster={cartagenaHeroPoster}
                     autoPlay
                     loop
                     muted
@@ -325,9 +304,7 @@ export default function Hero() {
                       e.currentTarget.playbackRate = 0.75;
                       setIsVideoReady(true);
                     }}
-                    className={`w-full h-full object-cover object-center scale-100 group-hover:scale-105 transition-all duration-700 ease-out ${
-                      isVideoReady ? 'opacity-100' : 'opacity-0'
-                    }`}
+                    className="w-full h-full object-cover object-center scale-100 group-hover:scale-105 transition-all duration-700 ease-out"
                   />
 
                   {/* Sombra ambiental cinematográfica para contraste */}

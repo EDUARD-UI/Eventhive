@@ -21,6 +21,7 @@ import Terminos from '../pages/SobreNosotros/Terminos.jsx';
 import Contacto from '../pages/SobreNosotros/Contacto.jsx';
 import NotFoundPage from '../pages/NotFoundPage.jsx';
 import RecuperarContrasenaPage from '../pages/RecuperarContrasenaPage.jsx';
+import AceptarInvitacionPage from '../pages/AceptarInvitacionPage.jsx';
 
 /**
  * Si el usuario ya está autenticado e intenta ir a /iniciosesion o /registro,
@@ -184,6 +185,7 @@ export default function AppRouter() {
         />
         <Route path="/olvide-contrasena" element={<Navigate to="/recuperar-contrasena" replace />} />
         <Route path="/restablecer-contrasena" element={<RecuperarContrasenaPage />} />
+        <Route path="/aceptar-invitacion" element={<AceptarInvitacionPage />} />
 
         {/* Fallback de ruta no encontrada: página 404 personalizada */}
         <Route path="*" element={<NotFoundPage />} />

@@ -34,16 +34,11 @@ export const promotionPlanService = {
 
   /**
    * Lista todos los planes configurados para el panel de marketing:
-   * GET /api/marketing/planes (con fallback a /promociones/planes)
+   * GET /api/marketing/planes
    */
   async getPlanesMarketing() {
     try {
-      let data;
-      try {
-        data = await httpClient.get('/marketing/planes');
-      } catch {
-        data = await httpClient.get('/promociones/planes');
-      }
+      const data = await httpClient.get('/marketing/planes');
       const list = Array.isArray(data) ? data : data?.data || data?.content || [];
       return list.map((p) => ({
         id: p.id,
@@ -57,8 +52,12 @@ export const promotionPlanService = {
         pautaRedes: Boolean(p.pautaRedes || p.llevaPautaRedes),
       }));
     } catch (err) {
+      if (err.status === 401 || err.status === 403) {
+        throw err;
+      }
       console.warn('Error al consultar planes en marketing:', err);
-      return [];
+      // Fallback a planes públicos solo si no es un error de autorización
+      return this.getPlanesPublicos();
     }
   },
 
@@ -98,18 +97,16 @@ export const promotionPlanService = {
 
   /**
    * Consulta eventos con pago de promoción confirmado:
-   * GET /api/marketing/eventos-promocionados (o /promociones)
+   * GET /api/marketing/eventos-promocionados
    */
   async getEventosPromocionados() {
     try {
-      let data;
-      try {
-        data = await httpClient.get('/marketing/eventos-promocionados');
-      } catch {
-        data = await httpClient.get('/promociones', { page: 0, size: 100 });
-      }
+      const data = await httpClient.get('/marketing/eventos-promocionados');
       return Array.isArray(data) ? data : data?.content || data?.data || [];
     } catch (err) {
+      if (err.status === 401 || err.status === 403) {
+        throw err;
+      }
       console.warn('Error al obtener eventos promocionados:', err);
       return [];
     }
@@ -117,11 +114,11 @@ export const promotionPlanService = {
 
   /**
    * Asigna la imagen destacada para el carrusel (solo planes premium):
-   * PUT /api/promociones/eventos/{eventoId}/posicionar
+   * POST /api/promociones/eventos/{eventoId}/posicionar
    * Body: { urlImagenDestacado: string }
    */
   async asignarImagenPromocional(eventoId, urlImagenDestacado) {
-    return httpClient.put(`/promociones/eventos/${eventoId}/posicionar`, {
+    return httpClient.post(`/promociones/eventos/${eventoId}/posicionar`, {
       urlImagenDestacado: urlImagenDestacado?.trim(),
     });
   },

@@ -278,9 +278,14 @@ export const organizerService = {
     return httpClient.get('/organizaciones/invitaciones-enviadas', { page, size });
   },
 
-  /** POST /api/organizaciones/invitar?correo=... */
+  /** POST /api/organizaciones/invitar */
   invitarOperador(correo) {
-    return httpClient.post('/organizaciones/invitar', null, { params: { correo } });
+    const correoTrimmed = (correo || '').trim();
+    return httpClient.post(
+      '/organizaciones/invitar',
+      { correo: correoTrimmed, rol: 'OPERADOR' },
+      { params: { correo: correoTrimmed } }
+    );
   },
 
   /** DELETE /api/organizaciones/expulsar-operador/{operadorId} */

@@ -185,7 +185,6 @@ export default function ModalInvitarTrabajadorAdmin({
                 >
                   <option value="MODERADOR">MODERADOR (Revisión y supervisión de eventos)</option>
                   <option value="MARKETING">MARKETING (Gestión de banners y promociones)</option>
-                  <option value="ADMINISTRADOR">ADMINISTRADOR (Gestión general del sistema)</option>
                 </select>
               </div>
               <p className="text-[11px] text-slate-500 mt-1">

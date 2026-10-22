@@ -63,6 +63,7 @@ export default function MarketingPromocionesView() {
   });
   const [savingPlan, setSavingPlan] = useState(false);
   const [planFormError, setPlanFormError] = useState(null);
+  const [authError, setAuthError] = useState(null);
 
   // Cargar planes reales desde el backend
   const loadPlanes = useCallback(async () => {
@@ -71,7 +72,13 @@ export default function MarketingPromocionesView() {
       const data = await promotionPlanService.getPlanesMarketing();
       setPlanes(data);
     } catch (err) {
-      console.warn('Error al cargar planes de promoción:', err);
+      if (err.status === 403) {
+        setAuthError('Acceso denegado (403): Se requieren permisos de MARKETING o ADMINISTRADOR para gestionar planes y eventos.');
+      } else if (err.status === 401) {
+        setAuthError('Tu sesión ha expirado o no es válida. Por favor, inicia sesión nuevamente.');
+      } else {
+        console.warn('Error al cargar planes de promoción:', err);
+      }
     } finally {
       setLoadingPlanes(false);
     }
@@ -113,7 +120,13 @@ export default function MarketingPromocionesView() {
 
       setPromociones(mapped);
     } catch (err) {
-      console.warn('Error al cargar promociones de marketing:', err);
+      if (err.status === 403) {
+        setAuthError('Acceso denegado (403): No cuentas con permisos de MARKETING o ADMINISTRADOR para consultar eventos promocionados.');
+      } else if (err.status === 401) {
+        setAuthError('Tu sesión ha expirado o no es válida. Por favor, inicia sesión nuevamente.');
+      } else {
+        console.warn('Error al cargar promociones de marketing:', err);
+      }
     } finally {
       setLoading(false);
     }
@@ -330,6 +343,7 @@ export default function MarketingPromocionesView() {
           <button
             type="button"
             onClick={() => {
+              setAuthError(null);
               fetchPromociones();
               loadPlanes();
             }}
@@ -340,6 +354,23 @@ export default function MarketingPromocionesView() {
           </button>
         </div>
       </div>
+
+      {/* Alerta de Autorización / Sesión */}
+      {authError && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-semibold flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+            <span>{authError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAuthError(null)}
+            className="text-amber-600 hover:text-amber-800 font-bold ml-2 text-sm"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Subnavegación de Pestañas */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-3">

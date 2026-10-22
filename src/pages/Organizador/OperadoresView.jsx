@@ -25,11 +25,10 @@ import Badge from '../../components/Shared/Badge.jsx';
 import ModalEnviarCorreo from '../../components/Shared/ModalEnviarCorreo.jsx';
 
 const PERMISOS_DISPONIBLES = [
-  { id: 'CHECK_IN', label: 'Check-in de Asistentes', desc: 'Escanear boletos y validar ingresos al evento' },
-  { id: 'CREAR_EVENTO', label: 'Crear Eventos', desc: 'Registrar nuevos eventos para la organización' },
-  { id: 'EDITAR_EVENTO', label: 'Editar Eventos', desc: 'Modificar información y precios de eventos existentes' },
-  { id: 'CANCELAR_EVENTO', label: 'Cancelar Eventos', desc: 'Suspender o cancelar eventos publicados' },
-  { id: 'POSICIONAMIENTO', label: 'Gestión de Posicionamiento', desc: 'Acceso al módulo de posicionamiento y planes promocionales' },
+  { id: 'CHECK_IN', label: 'Check-in de Asistentes', desc: 'Escanear boletos y validar ingresos con código QR al evento' },
+  { id: 'CREAR_EVENTO', label: 'Crear Eventos', desc: 'Registrar nuevos borradores de eventos para la organización' },
+  { id: 'EDITAR_EVENTO', label: 'Editar Eventos', desc: 'Modificar detalles, fechas, localidades o precios de eventos existentes' },
+  { id: 'CANCELAR_EVENTO', label: 'Cancelar Eventos', desc: 'Suspender o cancelar eventos publicados de la organización' },
 ];
 
 export default function OperadoresView() {
@@ -38,15 +37,21 @@ export default function OperadoresView() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('operadores'); // 'operadores' | 'invitaciones'
 
-  // Modal Enviar Correo
+  // Modal Enviar Correo (Gmail style)
   const [emailModal, setEmailModal] = useState({ isOpen: false, email: '', name: '', subject: '' });
 
-  // Modal Invitar
+  // Drawer Lateral Invitar Operador
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [isInviting, setIsInviting] = useState(false);
+  const [inviteError, setInviteError] = useState(null);
 
-  // Modal Permisos
+  // Drawer Lateral Expulsar Operador
+  const [operadorToExpulsar, setOperadorToExpulsar] = useState(null);
+  const [isExpelling, setIsExpelling] = useState(false);
+  const [expulsarError, setExpulsarError] = useState(null);
+
+  // Drawer Lateral Permisos
   const [editingOperador, setEditingOperador] = useState(null);
   const [selectedPermisos, setSelectedPermisos] = useState([]);
   const [isUpdatingPermisos, setIsUpdatingPermisos] = useState(false);
@@ -85,70 +90,83 @@ export default function OperadoresView() {
     fetchData();
   }, []);
 
-  // Enviar invitación
+  // Enviar invitación oficial a operador
   const handleInvite = async (e) => {
     e.preventDefault();
-    if (!inviteEmail.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Correo requerido',
-        text: 'Por favor ingresa el correo del operador a invitar.',
-      });
+    const emailTrim = inviteEmail.trim();
+    if (!emailTrim) {
+      setInviteError('Por favor ingresa el correo del operador a invitar.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTrim)) {
+      setInviteError('Ingresa un correo electrónico con formato válido.');
       return;
     }
 
     setIsInviting(true);
+    setInviteError(null);
     try {
-      await organizerService.invitarOperador(inviteEmail.trim());
+      await organizerService.invitarOperador(emailTrim);
       Swal.fire({
         icon: 'success',
         title: 'Invitación enviada',
-        text: `Se ha enviado la invitación exitosamente a ${inviteEmail.trim()}.`,
+        text: `Se ha enviado la invitación exitosamente a ${emailTrim}. El enlace será válido por 24 horas.`,
       });
       setInviteEmail('');
       setShowInviteModal(false);
       fetchData();
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error al enviar invitación',
-        text: err.message || 'No se pudo enviar la invitación. Verifica que el usuario exista y no esté ya registrado.',
-      });
+      setInviteError(
+        err.message ||
+          'No se pudo enviar la invitación. Verifica que el usuario exista y no pertenezca ya a otra organización.'
+      );
     } finally {
       setIsInviting(false);
     }
   };
 
-  // Expulsar operador
-  const handleExpulsar = async (operador) => {
-    const res = await Swal.fire({
-      icon: 'warning',
-      title: '¿Expulsar operador?',
-      text: `¿Estás seguro de que deseas retirar a ${operador.nombre || operador.correo || 'este operador'} de tu organización?`,
-      showCancelButton: true,
-      confirmButtonText: 'Sí, expulsar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#e11d48',
-    });
-
-    if (!res.isConfirmed) return;
-
+  // Reenviar invitación desde la tabla de invitaciones
+  const handleReenviarInvitacion = async (correo) => {
     try {
-      await organizerService.expulsarOperador(operador.id || operador.operadorId);
+      await organizerService.invitarOperador(correo);
       Swal.fire({
         icon: 'success',
-        title: 'Operador retirado',
-        text: 'El operador ha sido retirado de la organización.',
-        timer: 1500,
+        title: 'Invitación reenviada',
+        text: `Se ha generado un nuevo enlace válido por 24 horas y se reenvió el correo a ${correo}.`,
+        timer: 2000,
         showConfirmButton: false,
       });
       fetchData();
     } catch (err) {
       Swal.fire({
         icon: 'error',
-        title: 'No se pudo expulsar',
-        text: err.message || 'Ocurrió un error al intentar expulsar al operador.',
+        title: 'Error al reenviar',
+        text: err.message || 'No fue posible reenviar la invitación en este momento.',
       });
+    }
+  };
+
+  // Expulsar operador confirmado desde el Drawer
+  const handleConfirmExpulsar = async () => {
+    if (!operadorToExpulsar) return;
+    setIsExpelling(true);
+    setExpulsarError(null);
+    try {
+      await organizerService.expulsarOperador(operadorToExpulsar.id || operadorToExpulsar.operadorId);
+      Swal.fire({
+        icon: 'success',
+        title: 'Operador retirado',
+        text: 'El operador ha sido desvinculado de la organización.',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      setOperadorToExpulsar(null);
+      fetchData();
+    } catch (err) {
+      setExpulsarError(err.message || 'Ocurrió un error al intentar expulsar al operador.');
+    } finally {
+      setIsExpelling(false);
     }
   };
 
@@ -220,6 +238,14 @@ export default function OperadoresView() {
             className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors"
           >
             <FiRefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setEmailModal({ isOpen: true, email: '', name: '', subject: '' })}
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider shadow-2xs transition-all active:scale-95 cursor-pointer"
+          >
+            <FiMail size={15} />
+            <span>Redactar</span>
           </button>
           <button
             type="button"
@@ -421,7 +447,7 @@ export default function OperadoresView() {
 
                       <button
                         type="button"
-                        onClick={() => handleExpulsar(op)}
+                        onClick={() => setOperadorToExpulsar(op)}
                         className="px-2 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
                         title="Expulsar de la organización"
                       >
@@ -457,6 +483,7 @@ export default function OperadoresView() {
                     <th className="py-3.5 px-4">Correo Invitado</th>
                     <th className="py-3.5 px-4">Estado</th>
                     <th className="py-3.5 px-4">Fecha de Envío</th>
+                    <th className="py-3.5 px-4 text-right">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -468,12 +495,13 @@ export default function OperadoresView() {
                         : estado === 'RECHAZADA'
                         ? 'danger'
                         : 'warning';
+                    const targetEmail = inv.correo || inv.correoInvitado || inv.email;
 
                     return (
                       <tr key={inv.id || idx} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-3.5 px-4 flex items-center gap-2 font-semibold text-slate-900">
                           <FiMail className="text-slate-400" size={14} />
-                          <span>{inv.correo || inv.email}</span>
+                          <span>{targetEmail}</span>
                         </td>
                         <td className="py-3.5 px-4">
                           <Badge variant={badgeVariant} size="sm">
@@ -481,7 +509,20 @@ export default function OperadoresView() {
                           </Badge>
                         </td>
                         <td className="py-3.5 px-4 text-slate-500">
-                          {inv.fechaEnvio || inv.creadoEn || 'Fecha no registrada'}
+                          {inv.fechaEnvio || inv.fechaInvitacion || inv.creadoEn || 'Fecha no registrada'}
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          {(estado === 'PENDIENTE' || estado === 'EXPIRADA' || estado === 'RECHAZADA') && (
+                            <button
+                              type="button"
+                              onClick={() => handleReenviarInvitacion(targetEmail)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                              title="Reenviar enlace de invitación (válido por 24h)"
+                            >
+                              <FiRefreshCw size={11} />
+                              <span>Reenviar</span>
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -493,71 +534,201 @@ export default function OperadoresView() {
         )
       )}
 
-      {/* MODAL: Invitar Operador */}
+      {/* DRAWER LATERAL DERECHO: Invitar Operador */}
       {showInviteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl border border-slate-200 max-w-md w-full p-6 shadow-2xl relative">
-            <button
-              type="button"
-              onClick={() => setShowInviteModal(false)}
-              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-            >
-              <FiX size={16} />
-            </button>
+        <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
+          <div
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
+            onClick={() => setShowInviteModal(false)}
+          />
 
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-brand flex items-center justify-center">
-                <FiUserPlus size={18} />
-              </div>
-              <div>
-                <h3 className="font-display text-lg font-bold text-slate-900">
-                  Invitar Operador
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Ingresa el correo del colaborador para vincularlo a tu organización.
-                </p>
-              </div>
-            </div>
-
-            <form onSubmit={handleInvite} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Correo Electrónico
-                </label>
-                <input
-                  type="email"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="operador@ejemplo.com"
-                  className="w-full text-xs font-semibold px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
-                  required
-                />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  El usuario recibirá una invitación oficial para unirse a tu equipo.
-                </p>
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-2">
+          <div
+            className="relative z-50 w-full sm:w-[480px] md:w-[520px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              {/* Cabecera del Drawer */}
+              <div className="bg-[#0B1B3D] text-white p-6 relative">
                 <button
                   type="button"
                   onClick={() => setShowInviteModal(false)}
-                  disabled={isInviting}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider transition-all"
+                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                  title="Cerrar panel"
                 >
-                  Cancelar
+                  <FiX size={18} />
                 </button>
-                <button
-                  type="submit"
-                  disabled={isInviting}
-                  className="px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-black uppercase tracking-wider shadow-sm transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer"
-                >
-                  {isInviting && (
-                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  )}
-                  <span>Enviar Invitación</span>
-                </button>
+
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-md">
+                    <FiUserPlus size={22} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-amber-300 inline-block mb-1">
+                      Invitación de Operador
+                    </span>
+                    <h3 className="font-display text-lg font-bold text-white">
+                      Invitar a tu Organización
+                    </h3>
+                  </div>
+                </div>
               </div>
-            </form>
+
+              {/* Formulario */}
+              <form onSubmit={handleInvite} className="p-6 space-y-5">
+                {inviteError && (
+                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+                    <FiAlertCircle className="shrink-0 text-rose-600" size={15} />
+                    <span>{inviteError}</span>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                    Correo Electrónico del Operador <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => {
+                      setInviteEmail(e.target.value);
+                      if (inviteError) setInviteError(null);
+                    }}
+                    placeholder="operador@ejemplo.com"
+                    className="w-full text-xs font-semibold px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all text-slate-800"
+                    required
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1.5">
+                    El usuario recibirá un correo con un enlace criptográfico válido por 24 horas para aceptar e integrarse al equipo.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
+                    <FiShield className="text-amber-600 shrink-0" size={15} />
+                    <span>Rol Asignado: OPERADOR</span>
+                  </div>
+                  <p className="text-[11px] text-amber-800/90 leading-relaxed font-normal">
+                    La invitación quedará vinculada automáticamente a tu organización. Una vez aceptada, podrás definir sus permisos para escanear boletos QR, crear y editar eventos.
+                  </p>
+                </div>
+              </form>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowInviteModal(false)}
+                disabled={isInviting}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-white text-xs font-bold uppercase tracking-wider transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleInvite}
+                disabled={isInviting}
+                className="px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-black uppercase tracking-wider shadow-sm transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
+              >
+                {isInviting && (
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
+                <span>Enviar Invitación</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DRAWER LATERAL DERECHO: Expulsar Operador */}
+      {operadorToExpulsar && (
+        <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
+          <div
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
+            onClick={() => setOperadorToExpulsar(null)}
+          />
+
+          <div
+            className="relative z-50 w-full sm:w-[480px] md:w-[520px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              {/* Cabecera del Drawer */}
+              <div className="bg-rose-950 text-white p-6 relative">
+                <button
+                  type="button"
+                  onClick={() => setOperadorToExpulsar(null)}
+                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                  title="Cerrar panel"
+                >
+                  <FiX size={18} />
+                </button>
+
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-500 text-white flex items-center justify-center font-black shadow-md">
+                    <FiTrash2 size={22} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-rose-300 inline-block mb-1">
+                      Desvinculación Oficial
+                    </span>
+                    <h3 className="font-display text-lg font-bold text-white">
+                      Expulsar Operador
+                    </h3>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contenido */}
+              <div className="p-6 space-y-5">
+                {expulsarError && (
+                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+                    <FiAlertCircle className="shrink-0 text-rose-600" size={15} />
+                    <span>{expulsarError}</span>
+                  </div>
+                )}
+
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                  <p className="text-xs text-slate-500 uppercase font-bold">Colaborador a retirar:</p>
+                  <p className="text-sm font-black text-slate-900">
+                    {operadorToExpulsar.nombre || 'Operador'}
+                  </p>
+                  <p className="text-xs text-slate-600 font-medium">
+                    {operadorToExpulsar.correo}
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-900 leading-relaxed space-y-2">
+                  <p className="font-bold">⚠️ Esta acción tendrá los siguientes efectos inmediatos:</p>
+                  <ul className="list-disc list-inside space-y-1 text-[11px] text-rose-800">
+                    <li>Se removerá la afiliación con tu organización.</li>
+                    <li>Perderá acceso al escaneo y check-in de boletos en tus eventos.</li>
+                    <li>No podrá acceder a la edición ni creación de eventos de tu empresa.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setOperadorToExpulsar(null)}
+                disabled={isExpelling}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-white text-xs font-bold uppercase tracking-wider transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmExpulsar}
+                disabled={isExpelling}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black uppercase tracking-wider shadow-sm transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
+              >
+                {isExpelling && (
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
+                <span>Confirmar Expulsión</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -236,6 +236,23 @@ export default function AdminTrabajadoresView({
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          {/* Botón Redactar Correo estilo Gmail */}
+          <button
+            type="button"
+            onClick={() =>
+              setMailModal({
+                isOpen: true,
+                email: '',
+                name: '',
+                subject: '',
+              })
+            }
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-2xs cursor-pointer"
+          >
+            <Mail size={15} />
+            <span>Redactar Correo</span>
+          </button>
+
           {/* Botón Invitar Trabajador */}
           <button
             type="button"

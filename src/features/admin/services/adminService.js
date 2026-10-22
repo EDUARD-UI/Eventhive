@@ -346,25 +346,16 @@ export const adminService = {
     }
   },
 
-  async invitarTrabajador({ email, nombre, telefono, rol = 'MODERADOR' }) {
-    try {
-      const res = await httpClient.post('/admin/trabajadores/invitar', {
-        email,
-        nombre,
-        telefono,
-        rol,
-      });
-      return {
-        success: true,
-        data: res,
-        mensaje: `Invitación enviada exitosamente a ${email} para el rol ${rol}.`,
-      };
-    } catch {
-      return {
-        success: true,
-        mensaje: `Invitación institucional enviada exitosamente a ${email} para el rol ${rol}.`,
-      };
-    }
+  async invitarRol({ correo, rol = 'MODERADOR' }) {
+    const rolValido = (rol || 'MODERADOR').toUpperCase().trim();
+    return httpClient.post('/admin/correos/invitar', {
+      correo: correo.trim(),
+      rol: rolValido,
+    });
+  },
+
+  async invitarTrabajador({ email, rol = 'MODERADOR' }) {
+    return this.invitarRol({ correo: email, rol });
   },
 
   // 5. USUARIOS DEL SISTEMA (GET /api/usuarios)

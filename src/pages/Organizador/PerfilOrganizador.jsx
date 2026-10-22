@@ -87,6 +87,7 @@ export default function PerfilOrganizador() {
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState('organizacion'); // 'organizacion' | 'representante'
   const [savingDrawer, setSavingDrawer] = useState(false);
+  const [drawerErrors, setDrawerErrors] = useState({});
 
   // Form temporal para el drawer
   const [drawerForm, setDrawerForm] = useState({
@@ -96,6 +97,17 @@ export default function PerfilOrganizador() {
     repNombre: '',
     repTelefono: '',
   });
+
+  // Listener para cerrar drawer con Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isEditDrawerOpen && !savingDrawer) {
+        setIsEditDrawerOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isEditDrawerOpen, savingDrawer]);
 
   // Load organization profile
   const loadOrgData = async () => {
@@ -182,6 +194,7 @@ export default function PerfilOrganizador() {
   // Abrir modal lateral sincronizado con los datos actuales
   const openEditDrawer = (tab = 'organizacion') => {
     setDrawerTab(tab);
+    setDrawerErrors({});
     setDrawerForm({
       razonSocial: orgProfile.razonSocial,
       correoContacto: orgProfile.correoContacto,
@@ -192,17 +205,48 @@ export default function PerfilOrganizador() {
     setIsEditDrawerOpen(true);
   };
 
-  // Guardar cambios desde el modal lateral derecho
+  // Guardar cambios desde el modal lateral derecho con validaciones estrictas
   const handleSaveDrawer = async (e) => {
     if (e) e.preventDefault();
+    setDrawerErrors({});
     setSavingDrawer(true);
 
     try {
       if (drawerTab === 'organizacion') {
+        const rs = (drawerForm.razonSocial || '').trim();
+        const cc = (drawerForm.correoContacto || '').trim();
+        const desc = (drawerForm.descripcion || '').trim();
+
+        const errors = {};
+        if (!rs) {
+          errors.razonSocial = 'La razón social es obligatoria.';
+        } else if (rs.length > 200) {
+          errors.razonSocial = 'La razón social no puede superar 200 caracteres.';
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!cc) {
+          errors.correoContacto = 'El correo de contacto es obligatorio.';
+        } else if (!emailRegex.test(cc)) {
+          errors.correoContacto = 'El formato del correo de contacto no es válido.';
+        } else if (cc.length > 150) {
+          errors.correoContacto = 'El correo no puede superar 150 caracteres.';
+        }
+
+        if (desc.length > 1000) {
+          errors.descripcion = 'La descripción no puede superar 1000 caracteres.';
+        }
+
+        if (Object.keys(errors).length > 0) {
+          setDrawerErrors(errors);
+          setSavingDrawer(false);
+          return;
+        }
+
         const datos = {
-          razonSocial: sanitizeText(drawerForm.razonSocial),
-          correoContacto: drawerForm.correoContacto.trim(),
-          descripcion: drawerForm.descripcion.trim(),
+          razonSocial: sanitizeText(rs),
+          correoContacto: cc,
+          descripcion: desc,
         };
         const fd = new FormData();
         fd.append('datos', new Blob([JSON.stringify(datos)], { type: 'application/json' }));
@@ -224,6 +268,12 @@ export default function PerfilOrganizador() {
       } else {
         const cleanNombre = sanitizeText(drawerForm.repNombre);
         const cleanTelefono = sanitizePhone(drawerForm.repTelefono);
+
+        if (!cleanNombre.trim()) {
+          setDrawerErrors({ repNombre: 'El nombre del representante es obligatorio.' });
+          setSavingDrawer(false);
+          return;
+        }
 
         await userService.updatePerfil({
           nombre: cleanNombre,
@@ -252,7 +302,9 @@ export default function PerfilOrganizador() {
       }
       setIsEditDrawerOpen(false);
     } catch (err) {
-      showErrorAlert('Error al guardar', err?.message || 'No fue posible guardar los cambios.');
+      const msg = err?.message || 'No fue posible guardar los cambios.';
+      setDrawerErrors({ general: msg });
+      showErrorAlert('Error al guardar', msg);
     } finally {
       setSavingDrawer(false);
     }
@@ -731,32 +783,57 @@ export default function PerfilOrganizador() {
                   </button>
                 </div>
 
+                {drawerErrors.general && (
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-800 flex items-center gap-2 mb-3">
+                    <FiAlertCircle size={15} className="text-rose-600 shrink-0" />
+                    <span>{drawerErrors.general}</span>
+                  </div>
+                )}
+
                 {drawerTab === 'organizacion' ? (
                   <form id="org-drawer-form" onSubmit={handleSaveDrawer} className="space-y-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Razón Social / Nombre
+                        Razón Social / Nombre <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="text"
                         value={drawerForm.razonSocial}
-                        onChange={(e) => setDrawerForm((prev) => ({ ...prev, razonSocial: e.target.value }))}
-                        className={inputClass}
+                        onChange={(e) => {
+                          setDrawerForm((prev) => ({ ...prev, razonSocial: e.target.value }));
+                          if (drawerErrors.razonSocial) setDrawerErrors((prev) => ({ ...prev, razonSocial: null }));
+                        }}
+                        className={`${inputClass} ${drawerErrors.razonSocial ? 'border-rose-400 bg-rose-50/20' : ''}`}
                         required
+                        maxLength={200}
                       />
+                      {drawerErrors.razonSocial && (
+                        <p className="text-[11px] text-rose-600 font-semibold mt-1">
+                          {drawerErrors.razonSocial}
+                        </p>
+                      )}
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Correo de Contacto Institucional
+                        Correo de Contacto Institucional <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="email"
                         value={drawerForm.correoContacto}
-                        onChange={(e) => setDrawerForm((prev) => ({ ...prev, correoContacto: e.target.value }))}
-                        className={inputClass}
+                        onChange={(e) => {
+                          setDrawerForm((prev) => ({ ...prev, correoContacto: e.target.value }));
+                          if (drawerErrors.correoContacto) setDrawerErrors((prev) => ({ ...prev, correoContacto: null }));
+                        }}
+                        className={`${inputClass} ${drawerErrors.correoContacto ? 'border-rose-400 bg-rose-50/20' : ''}`}
                         required
+                        maxLength={150}
                       />
+                      {drawerErrors.correoContacto && (
+                        <p className="text-[11px] text-rose-600 font-semibold mt-1">
+                          {drawerErrors.correoContacto}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -766,25 +843,42 @@ export default function PerfilOrganizador() {
                       <textarea
                         rows={4}
                         value={drawerForm.descripcion}
-                        onChange={(e) => setDrawerForm((prev) => ({ ...prev, descripcion: e.target.value }))}
-                        className={`${inputClass} resize-none leading-relaxed`}
+                        onChange={(e) => {
+                          setDrawerForm((prev) => ({ ...prev, descripcion: e.target.value }));
+                          if (drawerErrors.descripcion) setDrawerErrors((prev) => ({ ...prev, descripcion: null }));
+                        }}
+                        className={`${inputClass} resize-none leading-relaxed ${drawerErrors.descripcion ? 'border-rose-400 bg-rose-50/20' : ''}`}
                         placeholder="Describe el perfil y trayectoria cultural de la organización..."
+                        maxLength={1000}
                       />
+                      {drawerErrors.descripcion && (
+                        <p className="text-[11px] text-rose-600 font-semibold mt-1">
+                          {drawerErrors.descripcion}
+                        </p>
+                      )}
                     </div>
                   </form>
                 ) : (
                   <form id="rep-drawer-form" onSubmit={handleSaveDrawer} className="space-y-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Nombre del Representante Legal
+                        Nombre del Representante Legal <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="text"
                         value={drawerForm.repNombre}
-                        onChange={(e) => setDrawerForm((prev) => ({ ...prev, repNombre: e.target.value }))}
-                        className={inputClass}
+                        onChange={(e) => {
+                          setDrawerForm((prev) => ({ ...prev, repNombre: e.target.value }));
+                          if (drawerErrors.repNombre) setDrawerErrors((prev) => ({ ...prev, repNombre: null }));
+                        }}
+                        className={`${inputClass} ${drawerErrors.repNombre ? 'border-rose-400 bg-rose-50/20' : ''}`}
                         required
                       />
+                      {drawerErrors.repNombre && (
+                        <p className="text-[11px] text-rose-600 font-semibold mt-1">
+                          {drawerErrors.repNombre}
+                        </p>
+                      )}
                     </div>
 
                     <div>
