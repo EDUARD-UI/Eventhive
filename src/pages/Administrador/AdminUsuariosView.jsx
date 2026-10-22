@@ -160,6 +160,17 @@ export default function AdminUsuariosView({
             <option value="MARKETING">Marketing</option>
             <option value="ADMINISTRADOR">Administradores</option>
           </select>
+
+          {/* Botón Redactar Correo Estilo Gmail */}
+          <button
+            type="button"
+            onClick={() => setMailModal({ isOpen: true, email: '', name: '', subject: '' })}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-black text-amber-300 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-xs cursor-pointer shrink-0"
+            title="Abrir redactor de correo electrónico"
+          >
+            <Mail size={15} />
+            <span>Redactar</span>
+          </button>
         </div>
       </div>
 

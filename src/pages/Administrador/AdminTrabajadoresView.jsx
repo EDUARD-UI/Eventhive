@@ -263,6 +263,17 @@ export default function AdminTrabajadoresView({
             <span>Invitar Trabajador</span>
           </button>
 
+          {/* Botón Redactar Correo Estilo Gmail */}
+          <button
+            type="button"
+            onClick={() => setMailModal({ isOpen: true, email: '', name: '', subject: '' })}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-xs cursor-pointer"
+            title="Abrir redactor de correo electrónico"
+          >
+            <Mail size={15} className="text-slate-500" />
+            <span>Redactar</span>
+          </button>
+
           {/* Filtro por Rol */}
           <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold gap-1">
             {['TODOS', 'MODERADOR', 'MARKETING'].map((rf) => (
