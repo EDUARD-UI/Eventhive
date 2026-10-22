@@ -532,14 +532,6 @@ export default function PerfilUsuario() {
 
             {/* Tarjeta Identidad */}
             <div className="bg-white dark:bg-[#0B1428] border border-amber-200/80 dark:border-slate-800 rounded-[28px] shadow-sm p-6 relative overflow-hidden transition-all duration-300 hover:shadow-md">
-              <button
-                type="button"
-                onClick={() => setEditModal(true)}
-                title="Editar información de perfil"
-                className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50/80 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                <FiEdit2 size={16} />
-              </button>
 
               <div className="flex flex-col items-center text-center">
                 {/* Input de archivo oculto */}

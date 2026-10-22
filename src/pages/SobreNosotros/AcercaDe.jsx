@@ -113,7 +113,7 @@ function AnimatedCounter({ value, label, icon: Icon, suffix = '' }) {
   return (
     <div
       ref={ref}
-      className={`flex flex-col items-center gap-3 transition-all duration-700 ${
+      className={`flex flex-col items-center gap-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-5 shadow-sm transition-all duration-700 ${
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
       }`}
     >
@@ -229,9 +229,7 @@ export default function AcercaDe() {
               heroMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}
           >
-            <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-amber-500/20 text-amber-300 border border-amber-400/30 mb-6 shadow-xs backdrop-blur-md">
-              ¿Quiénes somos?
-            </span>
+            
             <h1
               id="hero-heading"
               className="text-3xl sm:text-5xl lg:text-6xl font-black leading-tight tracking-tight mb-6 text-white uppercase drop-shadow-sm"
@@ -272,9 +270,7 @@ export default function AcercaDe() {
         >
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-14">
-              <span className="inline-block px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-400/30 mb-3">
-                Propósito
-              </span>
+              
               <h2
                 id="mv-heading"
                 className="text-2xl sm:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase"
@@ -286,7 +282,7 @@ export default function AcercaDe() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Misión */}
               <article
-                className={`group relative rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B1428]/80 p-8 sm:p-10 shadow-sm hover:shadow-xl hover:border-amber-400/50 transition-all duration-700 ease-out transform ${
+                className={`group relative rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-8 sm:p-10 shadow-sm hover:shadow-xl hover:border-amber-400/50 transition-all duration-700 ease-out transform ${
                   mvVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
                 }`}
               >
@@ -303,7 +299,7 @@ export default function AcercaDe() {
 
               {/* Visión */}
               <article
-                className={`group relative rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B1428]/80 p-8 sm:p-10 shadow-sm hover:shadow-xl hover:border-amber-400/50 transition-all duration-700 delay-150 ease-out transform ${
+                className={`group relative rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-8 sm:p-10 shadow-sm hover:shadow-xl hover:border-amber-400/50 transition-all duration-700 delay-150 ease-out transform ${
                   mvVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
                 }`}
               >
@@ -331,9 +327,7 @@ export default function AcercaDe() {
         >
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-14">
-              <span className="inline-block px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-400/30 mb-3">
-                Lo que nos guía
-              </span>
+             
               <h2
                 id="values-heading"
                 className="text-2xl sm:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase"
@@ -380,9 +374,7 @@ export default function AcercaDe() {
           aria-labelledby="metrics-heading"
         >
           <div className="max-w-5xl mx-auto text-center">
-            <span className="inline-block px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-400/30 mb-4">
-              Impacto real
-            </span>
+            
             <h2
               id="metrics-heading"
               className="text-2xl sm:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-14"
@@ -407,9 +399,7 @@ export default function AcercaDe() {
           aria-labelledby="cta-heading"
         >
           <div className="max-w-4xl mx-auto rounded-3xl bg-white dark:bg-[#0B1428] border border-slate-200 dark:border-slate-800 p-8 sm:p-14 text-center shadow-md relative overflow-hidden">
-            <span className="inline-block px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-400/30 mb-4">
-              Únete a la comunidad
-            </span>
+            
             <h2
               id="cta-heading"
               className="text-2xl sm:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-4"

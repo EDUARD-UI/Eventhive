@@ -66,11 +66,26 @@ export const normalizeEvent = (event) => {
     lng: event.longitud,
     promocionado: Boolean(event.promocionado || event.destacado || event.urlImagenDestacado || event.imagenPromocional),
     imagenPromocional: event.imagenPromocional || event.urlImagenDestacado || null,
-    price: event.precio ?? event.localidades?.[0]?.precio ?? null,
+    price:
+      event.precio != null
+        ? Number(event.precio)
+        : event.price != null
+        ? Number(event.price)
+        : Array.isArray(event.localidades) && event.localidades.length > 0
+        ? Number(event.localidades[0]?.precio ?? event.localidades[0]?.price ?? 0)
+        : null,
     minPrice:
       Array.isArray(event.localidades) && event.localidades.length > 0
-        ? Math.min(...event.localidades.map((l) => Number(l.precio || 0)))
-        : event.precio ?? null,
+        ? Math.min(
+            ...event.localidades
+              .map((l) => Number(l.precio ?? l.price))
+              .filter((n) => !isNaN(n) && n >= 0)
+          )
+        : event.precio != null
+        ? Number(event.precio)
+        : event.price != null
+        ? Number(event.price)
+        : null,
     favorite: false,
     photo: event.imagenPromocional || event.urlImagenDestacado || event.foto || event.fotoUrl || event.imagen || event.imagenUrl || event.banner || null,
     organization: event.organizacion || event.organizador,
@@ -261,11 +276,45 @@ export async function getEventsByCategory({ categoriaId, page = 0, size = 12, so
 
 /**
  * Eventos para renderizar en mapa (GET /api/eventos/mapa).
+ * Enriquecido en paralelo con los detalles completos del evento (localidades, precios, foto y lugar).
  */
 export async function getMapEvents({ categoriaId, lat, lng, radioKm } = {}) {
-  const data = await httpClient.get('/eventos/mapa', { categoriaId, lat, lng, radioKm });
-  const events = Array.isArray(data) ? data : data?.content || [];
-  return events.map(normalizeEvent);
+  try {
+    const data = await httpClient.get('/eventos/mapa', { categoriaId, lat, lng, radioKm });
+    const rawEvents = Array.isArray(data) ? data : data?.content || [];
+    if (!rawEvents.length) return [];
+
+    // Enriquecer cada evento del mapa con sus detalles completos (localidades y tarifas de entradas)
+    const enrichedEvents = await Promise.allSettled(
+      rawEvents.map(async (ev) => {
+        try {
+          if (!ev?.id) return ev;
+          const detail = await httpClient.get(`/eventos/${ev.id}`);
+          if (detail && typeof detail === 'object') {
+            return {
+              ...ev,
+              ...detail,
+              // Preservar coordenadas geográficas del endpoint de mapa
+              latitud: ev.latitud ?? detail.latitud,
+              longitud: ev.longitud ?? detail.longitud,
+            };
+          }
+          return ev;
+        } catch {
+          return ev;
+        }
+      })
+    );
+
+    const merged = enrichedEvents.map((res, idx) =>
+      res.status === 'fulfilled' && res.value ? res.value : rawEvents[idx]
+    );
+
+    return merged.map(normalizeEvent);
+  } catch (err) {
+    console.warn('Error consultando /eventos/mapa:', err?.message);
+    return [];
+  }
 }
 
 export const COACHELLA_HEROICA_EVENT = {

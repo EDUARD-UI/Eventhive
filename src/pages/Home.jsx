@@ -6,8 +6,10 @@ import Swal from 'sweetalert2';
 import { showLocationPromptAlert } from '../utils/alertUtils.js';
 import {
   FiArrowRight,
+  FiCalendar,
   FiMapPin,
   FiNavigation,
+  FiTag,
 } from 'react-icons/fi';
 import Hero from '../components/Hero.jsx';
 import FeaturedEventsCarousel from '../components/home/FeaturedEventsCarousel.jsx';
@@ -24,11 +26,55 @@ import EventListCard from '../components/common/EventListCard.jsx';
 import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
 import { getCarouselEvents, getFeaturedEvents, getMapEvents, getUpcomingEvents } from '../services/eventService.js';
 import { getCategoryNames } from '../services/categoryService.js';
+import { formatPrice } from '../utils/formatters.js';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useLanguage } from '../context/LanguageContext.jsx';
 import { useLenisScroll } from '../hooks/useLenisScroll.js';
 
 const toRad = (value) => (value * Math.PI) / 180;
+
+const getEventPriceDisplay = (event) => {
+  if (!event) return 'Boletería disponible';
+
+  // 1. Si tiene localidades configuradas con tarifas reales
+  if (Array.isArray(event.localidades) && event.localidades.length > 0) {
+    const validPrices = event.localidades
+      .map((l) => Number(l.precio ?? l.price))
+      .filter((p) => !isNaN(p) && p >= 0);
+
+    if (validPrices.length > 0) {
+      const min = Math.min(...validPrices);
+      if (min === 0) {
+        const hasPaid = validPrices.some((p) => p > 0);
+        return hasPaid ? `Desde ${formatPrice(Math.min(...validPrices.filter((p) => p > 0)))}` : 'Entrada Libre';
+      }
+      return `Desde ${formatPrice(min)}`;
+    }
+  }
+
+  // 2. Si tiene minPrice numérico válido
+  if (event.minPrice != null && !isNaN(Number(event.minPrice))) {
+    const val = Number(event.minPrice);
+    if (val === 0) return 'Entrada Libre';
+    return `Desde ${formatPrice(val)}`;
+  }
+
+  // 3. Si tiene price / precio numérico válido
+  const rawPrice = event.price ?? event.precio;
+  if (rawPrice != null && !isNaN(Number(rawPrice))) {
+    const val = Number(rawPrice);
+    if (val === 0) return 'Entrada Libre';
+    return `Desde ${formatPrice(val)}`;
+  }
+
+  // 4. Si el evento se marca explícitamente como gratuito
+  if (event.esGratis === true || event.isFree === true || rawPrice === 'Gratis' || rawPrice === '0') {
+    return 'Entrada Libre';
+  }
+
+  // 5. Si no se puede determinar aún el precio
+  return 'Boletería disponible';
+};
 
 const getDistanceKm = (lat1, lng1, lat2, lng2) => {
   const earthRadiusKm = 6371;
@@ -411,15 +457,15 @@ export default function Home() {
         }`}
       >
 
-        <div className="max-w-7xl mx-auto relative z-10 isolate">
-          <div className={`mb-8 flex flex-col items-center justify-center text-center transition-all duration-700 ease-out transform ${
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className={`mb-8 relative z-20 flex flex-col items-center justify-center text-center transition-all duration-700 ease-out transform ${
             mapRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-6">
               {t('home.eventMap')}
             </h2>
 
-            <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3 relative z-30">
               {/* Botón Geolocalización */}
               <button
                 type="button"
@@ -450,7 +496,7 @@ export default function Home() {
               </button>
 
               {/* Selector Categoría con CustomSelect sincronizado con el tema */}
-              <div className="w-48 sm:w-56">
+              <div className="w-48 sm:w-56 relative z-30">
                 <CustomSelect
                   value={selectedCategory}
                   onChange={(event) => setSelectedCategory(event.target.value)}
@@ -461,7 +507,7 @@ export default function Home() {
               </div>
 
               {/* Selector Distancia con CustomSelect sincronizado con el tema */}
-              <div className="w-44 sm:w-52">
+              <div className="w-44 sm:w-52 relative z-30">
                 <CustomSelect
                   value={selectedDistance}
                   onChange={(event) => handleDistanceChange(event.target.value)}
@@ -508,11 +554,14 @@ export default function Home() {
                   icon={userLocationPinIcon()}
                 >
                   <Popup>
-                    <div className="p-2 text-center min-w-[150px]">
-                      <span className="font-bold text-xs text-amber-600 block mb-0.5">
+                    <div className="p-3.5 text-center min-w-[170px] bg-slate-900 text-white rounded-2xl border border-amber-500/20 shadow-xl">
+                      <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                        <FiNavigation size={14} />
+                      </div>
+                      <span className="font-extrabold text-xs text-amber-400 block mb-1 tracking-tight">
                         {t('home.yourCurrentLocation')}
                       </span>
-                      <span className="text-[11px] text-slate-600 block">
+                      <span className="text-[11px] text-slate-300 block leading-tight">
                         {selectedDistance === 'all'
                           ? t('home.referenceLocation')
                           : t('home.searchingInRadius', { km: selectedDistance })}
@@ -528,6 +577,8 @@ export default function Home() {
                     ? getDistanceKm(userLocation.lat, userLocation.lng, Number(event.lat), Number(event.lng))
                     : null;
 
+                const priceDisplay = getEventPriceDisplay(event);
+
                 return (
                   <Marker
                     key={event.id}
@@ -535,30 +586,70 @@ export default function Home() {
                     icon={locationPinIcon()}
                   >
                     <Popup>
-                      <div className="p-2 min-w-[200px]">
-                        <div className="flex items-center justify-between gap-1 mb-1">
-                          <span className="text-[10px] font-bold text-amber-700 uppercase block">
-                            {event.category}
-                          </span>
-                          {distanceToUser != null && (
-                            <span className="text-[10px] font-bold text-slate-950 bg-amber-400 px-1.5 py-0.5 rounded">
-                              {distanceToUser.toFixed(1)} km
+                      <div className="w-[260px] sm:w-[280px] bg-slate-900 text-slate-100 rounded-2xl overflow-hidden shadow-2xl border border-slate-700/60 font-body">
+                        {/* Portada del evento si está disponible */}
+                        {event.photo && (
+                          <div className="relative h-24 sm:h-28 w-full overflow-hidden bg-slate-950">
+                            <img
+                              src={event.photo}
+                              alt={event.title}
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/30 to-transparent" />
+                          </div>
+                        )}
+
+                        <div className="p-3.5 space-y-2.5">
+                          {/* Categoría y Distancia */}
+                          <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                            <span className="text-[10px] font-extrabold tracking-wider text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full uppercase">
+                              {event.category || 'Evento'}
                             </span>
-                          )}
+                            {distanceToUser != null && (
+                              <span className="text-[10px] font-bold text-amber-300 bg-slate-800/90 border border-amber-400/20 px-2 py-0.5 rounded-full">
+                                {distanceToUser.toFixed(1)} km
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Título */}
+                          <h4 className="text-xs sm:text-sm font-extrabold text-white leading-snug line-clamp-2">
+                            {event.title}
+                          </h4>
+
+                          {/* Metadatos con micro-iconos */}
+                          <div className="space-y-1.5 pt-1 text-[11px] text-slate-300 border-t border-slate-800">
+                            {/* Ubicación resumida */}
+                            <div className="flex items-center gap-1.5 text-slate-300 truncate">
+                              <FiMapPin className="text-amber-400 shrink-0" size={13} />
+                              <span className="truncate">{event.location || 'Cartagena de Indias'}</span>
+                            </div>
+
+                            {/* Precio inicial o Entrada Libre según lógica real de localidades */}
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5">
+                                <FiTag className="text-amber-400 shrink-0" size={13} />
+                                <span className="font-semibold text-amber-300">{priceDisplay}</span>
+                              </div>
+                              {event.shortDate && (
+                                <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                                  <FiCalendar size={11} className="shrink-0" />
+                                  <span>{event.shortDate}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Botón CTA táctil */}
+                          <Link
+                            to={`/eventos/${event.id}`}
+                            className="mt-2 w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 active:scale-[0.98] transition-all duration-200 cursor-pointer"
+                          >
+                            <span>{t('home.viewEvent')}</span>
+                            <FiArrowRight size={13} className="shrink-0" />
+                          </Link>
                         </div>
-                        <h4 className="text-xs font-bold text-slate-900 mb-1 leading-snug">
-                          {event.title}
-                        </h4>
-                        <p className="text-[11px] text-slate-600 mb-2 line-clamp-2">
-                          {event.description}
-                        </p>
-                        <Link
-                          to={`/eventos/${event.id}`}
-                          className="text-[11px] font-bold text-amber-600 hover:text-amber-700 inline-flex items-center gap-1 transition-colors"
-                        >
-                          <span>{t('home.viewEvent')}</span>
-                          <FiArrowRight size={11} />
-                        </Link>
                       </div>
                     </Popup>
                   </Marker>

@@ -96,7 +96,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className={`relative overflow-visible select-none min-h-[64vh] sm:min-h-[70vh] lg:min-h-[74vh] max-h-[800px] flex flex-col justify-between transition-colors duration-500 ${
+      className={`relative overflow-visible select-none min-h-[64vh] sm:min-h-[70vh] lg:min-h-[74vh] max-h-[800px] pb-12 sm:pb-16 lg:pb-20 flex flex-col justify-between transition-colors duration-500 ${
         isDark
           ? 'bg-gradient-to-b from-[#0F172A] via-[#090D1A] to-[#05070F] text-white'
           : 'bg-gradient-to-b from-[#EDF4F9] via-[#F8FAFC] to-[#F1F5F9] text-slate-900 border-b border-slate-200/60'

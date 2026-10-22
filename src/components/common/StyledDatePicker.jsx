@@ -19,6 +19,7 @@ export default function StyledDatePicker({
   id,
   name,
   label,
+  inlineLabel = null,
   value,
   onChange,
   minDate,
@@ -142,8 +143,8 @@ export default function StyledDatePicker({
   })();
 
   return (
-    <div className={`space-y-1.5 relative ${className}`} ref={containerRef}>
-      {label && (
+    <div className={`${inlineLabel ? '' : 'space-y-1.5'} relative ${isOpen ? 'z-50' : 'z-10'} ${className}`} ref={containerRef}>
+      {label && !inlineLabel && (
         <label
           htmlFor={id || name}
           className={`block text-[11px] font-bold uppercase tracking-wider ${
@@ -155,49 +156,98 @@ export default function StyledDatePicker({
       )}
 
       {/* Botón / Input visual interactivo */}
-      <div
-        id={id || name}
-        onClick={() => !disabled && setIsOpen((prev) => !prev)}
-        className={`relative flex items-center justify-between rounded-xl border px-3.5 py-2.5 transition-all shadow-2xs cursor-pointer select-none ${
-          isDark
-            ? 'bg-[#0B0F19] border-slate-700 text-white hover:border-slate-500 focus-within:border-amber-400'
-            : 'bg-white border-slate-300 text-slate-900 hover:border-slate-400 focus-within:border-amber-500'
-        } ${isOpen ? 'ring-2 ring-amber-500/30 border-amber-500' : ''} ${
-          error ? 'border-rose-400' : ''
-        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-      >
-        <div className="flex items-center gap-2.5 min-w-0">
-          <FiCalendar
-            size={16}
-            className={`shrink-0 ${isDark ? 'text-amber-400' : 'text-amber-500'}`}
-          />
-          <span
-            className={`text-xs sm:text-sm font-semibold truncate ${
-              formattedDisplay
-                ? (isDark ? 'text-white' : 'text-slate-900')
-                : (isDark ? 'text-slate-500' : 'text-slate-400 font-normal')
-            }`}
-          >
-            {formattedDisplay || placeholder}
-          </span>
-        </div>
+      {inlineLabel ? (
+        <div
+          id={id || name}
+          onClick={() => !disabled && setIsOpen((prev) => !prev)}
+          className={`relative h-[54px] flex items-center justify-between gap-2.5 rounded-2xl border px-3.5 py-2 transition-all shadow-xs backdrop-blur-md cursor-pointer select-none ${
+            isDark
+              ? 'bg-[#0B1428]/95 border-slate-800 text-white hover:border-slate-700'
+              : 'bg-white/95 dark:bg-[#0B1428]/95 border-slate-200/90 dark:border-slate-800 text-slate-900 dark:text-white hover:border-slate-300 dark:hover:border-slate-700'
+          } ${
+            isOpen
+              ? isDark
+                ? 'border-amber-400 ring-2 ring-amber-400/20'
+                : 'border-amber-500 dark:border-amber-400 ring-2 ring-amber-500/15'
+              : ''
+          } ${error ? 'border-rose-400' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          <div className="flex items-center gap-2.5 min-w-0 flex-1 text-left">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/20 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400">
+              <FiCalendar size={15} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 leading-none mb-1">
+                {inlineLabel}
+              </span>
+              <span
+                className={`block truncate text-xs sm:text-[13px] leading-tight ${
+                  formattedDisplay
+                    ? 'font-bold text-slate-900 dark:text-white'
+                    : 'font-semibold text-slate-500 dark:text-slate-400'
+                }`}
+              >
+                {formattedDisplay || placeholder}
+              </span>
+            </div>
+          </div>
 
-        {value && !disabled ? (
-          <button
-            type="button"
-            onClick={handleClear}
-            className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
-            title="Limpiar fecha"
-          >
-            <FiX size={14} />
-          </button>
-        ) : null}
-      </div>
+          {value && !disabled ? (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors shrink-0"
+              title="Limpiar fecha"
+            >
+              <FiX size={14} />
+            </button>
+          ) : null}
+        </div>
+      ) : (
+        <div
+          id={id || name}
+          onClick={() => !disabled && setIsOpen((prev) => !prev)}
+          className={`relative flex items-center justify-between rounded-xl border px-3.5 py-2.5 transition-all shadow-2xs cursor-pointer select-none ${
+            isDark
+              ? 'bg-[#0B0F19] border-slate-700 text-white hover:border-slate-500 focus-within:border-amber-400'
+              : 'bg-white border-slate-300 text-slate-900 hover:border-slate-400 focus-within:border-amber-500'
+          } ${isOpen ? 'ring-2 ring-amber-500/30 border-amber-500' : ''} ${
+            error ? 'border-rose-400' : ''
+          } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <FiCalendar
+              size={16}
+              className={`shrink-0 ${isDark ? 'text-amber-400' : 'text-amber-500'}`}
+            />
+            <span
+              className={`text-xs sm:text-sm font-semibold truncate ${
+                formattedDisplay
+                  ? (isDark ? 'text-white' : 'text-slate-900')
+                  : (isDark ? 'text-slate-500' : 'text-slate-400 font-normal')
+              }`}
+            >
+              {formattedDisplay || placeholder}
+            </span>
+          </div>
+
+          {value && !disabled ? (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+              title="Limpiar fecha"
+            >
+              <FiX size={14} />
+            </button>
+          ) : null}
+        </div>
+      )}
 
       {/* Calendario Flotante Personalizado */}
       {isOpen && (
         <div
-          className={`absolute left-0 mt-2 z-50 w-72 sm:w-80 rounded-2xl border p-4 shadow-2xl backdrop-blur-md transition-all animate-fade-in-up ${
+          className={`absolute left-0 mt-2 z-[100] w-72 sm:w-80 rounded-2xl border p-4 shadow-2xl backdrop-blur-md transition-all animate-fade-in-up ${
             isDark
               ? 'bg-[#0B1428] border-slate-700/80 text-white shadow-[0_12px_40px_rgba(0,0,0,0.7)]'
               : 'bg-white border-slate-200 text-slate-900 shadow-[0_12px_35px_rgba(15,23,42,0.15)]'

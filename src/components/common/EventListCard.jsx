@@ -15,6 +15,7 @@ export default function EventListCard({
   event,
   notchBg = 'bg-[#F8FAFC]',
   aspectVariant = 'standard',
+  masonry = false,
 }) {
   const { t } = useLanguage();
 
@@ -37,15 +38,21 @@ export default function EventListCard({
   const displayTime = formattedTime ? formatHora23(formattedTime) : (event.hora ? formatHora23(event.hora) : null);
 
   const aspectClass =
-    aspectVariant === 'tall'
+    aspectVariant === 'portrait'
+      ? 'aspect-[4/5]'
+      : aspectVariant === 'tall'
       ? 'aspect-[4/3]'
       : aspectVariant === 'wide'
       ? 'aspect-[16/9]'
+      : aspectVariant === 'compact'
+      ? 'aspect-[2/1]'
       : 'aspect-[16/10]';
 
   return (
     <article
-      className="group relative h-full rounded-3xl transition-all duration-300 ease-out flex flex-col justify-between overflow-hidden bg-white dark:bg-[#151D2F] border border-slate-200/90 dark:border-white/[0.07] hover:border-slate-400/80 hover:dark:bg-slate-800 hover:dark:border-white/15 shadow-sm hover:shadow-md hover:-translate-y-1"
+      className={`group relative ${
+        masonry ? 'h-auto break-inside-avoid' : 'h-full'
+      } rounded-3xl transition-all duration-300 ease-out flex flex-col justify-between overflow-hidden bg-white dark:bg-[#151D2F] border border-slate-200/90 dark:border-white/[0.07] hover:border-slate-400/80 hover:dark:bg-slate-800 hover:dark:border-white/15 shadow-sm hover:shadow-md hover:-translate-y-1`}
     >
       {/* SECCIÓN SUPERIOR: Portada + Título */}
       <div className="relative z-10">
@@ -95,7 +102,11 @@ export default function EventListCard({
             to={`/eventos/${id}`}
             className="block transition-colors duration-200 text-slate-950 dark:text-white hover:text-amber-600 dark:hover:text-amber-400 font-extrabold"
           >
-            <h3 className="text-base sm:text-[17px] tracking-tight uppercase leading-snug line-clamp-2 min-h-[2.75rem]">
+            <h3
+              className={`text-base sm:text-[17px] tracking-tight uppercase leading-snug line-clamp-3 ${
+                masonry ? 'min-h-0' : 'min-h-[2.75rem]'
+              }`}
+            >
               {title}
             </h3>
           </Link>
