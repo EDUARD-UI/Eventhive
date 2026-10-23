@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
-import AdminInfoAlert from '../../components/componentsAdmin/AdminInfoAlert.jsx';
 
 export default function AdminHistorialView({ auditLogs: initialLogs = [] }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -128,46 +127,29 @@ export default function AdminHistorialView({ auditLogs: initialLogs = [] }) {
 
   const renderElementoBadge = (tipo) => {
     const t = (tipo || 'SISTEMA').toUpperCase();
+    let Icon = Shield;
+    let label = 'Sistema';
     if (t === 'ORGANIZACION') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-          <Building2 className="w-3 h-3" />
-          <span>Organización</span>
-        </span>
-      );
-    }
-    if (t === 'USUARIO') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-          <User className="w-3 h-3" />
-          <span>Usuario</span>
-        </span>
-      );
-    }
-    if (t === 'CATEGORIA') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-          <Tag className="w-3 h-3" />
-          <span>Categoría</span>
-        </span>
-      );
+      Icon = Building2;
+      label = 'Organización';
+    } else if (t === 'USUARIO') {
+      Icon = User;
+      label = 'Usuario';
+    } else if (t === 'CATEGORIA') {
+      Icon = Tag;
+      label = 'Categoría';
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700">
-        <span>Sistema</span>
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/80">
+        <Icon className="w-3 h-3 text-slate-500" />
+        <span>{label}</span>
       </span>
     );
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Alerta Informativa Inicial (Requisito 10) */}
-      <AdminInfoAlert
-        id="historial"
-        title="Historial de Auditoría y Trazabilidad Administrativa"
-        description="Registro inmutable de acciones administrativas: suspensiones, aprobaciones de RUT, asignaciones de roles y decisiones de plataforma. La interfaz está estructurada para auditar con exactitud: quién realizó la acción, cuándo, sobre qué elemento y cuál fue el resultado."
-      />
-
+      
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">

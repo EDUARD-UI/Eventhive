@@ -98,7 +98,6 @@ export default function AdminReportesView({
 
       {/* Tarjetas Principales de Métricas Comerciales (Requerimiento 10) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* 10.1. Venta Bruta Total */}
         <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs relative overflow-hidden flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
@@ -123,14 +122,14 @@ export default function AdminReportesView({
         <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs relative overflow-hidden flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Comisiones de EventHive
               </span>
               <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
                 <Percent className="w-4 h-4" strokeWidth={1.75} />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-emerald-700 mb-1">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 mb-1">
               {formatPrice(comisionesVentas)}
             </div>
           </div>
@@ -144,14 +143,14 @@ export default function AdminReportesView({
         <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs relative overflow-hidden flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-700">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Ingresos por pago de promoción
               </span>
               <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600">
                 <Award className="w-4 h-4" strokeWidth={1.75} />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-amber-600 mb-1">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 mb-1">
               {formatPrice(ingresosPagoPromocion)}
             </div>
           </div>

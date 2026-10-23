@@ -233,16 +233,8 @@ export default function ActividadesView() {
     {
       header: 'Valor / Impacto',
       key: 'monto',
-      render: (val, row) => (
-        <span
-          className={`font-display font-bold text-xs ${
-            row.tipo === 'venta'
-              ? 'text-emerald-600'
-              : row.tipo === 'resena'
-              ? 'text-amber-600'
-              : 'text-brand'
-          }`}
-        >
+      render: (val) => (
+        <span className="font-mono font-bold text-xs text-slate-900">
           {val || '—'}
         </span>
       ),
@@ -303,7 +295,7 @@ export default function ActividadesView() {
               Swal.fire({
                 icon: 'info',
                 title: 'Exportando bitácora',
-                text: 'Descargando bitácora de auditoría en formato CSV certificado...',
+                text: 'Descargando registro de actividades...',
                 timer: 2000,
                 showConfirmButton: false,
               })
@@ -460,8 +452,8 @@ export default function ActividadesView() {
       ) : (
         /* Vista en Tabla de Auditoría con Paginación Integrada */
         <DataTable
-          title="Registro Oficial de Auditoría y Trazabilidad"
-          subtitle={`Mostrando ${actividadesFiltradas.length} eventos de auditoría certificados`}
+          title="Registro de Actividades"
+          subtitle={`Mostrando ${actividadesFiltradas.length} actividades registradas`}
           columns={auditTableColumns}
           data={actividadesFiltradas}
           paginate={true}

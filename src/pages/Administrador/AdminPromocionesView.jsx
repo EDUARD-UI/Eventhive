@@ -14,7 +14,6 @@ import {
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import ModalPromocion from '../../components/componentsAdmin/ModalPromocion.jsx';
-import AdminInfoAlert from '../../components/componentsAdmin/AdminInfoAlert.jsx';
 import adminService from '../../features/admin/services/adminService.js';
 
 export default function AdminPromocionesView({
@@ -233,14 +232,7 @@ export default function AdminPromocionesView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Alerta Informativa Inicial (Requisitos 7 y 10) */}
-      <AdminInfoAlert
-        id="promociones"
-        alertId="promociones"
-        title="Gestión de Promociones y Descuentos"
-        description="Administre las promociones vinculadas a eventos de la plataforma. La lista cuenta con paginación integrada y muestra claramente el evento al que pertenece cada descuento comercial."
-      />
-
+      
       {/* Encabezado */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -301,9 +293,8 @@ export default function AdminPromocionesView({
         </span>
       </div>
 
-      {/* Grid: Preview & Listado */}
+      
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Columna Izquierda: Vista Previa y Mockup de Imagen de Referencia */}
         <div className="lg:col-span-5 sticky top-20 space-y-3">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
             <Eye className="w-3.5 h-3.5 text-[#087fea]" />
@@ -312,7 +303,6 @@ export default function AdminPromocionesView({
 
           {promoParaPreview ? (
             <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-sm space-y-4">
-              {/* Estructura con soporte para imágenes de diseño o referencia */}
               <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 aspect-[16/8] flex flex-col justify-between p-5 text-white border border-slate-800 shadow-md group">
                 <div className="flex items-center justify-between z-10">
                   <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/20 backdrop-blur-md border border-white/20 text-white">
@@ -349,7 +339,6 @@ export default function AdminPromocionesView({
                   </p>
                 </div>
 
-                {/* Ranura visual preparada para imagen de referencia o fondo */}
                 {promoParaPreview.imagenUrl ||
                 promoParaPreview.imagen ||
                 promoParaPreview.fotoUrl ? (
@@ -390,7 +379,6 @@ export default function AdminPromocionesView({
           )}
         </div>
 
-        {/* Columna Derecha: Tarjetas de Promociones Paginadas */}
         <div className="lg:col-span-7 space-y-3">
           {loading ? (
             <div className="py-12 text-center text-slate-400 text-xs bg-white rounded-3xl border border-slate-200 animate-pulse">
@@ -426,7 +414,6 @@ export default function AdminPromocionesView({
                         {getDescuentoBadge(promo)}
                       </div>
                       <div className="min-w-0">
-                        {/* Requisito 7: Mostrar claramente el nombre del evento */}
                         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-blue-50 border border-blue-100 text-blue-800 text-[10px] font-bold mb-1">
                           <Calendar className="w-3 h-3 text-[#087fea]" />
                           <span className="truncate max-w-[240px]">{eventoNombre}</span>
@@ -442,7 +429,6 @@ export default function AdminPromocionesView({
                     </Badge>
                   </div>
 
-                  {/* Fechas de vigencia, código y acciones */}
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 text-xs">
                     <div className="flex items-center gap-3">
                       {promo.codigo && (
@@ -518,7 +504,6 @@ export default function AdminPromocionesView({
             })
           )}
 
-          {/* Paginación (Requisito 7) */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs mt-4">
             <Pagination
               currentPage={currentPage}
@@ -537,7 +522,7 @@ export default function AdminPromocionesView({
         </div>
       </div>
 
-      {/* Modal Crear / Editar */}
+      
       {modalOpen && (
         <ModalPromocion
           promocion={promoAEditar}

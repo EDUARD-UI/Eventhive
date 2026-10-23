@@ -113,7 +113,7 @@ function OrgEventsCalendar({ events = [], onSelectEvent }) {
       {/* Encabezado Calendario */}
       <div className="flex items-center justify-between pb-3 border-b border-slate-100">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 block">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
             Agenda Mensual
           </span>
           <h3 className="font-display text-base font-bold text-slate-900">
@@ -589,7 +589,7 @@ export default function OrganizadorIndex() {
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                         Ingresos totales de la organización
                       </span>
-                      <strong className="text-lg font-black text-emerald-700">
+                      <strong className="text-lg font-black text-slate-900">
                         {formatPrice(totalIngresosGlobalNeto)}
                       </strong>
                     </div>

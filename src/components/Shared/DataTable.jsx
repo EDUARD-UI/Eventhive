@@ -111,7 +111,7 @@ export default function DataTable({
       <div className="overflow-x-auto w-full">
         <table className="w-full min-w-[650px] border-collapse text-left">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/75 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            <tr className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
               {columns.map((col, idx) => (
                 <th
                   key={col.key || idx}
@@ -162,7 +162,7 @@ export default function DataTable({
               paginatedData.map((row, rowIdx) => (
                 <tr
                   key={row.id || rowIdx}
-                  className="hover:bg-blue-50/30 transition-colors group"
+                  className="hover:bg-slate-50/60 transition-colors group"
                 >
                   {columns.map((col, colIdx) => (
                     <td

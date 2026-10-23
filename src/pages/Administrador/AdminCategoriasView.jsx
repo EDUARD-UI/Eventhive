@@ -10,7 +10,6 @@ import {
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import ModalCategoria from '../../components/componentsAdmin/ModalCategoria.jsx';
-import AdminInfoAlert from '../../components/componentsAdmin/AdminInfoAlert.jsx';
 
 export default function AdminCategoriasView({
   categorias = [],
@@ -64,14 +63,8 @@ export default function AdminCategoriasView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Alerta Informativa Inicial (Requisito 10) */}
-      <AdminInfoAlert
-        id="categorias"
-        title="Catálogo Oficial de Categorías"
-        description="Gestione las categorías temáticas de eventos. Cada categoría cuenta con ID, nombre y fotografía asociada. Si una categoría posee eventos asociados, es recomendable desactivarla para preservar la integridad transaccional."
-      />
-
-      {/* Encabezado Principal y Acción Crear */}
+      
+    
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
@@ -125,7 +118,7 @@ export default function AdminCategoriasView({
         </div>
       </div>
 
-      {/* TABLA DE GESTIÓN DE CATEGORÍAS (Requisito 6: ID, Nombre, Foto) */}
+      {/* TABLA DE GESTIÓN DE CATEGORÍAS  */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -246,7 +239,7 @@ export default function AdminCategoriasView({
         />
       </div>
 
-      {/* Modal Crear / Editar Categoría */}
+    
       {modalOpen && (
         <ModalCategoria
           categoria={categoriaAEditar}

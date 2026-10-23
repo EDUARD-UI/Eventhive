@@ -502,7 +502,7 @@ export default function MarketingPromocionesView() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-slate-700">
-                  <thead className="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                  <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     <tr>
                       <th className="py-3.5 px-4">Evento</th>
                       <th className="py-3.5 px-4">Organización</th>
@@ -519,7 +519,7 @@ export default function MarketingPromocionesView() {
                       const hasPromoImage = Boolean(p.urlImagenDestacado);
 
                       return (
-                        <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                        <tr key={p.id} className="hover:bg-slate-50/60 transition-colors">
                           {/* Evento */}
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-3">
@@ -567,9 +567,9 @@ export default function MarketingPromocionesView() {
 
                               {/* Si es Premium */}
                               {p.premium ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-2xs">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
                                   <Star size={10} />
-                                  <span>Premium (Carrusel)</span>
+                                  <span>Premium</span>
                                 </span>
                               ) : (
                                 <span className="text-[10px] text-slate-400 font-medium">
@@ -732,13 +732,13 @@ export default function MarketingPromocionesView() {
                 <table className="w-full text-left text-xs text-slate-700">
                   <thead className="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
                     <tr>
-                      <th className="py-3.5 px-4">1. Nombre</th>
-                      <th className="py-3.5 px-4">2. Código</th>
-                      <th className="py-3.5 px-4">3. Detalle de Publicidad</th>
-                      <th className="py-3.5 px-4 text-center">4. Lleva Pauta de Redes</th>
-                      <th className="py-3.5 px-4 text-center">5. Premium</th>
-                      <th className="py-3.5 px-4 text-right">6. Precio de Pago Fijo</th>
-                      <th className="py-3.5 px-4 text-right">7. Acciones</th>
+                      <th className="py-3.5 px-4">Nombre</th>
+                      <th className="py-3.5 px-4">Código</th>
+                      <th className="py-3.5 px-4">Detalle de Publicidad</th>
+                      <th className="py-3.5 px-4 text-center">Pauta en Redes</th>
+                      <th className="py-3.5 px-4 text-center">Nivel</th>
+                      <th className="py-3.5 px-4 text-right">Precio</th>
+                      <th className="py-3.5 px-4 text-right">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -766,24 +766,18 @@ export default function MarketingPromocionesView() {
                         {/* 4. Lleva pauta de redes: Sí/No */}
                         <td className="py-4 px-4 text-center font-bold">
                           {plan.pautaRedes ? (
-                            <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs">
-                              Sí
-                            </span>
+                            <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">Incluida</span>
                           ) : (
-                            <span className="text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg text-xs">
-                              No
-                            </span>
+                            <span className="text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">No</span>
                           )}
                         </td>
 
                         {/* 5. Premium: Sí/No */}
                         <td className="py-4 px-4 text-center font-bold">
                           {plan.premium ? (
-                            <span className="text-amber-900 bg-amber-400/30 border border-amber-400 px-2.5 py-1 rounded-lg text-xs">
-                              Sí
-                            </span>
+                            <span className="text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">Premium</span>
                           ) : (
-                            <span className="text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg text-xs">
+                            <span className="text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">
                               No
                             </span>
                           )}

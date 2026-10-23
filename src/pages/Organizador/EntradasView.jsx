@@ -132,18 +132,18 @@ export default function EntradasView() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase tracking-wider font-bold">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th className="py-3 px-4">Nombre del Evento</th>
-                  <th className="py-3 px-4 text-center">Boletas Vendidas</th>
-                  <th className="py-3 px-4 text-right">Ingresos Organización</th>
-                  <th className="py-3 px-4 text-right">Estado</th>
+                  <th className="py-3.5 px-4">Nombre del Evento</th>
+                  <th className="py-3.5 px-4 text-center">Boletas Vendidas</th>
+                  <th className="py-3.5 px-4 text-right">Ingresos Organización</th>
+                  <th className="py-3.5 px-4 text-right">Estado</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                 {eventosGanancias.map((ev) => (
-                  <tr key={ev.key} className="hover:bg-slate-50/80 transition-colors">
+                  <tr key={ev.key} className="hover:bg-slate-50/60 transition-colors">
                     <td className="py-3.5 px-4 font-bold text-slate-900">
                       {ev.titulo}
                     </td>
@@ -152,7 +152,7 @@ export default function EntradasView() {
                         {ev.boletasVendidas.toLocaleString('es-CO')} boletas
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-right font-black text-emerald-700 text-sm">
+                    <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-900 text-sm">
                       {formatPrice(ev.ingresosGenerados)}
                     </td>
                     <td className="py-3.5 px-4 text-right">

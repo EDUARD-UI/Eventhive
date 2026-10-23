@@ -280,7 +280,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                   {nombre ? nombre.substring(0, 2).toUpperCase() : 'AD'}
                 </span>
 
-                {/* Overlay de cámara al pasar el ratón */}
+             
                 <div className="absolute inset-0 bg-black/40 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   {uploadingPhoto ? (
                     <Loader2 size={20} className="animate-spin" />
@@ -439,7 +439,6 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
             </div>
           </div>
 
-          {/* Columna Derecha: Privilegios y Alcance */}
           <div className="space-y-6">
             <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
               <h3 className="font-display font-bold text-sm text-slate-900 flex items-center gap-2">
@@ -517,7 +516,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 <h4 className="text-2xl font-black font-display text-slate-900 mt-1">
                   {actividad?.eventosComprados ?? 0}
                 </h4>
-                <span className="text-[11px] text-emerald-600 font-medium">Asistencia personal</span>
+                <span className="text-[11px] text-slate-500 font-medium">Asistencia personal</span>
               </div>
               <div className="p-3 rounded-2xl bg-blue-50 text-blue-600">
                 <Calendar className="w-6 h-6" />
@@ -530,7 +529,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 <h4 className="text-2xl font-black font-display text-slate-900 mt-1">
                   {actividad?.entradasCompradas ?? 0}
                 </h4>
-                <span className="text-[11px] text-indigo-600 font-medium">Boletos emitidos</span>
+                <span className="text-[11px] text-slate-500 font-medium">Boletos emitidos</span>
               </div>
               <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-600">
                 <Ticket className="w-6 h-6" />
@@ -543,7 +542,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 <h4 className="text-2xl font-black font-display text-slate-900 mt-1">
                   {actividad?.favoritos ?? deseos.length ?? 0}
                 </h4>
-                <span className="text-[11px] text-rose-600 font-medium">En lista de deseos</span>
+                <span className="text-[11px] text-slate-500 font-medium">En lista de deseos</span>
               </div>
               <div className="p-3 rounded-2xl bg-rose-50 text-rose-600">
                 <Heart className="w-6 h-6" />

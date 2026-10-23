@@ -18,7 +18,6 @@ import {
   Eye,
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
-import AdminInfoAlert from '../../components/componentsAdmin/AdminInfoAlert.jsx';
 
 export default function AdminSolicitudesView({
   solicitudes = [],
@@ -66,13 +65,7 @@ export default function AdminSolicitudesView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Alerta Informativa Descartable y Persistente */}
-      <AdminInfoAlert
-        alertId="solicitudes"
-        title="Verificación de Organizaciones (Validación de RUT)"
-        description="Aquí se gestiona la cola de admisión de organizaciones tras la carga de su documento RUT tributario. Como Administrador, puedes aprobar la verificación para habilitar la publicación de eventos, rechazar solicitudes inválidas o solicitar subsanación de inconsistencias documentales."
-      />
-
+      
       {/* Lista de Solicitudes de Verificación Pendientes */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-7">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 mb-6 border-b border-slate-100">

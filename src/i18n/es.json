@@ -332,10 +332,28 @@
   },
   "calendar": {
     "months": [
-      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre"
     ],
-    "weekdays": ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"],
+    "weekdays": [
+      "Lu",
+      "Ma",
+      "Mi",
+      "Ju",
+      "Vi",
+      "Sá",
+      "Do"
+    ],
     "selectDate": "Selecciona una fecha",
     "goToToday": "Ir a hoy",
     "clearFilter": "Limpiar filtro",
@@ -765,6 +783,12 @@
     "Cine": "Cinema",
     "Danza": "Dance",
     "Comedia": "Comedy",
-    "Familiar": "Family"
+    "Familiar": "Family",
+    "¿Buscabas algún evento o experiencia en particular?": "Looking for a specific event or experience?",
+    "Buscar": "Search",
+    "Categorías sugeridas:": "Suggested categories:",
+    "¿Necesitas ayuda adicional?": "Need additional help?",
+    "Si crees que esto es un error del sistema o un enlace roto dentro de la plataforma, por favor contáctanos para solucionarlo.": "If you believe this is a system error or a broken link within the platform, please contact us to resolve it.",
+    "Contactar soporte": "Contact support"
   }
 }

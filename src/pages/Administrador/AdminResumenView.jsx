@@ -19,7 +19,6 @@ import {
 import StatCard from '../../components/Shared/StatCard.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
 import PlatformMetricsChart from '../../components/componentsAdmin/PlatformMetricsChart.jsx';
-import AdminInfoAlert from '../../components/componentsAdmin/AdminInfoAlert.jsx';
 
 export default function AdminResumenView({
   metrics,
@@ -197,30 +196,30 @@ export default function AdminResumenView({
               </button>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-100">
-                <div className="flex items-center justify-center gap-1 text-emerald-700 text-xs font-semibold mb-0.5">
-                  <CheckCircle2 className="w-3 h-3" strokeWidth={2} />
+              <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
+                <div className="flex items-center justify-center gap-1.5 text-slate-600 text-xs font-semibold mb-0.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2} />
                   <span>Aprobadas</span>
                 </div>
-                <div className="text-lg font-black text-emerald-800">
+                <div className="text-lg font-black text-slate-900">
                   {aprobadasCount}
                 </div>
               </div>
-              <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-100">
-                <div className="flex items-center justify-center gap-1 text-amber-700 text-xs font-semibold mb-0.5">
-                  <Clock className="w-3 h-3" strokeWidth={2} />
+              <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
+                <div className="flex items-center justify-center gap-1.5 text-slate-600 text-xs font-semibold mb-0.5">
+                  <Clock className="w-3.5 h-3.5 text-amber-500" strokeWidth={2} />
                   <span>Por Validación</span>
                 </div>
-                <div className="text-lg font-black text-amber-800">
+                <div className="text-lg font-black text-slate-900">
                   {pendientesValidacionRut}
                 </div>
               </div>
-              <div className="p-2.5 rounded-xl bg-rose-50/60 border border-rose-100">
-                <div className="flex items-center justify-center gap-1 text-rose-700 text-xs font-semibold mb-0.5">
-                  <Ban className="w-3 h-3" strokeWidth={2} />
+              <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
+                <div className="flex items-center justify-center gap-1.5 text-slate-600 text-xs font-semibold mb-0.5">
+                  <Ban className="w-3.5 h-3.5 text-rose-500" strokeWidth={2} />
                   <span>Suspendidas</span>
                 </div>
-                <div className="text-lg font-black text-rose-800">
+                <div className="text-lg font-black text-slate-900">
                   {suspendidasCount}
                 </div>
               </div>
@@ -314,34 +313,37 @@ export default function AdminResumenView({
 
         {/* Resumen numérico del endpoint /admin/estadisticas/organizaciones-por-validacion */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-          <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/80">
-            <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider block">
-              Pendientes Validación RUT
+          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+              <span>Pendientes Validación RUT</span>
             </span>
-            <span className="text-2xl font-black text-amber-900 mt-1 block">
+            <span className="text-2xl font-black text-slate-900 mt-1.5 block">
               {pendientesValidacionRut}
             </span>
-            <span className="text-[10px] text-amber-700">Esperando revisión administrativa</span>
+            <span className="text-[11px] text-slate-400 mt-0.5 block">Esperando revisión administrativa</span>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
-            <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
-              Sin RUT Cargado
+          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
+              <span>Sin RUT Cargado</span>
             </span>
-            <span className="text-2xl font-black text-slate-800 mt-1 block">
+            <span className="text-2xl font-black text-slate-900 mt-1.5 block">
               {sinRutCount}
             </span>
-            <span className="text-[10px] text-slate-500">En pre-registro (sin documento)</span>
+            <span className="text-[11px] text-slate-400 mt-0.5 block">En pre-registro (sin documento)</span>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-100">
-            <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider block">
-              Aprobadas y Verificadas
+          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+              <span>Aprobadas y Verificadas</span>
             </span>
-            <span className="text-2xl font-black text-emerald-900 mt-1 block">
+            <span className="text-2xl font-black text-slate-900 mt-1.5 block">
               {aprobadasCount}
             </span>
-            <span className="text-[10px] text-emerald-700">Habilitadas para publicar</span>
+            <span className="text-[11px] text-slate-400 mt-0.5 block">Habilitadas para publicar</span>
           </div>
         </div>
 

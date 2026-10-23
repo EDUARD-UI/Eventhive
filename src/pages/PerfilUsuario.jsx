@@ -677,7 +677,7 @@ export default function PerfilUsuario() {
 
             {/* Tarjeta Estadísticas */}
             <div className="bg-white dark:bg-[#0B1428] border-2 border-amber-200/90 dark:border-slate-800 rounded-3xl shadow-sm p-6 space-y-4">
-              <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 dark:text-amber-400 block">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 block">
                 ACTIVIDAD EN LA APLICACION
               </span>
 
@@ -735,7 +735,7 @@ export default function PerfilUsuario() {
                   <div className="space-y-6">
                     <div className="bg-white dark:bg-[#0B1428] p-6 rounded-3xl border border-amber-200/90 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 dark:text-amber-400 block mb-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-1">
                           PASES OFICIALES
                         </span>
                         <h3 className="text-xl font-black text-[#0B1B3D] dark:text-white">Mis Boletos Digitales</h3>
@@ -820,7 +820,7 @@ export default function PerfilUsuario() {
                                     className="w-14 h-14 rounded-xl border border-amber-200 dark:border-slate-700 p-1 bg-white shrink-0 shadow-xs"
                                   />
                                   <div>
-                                    <p className="text-[11px] font-black text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                                    <p className="text-[11px] font-mono font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1">
                                       <FiCheckCircle size={12} /> {ticket.estado}
                                     </p>
                                     <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Acceso Oficial</p>
@@ -850,7 +850,7 @@ export default function PerfilUsuario() {
                     {/* Información Personal */}
                     <div className="bg-white dark:bg-[#0B1428] border-2 border-amber-200/90 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
                       <div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 dark:text-amber-400 block mb-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-1">
                           DATOS DE CONTACTO
                         </span>
                         <h3 className="text-xl font-black text-[#0B1B3D] dark:text-white">Información Personal</h3>
@@ -1014,7 +1014,7 @@ export default function PerfilUsuario() {
                     <div className="space-y-6">
                       <div className="bg-white dark:bg-[#0B1428] p-6 rounded-3xl border-2 border-amber-200/90 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 dark:text-amber-400 block mb-1">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-1">
                             AGENDA PERSONAL
                           </span>
                           <h3 className="text-xl font-black text-[#0B1B3D] dark:text-white">

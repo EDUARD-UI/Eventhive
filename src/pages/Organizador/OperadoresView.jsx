@@ -488,8 +488,8 @@ export default function OperadoresView() {
         ) : (
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase tracking-wider font-bold">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   <tr>
                     <th className="py-3.5 px-4">Correo Invitado</th>
                     <th className="py-3.5 px-4">Estado</th>
@@ -509,7 +509,7 @@ export default function OperadoresView() {
                     const targetEmail = inv.correo || inv.correoInvitado || inv.email;
 
                     return (
-                      <tr key={inv.id || idx} className="hover:bg-slate-50/80 transition-colors">
+                      <tr key={inv.id || idx} className="hover:bg-slate-50/60 transition-colors">
                         <td className="py-3.5 px-4 flex items-center gap-2 font-semibold text-slate-900">
                           <FiMail className="text-slate-400" size={14} />
                           <span>{targetEmail}</span>

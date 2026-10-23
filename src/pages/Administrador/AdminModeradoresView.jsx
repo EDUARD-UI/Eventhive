@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
-import AdminInfoAlert from '../../components/componentsAdmin/AdminInfoAlert.jsx';
 import adminService from '../../features/admin/services/adminService.js';
 
 export default function AdminModeradoresView({
@@ -101,13 +100,7 @@ export default function AdminModeradoresView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Alerta Informativa Inicial (Requisito 10) */}
-      <AdminInfoAlert
-        id="moderadores"
-        title="Gestión de Moderadores Institucionales"
-        description="Esta sección se destina exclusivamente a listar el personal con rol de moderador y gestionar sus accesos cuando concluya su vinculación con la empresa. La supervisión técnica de eventos corresponde de forma privativa a la bandeja del Moderador."
-      />
-
+      
       {feedbackMsg && (
         <div
           className={`p-4 rounded-2xl flex items-center justify-between text-xs font-semibold ${
@@ -186,7 +179,6 @@ export default function AdminModeradoresView({
                       #{mod.id}
                     </td>
 
-                    {/* Nombre */}
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center font-bold text-indigo-700 text-sm shrink-0">
@@ -196,7 +188,7 @@ export default function AdminModeradoresView({
                       </div>
                     </td>
 
-                    {/* Correo */}
+          
                     <td className="py-4 px-4 text-slate-600">
                       <div className="flex items-center gap-1.5">
                         <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -204,7 +196,7 @@ export default function AdminModeradoresView({
                       </div>
                     </td>
 
-                    {/* Teléfono */}
+      
                     <td className="py-4 px-4 text-slate-600">
                       <div className="flex items-center gap-1.5">
                         <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -212,14 +204,13 @@ export default function AdminModeradoresView({
                       </div>
                     </td>
 
-                    {/* Rol */}
                     <td className="py-4 px-4 text-center">
                       <Badge variant="primary" size="xs">
                         {mod.rolNombre || 'MODERADOR'}
                       </Badge>
                     </td>
 
-                    {/* Botón Revocar Rol */}
+
                     <td className="py-4 px-4 text-right">
                       <button
                         type="button"

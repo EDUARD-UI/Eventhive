@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
-import AdminInfoAlert from '../../components/componentsAdmin/AdminInfoAlert.jsx';
 import adminService from '../../features/admin/services/adminService.js';
 import { organizationService } from '../../services/organizerService.js';
 
@@ -33,6 +32,29 @@ export default function AdminOrganizacionesView({
   const [pageSize, setPageSize] = useState(10);
   const [totalItems, setTotalItems] = useState(initialOrganizaciones.length || 0);
   const [loading, setLoading] = useState(false);
+
+  const countAprobadas = useMemo(() => {
+    const list = Array.isArray(initialOrganizaciones) && initialOrganizaciones.length > 0
+      ? initialOrganizaciones
+      : (Array.isArray(organizacionesList) ? organizacionesList : []);
+    return list.filter((o) => o?.estado === 'APROBADA' || o?.estado === 'VERIFICADA').length;
+  }, [initialOrganizaciones, organizacionesList]);
+
+  const countPendientes = useMemo(() => {
+    const list = Array.isArray(initialOrganizaciones) && initialOrganizaciones.length > 0
+      ? initialOrganizaciones
+      : (Array.isArray(organizacionesList) ? organizacionesList : []);
+    return list.filter(
+      (o) => o?.estado === 'PENDIENTE' || o?.estado === 'PENDIENTE_REVISION' || o?.estado === 'EN_REVISION'
+    ).length;
+  }, [initialOrganizaciones, organizacionesList]);
+
+  const countSuspendidas = useMemo(() => {
+    const list = Array.isArray(initialOrganizaciones) && initialOrganizaciones.length > 0
+      ? initialOrganizaciones
+      : (Array.isArray(organizacionesList) ? organizacionesList : []);
+    return list.filter((o) => o?.estado === 'SUSPENDIDA' || o?.estado === 'RECHAZADA').length;
+  }, [initialOrganizaciones, organizacionesList]);
 
   // Carga reactiva de organizaciones utilizando los endpoints paginados del backend
   const fetchOrganizaciones = useCallback(async () => {
@@ -122,7 +144,6 @@ export default function AdminOrganizacionesView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Contadores Rápidos y Filtros de Estado */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <button
           type="button"
@@ -130,16 +151,19 @@ export default function AdminOrganizacionesView({
             setFiltroEstado('TODOS');
             setCurrentPage(1);
           }}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
+          className={`p-4 rounded-2xl border text-left transition-all ${
             filtroEstado === 'TODOS'
               ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+              : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50 hover:border-slate-300'
           }`}
         >
-          <span className="text-[11px] font-bold uppercase tracking-wider block opacity-75">
-            Total Empresas
+          <span className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+            filtroEstado === 'TODOS' ? 'text-slate-300' : 'text-slate-500'
+          }`}>
+            <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
+            <span>Total Empresas</span>
           </span>
-          <span className="text-xl font-black">{totalItems}</span>
+          <span className="text-2xl font-black mt-1.5 block">{totalItems}</span>
         </button>
 
         <button
@@ -148,17 +172,20 @@ export default function AdminOrganizacionesView({
             setFiltroEstado('APROBADA');
             setCurrentPage(1);
           }}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
+          className={`p-4 rounded-2xl border text-left transition-all ${
             filtroEstado === 'APROBADA'
-              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-              : 'bg-white text-slate-700 border-slate-200 hover:bg-emerald-50/50'
+              ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+              : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50 hover:border-slate-300'
           }`}
         >
-          <span className="text-[11px] font-bold uppercase tracking-wider block opacity-75">
-            Solo Aprobadas
+          <span className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+            filtroEstado === 'APROBADA' ? 'text-slate-300' : 'text-slate-500'
+          }`}>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+            <span>Aprobadas</span>
           </span>
-          <span className={`text-xl font-black ${filtroEstado === 'APROBADA' ? 'text-white' : 'text-emerald-600'}`}>
-            Filtro Activo
+          <span className="text-2xl font-black mt-1.5 block">
+            {countAprobadas}
           </span>
         </button>
 
@@ -168,17 +195,20 @@ export default function AdminOrganizacionesView({
             setFiltroEstado('PENDIENTE');
             setCurrentPage(1);
           }}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
+          className={`p-4 rounded-2xl border text-left transition-all ${
             filtroEstado === 'PENDIENTE'
-              ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
-              : 'bg-white text-slate-700 border-slate-200 hover:bg-amber-50/50'
+              ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+              : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50 hover:border-slate-300'
           }`}
         >
-          <span className="text-[11px] font-bold uppercase tracking-wider block opacity-75">
-            En Revisión
+          <span className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+            filtroEstado === 'PENDIENTE' ? 'text-slate-300' : 'text-slate-500'
+          }`}>
+            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+            <span>En Revisión</span>
           </span>
-          <span className={`text-xl font-black ${filtroEstado === 'PENDIENTE' ? 'text-white' : 'text-amber-600'}`}>
-            Por Validar
+          <span className="text-2xl font-black mt-1.5 block">
+            {countPendientes}
           </span>
         </button>
 
@@ -188,17 +218,20 @@ export default function AdminOrganizacionesView({
             setFiltroEstado('SUSPENDIDA');
             setCurrentPage(1);
           }}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
+          className={`p-4 rounded-2xl border text-left transition-all ${
             filtroEstado === 'SUSPENDIDA'
-              ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
-              : 'bg-white text-slate-700 border-slate-200 hover:bg-rose-50/50'
+              ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+              : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50 hover:border-slate-300'
           }`}
         >
-          <span className="text-[11px] font-bold uppercase tracking-wider block opacity-75">
-            Suspendidas
+          <span className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+            filtroEstado === 'SUSPENDIDA' ? 'text-slate-300' : 'text-slate-500'
+          }`}>
+            <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+            <span>Suspendidas</span>
           </span>
-          <span className={`text-xl font-black ${filtroEstado === 'SUSPENDIDA' ? 'text-white' : 'text-rose-600'}`}>
-            Inactivas
+          <span className="text-2xl font-black mt-1.5 block">
+            {countSuspendidas}
           </span>
         </button>
       </div>
@@ -236,7 +269,6 @@ export default function AdminOrganizacionesView({
         </div>
       </div>
 
-      {/* Tabla de Organizaciones Paginada */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -282,7 +314,7 @@ export default function AdminOrganizacionesView({
                       key={org.id}
                       className="hover:bg-slate-50/60 transition-colors"
                     >
-                      {/* Razón Social */}
+                  
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary font-bold flex items-center justify-center shrink-0 border border-primary/20">

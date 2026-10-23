@@ -41,32 +41,20 @@ export default function ModeradorResumenView({
 
   return (
     <div className="space-y-7 animate-in fade-in duration-300">
-      {/* Tarjeta Informativa de Responsabilidad del Rol */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-slate-900 to-[#131b2e] text-white border border-slate-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-brand/20 border border-brand/40 text-brand flex items-center justify-center shrink-0">
-            <FiShield size={24} />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-display text-base font-bold">
-                Panel de Control de Moderación
-              </h3>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand/20 text-brand border border-brand/30">
-                Rol Activo
-              </span>
-            </div>
-            <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-              Supervisa la validez de los eventos enviados para publicación. Comprueba fechas,
-              aforos, coherencia de localidades y cumplimiento de las directrices comunitarias.
-            </p>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
+        <div>
+          <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+            <FiShield className="w-5 h-5 text-brand" />
+            <span>Panel de Control de Moderación</span>
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Supervisión y control de calidad de eventos culturales postulados para publicación
+          </p>
         </div>
-
         <button
           type="button"
           onClick={() => onNavigateTab('eventos')}
-          className="self-end md:self-center px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-bold shadow-md shadow-brand/25 flex items-center gap-2 transition-all active:scale-95 shrink-0"
+          className="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-bold shadow-md shadow-brand/25 flex items-center gap-2 transition-all active:scale-95 shrink-0 cursor-pointer"
         >
           <span>Ir a Eventos Pendientes</span>
           <FiArrowRight size={15} />
