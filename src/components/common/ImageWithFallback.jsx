@@ -3,8 +3,7 @@ import { FiImage } from 'react-icons/fi';
 
 /**
  * Componente de imagen con soporte para carga fallida o URL nula.
- * Aplica un fondo gris azulado sofisticado (#1e293b / slate-800) con icono
- * y texto discreto para indicar visualmente que no se cargó la imagen.
+ * Llena el contenedor completamente sin espacios vacíos ni fondos a los lados.
  */
 export default function ImageWithFallback({
   src,
@@ -62,13 +61,13 @@ export default function ImageWithFallback({
     : 'object-cover';
 
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    <div className={`relative overflow-hidden w-full h-full ${className}`}>
       <img
         src={src}
         alt={alt}
         loading="lazy"
         onError={() => setHasError(true)}
-        className={`h-full w-full ${defaultFit} transition-all duration-300 ${imgClassName}`}
+        className={`h-full w-full object-center ${defaultFit} transition-all duration-300 ${imgClassName}`}
       />
       {children}
     </div>

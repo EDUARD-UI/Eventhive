@@ -11,17 +11,18 @@ export default function HiveEventCard({ event }) {
   return (
     <article className="group h-full bg-white dark:bg-[#151D2F] border border-slate-200 dark:border-white/[0.07] hover:border-slate-300 hover:dark:bg-slate-800 hover:dark:border-white/15 rounded-2xl overflow-hidden transition-all duration-200 ease-out shadow-sm hover:shadow-md hover:-translate-y-0.5 flex flex-col justify-between text-slate-900 dark:text-white">
       <div>
-        <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-900">
+        <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
           <ImageWithFallback
             src={photo}
             alt={title}
-            className="h-full w-full object-cover group-hover:scale-103 transition-transform duration-300 ease-out"
+            className="h-full w-full"
+            imgClassName="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300 ease-out"
             fallbackText={category || 'Evento'}
             iconSize={26}
           >
             {/* Máscara de degradado linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.85) 100%) */}
             <div
-              className="absolute inset-0 pointer-events-none opacity-85 group-hover:opacity-95 transition-opacity duration-200"
+              className="absolute inset-0 pointer-events-none opacity-40 group-hover:opacity-50 transition-opacity duration-200"
               style={{
                 background: 'linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.85) 100%)',
               }}

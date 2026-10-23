@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { FiBell, FiMenu, FiSearch, FiUser, FiLogOut, FiChevronDown, FiCheck, FiTrash2, FiClock } from 'react-icons/fi';
 import { session } from '../../services/session.js';
 import notificationService from '../../services/notificationService.js';
-import LanguageSwitcher from '../common/LanguageSwitcher.jsx';
 
 export default function Header({
   title,
@@ -202,11 +201,6 @@ export default function Header({
         )}
 
         <div className="min-w-0">
-          {badgeText && (
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#087fea] bg-[#e8f2ff] px-2 py-0.5 rounded-md inline-block mb-1">
-              {badgeText}
-            </span>
-          )}
           {title && (
             <h1 className="font-display text-[16px] sm:text-[20px] font-bold text-[#172033] leading-tight truncate">
               {title}
@@ -230,7 +224,6 @@ export default function Header({
           </div>
         )}
 
-        <LanguageSwitcher />
 
         {showNotifications && (
           <div ref={notificationsRef} className="relative flex items-center">

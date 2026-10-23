@@ -18,12 +18,12 @@ export default function AdminEventCard({
   return (
     <div className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col group hover:-translate-y-0.5">
       {/* Contenedor de Imagen de Portada */}
-      <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+      <div className="relative aspect-[16/10] overflow-hidden bg-slate-950 flex items-center justify-center">
         <img
           src={imgError || !evento.foto ? fallbackImg : evento.foto}
           alt={evento.titulo}
           onError={() => setImgError(true)}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
 

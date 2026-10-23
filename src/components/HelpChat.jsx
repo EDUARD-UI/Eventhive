@@ -8,15 +8,18 @@ import {
   FiInfo,
   FiTag,
   FiCreditCard,
+  FiMove,
 } from "react-icons/fi";
 import { getUpcomingEvents } from "../services/eventService.js";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { useLanguage } from "../context/LanguageContext.jsx";
 
 /**
  * HelpChat (Conectado a n8n + Google Gemini IA)
  * Widget de chat flotante moderno para EventHive.
+ * Soporta arrastrar la burbuja (Drag and Drop) y persistir su posición.
+ * Solo aparece en las vistas principales ('home', 'buscar eventos', 'organizacion').
  */
 export default function HelpChat({
   isOpen: controlledIsOpen,
@@ -25,6 +28,18 @@ export default function HelpChat({
 }) {
   const { isDark } = useTheme();
   const { t, language } = useLanguage();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // 1. RESTRICCIÓN DE RUTAS: Solo vistas principales ('home', 'buscar eventos', 'organizacion')
+  const isAllowedPath = (() => {
+    const path = (location?.pathname || '').toLowerCase();
+    if (path === '/' || path === '') return true;
+    if (path === '/buscar' || path.startsWith('/buscar')) return true;
+    if (path.startsWith('/organizaciones') || path.startsWith('/organizacion')) return true;
+    return false;
+  })();
+
   const [internalOpen, setInternalOpen] = useState(Boolean(controlledIsOpen));
   const [messages, setMessages] = useState(() => [
     {
@@ -38,7 +53,129 @@ export default function HelpChat({
   const [isTyping, setIsTyping] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
   const scrollRef = useRef(null);
-  const navigate = useNavigate();
+  const buttonRef = useRef(null);
+
+  // Estado y lógica para arrastrar la burbuja y guardar su ubicación
+  const [position, setPosition] = useState(() => {
+    try {
+      const saved = localStorage.getItem("eventhive_chat_bubble_pos");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.x === "number" && typeof parsed.y === "number") {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return null;
+  });
+
+  const [isDraggingState, setIsDraggingState] = useState(false);
+  const dragStartRef = useRef({
+    startX: 0,
+    startY: 0,
+    initialPosX: 0,
+    initialPosY: 0,
+    hasMoved: false,
+    active: false,
+  });
+
+  // Ajustar posición si cambia el tamaño de la ventana
+  useEffect(() => {
+    const handleResize = () => {
+      setPosition((prev) => {
+        if (!prev) return null;
+        const btnW = 60;
+        const btnH = 60;
+        const maxX = Math.max(12, window.innerWidth - btnW - 12);
+        const maxY = Math.max(12, window.innerHeight - btnH - 12);
+        const clampedX = Math.min(Math.max(12, prev.x), maxX);
+        const clampedY = Math.min(Math.max(12, prev.y), maxY);
+        if (clampedX !== prev.x || clampedY !== prev.y) {
+          const updated = { x: clampedX, y: clampedY };
+          try {
+            localStorage.setItem("eventhive_chat_bubble_pos", JSON.stringify(updated));
+          } catch (e) {}
+          return updated;
+        }
+        return prev;
+      });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const handlePointerDown = (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    const clientX = e.clientX ?? (e.touches && e.touches[0]?.clientX);
+    const clientY = e.clientY ?? (e.touches && e.touches[0]?.clientY);
+    if (clientX === undefined || clientY === undefined) return;
+
+    const rect = buttonRef.current?.getBoundingClientRect();
+    const currentX = rect ? rect.left : (position?.x ?? (window.innerWidth - 80));
+    const currentY = rect ? rect.top : (position?.y ?? (window.innerHeight - 84));
+
+    dragStartRef.current = {
+      startX: clientX,
+      startY: clientY,
+      initialPosX: currentX,
+      initialPosY: currentY,
+      hasMoved: false,
+      active: true,
+    };
+
+    const handlePointerMove = (moveEvt) => {
+      if (!dragStartRef.current.active) return;
+      const curX = moveEvt.clientX ?? (moveEvt.touches && moveEvt.touches[0]?.clientX);
+      const curY = moveEvt.clientY ?? (moveEvt.touches && moveEvt.touches[0]?.clientY);
+      if (curX === undefined || curY === undefined) return;
+
+      const deltaX = curX - dragStartRef.current.startX;
+      const deltaY = curY - dragStartRef.current.startY;
+
+      if (!dragStartRef.current.hasMoved && Math.hypot(deltaX, deltaY) > 4) {
+        dragStartRef.current.hasMoved = true;
+        setIsDraggingState(true);
+      }
+
+      if (dragStartRef.current.hasMoved) {
+        const btnW = 60;
+        const btnH = 60;
+        const maxX = Math.max(10, window.innerWidth - btnW - 10);
+        const maxY = Math.max(10, window.innerHeight - btnH - 10);
+        const newX = Math.min(Math.max(10, dragStartRef.current.initialPosX + deltaX), maxX);
+        const newY = Math.min(Math.max(10, dragStartRef.current.initialPosY + deltaY), maxY);
+        setPosition({ x: newX, y: newY });
+      }
+    };
+
+    const handlePointerUp = () => {
+      dragStartRef.current.active = false;
+      window.removeEventListener("mousemove", handlePointerMove);
+      window.removeEventListener("mouseup", handlePointerUp);
+      window.removeEventListener("touchmove", handlePointerMove);
+      window.removeEventListener("touchend", handlePointerUp);
+
+      if (dragStartRef.current.hasMoved) {
+        setPosition((curr) => {
+          if (curr) {
+            try {
+              localStorage.setItem("eventhive_chat_bubble_pos", JSON.stringify(curr));
+            } catch (e) {}
+          }
+          return curr;
+        });
+        setTimeout(() => setIsDraggingState(false), 60);
+      } else {
+        setIsDraggingState(false);
+        handleToggle();
+      }
+    };
+
+    window.addEventListener("mousemove", handlePointerMove);
+    window.addEventListener("mouseup", handlePointerUp);
+    window.addEventListener("touchmove", handlePointerMove, { passive: true });
+    window.addEventListener("touchend", handlePointerUp);
+  };
 
   const faqOptions = [
     { id: "tickets", text: t("helpChat.faqTickets"), icon: FiTag },
@@ -207,6 +344,46 @@ export default function HelpChat({
     pushUserMessage(draft);
   };
 
+  // Requerimiento 1: La burbuja solo debe salir/aparecer en las vistas principales:
+  // 'home' (/), 'buscar eventos' (/buscar) y 'organizacion' (/organizaciones, /organizacion)
+  if (!isAllowedPath) {
+    return null;
+  }
+
+  const getAsideStyle = () => {
+    const baseShadow = {
+      boxShadow: "0 20px 40px -15px rgba(11, 19, 43, 0.35), 0 0 1px 1px rgba(0,0,0,0.06)",
+    };
+
+    if (!position || typeof window === 'undefined') {
+      return baseShadow;
+    }
+
+    const style = { ...baseShadow };
+    const chatWidth = Math.min(375, window.innerWidth - 32);
+    const chatHeight = 540;
+
+    // Horizontal: Si el botón está en la mitad izquierda, alinear a la izquierda; si está en la derecha, a la derecha
+    if (position.x < window.innerWidth / 2) {
+      style.left = `${Math.max(12, Math.min(position.x, window.innerWidth - chatWidth - 12))}px`;
+      style.right = 'auto';
+    } else {
+      style.right = `${Math.max(12, Math.min(window.innerWidth - position.x - 60, window.innerWidth - chatWidth - 12))}px`;
+      style.left = 'auto';
+    }
+
+    // Vertical: Si está cerca de arriba, mostrar hacia abajo; si está cerca de abajo, mostrar hacia arriba
+    if (position.y < chatHeight) {
+      style.top = `${Math.min(position.y + 70, window.innerHeight - chatHeight - 12)}px`;
+      style.bottom = 'auto';
+    } else {
+      style.bottom = `${Math.max(12, window.innerHeight - position.y + 12)}px`;
+      style.top = 'auto';
+    }
+
+    return style;
+  };
+
   return (
     <>
       {/* ========================================================
@@ -215,11 +392,10 @@ export default function HelpChat({
       {isOpen && (
         <aside
           aria-label="Ventana de chat de ayuda EventHive"
-          className="fixed z-[9999] bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] max-w-[360px] sm:max-w-[375px] h-[540px] max-h-[78vh] flex flex-col rounded-[28px] overflow-hidden shadow-2xl ring-1 ring-black/10 border border-slate-200/90 dark:border-white/10 bg-white dark:bg-[#0B132B] transition-all animate-fade-in"
-          style={{
-            boxShadow:
-              "0 20px 40px -15px rgba(11, 19, 43, 0.35), 0 0 1px 1px rgba(0,0,0,0.06)",
-          }}
+          className={`fixed z-[9999] ${
+            !position ? 'bottom-24 right-4 sm:right-6' : ''
+          } w-[calc(100vw-2rem)] max-w-[360px] sm:max-w-[375px] h-[540px] max-h-[78vh] flex flex-col rounded-[28px] overflow-hidden shadow-2xl ring-1 ring-black/10 border border-slate-200/90 dark:border-white/10 bg-white dark:bg-[#0B132B] transition-all animate-fade-in`}
+          style={getAsideStyle()}
         >
           {/* 1. Cabecera Azul Marino (#0B132B) */}
           <div className="relative flex items-center justify-between px-5 py-4 bg-[#0B132B] text-white shrink-0 select-none">
@@ -244,7 +420,7 @@ export default function HelpChat({
                 </h3>
                 <p className="text-[11.5px] text-slate-300 font-normal leading-tight mt-0.5 flex items-center gap-1.5">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Asistente con Gemini IA</span>
+                  <span>Asistente de IA</span>
                 </p>
               </div>
             </div>
@@ -419,21 +595,40 @@ export default function HelpChat({
         </aside>
       )}
 
-      {/* 4. BOTÓN FLOTANTE (FAB) */}
+      {/* 4. BOTÓN FLOTANTE (FAB) ARRASTRABLE Y PERSISTENTE */}
       <button
+        ref={buttonRef}
         type="button"
-        onClick={handleToggle}
+        onMouseDown={handlePointerDown}
+        onTouchStart={handlePointerDown}
         aria-label={isOpen ? "Cerrar chat de ayuda" : "Abrir chat de ayuda"}
-        title="Chat de ayuda EventHive"
-        className="fixed z-[9999] bottom-5 right-5 sm:bottom-6 sm:right-6 w-14 h-14 sm:w-15 sm:h-15 rounded-full bg-[#0B132B] border-2 border-amber-500 hover:border-amber-400 shadow-2xl shadow-slate-900/60 hover:shadow-amber-500/30 hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 select-none"
+        title={isDraggingState ? "Moviendo burbuja..." : "Arrastra para moverla o haz clic para abrir chat"}
+        style={{
+          touchAction: 'none',
+          ...(position
+            ? {
+                left: `${position.x}px`,
+                top: `${position.y}px`,
+                bottom: 'auto',
+                right: 'auto',
+              }
+            : {}),
+        }}
+        className={`fixed z-[9999] ${
+          !position ? 'bottom-5 right-5 sm:bottom-6 sm:right-6' : ''
+        } w-14 h-14 sm:w-15 sm:h-15 rounded-full bg-[#0B132B] border-2 border-amber-500 hover:border-amber-400 shadow-2xl shadow-slate-900/60 hover:shadow-amber-500/30 flex items-center justify-center transition-transform select-none group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 ${
+          isDraggingState
+            ? 'cursor-grabbing scale-110 shadow-amber-500/50'
+            : 'cursor-grab hover:scale-105 active:scale-95 duration-200'
+        }`}
       >
         <img
           src="/LOGO45x50.png"
           alt="EventHive"
-          className="w-8 h-8 object-contain drop-shadow-[0_2px_6px_rgba(245,158,11,0.4)] group-hover:scale-110 transition-transform duration-300"
+          className="w-8 h-8 object-contain drop-shadow-[0_2px_6px_rgba(245,158,11,0.4)] pointer-events-none group-hover:scale-110 transition-transform duration-300"
         />
         <span
-          className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#0B132B] shadow-xs"
+          className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#0B132B] shadow-xs pointer-events-none"
           title="En línea"
           aria-hidden="true"
         />

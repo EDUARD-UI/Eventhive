@@ -9,6 +9,7 @@ import {
   FiUsers,
 } from 'react-icons/fi';
 import Navbar from '../components/usersComponets/Navbar.jsx';
+import HiveBeeLoader from '../components/common/HiveBeeLoader.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import { organizationService } from '../services/organizerService.js';
 import { session, normalizeRole } from '../services/session.js';
@@ -29,6 +30,7 @@ export default function OrganizadoresPage() {
   const [organizations, setOrganizations] = useState([]);
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [initialScreenLoading, setInitialScreenLoading] = useState(true);
 
   // Determinar rol para el botón de acción principal
   const currentUser = session.getUser();
@@ -77,10 +79,29 @@ export default function OrganizadoresPage() {
     };
   }, [searchTerm, currentPage]);
 
-  const handleSearchChange = (e) => {
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => {
+        setInitialScreenLoading(false);
+      }, 550);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
+
+    const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
+
+  if (initialScreenLoading) {
+    return (
+      <HiveBeeLoader
+        text="Cargando..."
+        subtext="Directorio de Organizaciones de Cartagena"
+        fullScreen={true}
+      />
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body overflow-x-clip max-w-full relative transition-colors duration-200">
@@ -234,53 +255,53 @@ export default function OrganizadoresPage() {
         {activeTab === 'informacion' && (
           <section className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-[#0D182E] rounded-2xl border border-slate-800 p-6 shadow-md hover:border-slate-700 transition-all duration-200">
-                <div className="w-10 h-10 rounded-xl bg-slate-800 text-amber-400 flex items-center justify-center mb-4">
+              <div className="bg-white dark:bg-[#0B132B] rounded-2xl border border-slate-200/90 dark:border-white/[0.08] p-6 shadow-sm hover:shadow-md hover:border-amber-400/50 dark:hover:border-amber-400/30 transition-all duration-200">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-400/15 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
                   <FiCalendar size={20} />
                 </div>
-                <h3 className="font-extrabold text-white text-base mb-2">
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-base mb-2">
                   Publicación Inmediata
                 </h3>
-                <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
+                <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
                   Crea eventos en minutos, añade fotografías, fechas, horarios y ubicación en el mapa interactivo de Cartagena.
                 </p>
               </div>
 
-              <div className="bg-[#0D182E] rounded-2xl border border-slate-800 p-6 shadow-md hover:border-slate-700 transition-all duration-200">
-                <div className="w-10 h-10 rounded-xl bg-slate-800 text-amber-400 flex items-center justify-center mb-4">
+              <div className="bg-white dark:bg-[#0B132B] rounded-2xl border border-slate-200/90 dark:border-white/[0.08] p-6 shadow-sm hover:shadow-md hover:border-amber-400/50 dark:hover:border-amber-400/30 transition-all duration-200">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-400/15 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
                   <FiSmartphone size={20} />
                 </div>
-                <h3 className="font-extrabold text-white text-base mb-2">
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-base mb-2">
                   Pases Digitales con QR
                 </h3>
-                <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
+                <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
                   Valida entradas en segundos con lector QR seguro, sin riesgo de pases duplicados.
                 </p>
               </div>
 
-              <div className="bg-[#0D182E] rounded-2xl border border-slate-800 p-6 shadow-md hover:border-slate-700 transition-all duration-200">
-                <div className="w-10 h-10 rounded-xl bg-slate-800 text-amber-400 flex items-center justify-center mb-4">
+              <div className="bg-white dark:bg-[#0B132B] rounded-2xl border border-slate-200/90 dark:border-white/[0.08] p-6 shadow-sm hover:shadow-md hover:border-amber-400/50 dark:hover:border-amber-400/30 transition-all duration-200">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-400/15 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
                   <FiTrendingUp size={20} />
                 </div>
-                <h3 className="font-extrabold text-white text-base mb-2">
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-base mb-2">
                   Métricas en Tiempo Real
                 </h3>
-                <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
+                <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
                   Supervisa la venta de entradas, afluencia y el impacto de tus actividades culturales.
                 </p>
               </div>
             </div>
 
             {/* Banner de Registro */}
-            <div className="rounded-3xl bg-[#0D182E] p-8 sm:p-10 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-800">
+            <div className="rounded-3xl bg-white dark:bg-[#0B132B] p-8 sm:p-10 text-slate-900 dark:text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-200/90 dark:border-white/[0.08] transition-colors duration-200">
               <div className="max-w-xl space-y-2">
-                <span className="text-amber-400 font-bold text-xs uppercase tracking-widest block">
+                <span className="text-amber-600 dark:text-amber-400 font-bold text-xs uppercase tracking-widest block">
                   IMPULSA TUS EVENTOS EN CARTAGENA
                 </span>
-                <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
                   Lleva tu cartelera al siguiente nivel
                 </h2>
-                <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
                   Únete a la red de productores y colectivos que impulsan la cultura y el entretenimiento en Cartagena.
                 </p>
               </div>

@@ -14,12 +14,12 @@ export default function EventCard({ event }) {
         : 'border-slate-200 dark:border-white/[0.07] hover:dark:bg-slate-800 hover:dark:border-white/15'
     }`}>
       <div>
-        <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-900">
+        <div className="relative aspect-[4/3] overflow-hidden bg-slate-900">
           <ImageWithFallback
             src={photo}
             alt={title}
             className="h-full w-full aspect-[4/3]"
-            imgClassName="group-hover:scale-105 transition-transform duration-500 ease-out"
+            imgClassName="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
             fallbackClassName="h-full w-full aspect-[4/3]"
             fallbackGradient={getCategoryGradient(category)}
             fallbackText={category || 'Sin imagen'}
@@ -27,7 +27,7 @@ export default function EventCard({ event }) {
           >
             {/* Máscara linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.85) 100%) para garantizar contraste y legibilidad */}
             <div
-              className="absolute inset-0 pointer-events-none opacity-80 group-hover:opacity-95 transition-opacity duration-300"
+              className="absolute inset-0 pointer-events-none opacity-40 group-hover:opacity-50 transition-opacity duration-300"
               style={{
                 background: 'linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.85) 100%)',
               }}

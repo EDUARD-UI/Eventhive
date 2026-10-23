@@ -221,7 +221,6 @@ export default function ModeradorPanel() {
       onSelect={(tabId) => setSearchParams({ tab: tabId })}
       title={activeHeaderInfo.title}
       subtitle={activeHeaderInfo.subtitle}
-      badgeText="Módulo de Moderación"
     >
       {/* Toast Notification */}
       {toast && (
