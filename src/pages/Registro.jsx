@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiUser, FiMail, FiLock, FiBriefcase, FiPhone, FiFileText } from 'react-icons/fi';
-import Swal from 'sweetalert2';
 import AuthLayout from '../components/auth/AuthLayout.jsx';
 import InputField from '../components/common/InputField.jsx';
 import useForm from '../hooks/useForm.js';
@@ -9,6 +8,7 @@ import { authService } from '../services/authService.js';
 import { session, normalizeRole } from '../services/session.js';
 import { sanitizeText, sanitizePhone, sanitizeEmail } from '../utils/sanitizer.js';
 import { useLanguage } from '../context/LanguageContext.jsx';
+import { showSuccessAlert, showErrorAlert } from '../utils/alertUtils.js';
 
 export default function Registro() {
   const navigate = useNavigate();
@@ -111,48 +111,56 @@ export default function Registro() {
   const isOrganizer = values.role === 'organizador';
 
   const onSubmit = async (formValues) => {
-    if (isOrganizer) {
-      await authService.registrarOrganizacion({
-        razonSocial: sanitizeText(formValues.razonSocial),
-        nit: sanitizeText(formValues.nit),
-        correoEmpresarial: sanitizeEmail(formValues.correoEmpresarial),
-        nombreCompleto: sanitizeText(formValues.nombreCompleto),
-        correoUsuario: sanitizeEmail(formValues.correoUsuario),
-        password: formValues.password,
+    try {
+      if (isOrganizer) {
+        await authService.registrarOrganizacion({
+          razonSocial: sanitizeText(formValues.razonSocial),
+          nit: sanitizeText(formValues.nit),
+          correoEmpresarial: sanitizeEmail(formValues.correoEmpresarial),
+          nombreCompleto: sanitizeText(formValues.nombreCompleto),
+          correoUsuario: sanitizeEmail(formValues.correoUsuario),
+          password: formValues.password,
+        });
+      } else {
+        await authService.registrarCliente({
+          nombre: sanitizeText(formValues.name),
+          correo: sanitizeEmail(formValues.email),
+          telefono: sanitizePhone(formValues.phone),
+          clave: formValues.password,
+        });
+      }
+
+      const user = session.getUser();
+      const userRole = normalizeRole(user?.role || user?.rol);
+
+      await showSuccessAlert({
+        title: t('auth.accountCreatedTitle'),
+        text:
+          isOrganizer || userRole === 'REPRESENTANTE' || userRole === 'OPERADOR'
+            ? t('auth.accountCreatedOrgText')
+            : t('auth.accountCreatedUserText'),
+        badge: 'Cuenta Creada',
+        timer: 1800,
+        showConfirmButton: false,
       });
-    } else {
-      await authService.registrarCliente({
-        nombre: sanitizeText(formValues.name),
-        correo: sanitizeEmail(formValues.email),
-        telefono: sanitizePhone(formValues.phone),
-        clave: formValues.password,
+
+      if (isOrganizer || userRole === 'REPRESENTANTE' || userRole === 'OPERADOR') {
+        navigate('/organizacion');
+      } else if (userRole === 'ADMINISTRADOR') {
+        navigate('/admin');
+      } else if (userRole === 'MODERADOR') {
+        navigate('/moderador');
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      await showErrorAlert({
+        title: 'Error en el registro',
+        text: err.message || 'No fue posible completar tu registro. Por favor verifica los datos ingresados.',
+        badge: 'Registro Fallido',
+        confirmButtonText: 'Revisar datos',
       });
-    }
-
-    const user = session.getUser();
-    const userRole = normalizeRole(user?.role || user?.rol);
-
-    await Swal.fire({
-      icon: 'success',
-      title: t('auth.accountCreatedTitle'),
-      text: isOrganizer || userRole === 'REPRESENTANTE' || userRole === 'OPERADOR'
-        ? t('auth.accountCreatedOrgText')
-        : t('auth.accountCreatedUserText'),
-      timer: 2000,
-      showConfirmButton: false,
-      customClass: {
-        popup: 'rounded-3xl shadow-2xl border border-slate-100',
-      },
-    });
-
-    if (isOrganizer || userRole === 'REPRESENTANTE' || userRole === 'OPERADOR') {
-      navigate('/organizacion');
-    } else if (userRole === 'ADMINISTRADOR') {
-      navigate('/admin');
-    } else if (userRole === 'MODERADOR') {
-      navigate('/moderador');
-    } else {
-      navigate('/');
+      throw err;
     }
   };
 

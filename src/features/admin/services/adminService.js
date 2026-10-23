@@ -346,16 +346,20 @@ export const adminService = {
     }
   },
 
-  async invitarRol({ correo, rol = 'MODERADOR' }) {
+  async invitarRol({ correo, email, rol = 'MODERADOR' } = {}) {
+    const targetEmail = (correo || email || '').trim();
+    if (!targetEmail) {
+      throw new Error('El correo electrónico es obligatorio para enviar la invitación.');
+    }
     const rolValido = (rol || 'MODERADOR').toUpperCase().trim();
     return httpClient.post('/admin/correos/invitar', {
-      correo: correo.trim(),
+      correo: targetEmail,
       rol: rolValido,
     });
   },
 
-  async invitarTrabajador({ email, rol = 'MODERADOR' }) {
-    return this.invitarRol({ correo: email, rol });
+  async invitarTrabajador({ email, correo, rol = 'MODERADOR' } = {}) {
+    return this.invitarRol({ correo: email || correo, rol });
   },
 
   // 5. USUARIOS DEL SISTEMA (GET /api/usuarios)

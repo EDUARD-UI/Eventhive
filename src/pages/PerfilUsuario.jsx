@@ -22,7 +22,7 @@ import {
   FiUpload,
   FiCheck,
 } from 'react-icons/fi';
-import Swal from 'sweetalert2';
+import { showSuccessAlert, showErrorAlert, showWarningAlert, showInfoAlert } from '../utils/alertUtils.js';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
@@ -265,18 +265,18 @@ export default function PerfilUsuario() {
     try {
       await organizerService.eliminarDeseo(eventoId);
       setGuardados((prev) => prev.filter((ev) => String(ev.id) !== String(eventoId)));
-      Swal.fire({
-        icon: 'success',
+      await showSuccessAlert({
         title: 'Eliminado',
         text: 'Evento eliminado de tus favoritos.',
+        badge: 'Favorito Removido',
         timer: 1500,
         showConfirmButton: false,
       });
     } catch {
-      Swal.fire({
-        icon: 'error',
+      await showErrorAlert({
         title: 'Error',
         text: 'No se pudo eliminar el evento de tus favoritos.',
+        badge: 'Operación Fallida',
       });
     }
   };
@@ -286,18 +286,18 @@ export default function PerfilUsuario() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      Swal.fire({
-        icon: 'warning',
+      showWarningAlert({
         title: 'Archivo no válido',
         text: 'Por favor selecciona un archivo de imagen válido (JPG, PNG, WebP).',
+        badge: 'Formato Inválido',
       });
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      Swal.fire({
-        icon: 'warning',
+      showWarningAlert({
         title: 'Imagen muy pesada',
         text: 'El tamaño de la imagen no debe superar los 5MB.',
+        badge: 'Tamaño Excedido',
       });
       return;
     }
@@ -323,18 +323,18 @@ export default function PerfilUsuario() {
       session.updateUser({ urlImagenPerfil: newUrl });
       setSelectedPhotoFile(null);
       setPhotoPreview(null);
-      Swal.fire({
-        icon: 'success',
+      await showSuccessAlert({
         title: 'Foto actualizada',
         text: 'Tu foto de perfil ha sido actualizada exitosamente.',
-        timer: 2000,
+        badge: 'Foto de Perfil',
+        timer: 1800,
         showConfirmButton: false,
       });
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
+      await showErrorAlert({
         title: 'Error al subir foto',
         text: err.message || 'No se pudo actualizar tu foto de perfil. Intenta de nuevo.',
+        badge: 'Carga Fallida',
       });
     } finally {
       setIsUploadingPhoto(false);
@@ -352,13 +352,21 @@ export default function PerfilUsuario() {
     if (e?.preventDefault) e.preventDefault();
     const cleanNombre = sanitizeText(usuario.nombreCompleto);
     if (!cleanNombre) {
-      Swal.fire('Atención', 'El nombre es obligatorio.', 'warning');
+      showWarningAlert({
+        title: 'Atención',
+        text: 'El nombre es obligatorio.',
+        badge: 'Dato Requerido',
+      });
       return;
     }
 
     const cleanPhone = sanitizePhone(usuario.telefono);
     if (usuario.telefono && cleanPhone.length > 10) {
-      Swal.fire('Atención', 'El teléfono no puede superar los 10 dígitos.', 'warning');
+      showWarningAlert({
+        title: 'Atención',
+        text: 'El teléfono no puede superar los 10 dígitos.',
+        badge: 'Teléfono Inválido',
+      });
       return;
     }
 
@@ -402,19 +410,19 @@ export default function PerfilUsuario() {
       setSelectedPhotoFile(null);
       setPhotoPreview(null);
 
-      Swal.fire({
-        icon: 'success',
+      await showSuccessAlert({
         title: '¡Perfil actualizado!',
         text: 'Tus datos personales y foto de perfil se guardaron correctamente.',
+        badge: 'Datos Guardados',
         timer: 1800,
         showConfirmButton: false,
       });
       setEditModal(false);
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
+      await showErrorAlert({
         title: 'Error al actualizar',
         text: err.message || 'No fue posible actualizar tu perfil.',
+        badge: 'Actualización Fallida',
       });
     } finally {
       setIsUpdating(false);
@@ -425,32 +433,44 @@ export default function PerfilUsuario() {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (!passwordForm.claveActual) {
-      Swal.fire('Atención', 'Ingresa tu contraseña actual.', 'warning');
+      showWarningAlert({
+        title: 'Atención',
+        text: 'Ingresa tu contraseña actual.',
+        badge: 'Campo Requerido',
+      });
       return;
     }
     if (!passwordForm.claveNueva || passwordForm.claveNueva.length < 6) {
-      Swal.fire('Atención', 'La nueva contraseña debe tener al menos 6 caracteres.', 'warning');
+      showWarningAlert({
+        title: 'Atención',
+        text: 'La nueva contraseña debe tener al menos 6 caracteres.',
+        badge: 'Seguridad de Clave',
+      });
       return;
     }
     if (passwordForm.claveNueva !== passwordForm.confirmarClave) {
-      Swal.fire('Atención', 'La confirmación de la nueva contraseña no coincide.', 'warning');
+      showWarningAlert({
+        title: 'Atención',
+        text: 'La confirmación de la nueva contraseña no coincide.',
+        badge: 'Contraseñas no coinciden',
+      });
       return;
     }
 
     try {
       setIsChangingPassword(true);
       await userService.changePassword(passwordForm.claveActual, passwordForm.claveNueva);
-      Swal.fire({
-        icon: 'success',
+      await showSuccessAlert({
         title: 'Contraseña cambiada',
         text: 'Tu contraseña se ha actualizado exitosamente.',
+        badge: 'Clave Actualizada',
       });
       setPasswordForm({ claveActual: '', claveNueva: '', confirmarClave: '' });
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
+      await showErrorAlert({
         title: 'No se pudo cambiar la contraseña',
         text: err.message || 'Verifica tu contraseña actual e intenta de nuevo.',
+        badge: 'Cambio Fallido',
       });
     } finally {
       setIsChangingPassword(false);
@@ -1116,11 +1136,10 @@ export default function PerfilUsuario() {
             <button
               type="button"
               onClick={() => {
-                Swal.fire({
-                  icon: 'info',
+                showInfoAlert({
                   title: 'Boleto Digital Verificado',
                   text: 'Puedes presentar este código QR directamente en tu dispositivo o guardar una captura para ingresar.',
-                  confirmButtonColor: '#0B1B3D',
+                  badge: 'Acceso Oficial',
                 });
               }}
               className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"

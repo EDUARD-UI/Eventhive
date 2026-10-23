@@ -27,17 +27,9 @@ export const normalizeRole = (rawRole) => {
     role = role.replace('ROLE_', '');
   }
 
-  // Corregir nombres: ADMINISTRADOR (no ADMIN), REPRESENTANTE (quien entra a la organización, no ORGANIZADOR)
+    // Corregir nombres: ADMINISTRADOR (no ADMIN), REPRESENTANTE (quien entra a la organización, no ORGANIZADOR)
   if (role === 'ADMIN' || role === 'ADMINISTRADOR') return 'ADMINISTRADOR';
-  if (
-    role === 'ORGANIZADOR' ||
-    role === 'REPRESENTANTE' ||
-    role === 'ORGANIZACION' ||
-    role === 'ORGANIZATION' ||
-    role === 'ORGANIZER'
-  ) {
-    return 'REPRESENTANTE';
-  }
+  if (role === 'REPRESENTANTE' || role === 'ORGANIZADOR' || role === 'REPRESENTANTE_ORGANIZACION' || role === 'ORGANIZATION') return 'REPRESENTANTE';
   if (role === 'OPERADOR') return 'OPERADOR';
   if (role === 'MODERADOR' || role === 'MODERATOR') return 'MODERADOR';
   if (role === 'MARKETING') return 'MARKETING';

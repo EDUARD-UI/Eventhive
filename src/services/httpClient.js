@@ -140,7 +140,7 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
     if (err.name === 'AbortError') {
       throw new Error('La solicitud tardó demasiado tiempo en responder. Verifica la conexión con el servidor.');
     }
-    throw new Error('No fue posible conectar con el servidor en http://localhost:8080. Verifica que el backend esté ejecutándose.');
+    throw new Error(`No fue posible conectar con el servidor backend (${API_BASE_URL}). Verifica la conexión de red o que el backend esté ejecutándose.`);
   }
 
   // 2. MANEJO REACTIVO DE 401 UNAUTHORIZED:

@@ -11,7 +11,7 @@ import {
   FiFileText,
   FiWifi,
 } from 'react-icons/fi';
-import Swal from 'sweetalert2';
+import { showWarningAlert, showSuccessAlert, showErrorAlert } from '../utils/alertUtils.js';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import logoImage from '../assets/logo pequeño.png';
@@ -148,21 +148,19 @@ export default function PasarelaPagoPage() {
     if (e) e.preventDefault();
 
     if (!buyerForm.nombre.trim() || !buyerForm.email.trim()) {
-      Swal.fire({
-        icon: 'warning',
+      showWarningAlert({
         title: 'Datos requeridos',
         text: 'Por favor ingresa tu nombre y correo para enviar las entradas.',
-        confirmButtonColor: '#0A1329',
+        badge: 'Información Faltante',
       });
       return;
     }
 
     if (cleanCardDigits.length < 15 || !cardForm.cvv) {
-      Swal.fire({
-        icon: 'warning',
+      showWarningAlert({
         title: 'Tarjeta requerida',
         text: 'Por favor verifica el número de tarjeta (16 dígitos) y el código de seguridad CVV.',
-        confirmButtonColor: '#0A1329',
+        badge: 'Datos de Pago',
       });
       return;
     }

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { FiMail, FiLock, FiArrowLeft, FiCheckCircle, FiKey, FiShield } from 'react-icons/fi';
-import Swal from 'sweetalert2';
 import AuthLayout from '../components/auth/AuthLayout.jsx';
 import InputField from '../components/common/InputField.jsx';
 import { httpClient } from '../services/httpClient.js';
+import { showSuccessAlert, showErrorAlert } from '../utils/alertUtils.js';
 
 export default function RecuperarContrasenaPage() {
   const navigate = useNavigate();
@@ -43,7 +43,6 @@ export default function RecuperarContrasenaPage() {
     setIsSendingEmail(true);
 
     try {
-      // Intento de consumir endpoint si backend existe
       try {
         await httpClient.post('/auth/olvide-password', { correo: email.trim() });
       } catch (backendErr) {
@@ -51,11 +50,17 @@ export default function RecuperarContrasenaPage() {
       }
 
       setEmailSent(true);
-      Swal.fire({
-        icon: 'success',
+      await showSuccessAlert({
         title: '¡Instrucciones enviadas!',
         text: `Hemos enviado un enlace de recuperación al correo ${email.trim()}. Revisa tu bandeja de entrada o spam.`,
-        confirmButtonColor: '#0B1B3D',
+        badge: 'Correo Enviado',
+        confirmButtonText: 'Entendido',
+      });
+    } catch (err) {
+      await showErrorAlert({
+        title: 'Error de envío',
+        text: err?.message || 'No fue posible despachar las instrucciones de recuperación.',
+        badge: 'Envío Fallido',
       });
     } finally {
       setIsSendingEmail(false);
@@ -91,14 +96,20 @@ export default function RecuperarContrasenaPage() {
         console.warn('Simulando cambio de contraseña:', backendErr);
       }
 
-      await Swal.fire({
-        icon: 'success',
+      await showSuccessAlert({
         title: '¡Contraseña restablecida!',
         text: 'Tu contraseña ha sido cambiada con éxito. Ya puedes iniciar sesión con tu nueva clave.',
-        confirmButtonColor: '#0B1B3D',
+        badge: 'Clave Actualizada',
+        confirmButtonText: 'Iniciar Sesión',
       });
 
       navigate('/iniciosesion');
+    } catch (err) {
+      await showErrorAlert({
+        title: 'Error al restablecer',
+        text: err?.message || 'No fue posible actualizar tu contraseña.',
+        badge: 'Operación Fallida',
+      });
     } finally {
       setIsSubmittingNewPassword(false);
     }

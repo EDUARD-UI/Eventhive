@@ -1,19 +1,30 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { FiMail, FiLock } from 'react-icons/fi';
-import Swal from 'sweetalert2';
 import AuthLayout from '../components/auth/AuthLayout.jsx';
 import InputField from '../components/common/InputField.jsx';
 import useForm from '../hooks/useForm.js';
 import { authService } from '../services/authService.js';
-import { session, normalizeRole, getDashboardPathForRole } from '../services/session.js';
+import { session, normalizeRole } from '../services/session.js';
 import { useLanguage } from '../context/LanguageContext.jsx';
+import { showSuccessAlert, showAuthErrorAlert, showWarningAlert } from '../utils/alertUtils.js';
 
 export default function InicioSesion() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const sessionExpired = searchParams.get('session_expired') === 'true';
   const { t } = useLanguage();
+
+  useEffect(() => {
+    if (sessionExpired) {
+      showWarningAlert({
+        title: 'Sesión caducada',
+        text: t('auth.sessionExpired'),
+        badge: 'Acceso Requerido',
+        confirmButtonText: 'Entendido',
+      });
+    }
+  }, [sessionExpired, t]);
 
   const validateLogin = useCallback(
     (values) => {
@@ -54,46 +65,61 @@ export default function InicioSesion() {
   );
 
   const onSubmit = async (formValues) => {
-    const data = await authService.login(formValues.email, formValues.password);
+    try {
+      const data = await authService.login(formValues.email, formValues.password);
 
-    await Swal.fire({
-      icon: 'success',
-      title: t('auth.welcomeBackTitle'),
-      text: t('auth.welcomeBackText'),
-      timer: 1200,
-      showConfirmButton: false,
-      customClass: {
-        popup: 'rounded-3xl shadow-2xl border border-slate-100',
-      },
-    });
+      await showSuccessAlert({
+        title: t('auth.welcomeBackTitle'),
+        text: t('auth.welcomeBackText'),
+        timer: 1400,
+        showConfirmButton: false,
+      });
 
-    const user = session.getUser();
-    const userRole = normalizeRole(
-      data?.rol ||
-      data?.role ||
-      data?.rolNombre ||
-      data?.usuario?.rol ||
-      data?.usuario?.role ||
-      data?.usuario?.rolNombre ||
-      user?.role ||
-      user?.rol ||
-      user?.rolNombre
-    );
+      const user = session.getUser();
+      const userRole = normalizeRole(
+        data?.rol ||
+        data?.role ||
+        data?.rolNombre ||
+        data?.usuario?.rol ||
+        data?.usuario?.role ||
+        data?.usuario?.rolNombre ||
+        user?.role ||
+        user?.rol ||
+        user?.rolNombre
+      );
 
-    // Redirección por rol: Clientes van a Home (/), Organizadores a /organizacion, etc.
-    let destination = '/';
-    if (userRole === 'REPRESENTANTE' || userRole === 'OPERADOR' || userRole === 'ORGANIZADOR') {
-      destination = '/organizacion';
-    } else if (userRole === 'ADMINISTRADOR' || userRole === 'ADMIN') {
-      destination = '/admin';
-    } else if (userRole === 'MODERADOR') {
-      destination = '/moderador';
-    } else {
-      // Cliente se direcciona a home
-      destination = '/';
+      // Redirección por rol: Clientes van a Home (/), Organizadores a /organizacion, etc.
+      let destination = '/';
+      if (userRole === 'REPRESENTANTE' || userRole === 'OPERADOR' || userRole === 'ORGANIZADOR') {
+        destination = '/organizacion';
+      } else if (userRole === 'ADMINISTRADOR' || userRole === 'ADMIN') {
+        destination = '/admin';
+      } else if (userRole === 'MODERADOR') {
+        destination = '/moderador';
+      } else {
+        // Cliente se direcciona a home
+        destination = '/';
+      }
+
+      navigate(destination, { replace: true });
+    } catch (err) {
+      const status = err?.status;
+      const isBadCredentials =
+        status === 401 ||
+        status === 400 ||
+        /credencial|clave|contrase|usuario|no coincide|invalid/i.test(err?.message || '');
+
+      await showAuthErrorAlert({
+        title: isBadCredentials ? 'Credenciales incorrectas' : 'Error al iniciar sesión',
+        text:
+          err?.message ||
+          'El correo electrónico o la contraseña ingresada no son válidos. Por favor, verifica tus datos e inténtalo nuevamente.',
+        badge: isBadCredentials ? 'Credenciales Inválidas' : 'Error de Conexión',
+        confirmButtonText: 'Intentar de nuevo',
+      });
+
+      throw err;
     }
-
-    navigate(destination, { replace: true });
   };
 
   return (

@@ -179,19 +179,15 @@ export default function AdminTrabajadoresView({
     }
   };
 
-  const handleInviteSuccess = async (inviteData) => {
+    const handleInviteSuccess = async (inviteData) => {
     await adminService.invitarTrabajador(inviteData);
     setFeedbackMsg({
       type: 'success',
       text: `Invitación enviada exitosamente a "${inviteData.email}" con el rol de ${inviteData.rol}.`,
     });
-    if (inviteData.rol === 'MODERADOR' && onAsignarModerador) {
-      try {
-        await onAsignarModerador(inviteData.email);
-      } catch {
-        // Fallback silencioso
-      }
-    }
+    // Se elimina la llamada prematura a onAsignarModerador(inviteData.email):
+    // La asignación de categorías/zonas a un moderador solo debe realizarse una vez que
+    // el usuario haya aceptado la invitación y cuente con rol activo en la base de datos.
     await fetchTrabajadores();
   };
 
@@ -256,22 +252,20 @@ export default function AdminTrabajadoresView({
           {/* Botón Invitar Trabajador */}
           <button
             type="button"
-            onClick={() => setInviteModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-black text-amber-300 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-xs cursor-pointer"
+            onClick={() =>
+              setMailModal({
+                isOpen: true,
+                email: '',
+                name: '',
+                subject: 'Invitación oficial para unirte a EventHive',
+                mode: 'invite',
+              })
+            }
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-sm cursor-pointer"
+            title="Invitar nuevo Moderador o especialista de Marketing mediante Gmail"
           >
             <UserPlus size={15} />
             <span>Invitar Trabajador</span>
-          </button>
-
-          {/* Botón Redactar Correo Estilo Gmail */}
-          <button
-            type="button"
-            onClick={() => setMailModal({ isOpen: true, email: '', name: '', subject: '' })}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-xs cursor-pointer"
-            title="Abrir redactor de correo electrónico"
-          >
-            <Mail size={15} className="text-slate-500" />
-            <span>Redactar</span>
           </button>
 
           {/* Filtro por Rol */}
@@ -482,15 +476,15 @@ export default function AdminTrabajadoresView({
         </div>, document.body)
       )}
 
-      {/* Modal Genérico de Enviar Correo (Se abre a la derecha) */}
+      {/* Modal Genérico de Enviar Correo (Estilo Gmail) */}
       <ModalEnviarCorreo
         isOpen={mailModal.isOpen}
         onClose={() => setMailModal((prev) => ({ ...prev, isOpen: false }))}
         initialEmail={mailModal.email}
         initialName={mailModal.name}
         defaultSubject={mailModal.subject}
-        title="Enviar Correo al Trabajador"
-        subtitle="Comunicación individual directa con el colaborador"
+        initialMode={mailModal.mode || 'email'}
+        onSendSuccess={() => fetchTrabajadores()}
       />
 
       {/* Modal Drawer de Invitar Trabajador (Se abre a la derecha) */}

@@ -11,7 +11,7 @@ import {
   Send,
   CheckCircle2,
 } from 'lucide-react';
-import Swal from 'sweetalert2';
+import { showSuccessAlert, showErrorAlert } from '../../utils/alertUtils.js';
 
 export default function ModalInvitarTrabajadorAdmin({
   isOpen,
@@ -38,6 +38,12 @@ export default function ModalInvitarTrabajadorAdmin({
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTrimmed)) {
+      setError('El formato del correo electrónico ingresado no es válido.');
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
@@ -52,11 +58,10 @@ export default function ModalInvitarTrabajadorAdmin({
         });
       }
 
-      await Swal.fire({
-        icon: 'success',
+      await showSuccessAlert({
         title: 'Invitación enviada',
         text: `Se ha enviado la invitación a ${emailTrimmed} con el rol de ${rol}.`,
-        confirmButtonColor: '#0f172a',
+        badge: 'Invitación Oficial',
       });
 
       // Limpiar formulario y cerrar
@@ -67,7 +72,13 @@ export default function ModalInvitarTrabajadorAdmin({
       setMensaje('');
       onClose();
     } catch (err) {
-      setError(err?.message || 'No fue posible enviar la invitación.');
+      const msg = err?.message || 'No fue posible enviar la invitación.';
+      setError(msg);
+      await showErrorAlert({
+        title: 'Error al enviar invitación',
+        text: msg,
+        badge: 'Invitación Fallida',
+      });
     } finally {
       setLoading(false);
     }
@@ -88,16 +99,16 @@ export default function ModalInvitarTrabajadorAdmin({
       >
         <div>
           {/* Cabecera del drawer */}
-          <div className="bg-[#131b2e] p-6 text-white flex items-center justify-between border-b border-white/10">
+          <div className="bg-slate-50 p-6 flex items-center justify-between border-b border-slate-200">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-400">
+              <div className="w-10 h-10 rounded-2xl bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center font-bold">
                 <UserPlus size={20} />
               </div>
               <div>
-                <h3 className="font-display text-base sm:text-lg font-bold text-white leading-tight">
+                <h3 className="font-display text-base sm:text-lg font-bold text-slate-900 leading-tight">
                   Invitar Trabajador
                 </h3>
-                <p className="text-xs text-slate-300 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5">
                   Vincular un nuevo integrante al equipo institucional
                 </p>
               </div>
@@ -105,7 +116,7 @@ export default function ModalInvitarTrabajadorAdmin({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 hover:text-slate-900 flex items-center justify-center transition-colors cursor-pointer"
             >
               <X size={18} />
             </button>
@@ -222,7 +233,7 @@ export default function ModalInvitarTrabajadorAdmin({
             form="invite-worker-form"
             type="submit"
             disabled={loading}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-300 font-bold text-xs uppercase tracking-wider shadow-sm hover:shadow-md transition-all disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white font-bold text-xs uppercase tracking-wider shadow-sm hover:shadow-md transition-all disabled:opacity-50 cursor-pointer"
           >
             <Send size={14} />
             <span>{loading ? 'Enviando...' : 'Enviar Invitación'}</span>

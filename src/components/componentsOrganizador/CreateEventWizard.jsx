@@ -17,7 +17,13 @@ import {
 } from 'react-icons/fi';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
-import Swal from 'sweetalert2';
+import {
+  showSuccessAlert,
+  showErrorAlert,
+  showWarningAlert,
+  showInfoAlert,
+  showPendingRutAlert,
+} from '../../utils/alertUtils.js';
 import { organizerService } from '../../services/organizerService.js';
 import { formatPrice, formatHora23 } from '../../utils/formatters.js';
 import StyledDatePicker from '../common/StyledDatePicker.jsx';
@@ -253,38 +259,38 @@ export default function CreateEventWizard({
   const validateStep = () => {
     if (currentStep === 1) {
       if (!form.titulo.trim()) {
-        Swal.fire({ icon: 'warning', title: 'Título requerido', text: 'Ingresa el nombre del evento.' });
+        showWarningAlert({ title: 'Título requerido', text: 'Ingresa el nombre del evento.', badge: 'Campo Obligatorio' });
         return false;
       }
       if (!form.descripcion.trim()) {
-        Swal.fire({ icon: 'warning', title: 'Descripción requerida', text: 'Describe la experiencia del evento.' });
+        showWarningAlert({ title: 'Descripción requerida', text: 'Describe la experiencia del evento.', badge: 'Campo Obligatorio' });
         return false;
       }
       if (!form.categoriaId) {
-        Swal.fire({ icon: 'warning', title: 'Categoría requerida', text: 'Selecciona una categoría.' });
+        showWarningAlert({ title: 'Categoría requerida', text: 'Selecciona una categoría para clasificar tu evento.', badge: 'Campo Obligatorio' });
         return false;
       }
       if (!form.fecha) {
-        Swal.fire({ icon: 'warning', title: 'Fecha requerida', text: 'Indica la fecha del evento.' });
+        showWarningAlert({ title: 'Fecha requerida', text: 'Indica la fecha en que se realizará el evento.', badge: 'Campo Obligatorio' });
         return false;
       }
       if (!isHistoricalEvent && form.fecha < todayStr) {
-        Swal.fire({
-          icon: 'warning',
+        showWarningAlert({
           title: 'Fecha inválida',
           text: 'No es posible seleccionar una fecha pasada para el inicio del evento.',
+          badge: 'Fecha no permitida',
         });
         return false;
       }
       if (!form.hora) {
-        Swal.fire({ icon: 'warning', title: 'Hora requerida', text: 'Indica la hora de inicio del evento.' });
+        showWarningAlert({ title: 'Hora requerida', text: 'Indica la hora de inicio del evento.', badge: 'Campo Obligatorio' });
         return false;
       }
       if (!isHistoricalEvent && form.fecha === todayStr && form.hora < currentTimeStr) {
-        Swal.fire({
-          icon: 'warning',
+        showWarningAlert({
           title: 'Hora inválida',
           text: `La hora seleccionada (${form.hora}) ya ha transcurrido el día de hoy. Por favor selecciona una hora posterior a las ${currentTimeStr}.`,
+          badge: 'Hora no permitida',
         });
         return false;
       }
@@ -292,18 +298,18 @@ export default function CreateEventWizard({
 
     if (currentStep === 2) {
       if (!form.lugar.trim()) {
-        Swal.fire({
-          icon: 'warning',
+        showWarningAlert({
           title: 'Nombre del lugar requerido',
           text: 'Por favor escribe el nombre del lugar donde se realizará el evento (ej: Plaza de la Aduana).',
+          badge: 'Lugar Requerido',
         });
         return false;
       }
       if (!form.latitud || !form.longitud) {
-        Swal.fire({
-          icon: 'warning',
+        showWarningAlert({
           title: 'Ubicación en el mapa',
           text: 'Haz clic en el mapa para ubicar el punto del evento.',
+          badge: 'Geolocalización',
         });
         return false;
       }
@@ -311,16 +317,16 @@ export default function CreateEventWizard({
 
     if (currentStep === 3) {
       if (localidades.length === 0) {
-        Swal.fire({ icon: 'warning', title: 'Localidades requeridas', text: 'Agrega al menos una localidad.' });
+        showWarningAlert({ title: 'Localidades requeridas', text: 'Agrega al menos una localidad o zona para la venta de boletos.', badge: 'Localidades' });
         return false;
       }
       for (const loc of localidades) {
         if (!loc.nombre.trim()) {
-          Swal.fire({ icon: 'warning', title: 'Nombre de localidad', text: 'Todas las localidades deben tener nombre.' });
+          showWarningAlert({ title: 'Nombre de localidad', text: 'Todas las localidades deben tener un nombre definido.', badge: 'Datos Incompletos' });
           return false;
         }
         if (Number(loc.capacidad) <= 0) {
-          Swal.fire({ icon: 'warning', title: 'Capacidad inválida', text: 'La capacidad debe ser mayor a 0.' });
+          showWarningAlert({ title: 'Capacidad inválida', text: 'La capacidad de cada localidad debe ser mayor a 0.', badge: 'Aforo Inválido' });
           return false;
         }
       }
@@ -388,35 +394,28 @@ export default function CreateEventWizard({
       // REQUERIMIENTO 5:
       // Si la organización está en PENDIENTE_REVISION y backend devuelve BORRADOR:
       if (estadoEvento === 'BORRADOR' || createdEvent?.requiereRut) {
-        await Swal.fire({
-          icon: 'info',
-          title: 'Evento creado como borrador',
-          text: 'Su evento ha sido creado como borrador, por favor adjunte su RUT para verificación de su organización.',
-          confirmButtonColor: '#0B1B3D',
-        });
+        await showPendingRutAlert();
       } else if (estadoEvento === 'MODERACION') {
-        await Swal.fire({
-          icon: 'info',
+        await showInfoAlert({
           title: 'Evento enviado a moderación',
           text: 'El evento ha sido enviado a moderación y será revisado antes de publicarse en cartelera.',
-          confirmButtonColor: '#0B1B3D',
+          badge: 'En Revisión',
         });
       } else {
-        await Swal.fire({
-          icon: 'success',
+        await showSuccessAlert({
           title: '¡Evento Creado!',
           text: backendMsg || 'Tu evento ha sido creado y publicado exitosamente.',
-          confirmButtonColor: '#0B1B3D',
+          badge: 'Evento Publicado',
         });
       }
 
       if (onSave) onSave(createdEvent);
     } catch (err) {
       console.error('Error al crear evento:', err);
-      Swal.fire({
-        icon: 'error',
+      await showErrorAlert({
         title: 'Error al crear evento',
         text: err.message || 'No se pudo crear el evento. Revisa la información e intenta de nuevo.',
+        badge: 'Creación Fallida',
       });
     } finally {
       setIsSubmitting(false);

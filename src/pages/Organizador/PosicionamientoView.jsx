@@ -12,7 +12,13 @@ import {
   FiDollarSign,
   FiAlertCircle,
 } from 'react-icons/fi';
-import Swal from 'sweetalert2';
+import {
+  showSuccessAlert,
+  showErrorAlert,
+  showWarningAlert,
+  showInfoAlert,
+  showConfirmAlert,
+} from '../../utils/alertUtils.js';
 import { organizerService } from '../../services/organizerService.js';
 import { promotionPlanService } from '../../services/promotionPlanService.js';
 import StatCard from '../../components/Shared/StatCard.jsx';
@@ -99,40 +105,29 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
     if (procesando) return; // Evitar clics repetidos
 
     if (!selectedEventoId) {
-      Swal.fire({
-        icon: 'warning',
+      showWarningAlert({
         title: 'Selecciona un evento',
         text: 'Por favor selecciona el evento publicado que deseas promocionar.',
-        confirmButtonColor: '#0B1B3D',
+        badge: 'Evento Requerido',
       });
       return;
     }
 
     if (!selectedPlan) {
-      Swal.fire({
-        icon: 'warning',
+      showWarningAlert({
         title: 'Selecciona un plan',
         text: 'Por favor elige un plan de promoción disponible.',
-        confirmButtonColor: '#0B1B3D',
+        badge: 'Plan Requerido',
       });
       return;
     }
 
-    const confirmRes = await Swal.fire({
-      icon: 'question',
+    const confirmRes = await showConfirmAlert({
       title: 'Contratar Promoción',
-      html: `
-        <div class="text-left text-xs space-y-2">
-          <p><strong>Evento:</strong> ${selectedEvento?.titulo || ''}</p>
-          <p><strong>Plan:</strong> ${selectedPlan.nombre}</p>
-          <p><strong>Detalle:</strong> ${selectedPlan.detallePublicidad || 'Posicionamiento en cartelera'}</p>
-          <p><strong>Precio fijo a pagar:</strong> <span class="text-amber-600 font-bold">${formatPrice(selectedPlan.precio)}</span></p>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: 'Continuar a pasarela de pago',
+      text: `¿Deseas contratar el plan ${selectedPlan.nombre} (${formatPrice(selectedPlan.precio)}) para "${selectedEvento?.titulo || ''}"?`,
+      badge: 'Confirmación de Pago',
+      confirmButtonText: 'Continuar al pago',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#0B1B3D',
     });
 
     if (!confirmRes.isConfirmed) return;
@@ -161,39 +156,35 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
 
       if (estadoConfirmado === 'CONFIRMADO') {
         setPagoStatus('CONFIRMADO');
-        await Swal.fire({
-          icon: 'success',
+        await showSuccessAlert({
           title: '¡Pago Confirmado!',
           text: `El pago de la promoción para "${selectedEvento?.titulo}" ha sido confirmado exitosamente. Se ha enviado un correo con el comprobante de la transacción.`,
-          confirmButtonColor: '#0B1B3D',
+          badge: 'Promoción Activa',
         });
         await loadEventosPublicados();
         if (onPromotionSuccess) onPromotionSuccess();
       } else if (estadoConfirmado === 'PENDIENTE') {
         setPagoStatus('PENDIENTE');
-        await Swal.fire({
-          icon: 'info',
+        await showInfoAlert({
           title: 'Pago Pendiente',
           text: 'La transacción permanece en estado pendiente de aprobación bancaria.',
-          confirmButtonColor: '#0B1B3D',
+          badge: 'En Espera Bancaria',
         });
       } else {
         setPagoStatus('FALLIDO');
-        await Swal.fire({
-          icon: 'error',
+        await showErrorAlert({
           title: 'Pago No Confirmado',
           text: 'La transacción no pudo ser verificada por el sistema bancario. Intenta nuevamente.',
-          confirmButtonColor: '#0B1B3D',
+          badge: 'Pago Fallido',
         });
       }
     } catch (err) {
       setPagoStatus('FALLIDO');
       console.error('Error en contratación de promoción:', err);
-      Swal.fire({
-        icon: 'error',
+      await showErrorAlert({
         title: 'Error en la operación',
         text: err?.message || 'No se pudo completar el flujo de pago de la promoción.',
-        confirmButtonColor: '#0B1B3D',
+        badge: 'Operación Fallida',
       });
     } finally {
       setProcesando(false);

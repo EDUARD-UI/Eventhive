@@ -11,9 +11,9 @@ import {
   FiArrowRight,
   FiHome,
 } from 'react-icons/fi';
-import Swal from 'sweetalert2';
 import { httpClient } from '../services/httpClient.js';
 import HexagonalHivePattern from '../components/common/HexagonalHivePattern.jsx';
+import { showSuccessAlert, showErrorAlert } from '../utils/alertUtils.js';
 
 export default function AceptarInvitacionPage() {
   const [searchParams] = useSearchParams();
@@ -102,6 +102,7 @@ export default function AceptarInvitacionPage() {
         nombre: nombreTrim,
         telefono: telTrim,
         clave: claveTrim,
+        password: claveTrim,
       };
 
       try {
@@ -110,20 +111,24 @@ export default function AceptarInvitacionPage() {
         await httpClient.post('/invitaciones-rol/aceptar', payload, { skipAuth: true });
       }
 
-      await Swal.fire({
-        icon: 'success',
+      await showSuccessAlert({
         title: '¡Invitación Aceptada!',
         text: 'Tu cuenta ha sido activada con éxito. Ya puedes iniciar sesión con tus credenciales.',
-        confirmButtonColor: '#0F172A',
+        badge: 'Bienvenido al Equipo',
         confirmButtonText: 'Iniciar Sesión',
       });
 
       navigate('/iniciosesion');
     } catch (err) {
-      setFormError(
+      const msg =
         err?.message ||
-          'Ocurrió un error al aceptar la invitación. Verifica los datos o solicita un nuevo enlace.'
-      );
+        'Ocurrió un error al aceptar la invitación. Verifica los datos o solicita un nuevo enlace.';
+      setFormError(msg);
+      await showErrorAlert({
+        title: 'Error al aceptar invitación',
+        text: msg,
+        badge: 'Invitación no válida',
+      });
     } finally {
       setSubmitting(false);
     }

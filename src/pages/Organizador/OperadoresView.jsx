@@ -18,11 +18,11 @@ import {
   FiCalendar,
   FiPhone,
 } from 'react-icons/fi';
-import Swal from 'sweetalert2';
 import { organizerService } from '../../services/organizerService.js';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
 import ModalEnviarCorreo from '../../components/Shared/ModalEnviarCorreo.jsx';
+import { showSuccessAlert, showErrorAlert, showConfirmAlert } from '../../utils/alertUtils.js';
 
 const PERMISOS_DISPONIBLES = [
   { id: 'CHECK_IN', label: 'Check-in de Asistentes', desc: 'Escanear boletos y validar ingresos con código QR al evento' },
@@ -108,19 +108,24 @@ export default function OperadoresView() {
     setInviteError(null);
     try {
       await organizerService.invitarOperador(emailTrim);
-      Swal.fire({
-        icon: 'success',
+      await showSuccessAlert({
         title: 'Invitación enviada',
         text: `Se ha enviado la invitación exitosamente a ${emailTrim}. El enlace será válido por 24 horas.`,
+        badge: 'Invitación Despachada',
       });
       setInviteEmail('');
       setShowInviteModal(false);
       fetchData();
     } catch (err) {
-      setInviteError(
+      const msg =
         err.message ||
-          'No se pudo enviar la invitación. Verifica que el usuario exista y no pertenezca ya a otra organización.'
-      );
+        'No se pudo enviar la invitación. Verifica que el usuario exista y no pertenezca ya a otra organización.';
+      setInviteError(msg);
+      await showErrorAlert({
+        title: 'Error al enviar invitación',
+        text: msg,
+        badge: 'Invitación Fallida',
+      });
     } finally {
       setIsInviting(false);
     }
@@ -130,19 +135,19 @@ export default function OperadoresView() {
   const handleReenviarInvitacion = async (correo) => {
     try {
       await organizerService.invitarOperador(correo);
-      Swal.fire({
-        icon: 'success',
+      await showSuccessAlert({
         title: 'Invitación reenviada',
         text: `Se ha generado un nuevo enlace válido por 24 horas y se reenvió el correo a ${correo}.`,
+        badge: 'Correo Reenviado',
         timer: 2000,
         showConfirmButton: false,
       });
       fetchData();
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
+      await showErrorAlert({
         title: 'Error al reenviar',
         text: err.message || 'No fue posible reenviar la invitación en este momento.',
+        badge: 'Reenvío Fallido',
       });
     }
   };
@@ -154,17 +159,23 @@ export default function OperadoresView() {
     setExpulsarError(null);
     try {
       await organizerService.expulsarOperador(operadorToExpulsar.id || operadorToExpulsar.operadorId);
-      Swal.fire({
-        icon: 'success',
+      await showSuccessAlert({
         title: 'Operador retirado',
         text: 'El operador ha sido desvinculado de la organización.',
-        timer: 1500,
+        badge: 'Operador Desvinculado',
+        timer: 1800,
         showConfirmButton: false,
       });
       setOperadorToExpulsar(null);
       fetchData();
     } catch (err) {
-      setExpulsarError(err.message || 'Ocurrió un error al intentar expulsar al operador.');
+      const msg = err.message || 'Ocurrió un error al intentar expulsar al operador.';
+      setExpulsarError(msg);
+      await showErrorAlert({
+        title: 'Error al desvincular operador',
+        text: msg,
+        badge: 'Operación Fallida',
+      });
     } finally {
       setIsExpelling(false);
     }
@@ -186,20 +197,20 @@ export default function OperadoresView() {
         editingOperador.id || editingOperador.operadorId,
         selectedPermisos
       );
-      Swal.fire({
-        icon: 'success',
+      await showSuccessAlert({
         title: 'Permisos actualizados',
         text: 'Los permisos del operador se actualizaron correctamente.',
-        timer: 1500,
+        badge: 'Permisos Guardados',
+        timer: 1800,
         showConfirmButton: false,
       });
       setEditingOperador(null);
       fetchData();
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
+      await showErrorAlert({
         title: 'Error al actualizar permisos',
         text: err.message || 'No se pudieron actualizar los permisos del operador.',
+        badge: 'Actualización Fallida',
       });
     } finally {
       setIsUpdatingPermisos(false);
@@ -296,7 +307,7 @@ export default function OperadoresView() {
           onClick={() => setActiveTab('operadores')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
             activeTab === 'operadores'
-              ? 'bg-[#0B1B3D] text-white shadow-sm'
+              ? 'bg-brand text-white shadow-sm'
               : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
@@ -308,7 +319,7 @@ export default function OperadoresView() {
           onClick={() => setActiveTab('invitaciones')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
             activeTab === 'invitaciones'
-              ? 'bg-[#0B1B3D] text-white shadow-sm'
+              ? 'bg-brand text-white shadow-sm'
               : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
@@ -366,7 +377,7 @@ export default function OperadoresView() {
                     {/* Header Operador */}
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-[#0B1B3D] text-amber-300 flex items-center justify-center font-bold text-sm shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-blue-50 text-brand border border-blue-100 flex items-center justify-center font-bold text-sm shrink-0">
                           {nombre.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">

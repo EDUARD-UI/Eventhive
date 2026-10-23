@@ -523,7 +523,7 @@ export default function MarketingPromocionesView() {
                           {/* Evento */}
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-slate-900 overflow-hidden shrink-0 flex items-center justify-center text-amber-400 font-bold text-xs border border-amber-400/40">
+                              <div className="w-10 h-10 rounded-xl bg-amber-50 overflow-hidden shrink-0 flex items-center justify-center text-amber-600 font-bold text-xs border border-amber-200">
                                 {p.urlImagenDestacado || p.foto ? (
                                   <img
                                     src={p.urlImagenDestacado || p.foto}
