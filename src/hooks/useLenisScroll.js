@@ -2,6 +2,69 @@ import { useEffect, useRef } from 'react';
 import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
 
+let activeLenisInstance = null;
+const scrollListeners = new Set();
+
+/**
+ * Registra un callback que se invocará en cada evento de scroll de Lenis
+ * @param {Function} callback
+ * @returns {Function} Función para cancelar la suscripción
+ */
+export function registerLenisScrollListener(callback) {
+  if (typeof callback !== 'function') return () => {};
+  scrollListeners.add(callback);
+  return () => {
+    scrollListeners.delete(callback);
+  };
+}
+
+/**
+ * Obtiene la instancia activa de Lenis si está disponible
+ * @returns {Lenis|null}
+ */
+export function getActiveLenis() {
+  return activeLenisInstance || (typeof window !== 'undefined' ? window.__lenis : null);
+}
+
+/**
+ * useLenisScrollEffect
+ * Hook reactivo para sincronizar elementos del DOM directamente con el motor Lenis.
+ * Invoca el callback en cada frame de scroll de Lenis y provee fallback pasivo para scroll nativo.
+ *
+ * @param {Function} callback - Callback que recibe ({ scroll, velocity, progress, direction, lenis })
+ * @param {Array} [deps] - Dependencias del efecto
+ */
+export function useLenisScrollEffect(callback, deps = []) {
+  const callbackRef = useRef(callback);
+  callbackRef.current = callback;
+
+  useEffect(() => {
+    const handler = (e) => {
+      const currentScroll =
+        e?.scroll ?? (typeof window !== 'undefined' ? window.scrollY || window.pageYOffset : 0);
+      callbackRef.current?.({
+        scroll: currentScroll,
+        velocity: e?.velocity ?? 0,
+        progress: e?.progress ?? 0,
+        direction: e?.direction ?? 1,
+        lenis: e?.lenis || activeLenisInstance,
+        event: e,
+      });
+    };
+
+    const unsubscribe = registerLenisScrollListener(handler);
+    window.addEventListener('scroll', handler, { passive: true });
+
+    // Ejecución inicial para calcular posición inicial
+    handler({ scroll: typeof window !== 'undefined' ? window.scrollY : 0 });
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('scroll', handler);
+    };
+  }, deps);
+}
+
 /**
  * useLenisScroll
  * Hook reutilizable para activar desplazamiento ultra fluido (Smooth Scroll)
@@ -34,11 +97,23 @@ export function useLenisScroll(options = {}, onScroll = null) {
     });
 
     lenisRef.current = lenis;
-
-    let unsubscribe = null;
-    if (typeof onScroll === 'function') {
-      unsubscribe = lenis.on('scroll', onScroll);
+    activeLenisInstance = lenis;
+    if (typeof window !== 'undefined') {
+      window.__lenis = lenis;
     }
+
+    const unsubscribeInternal = lenis.on('scroll', (e) => {
+      if (typeof onScroll === 'function') {
+        onScroll(e);
+      }
+      scrollListeners.forEach((fn) => {
+        try {
+          fn(e);
+        } catch (err) {
+          console.error('Error en listener de Lenis scroll:', err);
+        }
+      });
+    });
 
     let rafId;
     function raf(time) {
@@ -49,11 +124,15 @@ export function useLenisScroll(options = {}, onScroll = null) {
 
     return () => {
       cancelAnimationFrame(rafId);
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
+      unsubscribeInternal();
       lenis.destroy();
       lenisRef.current = null;
+      if (activeLenisInstance === lenis) {
+        activeLenisInstance = null;
+      }
+      if (typeof window !== 'undefined' && window.__lenis === lenis) {
+        window.__lenis = null;
+      }
     };
   }, []);
 

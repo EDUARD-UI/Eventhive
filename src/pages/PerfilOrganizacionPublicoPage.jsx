@@ -10,6 +10,7 @@ import {
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import HiveBeeLoader from '../components/common/HiveBeeLoader.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
+import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import HiveEventCard from '../components/home/HiveEventCard.jsx';
 import { organizationService } from '../services/organizerService.js';
@@ -163,6 +164,8 @@ export default function PerfilOrganizacionPublicoPage() {
             Volver a Organizaciones
           </Link>
         </div>
+        {/* Componente pre-footer compartido */}
+        <CityRhythmPreFooter />
         <Footer />
       </div>
     );
@@ -397,6 +400,8 @@ export default function PerfilOrganizacionPublicoPage() {
         </section>
       </main>
 
+      {/* Componente pre-footer compartido */}
+      <CityRhythmPreFooter />
       <Footer />
     </div>
   );

@@ -21,7 +21,7 @@ import {
 import { organizerService } from '../../services/organizerService.js';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
-import ModalEnviarCorreo from '../../components/Shared/ModalEnviarCorreo.jsx';
+import GmailComposeModal from '../../components/Shared/GmailComposeModal.jsx';
 import { showSuccessAlert, showErrorAlert, showConfirmAlert } from '../../utils/alertUtils.js';
 
 const PERMISOS_DISPONIBLES = [
@@ -37,14 +37,15 @@ export default function OperadoresView() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('operadores'); // 'operadores' | 'invitaciones'
 
-  // Modal Enviar Correo (Gmail style)
-  const [emailModal, setEmailModal] = useState({ isOpen: false, email: '', name: '', subject: '' });
-
-  // Drawer Lateral Invitar Operador
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [isInviting, setIsInviting] = useState(false);
-  const [inviteError, setInviteError] = useState(null);
+  // Modal Enviar Correo / Invitar (Réplica de Gmail)
+  const [emailModal, setEmailModal] = useState({
+    isOpen: false,
+    email: '',
+    name: '',
+    subject: '',
+    mode: 'email',
+    role: 'OPERADOR',
+  });
 
   // Drawer Lateral Expulsar Operador
   const [operadorToExpulsar, setOperadorToExpulsar] = useState(null);
@@ -253,7 +254,16 @@ export default function OperadoresView() {
 
           <button
             type="button"
-            onClick={() => setShowInviteModal(true)}
+            onClick={() => {
+              setEmailModal({
+                isOpen: true,
+                email: '',
+                name: '',
+                subject: 'Invitación para unirte a nuestro equipo de Operadores en EventHive',
+                mode: 'invite',
+                role: 'OPERADOR',
+              });
+            }}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-black uppercase tracking-wider shadow-sm transition-all active:scale-95 cursor-pointer"
           >
             <FiUserPlus size={15} />
@@ -523,105 +533,7 @@ export default function OperadoresView() {
         )
       )}
 
-      {/* DRAWER LATERAL DERECHO: Invitar Operador */}
-      {showInviteModal && (
-        <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
-          <div
-            className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
-            onClick={() => setShowInviteModal(false)}
-          />
 
-          <div
-            className="relative z-50 w-full sm:w-[480px] md:w-[520px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div>
-              {/* Cabecera del Drawer */}
-              <div className="bg-[#0B1B3D] text-white p-6 relative">
-                <button
-                  type="button"
-                  onClick={() => setShowInviteModal(false)}
-                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
-                  title="Cerrar panel"
-                >
-                  <FiX size={18} />
-                </button>
-
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-md">
-                    <FiUserPlus size={22} />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-amber-300 inline-block mb-1">
-                      Invitación de Operador
-                    </span>
-                    <h3 className="font-display text-lg font-bold text-white">
-                      Invitar a tu Organización
-                    </h3>
-                  </div>
-                </div>
-              </div>
-
-              {/* Formulario */}
-              <form onSubmit={handleInvite} className="p-6 space-y-5">
-                {inviteError && (
-                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
-                    <FiAlertCircle className="shrink-0 text-rose-600" size={15} />
-                    <span>{inviteError}</span>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Correo Electrónico del Operador <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => {
-                      setInviteEmail(e.target.value);
-                      if (inviteError) setInviteError(null);
-                    }}
-                    placeholder="operador@ejemplo.com"
-                    className="w-full text-xs font-semibold px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all text-slate-800"
-                    required
-                  />
-                  <p className="text-[11px] text-slate-400 mt-1.5">
-                    El usuario recibirá un correo con un enlace criptográfico válido por 24 horas para aceptar e integrarse al equipo.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between">
-                  <span className="text-xs font-bold text-amber-900">Rol</span>
-                  <span className="text-xs font-black text-amber-950 uppercase tracking-wider">OPERADOR</span>
-                </div>
-              </form>
-            </div>
-
-            <div className="p-6 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowInviteModal(false)}
-                disabled={isInviting}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-white text-xs font-bold uppercase tracking-wider transition-all"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleInvite}
-                disabled={isInviting}
-                className="px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-black uppercase tracking-wider shadow-sm transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
-              >
-                {isInviting && (
-                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                )}
-                <span>Enviar Invitación</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* DRAWER LATERAL DERECHO: Expulsar Operador */}
       {operadorToExpulsar && (
@@ -882,15 +794,16 @@ export default function OperadoresView() {
           </div>
         </div>
       )}
-      {/* Modal Genérico de Envío de Correo */}
-      <ModalEnviarCorreo
+      {/* Modal Réplica de Gmail para Correo e Invitación de Operadores */}
+      <GmailComposeModal
         isOpen={emailModal.isOpen}
         onClose={() => setEmailModal((prev) => ({ ...prev, isOpen: false }))}
         initialEmail={emailModal.email}
         initialName={emailModal.name}
         defaultSubject={emailModal.subject}
-        title="Enviar Correo a Trabajador"
-        subtitle="Comunícate con el operador o colaborador vía correo electrónico"
+        initialMode={emailModal.mode || 'email'}
+        defaultRole={emailModal.role || 'OPERADOR'}
+        onSuccess={() => fetchData()}
       />
     </div>
   );

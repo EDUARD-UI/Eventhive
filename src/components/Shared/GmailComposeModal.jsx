@@ -32,8 +32,8 @@ export default function GmailComposeModal({
   const userRole = normalizeRole(rawRole);
 
   const isAdmin = userRole === 'ADMINISTRADOR';
-  const isRepresentante = userRole === 'REPRESENTANTE';
-  const canInvite = isAdmin || isRepresentante;
+  const isRepresentante = userRole === 'REPRESENTANTE' || userRole === 'ORGANIZADOR';
+  const canInvite = isAdmin || isRepresentante || defaultRole === 'OPERADOR';
 
   // Estados de ventana
   const [isMinimized, setIsMinimized] = useState(false);
@@ -48,7 +48,11 @@ export default function GmailComposeModal({
   const [cc, setCc] = useState('');
   const [cco, setCco] = useState('');
   const [rol, setRol] = useState(
-    isRepresentante ? 'OPERADOR' : defaultRole === 'MARKETING' ? 'MARKETING' : 'MODERADOR'
+    defaultRole === 'OPERADOR' || (!isAdmin && isRepresentante)
+      ? 'OPERADOR'
+      : defaultRole === 'MARKETING'
+      ? 'MARKETING'
+      : 'MODERADOR'
   );
   const [asunto, setAsunto] = useState(defaultSubject || '');
   const [mensaje, setMensaje] = useState('');
@@ -72,13 +76,19 @@ export default function GmailComposeModal({
       setCco('');
       setShowScheduleMenu(false);
       setMode(initialMode === 'invite' && canInvite ? 'invite' : 'email');
-      setRol(isRepresentante ? 'OPERADOR' : defaultRole === 'MARKETING' ? 'MARKETING' : 'MODERADOR');
+      setRol(
+        defaultRole === 'OPERADOR' || (!isAdmin && isRepresentante)
+          ? 'OPERADOR'
+          : defaultRole === 'MARKETING'
+          ? 'MARKETING'
+          : 'MODERADOR'
+      );
 
       setTimeout(() => {
         recipientInputRef.current?.focus();
       }, 120);
     }
-  }, [isOpen, initialEmail, initialName, defaultSubject, defaultRole, initialMode, canInvite, isRepresentante]);
+  }, [isOpen, initialEmail, initialName, defaultSubject, defaultRole, initialMode, canInvite, isRepresentante, isAdmin]);
 
   // Si cambia a modo invitación y el asunto está vacío, prellenar uno institucional
   const handleModeChange = (newMode) => {
@@ -147,19 +157,19 @@ export default function GmailComposeModal({
 
     try {
       if (mode === 'invite') {
-        if (isAdmin) {
-          await adminService.invitarRol({ correo: emailTrim, rol });
-          await showSuccessAlert({
-            title: 'Invitación oficial enviada',
-            text: `Se ha despachado la invitación a ${emailTrim} para el rol de ${rol}.`,
-            badge: 'Invitación Exitosa',
-          });
-        } else if (isRepresentante) {
+        if (rol === 'OPERADOR' || (!isAdmin && isRepresentante)) {
           await organizerService.invitarOperador(emailTrim);
           await showSuccessAlert({
             title: 'Invitación oficial enviada',
             text: `Se ha enviado la invitación a ${emailTrim} para vincularse como Operador de tu organización.`,
             badge: 'Operador Vinculado',
+          });
+        } else if (isAdmin) {
+          await adminService.invitarRol({ correo: emailTrim, rol });
+          await showSuccessAlert({
+            title: 'Invitación oficial enviada',
+            text: `Se ha despachado la invitación a ${emailTrim} para el rol de ${rol}.`,
+            badge: 'Invitación Exitosa',
           });
         }
       } else {
@@ -462,7 +472,7 @@ export default function GmailComposeModal({
               <span className="w-12 text-xs font-bold text-amber-900 shrink-0">
                 Rol
               </span>
-              {isAdmin ? (
+              {isAdmin && rol !== 'OPERADOR' ? (
                 <select
                   value={rol}
                   onChange={(e) => setRol(e.target.value)}
@@ -472,11 +482,11 @@ export default function GmailComposeModal({
                   <option value="MODERADOR">🛡️ Moderador de Plataforma</option>
                   <option value="MARKETING">📢 Especialista de Marketing</option>
                 </select>
-              ) : isRepresentante ? (
+              ) : (
                 <span className="text-xs font-black text-amber-900 tracking-wider">
-                  OPERADOR
+                  {rol || 'OPERADOR'}
                 </span>
-              ) : null}
+              )}
             </div>
           )}
 

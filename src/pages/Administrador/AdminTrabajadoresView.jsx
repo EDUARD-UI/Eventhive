@@ -17,8 +17,7 @@ import {
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
-import ModalEnviarCorreo from '../../components/Shared/ModalEnviarCorreo.jsx';
-import ModalInvitarTrabajadorAdmin from '../../components/componentsAdmin/ModalInvitarTrabajadorAdmin.jsx';
+import GmailComposeModal from '../../components/Shared/GmailComposeModal.jsx';
 import adminService from '../../features/admin/services/adminService.js';
 import { normalizeRole } from '../../services/session.js';
 
@@ -35,15 +34,14 @@ export default function AdminTrabajadoresView({
   const [actionLoading, setActionLoading] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState(null);
 
-  // Estado del Modal de Invitar Trabajador (a la derecha)
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
-
-  // Estado del Modal de Enviar Correo (individual a la derecha)
+  // Estado del Modal de Enviar Correo / Invitar (Estilo Gmail)
   const [mailModal, setMailModal] = useState({
     isOpen: false,
     email: '',
     name: '',
     subject: '',
+    mode: 'email',
+    role: 'MODERADOR',
   });
 
   // Modal revocar moderador
@@ -471,22 +469,16 @@ export default function AdminTrabajadoresView({
         </div>, document.body)
       )}
 
-      {/* Modal Genérico de Enviar Correo (Estilo Gmail) */}
-      <ModalEnviarCorreo
+      {/* Modal Réplica de Gmail para Correo e Invitaciones de Trabajadores */}
+      <GmailComposeModal
         isOpen={mailModal.isOpen}
         onClose={() => setMailModal((prev) => ({ ...prev, isOpen: false }))}
         initialEmail={mailModal.email}
         initialName={mailModal.name}
         defaultSubject={mailModal.subject}
         initialMode={mailModal.mode || 'email'}
-        onSendSuccess={() => fetchTrabajadores()}
-      />
-
-      {/* Modal Drawer de Invitar Trabajador (Se abre a la derecha) */}
-      <ModalInvitarTrabajadorAdmin
-        isOpen={inviteModalOpen}
-        onClose={() => setInviteModalOpen(false)}
-        onInviteSuccess={handleInviteSuccess}
+        defaultRole={mailModal.role || 'MODERADOR'}
+        onSuccess={() => fetchTrabajadores()}
       />
     </div>
   );

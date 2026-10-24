@@ -129,17 +129,46 @@ export default function BuscarEventosPage() {
     if (!list || list.length === 0) return null;
     const now = Date.now();
 
+    const getSafeEventTime = (ev) => {
+      if (!ev) return 0;
+      if (ev.startsAt) {
+        const t = new Date(ev.startsAt).getTime();
+        if (!Number.isNaN(t)) return t;
+      }
+      if (ev.fechaInicio) {
+        const t = new Date(ev.fechaInicio).getTime();
+        if (!Number.isNaN(t)) return t;
+      }
+      if (ev.fecha) {
+        const dateStr = String(ev.fecha).split('T')[0];
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+          const year = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1;
+          const day = parseInt(parts[2], 10);
+          let hours = 0;
+          let minutes = 0;
+          if (ev.hora) {
+            const rawHora = String(ev.hora).trim();
+            const isPM = /pm/i.test(rawHora);
+            const isAM = /am/i.test(rawHora);
+            const digits = rawHora.replace(/[^0-9:]/g, '');
+            const timeParts = digits.split(':');
+            hours = parseInt(timeParts[0] || '0', 10);
+            minutes = parseInt(timeParts[1] || '0', 10);
+            if (isPM && hours < 12) hours += 12;
+            if (isAM && hours === 12) hours = 0;
+          }
+          const t = new Date(year, month, day, hours, minutes).getTime();
+          if (!Number.isNaN(t)) return t;
+        }
+      }
+      return 0;
+    };
+
     const sorted = [...list].sort((a, b) => {
-      const timeA = a.startsAt
-        ? new Date(a.startsAt).getTime()
-        : a.fecha
-        ? new Date(`${a.fecha}T${a.hora || '00:00:00'}`).getTime()
-        : 0;
-      const timeB = b.startsAt
-        ? new Date(b.startsAt).getTime()
-        : b.fecha
-        ? new Date(`${b.fecha}T${b.hora || '00:00:00'}`).getTime()
-        : 0;
+      const timeA = getSafeEventTime(a);
+      const timeB = getSafeEventTime(b);
 
       const diffA = timeA - now;
       const diffB = timeB - now;

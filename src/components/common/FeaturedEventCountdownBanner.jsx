@@ -40,25 +40,56 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
     };
   }, [event]);
 
-  // Calcular fecha destino del evento
-  const targetDate = useMemo(() => {
-    if (!activeEvent) return null;
+  // Función robusta para interpretar la fecha exacta del evento sin errores de parseo
+  const parseTargetDate = (ev) => {
+    if (!ev) return null;
 
-    if (activeEvent.startsAt) {
-      const d = new Date(activeEvent.startsAt);
+    if (ev.startsAt) {
+      const d = new Date(ev.startsAt);
       if (!Number.isNaN(d.getTime())) return d;
     }
 
-    if (activeEvent.fecha) {
-      const cleanTime = activeEvent.hora ? (activeEvent.hora.length === 5 ? `${activeEvent.hora}:00` : activeEvent.hora) : '00:00:00';
-      const d = new Date(`${activeEvent.fecha}T${cleanTime}`);
+    if (ev.fechaInicio) {
+      const d = new Date(ev.fechaInicio);
       if (!Number.isNaN(d.getTime())) return d;
+    }
+
+    if (ev.fecha) {
+      const dateStr = String(ev.fecha).split('T')[0];
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        let hours = 0;
+        let minutes = 0;
+
+        if (ev.hora) {
+          const rawHora = String(ev.hora).trim();
+          const isPM = /pm/i.test(rawHora);
+          const isAM = /am/i.test(rawHora);
+          const digits = rawHora.replace(/[^0-9:]/g, '');
+          const timeParts = digits.split(':');
+          hours = parseInt(timeParts[0] || '0', 10);
+          minutes = parseInt(timeParts[1] || '0', 10);
+          if (isPM && hours < 12) hours += 12;
+          if (isAM && hours === 12) hours = 0;
+        }
+
+        const d = new Date(year, month, day, hours, minutes);
+        if (!Number.isNaN(d.getTime())) return d;
+      }
     }
 
     return null;
+  };
+
+  // Calcular fecha destino del evento
+  const targetDate = useMemo(() => {
+    return parseTargetDate(activeEvent);
   }, [activeEvent]);
 
-  // Estado del contador
+  // Estado del contador en tiempo real
   const [timeLeft, setTimeLeft] = useState(() => {
     if (!targetDate) return { days: 0, hours: 0, minutes: 0, seconds: 0, totalMs: 0 };
     const diff = targetDate.getTime() - Date.now();
@@ -110,11 +141,34 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
   }
 
   const isLive = timeLeft.totalMs <= 0;
-  // Progreso de cuenta regresiva
-  const windowDays = 14 * 24 * 60 * 60 * 1000;
-  const progressRatio = isLive
-    ? 100
-    : Math.min(100, Math.max(10, 100 - (timeLeft.totalMs / windowDays) * 100));
+
+  // Barra de progreso dinámica que compara la fecha del evento con la fecha actual
+  const progressRatio = useMemo(() => {
+    if (isLive) return 100;
+    if (!targetDate) return 0;
+
+    const remainingMs = timeLeft.totalMs;
+
+    // Si el evento tiene fecha de registro o creación oficial
+    const createdDate = activeEvent.createdAt || activeEvent.creadoEn || activeEvent.fechaCreacion;
+    if (createdDate) {
+      const startMs = new Date(createdDate).getTime();
+      if (!Number.isNaN(startMs) && startMs < targetDate.getTime()) {
+        const totalDuration = targetDate.getTime() - startMs;
+        const elapsed = Date.now() - startMs;
+        return Math.max(5, Math.min(100, Math.round((elapsed / totalDuration) * 100)));
+      }
+    }
+
+    // Ventana de referencia proporcional de 30 días
+    const referenceWindowMs = 30 * 24 * 60 * 60 * 1000;
+    if (remainingMs > referenceWindowMs) {
+      return Math.max(8, Math.min(25, Math.round((1 - remainingMs / (90 * 24 * 60 * 60 * 1000)) * 25)));
+    }
+
+    const elapsed = referenceWindowMs - remainingMs;
+    return Math.max(10, Math.min(100, Math.round((elapsed / referenceWindowMs) * 100)));
+  }, [isLive, targetDate, timeLeft.totalMs, activeEvent]);
 
   const displayImage =
     activeEvent.photo ||
@@ -224,12 +278,18 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
                   </div>
                 </div>
 
-                {/* Barra de progreso en azul oscuro */}
-                <div className="w-full bg-[#070D1E]/25 border border-[#0B132B]/30 rounded-full h-2 overflow-hidden mt-2 p-[0.5px]">
-                  <div
-                    className="h-full rounded-full bg-[#0B132B] shadow-inner transition-all duration-1000 ease-linear"
-                    style={{ width: `${progressRatio}%` }}
-                  />
+                {/* Barra de progreso en azul oscuro con indicador */}
+                <div className="w-full mt-2.5">
+                  <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-950/80 mb-1">
+                    <span>{isEn ? 'Event Countdown' : 'Progreso al Evento'}</span>
+                    <span className="font-mono font-bold text-slate-950">{progressRatio}%</span>
+                  </div>
+                  <div className="w-full bg-[#070D1E]/20 border border-[#0B132B]/35 rounded-full h-2.5 overflow-hidden p-[1px] shadow-inner">
+                    <div
+                      className="h-full rounded-full bg-[#0B132B] shadow-sm transition-all duration-1000 ease-linear"
+                      style={{ width: `${progressRatio}%` }}
+                    />
+                  </div>
                 </div>
               </div>
             )}

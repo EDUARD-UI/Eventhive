@@ -25,6 +25,7 @@ import {
 import { showSuccessAlert, showErrorAlert, showWarningAlert, showInfoAlert } from '../utils/alertUtils.js';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
+import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
 import { userService } from '../services/userService.js';
@@ -1316,6 +1317,8 @@ export default function PerfilUsuario() {
         </div>
       )}
 
+      {/* Componente pre-footer compartido */}
+      <CityRhythmPreFooter />
       <Footer />
     </div>
   );
