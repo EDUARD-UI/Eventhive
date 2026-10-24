@@ -96,19 +96,37 @@ export async function getAdminBanners() {
  * Guardar o actualizar banner por posición (POST o PUT /api/banners-home/{posicion})
  */
 export async function saveBanner(posicion, bannerData) {
-  const payload = {
-    titulo: bannerData.titulo,
-    imagenUrl: bannerData.imagenUrl,
-    textoBoton: bannerData.textoBoton,
-    enlaceUrl: bannerData.enlaceUrl,
-    posicion: Number(posicion),
-  };
+  let body;
+  const isForm = bannerData instanceof FormData || Boolean(bannerData.imagenFile || bannerData.imagen instanceof File);
+
+  if (bannerData instanceof FormData) {
+    body = bannerData;
+  } else if (isForm) {
+    body = new FormData();
+    body.append('posicion', Number(posicion));
+    body.append('titulo', bannerData.titulo || '');
+    body.append('textoBoton', bannerData.textoBoton || 'Ver más');
+    body.append('enlaceUrl', bannerData.enlaceUrl || '');
+    if (bannerData.imagenFile) {
+      body.append('imagen', bannerData.imagenFile);
+    } else if (bannerData.imagen instanceof File) {
+      body.append('imagen', bannerData.imagen);
+    }
+  } else {
+    body = {
+      titulo: bannerData.titulo || '',
+      imagenUrl: bannerData.imagenUrl || '',
+      textoBoton: bannerData.textoBoton || 'Ver más',
+      enlaceUrl: bannerData.enlaceUrl || '',
+      posicion: Number(posicion),
+    };
+  }
 
   try {
-    return await httpClient.put(`/banners-home/${posicion}`, payload);
-  } catch (err) {
+    return await httpClient.put(`/banners-home/${posicion}`, body, { isFormData: isForm });
+  } catch {
     // Si da 404 (no existe aún en esa posición), usar POST
-    return await httpClient.post(`/banners-home/${posicion}`, payload);
+    return await httpClient.post(`/banners-home/${posicion}`, body, { isFormData: isForm });
   }
 }
 

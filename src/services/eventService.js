@@ -1,5 +1,5 @@
 import { httpClient } from './httpClient.js';
-import { formatHora23 } from '../utils/formatters.js';
+import { formatHora12 } from '../utils/formatters.js';
 
 const parseDateSafe = (dateString, timeString) => {
   if (!dateString) return null;
@@ -37,19 +37,19 @@ export const formatDisplayDate = (dateString, timeString) => {
 
 export const formatDisplayTime = (timeString, dateString) => {
   if (!timeString && !dateString) return '';
-  return formatHora23(timeString || dateString);
+  return formatHora12(timeString || dateString);
 };
 
 export const normalizeEvent = (event) => {
   const shortDate = formatDisplayDate(event.fecha, event.hora);
-  const cleanHora = formatHora23(event.hora);
+  const cleanHora = formatHora12(event.hora);
   const formattedTime = cleanHora;
 
   return {
     ...event,
     id: String(event.id),
     hora: cleanHora,
-    time: cleanHora || formatHora23(event.time),
+    time: cleanHora || formatHora12(event.time),
     title: event.titulo || event.title || 'Evento sin título',
     description: event.descripcion || event.description || '',
     category:
@@ -165,7 +165,7 @@ export async function getCarouselEvents() {
 
         const hora =
           typeof item === 'object' && item !== null
-            ? formatHora23(item.hora)
+            ? formatHora12(item.hora)
             : '';
 
         return {

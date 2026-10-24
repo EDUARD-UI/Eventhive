@@ -4,7 +4,7 @@ import ModeradorLayout from '../../layouts/ModeradorLayout.jsx';
 import ModeradorResumenView from './ModeradorResumenView.jsx';
 import ModeradorPendientesView from './ModeradorPendientesView.jsx';
 import ModeradorHistorialView from './ModeradorHistorialView.jsx';
-import ModeradorMotivosView from './ModeradorMotivosView.jsx';
+
 import ModalDetalleEventoModeracion from './ModalDetalleEventoModeracion.jsx';
 import ModalAccionModeracion from './ModalAccionModeracion.jsx';
 import moderationService from '../../services/moderationService.js';
@@ -22,12 +22,12 @@ export default function ModeradorPanel() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'resumen';
 
-  // Estados de datos reales
+  // Estados de datos reales (Requisito 5.4: publicados, pendientesRevision, enCorreccion, rechazados)
   const [stats, setStats] = useState({
-    revisados: 0,
-    aprobados: 0,
+    publicados: 0,
+    pendientesRevision: 0,
+    enCorreccion: 0,
     rechazados: 0,
-    correccionesSolicitadas: 0,
   });
   const [statsLoading, setStatsLoading] = useState(false);
 
@@ -183,14 +183,8 @@ export default function ModeradorPanel() {
         count: totalPendientesCount > 0 ? String(totalPendientesCount) : null,
       },
       { id: 'historial', label: 'Explorar Eventos', icon: FiLayers, count: null },
-      {
-        id: 'motivos',
-        label: 'Motivos de Rechazo',
-        icon: FiList,
-        count: motivos.length > 0 ? String(motivos.length) : null,
-      },
     ],
-    [totalPendientesCount, motivos.length]
+    [totalPendientesCount]
   );
 
   const titlesByTab = {
@@ -205,10 +199,6 @@ export default function ModeradorPanel() {
     historial: {
       title: 'Explorar Eventos del Sistema',
       subtitle: 'Búsqueda por estado, historial de moderación y auditoría',
-    },
-    motivos: {
-      title: 'Catálogo de Motivos Oficiales',
-      subtitle: 'Criterios normativos oficiales para correcciones y rechazos',
     },
   };
 
@@ -299,9 +289,7 @@ export default function ModeradorPanel() {
         />
       )}
 
-      {currentTab === 'motivos' && (
-        <ModeradorMotivosView motivos={motivos} loading={motivosLoading} />
-      )}
+
 
       {/* Modal de Detalle e Inspección Exhaustiva */}
       {eventoModalDetalle && (

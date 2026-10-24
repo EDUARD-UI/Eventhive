@@ -17,7 +17,7 @@ import {
 } from 'react-icons/fi';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
-import { formatHora23 } from '../../utils/formatters.js';
+import { formatHora12 } from '../../utils/formatters.js';
 
 export default function ModeradorResumenView({
   stats = {},
@@ -31,13 +31,11 @@ export default function ModeradorResumenView({
   onSolicitarCorreccion,
   onRechazar,
 }) {
-  const revisados = stats.revisados ?? 0;
-  const aprobados = stats.aprobados ?? 0;
+  // Requisito 5.4: Mostrar exactamente los 4 indicadores oficiales
+  const publicados = stats.publicados ?? stats.aprobados ?? 0;
+  const pendientesRevision = stats.pendientesRevision ?? stats.pendientes ?? totalPendientes ?? 0;
+  const enCorreccion = stats.enCorreccion ?? stats.correccionesSolicitadas ?? 0;
   const rechazados = stats.rechazados ?? 0;
-  const correcciones = stats.correccionesSolicitadas ?? 0;
-
-  const tasaAprobacion =
-    revisados > 0 ? Math.round((aprobados / revisados) * 100) : 0;
 
   return (
     <div className="space-y-7 animate-in fade-in duration-300">
@@ -61,44 +59,42 @@ export default function ModeradorResumenView({
         </button>
       </div>
 
-      {/* Tarjetas de Estadísticas Reales del Endpoint /api/moderaciones/estadisticas */}
+      {/* Tarjetas de Estadísticas Reales: 4 indicadores oficiales (Requisito 5.4) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          label="Revisiones Totales"
-          value={statsLoading ? '...' : revisados.toLocaleString()}
-          icon={FiClipboard}
-          iconBg="bg-blue-50"
-          iconColor="text-blue-600"
-          subtitle={statsLoading ? 'Cargando...' : 'Eventos procesados'}
-        />
-
-        <StatCard
-          label="Aprobados y Publicados"
-          value={statsLoading ? '...' : aprobados.toLocaleString()}
+          label="Eventos Publicados"
+          value={statsLoading ? '...' : publicados.toLocaleString()}
           icon={FiCheckCircle}
           iconBg="bg-emerald-50"
           iconColor="text-emerald-600"
-          change={revisados > 0 ? `${tasaAprobacion}% tasa` : undefined}
-          trend="up"
-          subtitle="Cumplen políticas"
+          subtitle="Visibles en cartelera"
         />
 
         <StatCard
-          label="En Corrección"
-          value={statsLoading ? '...' : correcciones.toLocaleString()}
-          icon={FiAlertTriangle}
+          label="Revisiones Pendientes"
+          value={statsLoading ? '...' : pendientesRevision.toLocaleString()}
+          icon={FiClipboard}
           iconBg="bg-amber-50"
           iconColor="text-amber-600"
-          subtitle="En espera de organizador"
+          subtitle="En espera de moderación"
         />
 
         <StatCard
-          label="Rechazados"
+          label="Eventos en Corrección"
+          value={statsLoading ? '...' : enCorreccion.toLocaleString()}
+          icon={FiAlertTriangle}
+          iconBg="bg-blue-50"
+          iconColor="text-blue-600"
+          subtitle="Ajustes solicitados"
+        />
+
+        <StatCard
+          label="Eventos Rechazados"
           value={statsLoading ? '...' : rechazados.toLocaleString()}
           icon={FiXCircle}
           iconBg="bg-rose-50"
           iconColor="text-rose-600"
-          subtitle="Incumplimiento o falta"
+          subtitle="No cumplen políticas"
         />
       </div>
 
@@ -176,9 +172,7 @@ export default function ModeradorResumenView({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-400 font-display font-bold text-xs bg-slate-200/60">
-                          {categoriaNombre.slice(0, 2).toUpperCase()}
-                        </div>
+                        <div className="w-full h-full bg-slate-200 dark:bg-slate-800" />
                       )}
                     </div>
 
@@ -203,7 +197,7 @@ export default function ModeradorResumenView({
                         {evento.fecha && (
                           <span className="flex items-center gap-1">
                             <FiCalendar className="text-brand" size={13} />
-                            {evento.fecha} {evento.hora ? `· ${formatHora23(evento.hora)}` : ''}
+                            {evento.fecha} {evento.hora ? `· ${formatHora12(evento.hora)}` : ''}
                           </span>
                         )}
                         {evento.lugar && (

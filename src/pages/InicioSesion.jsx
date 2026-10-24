@@ -96,8 +96,9 @@ export default function InicioSesion() {
         destination = '/admin';
       } else if (userRole === 'MODERADOR') {
         destination = '/moderador';
+      } else if (userRole === 'MARKETING') {
+        destination = '/marketing';
       } else {
-        // Cliente se direcciona a home
         destination = '/';
       }
 
@@ -126,12 +127,7 @@ export default function InicioSesion() {
     <AuthLayout
       title={t('auth.loginTitle')}
       subtitle={t('auth.loginSubtitle')}
-      errorBanner={
-        submitError ||
-        (sessionExpired
-          ? t('auth.sessionExpired')
-          : null)
-      }
+      errorBanner={null}
     >
       <div className="space-y-3">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3" noValidate>
@@ -167,18 +163,7 @@ export default function InicioSesion() {
             autoComplete="current-password"
           />
 
-          <div className="flex items-center justify-between pt-0.5">
-            <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600 dark:text-slate-300 font-medium">
-              <input
-                type="checkbox"
-                name="remember"
-                checked={values.remember}
-                onChange={handleChange}
-                className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-600 text-amber-500 focus:ring-amber-500/20 accent-amber-500 rounded-sm cursor-pointer"
-              />
-              <span>{t('auth.rememberSession')}</span>
-            </label>
-
+          <div className="flex items-center justify-end pt-0.5">
             <Link
               to="/recuperar-contrasena"
               className="text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"

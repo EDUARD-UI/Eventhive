@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, MapPin, Eye, Ban, CheckCircle2, Ticket, History } from 'lucide-react';
 import Badge from '../Shared/Badge.jsx';
-import { formatHora23 } from '../../utils/formatters.js';
+import { formatHora12, formatPrice } from '../../utils/formatters.js';
 
 export default function AdminEventCard({
   evento,
@@ -10,21 +10,23 @@ export default function AdminEventCard({
   onViewHistory,
 }) {
   const [imgError, setImgError] = useState(false);
-  const fallbackImg =
-    'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80';
 
   const isPublicado = evento.estado === 'Publicado';
 
   return (
     <div className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col group hover:-translate-y-0.5">
       {/* Contenedor de Imagen de Portada */}
-      <div className="relative aspect-[16/10] overflow-hidden bg-slate-950 flex items-center justify-center">
-        <img
-          src={imgError || !evento.foto ? fallbackImg : evento.foto}
-          alt={evento.titulo}
-          onError={() => setImgError(true)}
-          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-        />
+      <div className="relative aspect-[16/10] overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+        {!imgError && evento.foto ? (
+          <img
+            src={evento.foto}
+            alt={evento.titulo}
+            onError={() => setImgError(true)}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-full bg-slate-200 dark:bg-slate-800" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
 
         {/* Categoría Badge */}
@@ -41,13 +43,7 @@ export default function AdminEventCard({
         <div className="absolute bottom-3 left-3 text-white">
           <p className="text-[11px] text-white/80 font-medium">Entrada desde</p>
           <p className="font-bold text-sm font-display text-white">
-            {evento.precio === 0
-              ? 'Gratis'
-              : new Intl.NumberFormat('es-CO', {
-                  style: 'currency',
-                  currency: 'COP',
-                  maximumFractionDigits: 0,
-                }).format(evento.precio)}
+            {formatPrice(evento.precio || 0)}
           </p>
         </div>
 
@@ -75,7 +71,7 @@ export default function AdminEventCard({
                 <Calendar className="w-3.5 h-3.5" strokeWidth={1.75} />
               </div>
               <span>
-                {evento.fecha} {evento.hora ? `· ${formatHora23(evento.hora)}` : ''}
+                {evento.fecha} {evento.hora ? `· ${formatHora12(evento.hora)}` : ''}
               </span>
             </div>
 

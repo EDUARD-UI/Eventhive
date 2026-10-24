@@ -2,21 +2,22 @@ import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Sidebar from '../../components/Shared/Sidebar.jsx';
 import Header from '../../components/Shared/Header.jsx';
-import { Sparkles, Image, User } from 'lucide-react';
+import { Sparkles, Award, Image, User } from 'lucide-react';
 import MarketingPromocionesView from './MarketingPromocionesView.jsx';
 import MarketingBannersView from './MarketingBannersView.jsx';
 import AdminPerfilView from '../Administrador/AdminPerfilView.jsx';
 import { session } from '../../services/session.js';
 
 const menuItems = [
-  { id: 'promociones', label: 'Promociones', icon: Sparkles },
+  { id: 'eventos', label: 'Eventos Promocionados', icon: Sparkles },
+  { id: 'planes', label: 'Planes de Promoción', icon: Award },
   { id: 'banners', label: 'Banners', icon: Image },
   { id: 'perfil', label: 'Mi Perfil', icon: User },
 ];
 
 export default function MarketingPanel() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const currentTab = searchParams.get('tab') || 'promociones';
+  const currentTab = searchParams.get('tab') || 'eventos';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const sessionUser = session.getUser();
@@ -56,9 +57,13 @@ export default function MarketingPanel() {
           />
         );
 
+      case 'planes':
+        return <MarketingPromocionesView initialTab="planes" onNavigateTab={handleSelectTab} />;
+
+      case 'eventos':
       case 'promociones':
       default:
-        return <MarketingPromocionesView />;
+        return <MarketingPromocionesView initialTab="eventos" onNavigateTab={handleSelectTab} />;
     }
   };
 
@@ -68,9 +73,12 @@ export default function MarketingPanel() {
         return 'Espacios Publicitarios y Banners';
       case 'perfil':
         return 'Perfil Profesional';
+      case 'planes':
+        return 'Planes de Promoción';
+      case 'eventos':
       case 'promociones':
       default:
-        return 'Promociones y Posicionamiento';
+        return 'Eventos Promocionados';
     }
   };
 

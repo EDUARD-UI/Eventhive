@@ -613,8 +613,8 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-mono font-bold text-slate-400">
-                            Orden #{compra.id}
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                            Orden de Compra
                           </span>
                           <span className="text-xs font-bold text-slate-900">
                             {primerItem?.eventoNombre || 'Evento EventHive'}

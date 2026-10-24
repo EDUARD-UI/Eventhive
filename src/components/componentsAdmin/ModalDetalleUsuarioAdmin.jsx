@@ -131,7 +131,7 @@ export default function ModalDetalleUsuarioAdmin({
               )}
               <div className="min-w-0">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                  Consulta de Usuario #{usuario.id}
+                  Consulta de Usuario
                 </span>
                 <h3 className="font-display text-base sm:text-lg font-bold text-white truncate leading-tight">
                   {usuario.nombre}

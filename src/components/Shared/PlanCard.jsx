@@ -1,5 +1,4 @@
-import React from 'react';
-import { FiCheck, FiArrowRight, FiEdit2, FiChevronLeft, FiChevronRight, FiStar } from 'react-icons/fi';
+import { FiCheck, FiArrowRight, FiEdit2, FiStar } from 'react-icons/fi';
 import { formatPrice } from '../../utils/formatters.js';
 
 /**
@@ -11,13 +10,10 @@ export default function PlanCard({
   isSelected = false,
   isHighlighted = false,
   onSelect,
-  // Props para modo Marketing (editable y movible):
+  // Props para modo Marketing (editable):
   mode = 'select', // 'select' | 'manage'
   onEdit,
-  onMoveLeft,
-  onMoveRight,
-  canMoveLeft = false,
-  canMoveRight = false,
+  className = '',
 }) {
   const isDark = isHighlighted || Boolean(plan?.premium);
 
@@ -34,7 +30,7 @@ export default function PlanCard({
   return (
     <div
       onClick={mode === 'select' ? onSelect : undefined}
-      className={`relative w-[300px] sm:w-[320px] md:w-[340px] shrink-0 rounded-3xl p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 border select-none ${
+      className={`relative ${className || 'w-[300px] sm:w-[320px] md:w-[340px] shrink-0'} rounded-3xl p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 border select-none ${
         mode === 'select' ? 'cursor-pointer hover:-translate-y-1' : ''
       } ${
         isDark
@@ -150,7 +146,7 @@ export default function PlanCard({
             </span>
           </button>
         ) : (
-          /* Modo Gestión (Marketing): Editable y Movible */
+          /* Modo Gestión (Marketing): Editable */
           <div className="space-y-2">
             <button
               type="button"
@@ -169,49 +165,6 @@ export default function PlanCard({
                 <FiEdit2 size={13} />
               </span>
             </button>
-
-            {/* Controles de reordenamiento (Movible) */}
-            <div className="flex items-center justify-between pt-1 text-[11px] font-bold">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (canMoveLeft && onMoveLeft) onMoveLeft();
-                }}
-                disabled={!canMoveLeft}
-                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border transition-all ${
-                  canMoveLeft
-                    ? isDark
-                      ? 'border-slate-700 bg-slate-800/80 text-white hover:bg-slate-700 cursor-pointer'
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 cursor-pointer'
-                    : 'border-transparent opacity-30 cursor-not-allowed'
-                }`}
-                title="Mover a la izquierda"
-              >
-                <FiChevronLeft size={13} />
-                <span>Mover</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (canMoveRight && onMoveRight) onMoveRight();
-                }}
-                disabled={!canMoveRight}
-                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border transition-all ${
-                  canMoveRight
-                    ? isDark
-                      ? 'border-slate-700 bg-slate-800/80 text-white hover:bg-slate-700 cursor-pointer'
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 cursor-pointer'
-                    : 'border-transparent opacity-30 cursor-not-allowed'
-                }`}
-                title="Mover a la derecha"
-              >
-                <span>Mover</span>
-                <FiChevronRight size={13} />
-              </button>
-            </div>
           </div>
         )}
       </div>

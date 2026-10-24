@@ -180,7 +180,6 @@ export default function AdminUsuariosView({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                <th className="py-3.5 px-4">ID</th>
                 <th className="py-3.5 px-4">Nombre de Usuario</th>
                 <th className="py-3.5 px-4">Teléfono</th>
                 <th className="py-3.5 px-4 text-center">Rol del Usuario</th>
@@ -191,13 +190,13 @@ export default function AdminUsuariosView({
             <tbody className="divide-y divide-slate-100 text-xs">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
                     Cargando directorio de usuarios...
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
                     No se encontraron usuarios con los criterios especificados.
                   </td>
                 </tr>
@@ -213,10 +212,6 @@ export default function AdminUsuariosView({
 
                   return (
                     <tr key={user.id} className="hover:bg-slate-50/60 transition-colors">
-                      {/* ID */}
-                      <td className="py-4 px-4 font-mono font-bold text-slate-400 text-[11px]">
-                        #{user.id}
-                      </td>
 
                       {/* Nombre de Usuario */}
                       <td className="py-4 px-4">

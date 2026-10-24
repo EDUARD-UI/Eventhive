@@ -100,8 +100,9 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
     );
   }, [eventosPublicados]);
 
-  // Flujo de contratación y pago de una promoción (Requerimiento 2.4)
-  const handleContratarPago = async () => {
+  // Flujo de contratación y pago de una promoción al seleccionar el plan (Requerimiento 6.5)
+  const handleContratarPago = async (planToHire) => {
+    const plan = planToHire || selectedPlan;
     if (procesando) return; // Evitar clics repetidos
 
     if (!selectedEventoId) {
@@ -113,7 +114,7 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
       return;
     }
 
-    if (!selectedPlan) {
+    if (!plan) {
       showWarningAlert({
         title: 'Selecciona un plan',
         text: 'Por favor elige un plan de promoción disponible.',
@@ -122,9 +123,11 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
       return;
     }
 
+    setSelectedPlan(plan);
+
     const confirmRes = await showConfirmAlert({
       title: 'Contratar Promoción',
-      text: `¿Deseas contratar el plan ${selectedPlan.nombre} (${formatPrice(selectedPlan.precio)}) para "${selectedEvento?.titulo || ''}"?`,
+      text: `¿Deseas contratar el plan ${plan.nombre} (${formatPrice(plan.precio)}) para "${selectedEvento?.titulo || ''}"?`,
       badge: 'Confirmación de Pago',
       confirmButtonText: 'Continuar al pago',
       cancelButtonText: 'Cancelar',
@@ -139,7 +142,7 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
       // 1. Iniciar pago en backend
       const inicioRes = await promotionPlanService.iniciarPagoPosicionamiento(
         selectedEventoId,
-        selectedPlan.id
+        plan.id
       );
       const pagoId = inicioRes?.id || inicioRes?.data?.id;
 
@@ -333,7 +336,7 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
                     plan={plan}
                     isSelected={isSelected}
                     isHighlighted={isHighlighted}
-                    onSelect={() => setSelectedPlan(plan)}
+                    onSelect={() => handleContratarPago(plan)}
                     mode="select"
                   />
                 );
@@ -341,43 +344,6 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
             </div>
           </div>
         )}
-      </div>
-
-
-      {/* 5. Resumen de Contratación y Acción de Pago */}
-      <div className="bg-[#0B1B3D] text-white rounded-2xl p-6 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-        <div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 block mb-1">
-            RESUMEN DE CONTRATACIÓN
-          </span>
-          <h4 className="text-base font-bold text-white">
-            {selectedEvento?.titulo || 'Selecciona un evento publicado'}
-          </h4>
-          <p className="text-xs text-slate-300 mt-0.5">
-            Plan: <strong>{selectedPlan?.nombre || 'Ninguno'}</strong> · Precio fijo:{' '}
-            <strong className="text-amber-300">{formatPrice(selectedPlan?.precio || 0)}</strong>
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleContratarPago}
-          disabled={!selectedEventoId || !selectedPlan || procesando || eventosPublicados.length === 0}
-          className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer active:scale-95 shrink-0"
-        >
-          {procesando ? (
-            <>
-              <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-              <span>Procesando pago seguro...</span>
-            </>
-          ) : (
-            <>
-              <FiAward size={15} />
-              <span>Contratar plan</span>
-              <FiArrowRight size={14} />
-            </>
-          )}
-        </button>
       </div>
     </div>
   );

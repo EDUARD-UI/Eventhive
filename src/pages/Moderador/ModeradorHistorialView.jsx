@@ -13,7 +13,7 @@ import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import moderationService from '../../services/moderationService.js';
 import categoryService from '../../services/categoryService.js';
-import { formatHora23 } from '../../utils/formatters.js';
+import { formatHora12 } from '../../utils/formatters.js';
 
 const ESTADOS_DISPONIBLES = [
   { value: 'TODOS', label: 'Todos los estados' },
@@ -252,17 +252,12 @@ export default function ModeradorHistorialView({
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-[10px]">
-                                EH
-                              </div>
+                              <div className="w-full h-full bg-slate-200 dark:bg-slate-800" />
                             )}
                           </div>
                           <div>
                             <p className="font-bold text-slate-900 leading-snug line-clamp-1">
                               {evento.titulo}
-                            </p>
-                            <p className="text-[11px] text-slate-400 font-mono mt-0.5">
-                              ID #{evento.id}
                             </p>
                           </div>
                         </div>
@@ -283,7 +278,7 @@ export default function ModeradorHistorialView({
                       {/* Fecha y Hora */}
                       <td className="px-5 py-4 text-slate-600">
                         {evento.fecha || '—'}
-                        {evento.hora ? ` · ${formatHora23(evento.hora)}` : ''}
+                        {evento.hora ? ` · ${formatHora12(evento.hora)}` : ''}
                       </td>
 
                       {/* Estado */}

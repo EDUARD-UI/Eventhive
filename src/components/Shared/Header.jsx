@@ -206,7 +206,6 @@ export default function Header({
               {title}
             </h1>
           )}
-          {subtitle && <p className="text-xs text-[#64748b] mt-0.5 truncate hidden sm:block">{subtitle}</p>}
         </div>
       </div>
 
@@ -426,15 +425,12 @@ export default function Header({
                 type="button"
                 role="menuitem"
                 onClick={handleProfile}
-                className="w-full flex items-center gap-3 px-3 py-2 text-xs font-medium text-slate-700 hover:text-[#087fea] hover:bg-[#087fea]/10 rounded-xl transition-all text-left group"
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-slate-700 hover:text-[#087fea] hover:bg-[#087fea]/10 rounded-xl transition-all text-left group cursor-pointer"
               >
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 group-hover:bg-[#087fea]/15 text-slate-500 group-hover:text-[#087fea] transition-colors shrink-0">
                   <FiUser size={15} />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold leading-tight">Ver perfil</p>
-                  <p className="text-[10px] text-slate-400 truncate">Información de tu cuenta</p>
-                </div>
+                <span className="font-semibold leading-tight">Ver perfil</span>
               </button>
 
               <div className="h-px bg-slate-100 my-1" />
@@ -444,15 +440,12 @@ export default function Header({
                 type="button"
                 role="menuitem"
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-xl transition-all text-left group"
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-all text-left group cursor-pointer"
               >
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50 group-hover:bg-rose-100 text-rose-600 transition-colors shrink-0">
                   <FiLogOut size={15} />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold leading-tight">Cerrar sesión</p>
-                  <p className="text-[10px] text-rose-400 truncate">Finalizar sesión activa</p>
-                </div>
+                <span className="font-semibold leading-tight">Cerrar sesión</span>
               </button>
             </div>
           )}

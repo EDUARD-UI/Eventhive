@@ -113,6 +113,23 @@ export const promotionPlanService = {
   },
 
   /**
+   * Obtiene estadísticas de marketing:
+   * GET /api/marketing/estadisticas
+   */
+  async getEstadisticasMarketing() {
+    try {
+      const data = await httpClient.get('/marketing/estadisticas');
+      return data || { eventosActivosPromocionados: 0, eventosPorPlan: [] };
+    } catch (err) {
+      if (err.status === 401 || err.status === 403) {
+        throw err;
+      }
+      console.warn('Error al obtener estadísticas de marketing:', err);
+      return { eventosActivosPromocionados: 0, eventosPorPlan: [] };
+    }
+  },
+
+  /**
    * Asigna la imagen destacada para el carrusel (solo planes premium):
    * POST /api/promociones/eventos/{eventoId}/posicionar
    * Body: { urlImagenDestacado: string }

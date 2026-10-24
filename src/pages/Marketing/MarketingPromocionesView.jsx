@@ -27,17 +27,35 @@ import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import PlanCard from '../../components/Shared/PlanCard.jsx';
 import EventDetailView from '../Organizador/EventDetailView.jsx';
-import { formatPrice } from '../../utils/formatters.js';
+import { formatPrice, formatHora12 } from '../../utils/formatters.js';
 import { promotionPlanService } from '../../services/promotionPlanService.js';
 
-export default function MarketingPromocionesView() {
-  const [activeSubTab, setActiveSubTab] = useState('eventos'); // 'eventos' | 'planes'
+const formatFechaHora = (fechaStr) => {
+  if (!fechaStr || fechaStr === '—') return '—';
+  try {
+    const d = new Date(fechaStr);
+    if (isNaN(d.getTime())) return fechaStr;
+    const fecha = d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+    const hora = formatHora12(fechaStr);
+    return hora ? `${fecha} · ${hora}` : fecha;
+  } catch {
+    return fechaStr;
+  }
+};
+
+export default function MarketingPromocionesView({ initialTab = 'eventos', onNavigateTab }) {
+  const [activeSubTab, setActiveSubTab] = useState(initialTab || 'eventos'); // 'eventos' | 'planes'
   const [promociones, setPromociones] = useState([]);
+  const [stats, setStats] = useState({ eventosActivosPromocionados: 0, eventosPorPlan: [] });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPlanFilter, setSelectedPlanFilter] = useState('TODOS');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Paginación para Cards de Planes
+  const [planesPage, setPlanesPage] = useState(1);
+  const planesPageSize = 6;
 
   // Modal a la derecha: Detalle de evento
   const [selectedEventId, setSelectedEventId] = useState(null);
@@ -58,12 +76,26 @@ export default function MarketingPromocionesView() {
     codigo: '',
     detallePublicidad: '',
     precio: '',
+    comisionPorcentaje: 0,
     pautaRedes: false,
     premium: false,
   });
   const [savingPlan, setSavingPlan] = useState(false);
   const [planFormError, setPlanFormError] = useState(null);
   const [authError, setAuthError] = useState(null);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveSubTab(initialTab);
+    }
+  }, [initialTab]);
+
+  const handleTabChange = (tab) => {
+    setActiveSubTab(tab);
+    if (onNavigateTab) {
+      onNavigateTab(tab);
+    }
+  };
 
   // Cargar planes reales desde el backend
   const loadPlanes = useCallback(async () => {
@@ -84,11 +116,21 @@ export default function MarketingPromocionesView() {
     }
   }, []);
 
-  // Cargar eventos promocionados reales desde el backend
+  // Cargar eventos promocionados y estadísticas reales desde el backend
   const fetchPromociones = useCallback(async () => {
     try {
       setLoading(true);
-      const rawEvents = await promotionPlanService.getEventosPromocionados();
+      const [rawEvents, statsData] = await Promise.all([
+        promotionPlanService.getEventosPromocionados(),
+        promotionPlanService.getEstadisticasMarketing(),
+      ]);
+
+      if (statsData) {
+        setStats({
+          eventosActivosPromocionados: statsData.eventosActivosPromocionados || 0,
+          eventosPorPlan: Array.isArray(statsData.eventosPorPlan) ? statsData.eventosPorPlan : [],
+        });
+      }
 
       const mapped = (Array.isArray(rawEvents) ? rawEvents : []).map((p) => {
         const evId = p.eventoId || p.id;
@@ -110,8 +152,8 @@ export default function MarketingPromocionesView() {
           precio,
           premium: isPremium,
           pautaRedes: Boolean(p.pautaRedes || planObj.pautaRedes),
-          fechaInicio: p.fechaInicio || p.fecha || '—',
-          fechaFinal: p.fechaFinal || p.fechaFin || '—',
+          fechaInicio: p.fechaInicio || p.fechaInicioPromocion || p.fecha || '—',
+          fechaFinal: p.fechaFinal || p.fechaFinPromocion || p.fechaFin || '—',
           estado: (p.estado || (p.activo !== false ? 'ACTIVO' : 'FINALIZADO')).toUpperCase(),
           foto: p.foto || p.imagenUrl || null,
           urlImagenDestacado: p.urlImagenDestacado || p.imagenPromocional || null,
@@ -153,11 +195,17 @@ export default function MarketingPromocionesView() {
     });
   }, [promociones, selectedPlanFilter, searchTerm]);
 
-  // Paginado en cliente
+  // Paginado en cliente para eventos
   const paginatedPromociones = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredPromociones.slice(start, start + pageSize);
   }, [filteredPromociones, currentPage, pageSize]);
+
+  // Paginado en cliente para planes
+  const paginatedPlanes = useMemo(() => {
+    const start = (planesPage - 1) * planesPageSize;
+    return planes.slice(start, start + planesPageSize);
+  }, [planes, planesPage, planesPageSize]);
 
   // Abrir drawer para asignar imagen destacada (solo para planes Premium)
   const handleOpenPromoImageModal = (item) => {
@@ -227,6 +275,7 @@ export default function MarketingPromocionesView() {
       codigo: '',
       detallePublicidad: '',
       precio: '',
+      comisionPorcentaje: 0,
       pautaRedes: false,
       premium: false,
     });
@@ -241,22 +290,12 @@ export default function MarketingPromocionesView() {
       codigo: plan.codigo || '',
       detallePublicidad: plan.detallePublicidad || '',
       precio: plan.precio !== undefined ? String(plan.precio) : '',
+      comisionPorcentaje: plan.comisionPorcentaje !== undefined ? Number(plan.comisionPorcentaje) : 0,
       pautaRedes: Boolean(plan.pautaRedes),
       premium: Boolean(plan.premium),
     });
     setPlanFormError(null);
     setPlanDrawerOpen(true);
-  };
-
-  // Reordenar planes dinámicamente (movibles)
-  const handleMovePlan = (fromIndex, toIndex) => {
-    if (toIndex < 0 || toIndex >= planes.length) return;
-    setPlanes((prev) => {
-      const updated = [...prev];
-      const [moved] = updated.splice(fromIndex, 1);
-      updated.splice(toIndex, 0, moved);
-      return updated;
-    });
   };
 
   // Guardar Plan mediante el backend
@@ -267,6 +306,7 @@ export default function MarketingPromocionesView() {
     const nombreTrimmed = planForm.nombre.trim();
     const codigoTrimmed = planForm.codigo.trim().toUpperCase();
     const precioNum = Number(planForm.precio);
+    const comisionNum = Number(planForm.comisionPorcentaje);
 
     if (!nombreTrimmed) {
       setPlanFormError('El nombre del plan es obligatorio.');
@@ -283,11 +323,17 @@ export default function MarketingPromocionesView() {
       return;
     }
 
+    if (isNaN(comisionNum) || comisionNum < 0 || comisionNum > 100) {
+      setPlanFormError('El porcentaje de comisión debe estar entre 0% y 100%.');
+      return;
+    }
+
     const payload = {
       nombre: nombreTrimmed,
       codigo: codigoTrimmed,
       detallePublicidad: planForm.detallePublicidad.trim(),
       precio: precioNum,
+      comisionPorcentaje: comisionNum,
       pautaRedes: Boolean(planForm.pautaRedes),
       premium: Boolean(planForm.premium),
     };
@@ -376,7 +422,7 @@ export default function MarketingPromocionesView() {
       <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
         <button
           type="button"
-          onClick={() => setActiveSubTab('eventos')}
+          onClick={() => handleTabChange('eventos')}
           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
             activeSubTab === 'eventos'
               ? 'bg-slate-900 text-amber-400 shadow-sm'
@@ -384,7 +430,7 @@ export default function MarketingPromocionesView() {
           }`}
         >
           <Layers size={14} />
-          <span>Eventos Promocionados (Modo Tabla)</span>
+          <span>Eventos Promocionados</span>
           <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-500 text-[10px]">
             {promociones.length}
           </span>
@@ -392,7 +438,7 @@ export default function MarketingPromocionesView() {
 
         <button
           type="button"
-          onClick={() => setActiveSubTab('planes')}
+          onClick={() => handleTabChange('planes')}
           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
             activeSubTab === 'planes'
               ? 'bg-slate-900 text-amber-400 shadow-sm'
@@ -407,44 +453,90 @@ export default function MarketingPromocionesView() {
         </button>
       </div>
 
-      {/* VISTA 1: TABLA DE EVENTOS PROMOCIONADOS */}
+      {/* PANEL 1: EVENTOS PROMOCIONADOS */}
       {activeSubTab === 'eventos' && (
         <div className="space-y-6">
-          {/* Métricas Resumen */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center font-bold">
-                <Award size={22} />
+          {/* Métricas Requeridas de Marketing (7.4) */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* 1. Número de eventos activos con planes de promoción pagados */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center font-bold">
+                  <CheckCircle2 size={22} />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Eventos Activos con Promoción Pagada
+                  </p>
+                  <p className="text-2xl font-black text-slate-900 leading-tight">
+                    {stats.eventosActivosPromocionados || promociones.filter((p) => p.estado === 'ACTIVO' || p.estado === 'VIGENTE').length}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Promociones Pagadas</p>
-                <p className="text-2xl font-black text-slate-900 leading-tight">{promociones.length}</p>
+
+              {/* Total Promociones Registradas */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center font-bold">
+                  <Award size={22} />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Total Promociones Pagadas
+                  </p>
+                  <p className="text-2xl font-black text-slate-900 leading-tight">
+                    {promociones.length}
+                  </p>
+                </div>
+              </div>
+
+              {/* Beneficio Premium */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center font-bold">
+                  <Star size={22} />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Con Beneficio Premium
+                  </p>
+                  <p className="text-2xl font-black text-slate-900 leading-tight">
+                    {promociones.filter((p) => p.premium).length}
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center font-bold">
-                <CheckCircle2 size={22} />
+            {/* 2. Número de eventos por cada plan de promoción */}
+            {stats.eventosPorPlan && stats.eventosPorPlan.length > 0 && (
+              <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <Sparkles size={14} className="text-amber-500" />
+                    <span>Distribución de Eventos por Plan de Promoción</span>
+                  </h4>
+                  <span className="text-[11px] text-slate-400 font-medium">Datos en tiempo real</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {stats.eventosPorPlan.map((planStat, idx) => (
+                    <div
+                      key={planStat.planId || idx}
+                      className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between"
+                    >
+                      <div className="min-w-0 pr-2">
+                        <p className="text-xs font-bold text-slate-800 truncate" title={planStat.planNombre}>
+                          {planStat.planNombre}
+                        </p>
+                        <p className="text-[11px] text-slate-400 font-mono">
+                          {planStat.planCodigo || 'PLAN'}
+                        </p>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 text-xs font-black shrink-0">
+                        {planStat.cantidadEventos} {planStat.cantidadEventos === 1 ? 'evento' : 'eventos'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Promociones Activas</p>
-                <p className="text-2xl font-black text-slate-900 leading-tight">
-                  {promociones.filter((p) => p.estado === 'ACTIVO' || p.estado === 'VIGENTE').length}
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center font-bold">
-                <Star size={22} />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Con Beneficio Premium</p>
-                <p className="text-2xl font-black text-slate-900 leading-tight">
-                  {promociones.filter((p) => p.premium).length}
-                </p>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Barra de Filtros */}
@@ -488,7 +580,7 @@ export default function MarketingPromocionesView() {
             </div>
           </div>
 
-          {/* TABLA DE PROMOCIONES PAGADAS */}
+          {/* TABLA DE EVENTOS QUE HAN PAGADO PROMOCIÓN (SIN IDs INTERNOS) */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
             {loading ? (
               <div className="p-12 text-center text-slate-400 text-xs font-medium">
@@ -507,8 +599,9 @@ export default function MarketingPromocionesView() {
                       <th className="py-3.5 px-4">Evento</th>
                       <th className="py-3.5 px-4">Organización</th>
                       <th className="py-3.5 px-4">Plan Contratado</th>
-                      <th className="py-3.5 px-4">Tipo / Atributos</th>
-                      <th className="py-3.5 px-4">Precio Pagado</th>
+                      <th className="py-3.5 px-4">Beneficios del Plan</th>
+                      <th className="py-3.5 px-4">Monto Pagado</th>
+                      <th className="py-3.5 px-4">Vigencia</th>
                       <th className="py-3.5 px-4">Estado</th>
                       <th className="py-3.5 px-4 text-right">Acciones</th>
                     </tr>
@@ -519,26 +612,29 @@ export default function MarketingPromocionesView() {
                       const hasPromoImage = Boolean(p.urlImagenDestacado);
 
                       return (
-                        <tr key={p.id} className="hover:bg-slate-50/60 transition-colors">
-                          {/* Evento */}
+                        <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                          {/* Evento (Sin IDs internos visibles) */}
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-amber-50 overflow-hidden shrink-0 flex items-center justify-center text-amber-600 font-bold text-xs border border-amber-200">
+                              <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-slate-100 flex items-center justify-center">
                                 {p.urlImagenDestacado || p.foto ? (
                                   <img
                                     src={p.urlImagenDestacado || p.foto}
                                     alt={p.eventoNombre}
                                     className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                    }}
                                   />
                                 ) : (
-                                  <span>★</span>
+                                  <div className="w-full h-full bg-slate-200 dark:bg-slate-800" />
                                 )}
                               </div>
                               <div>
                                 <p className="font-bold text-slate-900 line-clamp-1 max-w-[220px]">
                                   {p.eventoNombre}
                                 </p>
-                                <span className="text-[10px] text-slate-400">ID #{p.eventoId}</span>
+                                <span className="text-[11px] text-slate-400 font-medium">Evento Cultural</span>
                               </div>
                             </div>
                           </td>
@@ -556,16 +652,14 @@ export default function MarketingPromocionesView() {
                             <span>{p.plan}</span>
                           </td>
 
-                          {/* Tipo / Atributos (Distinción Destacado vs Premium) */}
+                          {/* Beneficios / Atributos del Plan */}
                           <td className="py-3.5 px-4">
                             <div className="flex flex-col gap-1 items-start">
-                              {/* Todo evento con promo pagada y activa es Destacado */}
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-900 border border-amber-200">
                                 <Award size={10} />
                                 <span>Destacado</span>
                               </span>
 
-                              {/* Si es Premium */}
                               {p.premium ? (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
                                   <Star size={10} />
@@ -582,6 +676,11 @@ export default function MarketingPromocionesView() {
                           {/* Precio Pagado */}
                           <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
                             {formatPrice(p.precio)}
+                          </td>
+
+                          {/* Vigencia Formateada */}
+                          <td className="py-3.5 px-4 text-slate-600 text-[11px]">
+                            {formatFechaHora(p.fechaInicio)}
                           </td>
 
                           {/* Estado */}
@@ -645,16 +744,17 @@ export default function MarketingPromocionesView() {
         </div>
       )}
 
-      {/* VISTA 2: PLANES DE PROMOCIÓN (SECCIÓN 12) */}
+      {/* PANEL 2: PLANES DE PROMOCIÓN (CARDS VERTICALES CON PAGINACIÓN, SIN TABLA, SIN ARRASTRE) */}
       {activeSubTab === 'planes' && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
             <div>
-              <h3 className="font-bold text-base text-slate-900">
-                Catálogo Oficial de Planes de Promoción
+              <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                <Award className="w-5 h-5 text-amber-500" />
+                <span>Planes de Promoción Disponibles</span>
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Planes y tarifas oficiales de posicionamiento en la plataforma.
+                Tarifas y parámetros oficiales de posicionamiento para organizaciones.
               </p>
             </div>
             <button
@@ -667,145 +767,45 @@ export default function MarketingPromocionesView() {
             </button>
           </div>
 
-          {/* VISTA DINÁMICA DE TARJETAS HORIZONTALES (ESTILO IMAGEN 1 - MOVIBLES Y EDITABLES) */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
-              <div>
-                <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-                  <Sparkles size={16} className="text-amber-500" />
-                  <span>Visualización y Reordenamiento de Planes</span>
-                </h4>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Los planes son dinámicos, puedes mover su orden con los botones y editarlos con el modal a la derecha.
-                </p>
-              </div>
-              <span className="text-[11px] font-semibold text-slate-400">
-                Desliza horizontalmente para comparar planes →
-              </span>
+          {/* Cards de planes organizadas en grid responsive con paginación */}
+          {loadingPlanes ? (
+            <div className="p-16 text-center text-slate-400 text-xs font-medium bg-white rounded-3xl border border-slate-200/80">
+              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-slate-400" />
+              Cargando planes de promoción...
             </div>
-
-            {loadingPlanes ? (
-              <div className="p-12 text-center text-slate-400 text-xs font-medium">
-                <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-slate-400" />
-                Cargando planes de promoción...
+          ) : planes.length === 0 ? (
+            <div className="p-16 text-center text-slate-400 text-xs font-medium bg-white rounded-3xl border border-slate-200/80">
+              No hay planes de promoción registrados en el catálogo.
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+                {paginatedPlanes.map((plan) => (
+                  <PlanCard
+                    key={plan.id || plan.codigo}
+                    plan={plan}
+                    className="w-full"
+                    mode="manage"
+                    onEdit={() => handleOpenEditPlan(plan)}
+                  />
+                ))}
               </div>
-            ) : planes.length === 0 ? (
-              <div className="p-12 text-center text-slate-400 text-xs font-medium">
-                No hay planes de promoción registrados en el catálogo.
-              </div>
-            ) : (
-              <div className="overflow-x-auto pb-4 pt-2 -mx-2 px-2 flex items-stretch gap-6 scroll-smooth scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
-                {planes.map((plan, index) => {
-                  const isHighlighted = Boolean(plan.premium) || (planes.length >= 3 && index === 1);
-                  return (
-                    <PlanCard
-                      key={plan.id || plan.codigo || index}
-                      plan={plan}
-                      isHighlighted={isHighlighted}
-                      mode="manage"
-                      onEdit={() => handleOpenEditPlan(plan)}
-                      onMoveLeft={() => handleMovePlan(index, index - 1)}
-                      onMoveRight={() => handleMovePlan(index, index + 1)}
-                      canMoveLeft={index > 0}
-                      canMoveRight={index < planes.length - 1}
-                    />
-                  );
-                })}
-              </div>
-            )}
-          </div>
 
-          {/* TABLA DE 7 COLUMNAS REQUERIDA (SECCIÓN 12.2) */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-
-            {loadingPlanes ? (
-              <div className="p-12 text-center text-slate-400 text-xs font-medium">
-                <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-slate-400" />
-                Cargando planes de promoción...
-              </div>
-            ) : planes.length === 0 ? (
-              <div className="p-12 text-center text-slate-400 text-xs font-medium">
-                No hay planes de promoción registrados en el catálogo.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-700">
-                  <thead className="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
-                    <tr>
-                      <th className="py-3.5 px-4">Nombre</th>
-                      <th className="py-3.5 px-4">Código</th>
-                      <th className="py-3.5 px-4">Detalle de Publicidad</th>
-                      <th className="py-3.5 px-4 text-center">Pauta en Redes</th>
-                      <th className="py-3.5 px-4 text-center">Nivel</th>
-                      <th className="py-3.5 px-4 text-right">Precio</th>
-                      <th className="py-3.5 px-4 text-right">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {planes.map((plan) => (
-                      <tr key={plan.id || plan.codigo} className="hover:bg-slate-50/80 transition-colors">
-                        {/* 1. Nombre */}
-                        <td className="py-4 px-4 font-bold text-slate-900">
-                          {plan.nombre}
-                        </td>
-
-                        {/* 2. Código */}
-                        <td className="py-4 px-4 font-mono font-bold text-slate-600">
-                          <span className="px-2 py-1 rounded-md bg-slate-100 border border-slate-200 text-[11px]">
-                            {plan.codigo}
-                          </span>
-                        </td>
-
-                        {/* 3. Detalle de publicidad */}
-                        <td className="py-4 px-4 text-slate-600 max-w-xs">
-                          <p className="line-clamp-2">
-                            {plan.detallePublicidad || '—'}
-                          </p>
-                        </td>
-
-                        {/* 4. Lleva pauta de redes: Sí/No */}
-                        <td className="py-4 px-4 text-center font-bold">
-                          {plan.pautaRedes ? (
-                            <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">Incluida</span>
-                          ) : (
-                            <span className="text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">No</span>
-                          )}
-                        </td>
-
-                        {/* 5. Premium: Sí/No */}
-                        <td className="py-4 px-4 text-center font-bold">
-                          {plan.premium ? (
-                            <span className="text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">Premium</span>
-                          ) : (
-                            <span className="text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">
-                              No
-                            </span>
-                          )}
-                        </td>
-
-                        {/* 6. Precio de pago fijo (formato monetario) */}
-                        <td className="py-4 px-4 text-right font-mono font-black text-slate-900 text-sm">
-                          {formatPrice(plan.precio)}
-                        </td>
-
-                        {/* 7. Acciones existentes y permitidas */}
-                        <td className="py-4 px-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditPlan(plan)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
-                          >
-                            <Edit3 size={13} />
-                            <span>Editar</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+              {planes.length > planesPageSize && (
+                <div className="p-4 bg-white rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row justify-between items-center gap-3">
+                  <span className="text-xs text-slate-500 font-medium">
+                    Mostrando {paginatedPlanes.length} de {planes.length} planes
+                  </span>
+                  <Pagination
+                    currentPage={planesPage}
+                    pageSize={planesPageSize}
+                    totalItems={planes.length}
+                    onPageChange={setPlanesPage}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -916,7 +916,28 @@ export default function MarketingPromocionesView() {
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none font-mono"
                   />
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Precio final en COP. No se añade comisión comercial adicional.
+                    Precio fijo de contratación del plan en COP.
+                  </p>
+                </div>
+
+                {/* 5. Porcentaje de Comisión */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                    Porcentaje de Comisión (%) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={planForm.comisionPorcentaje}
+                    onChange={(e) => setPlanForm({ ...planForm, comisionPorcentaje: e.target.value })}
+                    placeholder="10"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none font-mono"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Porcentaje de comisión comercial sobre ventas de entradas (entre 0% y 100%).
                   </p>
                 </div>
 

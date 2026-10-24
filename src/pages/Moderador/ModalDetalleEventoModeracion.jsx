@@ -17,7 +17,25 @@ import {
 } from 'react-icons/fi';
 import Badge from '../../components/Shared/Badge.jsx';
 import moderationService from '../../services/moderationService.js';
-import { formatHora23 } from '../../utils/formatters.js';
+import { formatHora12 } from '../../utils/formatters.js';
+import L from 'leaflet';
+import { MapContainer, Marker, TileLayer } from 'react-leaflet';
+
+const customPinIcon = () =>
+  L.divIcon({
+    className: 'custom-moderacion-pin',
+    html: `
+      <div style="position: relative; width: 30px; height: 38px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));">
+        <svg viewBox="0 0 34 42" width="30" height="38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17 0C7.61 0 0 7.61 0 17C0 27.5 14.5 40.5 16.1 41.9C16.6 42.3 17.4 42.3 17.9 41.9C19.5 40.5 34 27.5 34 17C34 7.61 26.39 0 17 0Z" fill="#087fea" stroke="#FFFFFF" stroke-width="2"/>
+          <circle cx="17" cy="17" r="5" fill="#FFFFFF"/>
+        </svg>
+      </div>
+    `,
+    iconSize: [30, 38],
+    iconAnchor: [15, 38],
+    popupAnchor: [0, -38],
+  });
 
 export default function ModalDetalleEventoModeracion({
   evento,
@@ -154,11 +172,7 @@ export default function ModalDetalleEventoModeracion({
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center">
-              <span className="text-white/20 text-5xl font-display font-black">
-                EventHive
-              </span>
-            </div>
+            <div className="w-full h-full bg-slate-200 dark:bg-slate-800" />
           )}
 
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-black/20" />
@@ -178,9 +192,6 @@ export default function ModalDetalleEventoModeracion({
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="bg-brand text-white text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm">
                 {categoriaNombre}
-              </span>
-              <span className="bg-white/20 backdrop-blur-md text-white text-[11px] font-semibold px-2.5 py-1 rounded-lg">
-                ID #{evento.id}
               </span>
               <span className="bg-amber-500/90 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg">
                 {evento.estado || 'PENDIENTE_REVISION'}
@@ -223,7 +234,7 @@ export default function ModalDetalleEventoModeracion({
               </div>
               <div>
                 <p className="text-[10px] uppercase font-bold text-slate-400">Hora</p>
-                <p className="font-semibold text-slate-800">{evento.hora ? formatHora23(evento.hora) : 'Sin hora'}</p>
+                <p className="font-semibold text-slate-800">{evento.hora ? formatHora12(evento.hora) : 'Sin hora'}</p>
               </div>
             </div>
 
@@ -244,21 +255,39 @@ export default function ModalDetalleEventoModeracion({
             </div>
           </div>
 
-          {/* Ubicación y Coordenadas */}
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+          {/* Ubicación y Mapa Geográfico (Requisito 5.1 - sin coordenadas numéricas) */}
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
             <div className="flex items-center gap-2 text-slate-800 font-bold">
               <FiMapPin className="text-brand" size={16} />
-              <span>Lugar y Ubicación</span>
+              <span>Ubicación del Evento</span>
             </div>
-            <p className="text-slate-600 pl-6">{evento.lugar || 'Ubicación no especificada'}</p>
-            {(evento.latitud !== undefined && evento.latitud !== null && evento.longitud !== undefined && evento.longitud !== null) && (
-              <div className="pl-6 pt-1 text-[11px] text-slate-500 flex items-center gap-2">
-                <span className="font-mono bg-white px-2 py-0.5 rounded border border-slate-200">
-                  Lat: {evento.latitud}
-                </span>
-                <span className="font-mono bg-white px-2 py-0.5 rounded border border-slate-200">
-                  Lng: {evento.longitud}
-                </span>
+            <p className="text-slate-600 pl-6 text-xs">{evento.lugar || 'Ubicación no especificada'}</p>
+            {evento.latitud !== undefined &&
+            evento.latitud !== null &&
+            evento.longitud !== undefined &&
+            evento.longitud !== null &&
+            !isNaN(Number(evento.latitud)) &&
+            !isNaN(Number(evento.longitud)) ? (
+              <div className="overflow-hidden rounded-xl border border-slate-200 h-48 w-full relative z-0">
+                <MapContainer
+                  center={[Number(evento.latitud), Number(evento.longitud)]}
+                  zoom={15}
+                  scrollWheelZoom={false}
+                  className="h-full w-full"
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <Marker
+                    position={[Number(evento.latitud), Number(evento.longitud)]}
+                    icon={customPinIcon()}
+                  />
+                </MapContainer>
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl bg-slate-100/70 border border-slate-200 text-slate-500 text-[11px] text-center italic">
+                Ubicación en mapa no disponible para este evento.
               </div>
             )}
           </div>
@@ -368,11 +397,6 @@ export default function ModalDetalleEventoModeracion({
                       <p className="text-xs text-slate-800">
                         {item.observacion || 'Sin observación registrada.'}
                       </p>
-                      {item.id && (
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          Registro #{item.id}
-                        </p>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -471,20 +495,20 @@ export default function ModalDetalleEventoModeracion({
           )}
         </div>
 
-        {/* Footer de Acciones del Moderador */}
+        {/* Footer de Acciones del Moderador (Requisito 5.2: solo para PENDIENTE_REVISION) */}
         <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <span className="text-[11px] text-slate-500">
-            Revisión técnica de Evento #{evento.id}
+          <span className="text-[11px] text-slate-500 font-medium">
+            Revisión técnica de publicación
           </span>
 
           <div className="flex flex-wrap items-center gap-2">
-            {!actionType && (
+            {!actionType && evento.estado === 'PENDIENTE_REVISION' ? (
               <>
                 <button
                   type="button"
                   onClick={() => setActionType('CORRECCION')}
                   disabled={actionLoading}
-                  className="px-4 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
                   <FiEdit3 size={14} /> Solicitar Corrección
                 </button>
@@ -493,7 +517,7 @@ export default function ModalDetalleEventoModeracion({
                   type="button"
                   onClick={() => setActionType('RECHAZO')}
                   disabled={actionLoading}
-                  className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
                   <FiX size={14} /> Rechazar
                 </button>
@@ -502,12 +526,18 @@ export default function ModalDetalleEventoModeracion({
                   type="button"
                   onClick={() => onAprobar(evento.id)}
                   disabled={actionLoading}
-                  className="px-5 py-2 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-bold shadow-md shadow-brand/20 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-bold shadow-md shadow-brand/20 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
                   <FiCheck size={14} /> Aprobar y Publicar
                 </button>
               </>
-            )}
+            ) : !actionType ? (
+              <span className="text-xs font-medium text-slate-500 italic">
+                {evento.estado === 'PUBLICADO'
+                  ? 'Este evento ya ha sido publicado y no requiere moderación.'
+                  : `Estado actual: ${evento.estado || 'No editable'}`}
+              </span>
+            ) : null}
           </div>
         </div>
       </div>

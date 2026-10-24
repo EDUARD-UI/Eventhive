@@ -321,7 +321,6 @@ export default function AdminTrabajadoresView({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                <th className="py-3.5 px-4">ID</th>
                 <th className="py-3.5 px-4">Nombre Completo</th>
                 <th className="py-3.5 px-4">Correo Electrónico</th>
                 <th className="py-3.5 px-4">Teléfono</th>
@@ -332,13 +331,13 @@ export default function AdminTrabajadoresView({
             <tbody className="divide-y divide-slate-100 text-xs">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
                     Cargando trabajadores...
                   </td>
                 </tr>
               ) : filteredTrabajadores.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
                     No se encontraron trabajadores registrados.
                   </td>
                 </tr>
@@ -347,10 +346,6 @@ export default function AdminTrabajadoresView({
                   const isMod = t.rolNombre === 'MODERADOR';
                   return (
                     <tr key={t.id} className="hover:bg-slate-50/60 transition-colors">
-                      {/* ID */}
-                      <td className="py-4 px-4 font-mono font-bold text-slate-400 text-[11px]">
-                        #{t.id}
-                      </td>
 
                       {/* Nombre */}
                       <td className="py-4 px-4">

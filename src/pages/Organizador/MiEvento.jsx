@@ -15,7 +15,7 @@ import Badge from '../../components/Shared/Badge.jsx';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import { organizerService } from '../../services/organizerService.js';
 import { getCategoryNames } from '../../services/categoryService.js';
-import { formatHora23 } from '../../utils/formatters.js';
+import { formatHora12 } from '../../utils/formatters.js';
 import Swal from 'sweetalert2';
 
 const toneMap = {
@@ -64,8 +64,8 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
           title: e.titulo || e.title || 'Sin título',
           category: typeof e.categoria === 'string' ? e.categoria : e.categoria?.nombre || e.nombreCategoria || 'Evento',
           date: e.fecha || e.date || 'Próximamente',
-          time: formatHora23(e.hora || e.time) || 'Hora por confirmar',
-          hora: formatHora23(e.hora || e.time) || 'Hora por confirmar',
+          time: formatHora12(e.hora || e.time) || 'Hora por confirmar',
+          hora: formatHora12(e.hora || e.time) || 'Hora por confirmar',
           location: e.lugar || e.ubicacion || e.location || '',
           status: e.estado || 'BORRADOR',
           rawStatus: e.estado || 'BORRADOR',
@@ -155,12 +155,14 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
       key: 'title',
       render: (_, row) => (
         <div className="flex items-center gap-3">
-          {row.photo && (
+          {row.photo ? (
             <img
               src={row.photo}
               alt={row.title}
               className="h-11 w-14 rounded-lg object-cover border border-slate-200 shadow-2xs shrink-0"
             />
+          ) : (
+            <div className="h-11 w-14 rounded-lg bg-slate-200 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0" />
           )}
           <div className="min-w-0">
             <p className="font-display font-bold text-slate-900 truncate text-xs hover:text-brand transition-colors">

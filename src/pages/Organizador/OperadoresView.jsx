@@ -250,14 +250,7 @@ export default function OperadoresView() {
           >
             <FiRefreshCw size={15} className={loading ? 'animate-spin' : ''} />
           </button>
-          <button
-            type="button"
-            onClick={() => setEmailModal({ isOpen: true, email: '', name: '', subject: '' })}
-            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider shadow-2xs transition-all active:scale-95 cursor-pointer"
-          >
-            <FiMail size={15} />
-            <span>Redactar</span>
-          </button>
+
           <button
             type="button"
             onClick={() => setShowInviteModal(true)}
@@ -429,22 +422,7 @@ export default function OperadoresView() {
                     </button>
 
                     <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setEmailModal({
-                            isOpen: true,
-                            email: correo,
-                            name: nombre,
-                            subject: 'Información de la organización',
-                          })
-                        }
-                        className="px-2 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                        title="Enviar correo electrónico"
-                      >
-                        <FiMail size={12} />
-                        <span className="hidden sm:inline">Correo</span>
-                      </button>
+
 
                       <button
                         type="button"
@@ -613,14 +591,9 @@ export default function OperadoresView() {
                   </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
-                    <FiShield className="text-amber-600 shrink-0" size={15} />
-                    <span>Rol Asignado: OPERADOR</span>
-                  </div>
-                  <p className="text-[11px] text-amber-800/90 leading-relaxed font-normal">
-                    La invitación quedará vinculada automáticamente a tu organización. Una vez aceptada, podrás definir sus permisos para escanear boletos QR, crear y editar eventos.
-                  </p>
+                <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-900">Rol</span>
+                  <span className="text-xs font-black text-amber-950 uppercase tracking-wider">OPERADOR</span>
                 </div>
               </form>
             </div>
@@ -802,7 +775,7 @@ export default function OperadoresView() {
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                       <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Rol en Organización</span>
-                      <strong className="text-slate-800">Operador</strong>
+                      <strong className="text-slate-800 font-black">OPERADOR</strong>
                     </div>
                     <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                       <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Estado</span>
@@ -810,13 +783,9 @@ export default function OperadoresView() {
                         <FiCheckCircle size={12} /> Activo
                       </span>
                     </div>
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 col-span-2">
                       <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Teléfono</span>
                       <strong className="text-slate-800">{editingOperador.telefono || 'No registrado'}</strong>
-                    </div>
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Identificador</span>
-                      <strong className="text-slate-800 font-mono text-[11px]">#{editingOperador.id || editingOperador.operadorId || '—'}</strong>
                     </div>
                   </div>
                 </div>

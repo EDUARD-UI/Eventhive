@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { FiMapPin, FiEye, FiCalendar, FiClock, FiStar } from 'react-icons/fi';
 import ImageWithFallback from './ImageWithFallback.jsx';
-import { formatHora23 } from '../../utils/formatters.js';
+import { formatHora12 } from '../../utils/formatters.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 
 /**
@@ -34,7 +34,7 @@ export default function EventListCard({
 
   const isGolden = Boolean(promocionado);
   const displayDate = shortDate || date || t('eventCard.dateTbd');
-  const displayTime = formattedTime ? formatHora23(formattedTime) : (event.hora ? formatHora23(event.hora) : null);
+  const displayTime = formattedTime ? formatHora12(formattedTime) : (event.hora ? formatHora12(event.hora) : null);
 
   const aspectClass =
     aspectVariant === 'portrait'

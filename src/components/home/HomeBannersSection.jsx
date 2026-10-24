@@ -58,8 +58,8 @@ export default function HomeBannersSection() {
   }
 
   // Ordenar y asignar posición 1 (izq) y posición 2 (der)
-  const bannerLeft = banners.find((b) => b.posicion === 1) || banners[0];
-  const bannerRight = banners.find((b) => b.posicion === 2) || (banners.length > 1 ? banners[1] : null);
+  const bannerLeft = banners.find((b) => Number(b.posicion) === 1) || banners[0];
+  const bannerRight = banners.find((b) => Number(b.posicion) === 2 && b !== bannerLeft) || (banners.length > 1 && banners[1] !== bannerLeft ? banners[1] : null);
 
   const renderBannerCard = (banner, colSpanClass = 'lg:col-span-6') => {
     if (!banner) return null;

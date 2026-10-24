@@ -15,7 +15,7 @@ import {
 import Badge from '../../components/Shared/Badge.jsx';
 import { organizerService } from '../../services/organizerService.js';
 import Swal from 'sweetalert2';
-import { formatHora23 } from '../../utils/formatters.js';
+import { formatHora12 } from '../../utils/formatters.js';
 
 const toneMap = {
   PUBLICADO: 'active',
@@ -137,7 +137,7 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
   const canWithdraw = estado === 'PENDIENTE_REVISION';
 
   const formatCurrency = (val) => {
-    if (val === 0) return 'Gratis';
+    if (val == null || val === undefined || isNaN(val)) return '$0';
     return `$${Number(val).toLocaleString('es-CO')}`;
   };
 
@@ -181,15 +181,17 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
         {/* Información del Evento */}
         <div className="space-y-5">
           {/* Foto + datos básicos */}
-          {event.foto && (
-            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm max-h-72">
+          <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm max-h-72">
+            {event.foto ? (
               <img
                 src={event.foto}
                 alt={event.titulo}
                 className="w-full h-56 sm:h-64 object-cover"
               />
-            </div>
-          )}
+            ) : (
+              <div className="w-full h-56 sm:h-64 bg-slate-200 dark:bg-slate-800" />
+            )}
+          </div>
 
           <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm space-y-4">
             <h3 className="font-display text-sm font-bold text-slate-900 border-b border-slate-100 pb-2.5">
@@ -215,7 +217,7 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
                 <FiClock size={15} className="text-amber-600 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <span className="text-[10px] text-slate-400 uppercase font-bold block">Hora</span>
-                  <span className="font-bold text-slate-800 truncate block">{event.hora ? formatHora23(event.hora) : 'No definida'}</span>
+                  <span className="font-bold text-slate-800 truncate block">{event.hora ? formatHora12(event.hora) : 'No definida'}</span>
                 </div>
               </div>
 
@@ -273,73 +275,75 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
             </div>
           )}
 
-          {/* Barra de Acciones Disponibles */}
-          <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm space-y-3">
-            <h4 className="font-display text-sm font-bold text-slate-900 border-b border-slate-100 pb-2.5">
-              Acciones de Gestión
-            </h4>
+          {/* Barra de Acciones Disponibles - Oculta si el evento está FINALIZADO */}
+          {estado !== 'FINALIZADO' && (
+            <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm space-y-3">
+              <h4 className="font-display text-sm font-bold text-slate-900 border-b border-slate-100 pb-2.5">
+                Acciones de Gestión
+              </h4>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {canEdit && (
-                <button
-                  type="button"
-                  onClick={() => onEdit && onEdit(event)}
-                  disabled={actionLoading}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:border-amber-500 hover:text-amber-800 transition-colors disabled:opacity-50 cursor-pointer"
-                >
-                  <FiEdit3 size={14} /> Editar evento
-                </button>
-              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={() => onEdit && onEdit(event)}
+                    disabled={actionLoading}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:border-amber-500 hover:text-amber-800 transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    <FiEdit3 size={14} /> Editar evento
+                  </button>
+                )}
 
-              {canSendReview && (
-                <button
-                  type="button"
-                  onClick={() => handleAction(() => organizerService.enviarRevision(event.id))}
-                  disabled={actionLoading}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
-                >
-                  <FiSend size={14} /> Enviar a revisión
-                </button>
-              )}
+                {canSendReview && (
+                  <button
+                    type="button"
+                    onClick={() => handleAction(() => organizerService.enviarRevision(event.id))}
+                    disabled={actionLoading}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
+                  >
+                    <FiSend size={14} /> Enviar a revisión
+                  </button>
+                )}
 
-              {canWithdraw && (
-                <button
-                  type="button"
-                  onClick={() => handleAction(() => organizerService.retirarEvento(event.id))}
-                  disabled={actionLoading}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-amber-200 bg-amber-50 text-xs font-bold text-amber-800 hover:bg-amber-100 transition-colors disabled:opacity-50 cursor-pointer"
-                >
-                  <FiRotateCcw size={14} /> Retirar a borrador
-                </button>
-              )}
+                {canWithdraw && (
+                  <button
+                    type="button"
+                    onClick={() => handleAction(() => organizerService.retirarEvento(event.id))}
+                    disabled={actionLoading}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-amber-200 bg-amber-50 text-xs font-bold text-amber-800 hover:bg-amber-100 transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    <FiRotateCcw size={14} /> Retirar a borrador
+                  </button>
+                )}
 
-              {canCancel && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (confirm('¿Estás seguro de que deseas suspender/cancelar este evento?')) {
-                      handleAction(() => organizerService.cancelarEvento(event.id));
-                    }
-                  }}
-                  disabled={actionLoading}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-50 cursor-pointer"
-                >
-                  <FiPauseCircle size={14} /> Suspender evento
-                </button>
-              )}
+                {canCancel && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm('¿Estás seguro de que deseas suspender/cancelar este evento?')) {
+                        handleAction(() => organizerService.cancelarEvento(event.id));
+                      }
+                    }}
+                    disabled={actionLoading}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    <FiPauseCircle size={14} /> Suspender evento
+                  </button>
+                )}
 
-              {canReopen && (
-                <button
-                  type="button"
-                  onClick={() => handleAction(() => organizerService.reabrirEvento(event.id))}
-                  disabled={actionLoading}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition-colors disabled:opacity-50 cursor-pointer"
-                >
-                  <FiRotateCcw size={14} /> Reabrir evento
-                </button>
-              )}
+                {canReopen && (
+                  <button
+                    type="button"
+                    onClick={() => handleAction(() => organizerService.reabrirEvento(event.id))}
+                    disabled={actionLoading}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    <FiRotateCcw size={14} /> Reabrir evento
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

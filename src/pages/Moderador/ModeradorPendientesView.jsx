@@ -14,7 +14,7 @@ import {
 } from 'react-icons/fi';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
-import { formatHora23 } from '../../utils/formatters.js';
+import { formatHora12 } from '../../utils/formatters.js';
 
 export default function ModeradorPendientesView({
   pendientes = [],
@@ -144,9 +144,7 @@ export default function ModeradorPendientesView({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400 font-bold text-xs uppercase tracking-wider">
-                          Sin foto
-                        </div>
+                        <div className="w-full h-full bg-slate-200 dark:bg-slate-800" />
                       )}
                       <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm text-brand font-bold text-[10px] px-2 py-0.5 rounded-md shadow-xs">
                         {categoriaNombre}
@@ -155,9 +153,6 @@ export default function ModeradorPendientesView({
 
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className="text-[10px] font-mono font-bold text-slate-400">
-                          #{evento.id}
-                        </span>
                         <Badge tone="amber">
                           {evento.estado || 'PENDIENTE_REVISION'}
                         </Badge>
@@ -176,7 +171,7 @@ export default function ModeradorPendientesView({
                           <div className="flex items-center gap-1.5">
                             <FiCalendar className="text-brand shrink-0" size={13} />
                             <span>
-                              {evento.fecha} {evento.hora ? `· ${formatHora23(evento.hora)}` : ''}
+                              {evento.fecha} {evento.hora ? `· ${formatHora12(evento.hora)}` : ''}
                             </span>
                           </div>
                         )}

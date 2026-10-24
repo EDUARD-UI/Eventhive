@@ -124,7 +124,6 @@ export default function AdminCategoriasView({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                <th className="py-3.5 px-4">ID</th>
                 <th className="py-3.5 px-4">Fotografía</th>
                 <th className="py-3.5 px-4">Nombre de la Categoría</th>
                 <th className="py-3.5 px-4 text-center">Eventos Vinculados</th>
@@ -135,7 +134,7 @@ export default function AdminCategoriasView({
             <tbody className="divide-y divide-slate-100 text-xs">
               {paginatedCategorias.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
                     No se encontraron categorías coincidentes.
                   </td>
                 </tr>
@@ -149,24 +148,20 @@ export default function AdminCategoriasView({
                       key={cat.id}
                       className="hover:bg-slate-50/60 transition-colors"
                     >
-                      {/* ID */}
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-400 text-[11px]">
-                        #{cat.id}
-                      </td>
-
                       {/* Fotografía entregada por backend */}
                       <td className="py-3.5 px-4">
-                        <div className="w-14 h-12 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 relative flex items-center justify-center">
+                        <div className="w-14 h-12 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-800 border border-slate-200 shrink-0 relative flex items-center justify-center">
                           {imageUrl ? (
                             <img
                               src={imageUrl}
                               alt={cat.nombre}
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                              }}
                             />
                           ) : (
-                            <div className="flex flex-col items-center justify-center text-slate-400">
-                              <ImageIcon className="w-4 h-4" />
-                            </div>
+                            <div className="w-full h-full bg-slate-200 dark:bg-slate-800" />
                           )}
                         </div>
                       </td>

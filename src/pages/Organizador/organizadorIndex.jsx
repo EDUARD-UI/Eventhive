@@ -13,7 +13,7 @@ import PosicionamientoView from './PosicionamientoView.jsx';
 import EntradasView from './EntradasView.jsx';
 import PerfilOrganizador from './PerfilOrganizador.jsx';
 import EventDetailView from './EventDetailView.jsx';
-import { formatHora23 } from '../../utils/formatters.js';
+import { formatHora12 } from '../../utils/formatters.js';
 import {
   FiCalendar,
   FiCheck,
@@ -211,7 +211,7 @@ function OrgEventsCalendar({ events = [], onSelectEvent }) {
                   <p className="text-xs font-bold text-slate-900 truncate">{ev.titulo}</p>
                   <p className="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5">
                     <FiClock size={10} className="text-amber-600" />
-                    <span>{ev.hora ? formatHora23(ev.hora) : 'Hora por confirmar'}</span>
+                    <span>{ev.hora ? formatHora12(ev.hora) : 'Hora por confirmar'}</span>
                     <span>•</span>
                     <span className="truncate">{ev.lugar || 'Ubicación registrada'}</span>
                   </p>

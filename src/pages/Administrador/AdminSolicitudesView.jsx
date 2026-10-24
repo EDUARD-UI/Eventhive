@@ -120,8 +120,8 @@ export default function AdminSolicitudesView({
                 {/* Datos de la Organización */}
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[11px] font-mono font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/60">
-                      Solicitud #{sol.id}
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/60">
+                      Solicitud de Registro
                     </span>
                     <Badge variant="warning" size="xs">
                       {sol.estado || 'PENDIENTE'}
