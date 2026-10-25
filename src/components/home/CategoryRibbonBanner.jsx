@@ -1,18 +1,14 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { useLanguage } from '../../context/LanguageContext.jsx';
-import { useLenisScrollEffect } from '../../hooks/useLenisScroll.js';
 
 /**
  * CategoryRibbonBanner
  * Barra inclinada continua de categorías con nombres estáticos divididos por el logo de Eventhive.
- * Animada con smooth scroll mediante Lenis: al ir bajando va cruzando de lado a lado
- * manteniendo fielmente su inclinación (-2.4deg) y preservando los textos intactos.
+ * En modo oscuro adopta un fondo dorado ámbar con logos en blanco.
+ * En el centro incluye la insignia fija con el título "CATEGORÍAS".
  */
 export default function CategoryRibbonBanner() {
   const { language } = useLanguage();
-
-  const containerRef = useRef(null);
-  const ribbonRef = useRef(null);
 
   const isEn = language === 'en';
   const centerTitle = isEn ? 'CATEGORIES' : 'CATEGORÍAS';
@@ -42,38 +38,17 @@ export default function CategoryRibbonBanner() {
   // Generamos un bloque repetible para el marquee continuo
   const repeatedItems = Array(4).fill(categories).flat();
 
-  // Animación smooth scroll Lenis: la barra cruza de lado a lado manteniendo su inclinación
-  useLenisScrollEffect(() => {
-    if (!containerRef.current || !ribbonRef.current) return;
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const windowHeight = window.innerHeight || 800;
-
-    if (rect.bottom < -200 || rect.top > windowHeight + 200) return;
-
-    const centerOffset = (windowHeight / 2) - (rect.top + rect.height / 2);
-    const normalized = Math.max(-1.6, Math.min(1.6, centerOffset / (windowHeight * 0.65)));
-
-    // Se desplaza de lado a lado conforme se hace scroll manteniendo su rotación de -2.4deg
-    const shift = normalized * 220;
-    ribbonRef.current.style.transform = `translate3d(${shift}px, 0, 0) rotate(-2.4deg)`;
-  });
-
   return (
-    <div
-      ref={containerRef}
-      className="w-full overflow-hidden select-none relative min-h-[140px] sm:min-h-[170px] flex items-center justify-center will-change-transform"
-    >
-      {/* Barra inclinada continua que se extiende 180vw para permitir el desplazamiento lateral sin cortes */}
+    <div className="w-full overflow-hidden select-none relative min-h-[140px] sm:min-h-[170px] flex items-center justify-center">
+      {/* Barra inclinada continua que se extiende 150vw centrada simétricamente */}
       <div
-        ref={ribbonRef}
         style={{
-          width: '180vw',
-          minWidth: '180vw',
+          width: '150vw',
+          minWidth: '150vw',
           transform: 'rotate(-2.4deg)',
           transformOrigin: 'center center',
         }}
-        className="py-3 sm:py-3.5 bg-[#0B132B] text-white border-y-2 border-slate-900 shadow-xl dark:bg-amber-500 dark:text-slate-950 dark:border-amber-400 flex items-center overflow-hidden shrink-0 transition-colors duration-300 pointer-events-none select-none z-1 will-change-transform"
+        className="py-3 sm:py-3.5 bg-[#0B132B] text-white border-y-2 border-slate-900 shadow-xl dark:bg-amber-500 dark:text-slate-950 dark:border-amber-400 flex items-center overflow-hidden shrink-0 transition-colors duration-300 pointer-events-none select-none z-1"
       >
         <div
           className="whitespace-nowrap animate-marquee flex items-center shrink-0"
