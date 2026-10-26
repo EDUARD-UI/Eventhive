@@ -387,9 +387,9 @@ export default function BuscarEventosPage() {
       {/* Navbar idéntico */}
       <Navbar />
 
-      <main className="flex-1 max-w-[1900px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-8 relative z-10">
+      <main className="flex-1 max-w-[1900px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-4 sm:py-6 relative z-10">
         {/* Encabezado con tarjeta de búsqueda ancha y filtros integrados justo debajo del buscador */}
-        <header className="relative z-30 mb-6 rounded-3xl border border-slate-200/80 bg-white/85 px-5 py-7 sm:px-8 sm:py-9 text-center shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-[#0B1428]/85 max-w-7xl xl:max-w-[1440px] mx-auto w-full transition-colors duration-200">
+        <header className="relative z-30 mb-4 sm:mb-6 rounded-3xl border border-slate-200/80 bg-white/85 px-5 py-6 sm:px-8 sm:py-7 text-center shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-[#0B1428]/85 max-w-6xl xl:max-w-7xl mx-auto w-full transition-colors duration-200">
           {/* Contenedor con overflow-hidden exclusivo para el resplandor de fondo para no cortar los desplegables */}
           <div
             aria-hidden="true"
@@ -399,12 +399,12 @@ export default function BuscarEventosPage() {
           </div>
 
           <div className="relative flex flex-col items-center">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-slate-950 dark:text-white max-w-4xl text-center leading-tight">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-[32px] font-extrabold tracking-tight text-slate-950 dark:text-white max-w-2xl text-center leading-snug">
               Descubre conciertos, festivales, experiencias culturales y deportivas en La Heroica.
             </h1>
 
             {/* Buscador dentro de la tarjeta */}
-            <form role="search" onSubmit={handleSearchSubmit} className="relative mt-6 w-full max-w-xl">
+            <form role="search" onSubmit={handleSearchSubmit} className="relative mt-5 sm:mt-6 w-full max-w-xl">
               <label htmlFor="event-search" className="sr-only">
                 Buscar eventos por nombre
               </label>
@@ -414,7 +414,7 @@ export default function BuscarEventosPage() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Buscar eventos por nombre..."
-                className="h-12 w-full rounded-2xl border-2 border-slate-900 dark:border-white bg-white pl-11 pr-11 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-amber-500 dark:focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/15 dark:bg-[#0B0F19] dark:text-white dark:placeholder:text-slate-500"
+                className="h-11 sm:h-12 w-full rounded-2xl border-2 border-slate-900 dark:border-white bg-white pl-11 pr-11 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-amber-500 dark:focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/15 dark:bg-[#0B0F19] dark:text-white dark:placeholder:text-slate-500"
               />
               <FiSearch
                 className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -439,8 +439,8 @@ export default function BuscarEventosPage() {
             </form>
 
             {/* Filtros Horizontales y Compactos: DENTRO de la tarjeta y justo debajo del buscador */}
-            <div className="w-full mt-6 pt-5 sm:mt-7 sm:pt-6 border-t border-slate-200/60 dark:border-slate-800/80 relative z-30">
-              <div className="flex flex-wrap xl:flex-nowrap items-center justify-center gap-2.5 sm:gap-3 w-full">
+            <div className="w-full mt-5 pt-4 sm:mt-6 sm:pt-5 border-t border-slate-200/60 dark:border-slate-800/80 relative z-30">
+              <div className="flex flex-wrap xl:flex-nowrap items-center justify-center gap-2.5 sm:gap-3.5 w-full">
                 {/* 1. Selector en línea "Categoría" */}
                 <div className="w-full sm:w-[calc(50%-6px)] lg:w-auto lg:min-w-[210px] xl:min-w-[220px] lg:flex-1 relative z-30">
                   <CustomSelect
@@ -560,7 +560,7 @@ export default function BuscarEventosPage() {
         </header>
 
         {/* Contador de próximo evento destacado en formato cinemático */}
-        <div className="w-full max-w-7xl xl:max-w-[1440px] mx-auto mt-2 mb-6 sm:mb-8 relative z-0">
+        <div className="w-full max-w-6xl xl:max-w-7xl mx-auto my-3 sm:my-5 relative z-0">
           <FeaturedEventCountdownBanner
             event={closestFeaturedEvent}
             isLoading={loadingFeatured}

@@ -50,6 +50,20 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
     close();
   }, [location.pathname, location.search]);
 
+  // Escuchar actualizaciones de usuario en tiempo real (ej: cambio de foto de perfil)
+  useEffect(() => {
+    const handleUserUpdate = (e) => {
+      const updatedUser = e?.detail || session.getUser();
+      setCurrentUser(updatedUser);
+    };
+    window.addEventListener('eventhive_session_updated', handleUserUpdate);
+    window.addEventListener('storage', handleUserUpdate);
+    return () => {
+      window.removeEventListener('eventhive_session_updated', handleUserUpdate);
+      window.removeEventListener('storage', handleUserUpdate);
+    };
+  }, []);
+
   const handleLogout = () => {
     session.clear();
     setCurrentUser(null);
@@ -182,14 +196,31 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
               <div className="hidden items-center gap-2 xl:flex ml-3 sm:ml-5 xl:ml-7 pl-4 sm:pl-6 border-l border-slate-200 dark:border-white/10">
                 <Link
                   to={panelPath}
-                  className={`flex max-w-[240px] items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${isDark
+                  className={`flex max-w-[240px] items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200 shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${isDark
                       ? 'border border-white/10 bg-[#131E3A] text-white hover:border-amber-400 hover:text-amber-300'
                       : 'border border-slate-200 bg-slate-50/90 text-[#0B132B] hover:border-amber-500 hover:text-amber-800'
                     }`}
                 >
-                  <span className="w-6 h-6 rounded-full bg-amber-500 text-[#0B132B] flex items-center justify-center text-[10px] font-black shrink-0">
-                    {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
-                  </span>
+                  {currentUser.urlImagenPerfil || currentUser.fotoUrl || currentUser.foto || currentUser.avatar ? (
+                    <span className="w-6 h-6 rounded-full overflow-hidden border border-amber-400/60 bg-slate-800 flex items-center justify-center shrink-0">
+                      <img
+                        src={currentUser.urlImagenPerfil || currentUser.fotoUrl || currentUser.foto || currentUser.avatar}
+                        alt={currentUser.name || 'Usuario'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                      <span className="w-full h-full bg-amber-500 text-[#0B132B] items-center justify-center text-[10px] font-black hidden">
+                        {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="w-6 h-6 rounded-full bg-amber-500 text-[#0B132B] flex items-center justify-center text-[10px] font-black shrink-0">
+                      {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+                    </span>
+                  )}
                   <span className="truncate">{currentUser.name || t('navbar.myAccount')}</span>
                   {role && role !== 'CLIENTE' && (
                     <span className={`ml-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${isDark

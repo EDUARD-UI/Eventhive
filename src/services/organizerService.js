@@ -94,6 +94,36 @@ export const organizationService = {
     }
   },
 
+  async followOrganization(organizationId) {
+    return httpClient.post(`/seguidores/${organizationId}/seguir`);
+  },
+
+  async unfollowOrganization(organizationId) {
+    return httpClient.delete(`/seguidores/${organizationId}/seguir`);
+  },
+
+  async getOrganizacionesSeguidas({ page = 0, size = 50 } = {}) {
+    try {
+      const data = await httpClient.get('/seguidores/mis-seguidos', { page, size });
+      const items = Array.isArray(data) ? data : data?.content || data?.data?.content || data?.data || [];
+      if (items.length > 0) return items.map(normalizeOrganization);
+    } catch {}
+
+    try {
+      const data = await httpClient.get('/seguidores/siguiendo', { page, size });
+      const items = Array.isArray(data) ? data : data?.content || data?.data?.content || data?.data || [];
+      if (items.length > 0) return items.map(normalizeOrganization);
+    } catch {}
+
+    try {
+      const data = await httpClient.get('/organizaciones/seguidas', { page, size });
+      const items = Array.isArray(data) ? data : data?.content || data?.data?.content || data?.data || [];
+      if (items.length > 0) return items.map(normalizeOrganization);
+    } catch {}
+
+    return [];
+  },
+
   async getOrganizationEvents(organizationId, { page = 0, size = 50 } = {}) {
     // 1. Intentar endpoint directo GET /api/organizaciones/{id}/eventos
     try {

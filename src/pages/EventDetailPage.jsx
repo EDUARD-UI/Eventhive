@@ -138,6 +138,73 @@ export default function EventDetailPage() {
     }
   }, [localidades, selectedLocalidad]);
 
+  useEffect(() => {
+    let isMounted = true;
+    const user = session.getUser();
+
+    if (!user || !event?.id) {
+      setIsFavorite(false);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const targetEventId = event?.id || id;
+    httpClient.get('/deseos', { page: 0, size: 100 })
+      .then((response) => {
+        if (!isMounted) return;
+        const favorites = Array.isArray(response)
+          ? response
+          : response?.content ?? response?.data?.content ?? response?.data ?? response?.deseos ?? [];
+        const favoriteList = Array.isArray(favorites) ? favorites : [];
+        setIsFavorite(favoriteList.some((favorite) => {
+          const favoriteEventId = favorite?.evento?.id
+            ?? favorite?.event?.id
+            ?? favorite?.eventoId
+            ?? favorite?.eventId
+            ?? favorite?.id;
+          return String(favoriteEventId) === String(targetEventId) || String(favoriteEventId) === String(id);
+        }));
+      })
+      .catch(() => {
+        if (isMounted) setIsFavorite(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [event?.id, id]);
+
+  // Sincronizar estado de seguimiento de la organización
+  useEffect(() => {
+    const user = session.getUser();
+    const currentOrgId =
+      typeof event?.organization === 'object' ? event.organization?.id : event?.organizacionId;
+    if (!user || !currentOrgId) {
+      setIsFollowing(false);
+      return;
+    }
+
+    try {
+      const raw = localStorage.getItem(`eventhive_following_${user.id}`);
+      const list = raw ? JSON.parse(raw) : [];
+      if (list.map(String).includes(String(currentOrgId))) {
+        setIsFollowing(true);
+        return;
+      }
+    } catch {}
+
+    httpClient
+      .get('/seguidores/mis-seguidos', { page: 0, size: 50 })
+      .then((res) => {
+        const items = Array.isArray(res) ? res : res?.content || [];
+        if (items.some((o) => String(o.id) === String(currentOrgId))) {
+          setIsFollowing(true);
+        }
+      })
+      .catch(() => {});
+  }, [event]);
+
   const displayedPrice = selectedLocalidad?.precio ?? event?.price ?? 0;
 
   const orgName = useMemo(() => {
@@ -183,13 +250,27 @@ export default function EventDetailPage() {
       return;
     }
 
-    const orgId = typeof event?.organization === 'object' ? event.organization.id : null;
+    const orgId = typeof event?.organization === 'object' ? event.organization.id : event?.organizacionId;
     try {
       if (orgId) {
         if (isFollowing) {
           await httpClient.delete(`/seguidores/${orgId}/seguir`);
+          try {
+            const raw = localStorage.getItem(`eventhive_following_${user.id}`);
+            const list = raw ? JSON.parse(raw) : [];
+            localStorage.setItem(
+              `eventhive_following_${user.id}`,
+              JSON.stringify(list.filter((i) => String(i) !== String(orgId)))
+            );
+          } catch {}
         } else {
           await httpClient.post(`/seguidores/${orgId}/seguir`);
+          try {
+            const raw = localStorage.getItem(`eventhive_following_${user.id}`);
+            const list = raw ? JSON.parse(raw) : [];
+            if (!list.includes(String(orgId))) list.push(String(orgId));
+            localStorage.setItem(`eventhive_following_${user.id}`, JSON.stringify(list));
+          } catch {}
         }
       }
       setIsFollowing(!isFollowing);
@@ -209,12 +290,13 @@ export default function EventDetailPage() {
       return;
     }
 
+    const targetEventId = event?.id || id;
     try {
       if (isFavorite) {
-        await httpClient.delete(`/deseos/${event.id}`);
+        await httpClient.delete(`/deseos/${targetEventId}`);
         setIsFavorite(false);
       } else {
-        await httpClient.post(`/deseos/${event.id}`);
+        await httpClient.post(`/deseos/${targetEventId}`);
         setIsFavorite(true);
       }
     } catch {
@@ -434,34 +516,9 @@ export default function EventDetailPage() {
               <div className="p-5 sm:p-7 space-y-5">
                 {/* Fila de interacciones estilo Instagram */}
                 <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/80">
-                  <div className="flex items-center gap-4">
-                    <button
-                      type="button"
-                      onClick={handleToggleFavorite}
-                      className={`inline-flex items-center gap-1.5 transition-transform active:scale-125 cursor-pointer ${
-                        isFavorite ? 'text-rose-500' : 'text-slate-600 dark:text-slate-400 hover:text-rose-500'
-                      }`}
-                      aria-label={isFavorite ? t('eventDetail.savedInFavorites') : t('eventDetail.saveInFavorites')}
-                    >
-                      <FiHeart size={22} className={isFavorite ? 'fill-current' : ''} />
-                      <span className="text-xs font-bold hidden sm:inline">
-                        {isFavorite ? t('eventDetail.savedInFavorites') : t('eventDetail.saveInFavorites')}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleShare}
-                      className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-amber-500 transition-colors cursor-pointer"
-                      aria-label={t('eventDetail.shareEvent')}
-                    >
-                      <FiShare2 size={20} />
-                      <span className="text-xs font-bold hidden sm:inline">{t('eventDetail.shareEvent')}</span>
-                    </button>
-                  </div>
-
+                  
                   {event.category && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-400/30">
+                    <span className="ml-auto inline-flex items-center gap-4 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-400/30">
                       <FiTag size={12} />
                       <span>{event.category}</span>
                     </span>
@@ -675,11 +732,11 @@ export default function EventDetailPage() {
                   type="button"
                   onClick={handleToggleFavorite}
                   className={`w-full py-2.5 px-4 rounded-xl border text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] ${isFavorite
-                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300'
+                      ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400'
                       : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800'
                     }`}
                 >
-                  <FiHeart className={isFavorite ? 'fill-amber-600 text-amber-600' : 'text-slate-500'} size={15} />
+                  <FiHeart className={isFavorite ? 'fill-rose-500 text-rose-500' : 'text-slate-500'} size={15} />
                   <span>{isFavorite ? 'Guardado en favoritos' : 'Guardar en favoritos'}</span>
                 </button>
 

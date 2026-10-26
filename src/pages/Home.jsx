@@ -375,14 +375,14 @@ export default function Home() {
       <section
         id="carousel-section"
         ref={carouselSectionRef}
-        className={`w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-6 pb-8 sm:pt-10 sm:pb-12 max-w-[1850px] mx-auto relative z-10 scroll-mt-20 transition-all duration-1000 ease-out transform ${
+        className={`w-full px-4 sm:px-6 lg:px-8 pt-4 pb-6 sm:pt-6 sm:pb-8 max-w-6xl xl:max-w-7xl mx-auto relative z-10 scroll-mt-20 transition-all duration-1000 ease-out transform ${
           carouselRevealed
             ? 'opacity-100 translate-y-0 filter blur-0 scale-100'
             : 'opacity-0 translate-y-12 filter blur-[2px] scale-[0.98]'
         }`}
       >
         {isLoadingEvents ? (
-          <div className="w-full rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[200px] sm:min-h-[280px] lg:min-h-[360px] max-h-[480px] bg-slate-200 dark:bg-slate-800/80 border border-slate-300/40 dark:border-slate-700/60 animate-pulse relative overflow-hidden flex flex-col justify-end p-5 sm:p-10 shadow-sm">
+          <div className="w-full rounded-2xl sm:rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[240px] sm:min-h-[290px] md:min-h-[330px] max-h-[370px] sm:max-h-[390px] bg-slate-200 dark:bg-slate-800/80 border border-slate-300/40 dark:border-slate-700/60 animate-pulse relative overflow-hidden flex flex-col justify-end p-5 sm:p-10 shadow-sm">
             <div className="w-24 sm:w-28 h-5 sm:h-6 bg-slate-300 dark:bg-slate-700 rounded-md mb-3" />
             <div className="w-3/4 sm:w-2/3 h-6 sm:h-9 bg-slate-300 dark:bg-slate-700 rounded-lg mb-2.5" />
             <div className="w-1/2 h-4 bg-slate-300 dark:bg-slate-700/80 rounded mb-4 hidden sm:block" />
@@ -397,8 +397,8 @@ export default function Home() {
       <CrossedRibbonsBanner badgeText={t('home.ribbonText')} />
 
       {/* 3. Próximos Eventos: Título centrado y Grilla de Boletos */}
-      <section id="proximos" className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-10 sm:py-14 bg-white/60 dark:bg-slate-900/40 transition-colors duration-200">
-        <div className="max-w-[1850px] mx-auto">
+      <section id="proximos" className="w-full px-4 sm:px-6 lg:px-8 py-10 sm:py-14 md:py-16 bg-white/60 dark:bg-slate-900/40 transition-colors duration-200">
+        <div className="max-w-6xl xl:max-w-7xl mx-auto">
           <div className="flex flex-col items-center justify-center mb-10 text-center relative">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
               {t('home.upcomingEvents')}

@@ -31,12 +31,13 @@ export default function HelpChat({
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 1. RESTRICCIÓN DE RUTAS: Solo vistas principales ('home', 'buscar eventos', 'organizacion')
+  // 1. RESTRICCIÓN DE RUTAS: Vistas principales y perfil de usuario
   const isAllowedPath = (() => {
     const path = (location?.pathname || '').toLowerCase();
     if (path === '/' || path === '') return true;
     if (path === '/buscar' || path.startsWith('/buscar')) return true;
     if (path.startsWith('/organizaciones') || path.startsWith('/organizacion')) return true;
+    if (path.startsWith('/perfil')) return true;
     return false;
   })();
 
@@ -344,9 +345,8 @@ export default function HelpChat({
     pushUserMessage(draft);
   };
 
-  // Requerimiento 1: La burbuja solo debe salir/aparecer en las vistas principales:
-  // 'home' (/), 'buscar eventos' (/buscar) y 'organizacion' (/organizaciones, /organizacion)
-  if (!isAllowedPath) {
+  // Requerimiento 1: La burbuja solo debe salir/aparecer en las vistas principales o si se solicita abrirla
+  if (!isAllowedPath && !isOpen) {
     return null;
   }
 

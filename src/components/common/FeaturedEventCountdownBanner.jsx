@@ -127,15 +127,15 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
 
   if (isLoading && !event) {
     return (
-      <div className="w-full my-3 rounded-2xl bg-amber-500/20 border border-amber-400/30 p-4 sm:p-5 animate-pulse flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-xl bg-amber-500/30 shrink-0" />
-          <div className="space-y-2">
-            <div className="w-48 sm:w-64 h-6 bg-amber-500/30 rounded" />
-            <div className="w-36 h-3 bg-amber-500/30 rounded" />
+      <div className="w-full my-2 sm:my-3 rounded-2xl bg-amber-500/20 border border-amber-400/30 p-3 sm:p-4 animate-pulse flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-amber-500/30 shrink-0" />
+          <div className="space-y-1.5">
+            <div className="w-40 sm:w-56 h-4 sm:h-5 bg-amber-500/30 rounded" />
+            <div className="w-28 sm:w-36 h-3 bg-amber-500/30 rounded" />
           </div>
         </div>
-        <div className="w-40 h-10 bg-amber-500/30 rounded-xl hidden sm:block" />
+        <div className="w-32 sm:w-40 h-8 sm:h-9 bg-amber-500/30 rounded-xl hidden sm:block" />
       </div>
     );
   }
@@ -181,16 +181,16 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
   const formattedTime = formatDisplayTime(activeEvent.hora, activeEvent.fecha);
 
   return (
-    <div className="w-full my-3 sm:my-4 transition-all duration-300">
+    <div className="w-full my-2 sm:my-3 transition-all duration-300">
       <Link
         to={`/eventos/${activeEvent.id}`}
         aria-label={`Ver evento destacado: ${activeEvent.title}`}
-        className="group relative block w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-amber-400/90 dark:border-amber-400/80 bg-gradient-to-r from-amber-500 via-amber-500 to-amber-600 shadow-xl hover:shadow-2xl transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
+        className="group relative block w-full overflow-hidden rounded-2xl border border-amber-400/90 dark:border-amber-400/80 bg-gradient-to-r from-amber-500 via-amber-500 to-amber-600 shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
       >
-        <div className="relative flex flex-col md:flex-row items-stretch justify-between w-full min-h-[140px] sm:min-h-[150px]">
+        <div className="relative flex flex-col md:flex-row items-stretch justify-between w-full min-h-[96px] sm:min-h-[105px] md:min-h-[110px]">
           
-          {/* LADO IZQUIERDO: Imagen que ocupa toda la altura del componente con degradado ámbar derecho */}
-          <div className="relative w-full md:w-56 lg:w-72 xl:w-80 shrink-0 self-stretch min-h-[160px] md:min-h-[150px] overflow-hidden">
+          {/* LADO IZQUIERDO: Imagen compacta a toda la altura con degradado ámbar derecho */}
+          <div className="relative w-full md:w-44 lg:w-52 xl:w-60 shrink-0 self-stretch min-h-[120px] md:min-h-[105px] overflow-hidden">
             <img
               src={displayImage}
               alt={activeEvent.title}
@@ -209,14 +209,14 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
           </div>
 
           {/* CENTRO: Título del Evento y Fecha/Hora */}
-          <div className="relative z-10 flex-1 flex flex-col justify-center text-left px-5 py-4 sm:px-6 min-w-0">
-            <h2 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-black text-slate-950 tracking-tight leading-snug line-clamp-2 drop-shadow-xs group-hover:text-black transition-colors">
+          <div className="relative z-10 flex-1 flex flex-col justify-center text-left px-4 py-3 sm:px-5 sm:py-3.5 min-w-0">
+            <h2 className="text-sm sm:text-base lg:text-lg font-black text-slate-950 tracking-tight leading-snug line-clamp-1 sm:line-clamp-2 drop-shadow-xs group-hover:text-black transition-colors">
               {activeEvent.title}
             </h2>
 
             {formattedDate && (
-              <p className="text-xs sm:text-sm font-bold text-amber-950/90 truncate mt-1 flex items-center gap-1.5">
-                <FiCalendar size={13} className="text-slate-950 shrink-0" />
+              <p className="text-[11px] sm:text-xs font-bold text-amber-950/90 truncate mt-0.5 flex items-center gap-1.5">
+                <FiCalendar size={12} className="text-slate-950 shrink-0" />
                 <span>
                   {formattedDate} {formattedTime ? `• ${formattedTime}` : ''}
                 </span>
@@ -225,21 +225,21 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
           </div>
 
           {/* LADO DERECHO: Contador dinámico con números en blanco y barra en azul oscuro */}
-          <div className="relative z-10 shrink-0 flex flex-col items-center md:items-end justify-center px-5 py-4 sm:px-6">
+          <div className="relative z-10 shrink-0 flex flex-col items-center md:items-end justify-center px-4 py-3 sm:px-5 sm:py-3.5">
             {isLive ? (
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B132B] text-white shadow-md">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
-                <span className="text-sm font-black uppercase tracking-widest">{timeLabels.live}</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0B132B] text-white shadow-md">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                <span className="text-xs font-black uppercase tracking-widest">{timeLabels.live}</span>
               </div>
             ) : (
-              <div className="flex flex-col items-center md:items-end w-full max-w-[320px]">
+              <div className="flex flex-col items-center md:items-end w-full max-w-[280px]">
                 {/* Números del contador en blanco */}
-                <div className="flex items-baseline justify-center md:justify-end gap-1.5 sm:gap-2 font-mono font-black text-2xl sm:text-3xl lg:text-4xl text-white tracking-tight select-none">
+                <div className="flex items-baseline justify-center md:justify-end gap-1.5 sm:gap-2 font-mono font-black text-xl sm:text-2xl lg:text-[26px] text-white tracking-tight select-none">
                   <div className="flex flex-col items-center">
                     <span className="tabular-nums drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
                       {String(timeLeft.days).padStart(2, '0')}
                     </span>
-                    <span className="text-[9px] sm:text-[10px] font-sans font-bold uppercase tracking-wider text-white/90 -mt-0.5">
+                    <span className="text-[8px] sm:text-[9px] font-sans font-bold uppercase tracking-wider text-white/90 -mt-0.5">
                       {timeLabels.days}
                     </span>
                   </div>
@@ -250,7 +250,7 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
                     <span className="tabular-nums drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
                       {String(timeLeft.hours).padStart(2, '0')}
                     </span>
-                    <span className="text-[9px] sm:text-[10px] font-sans font-bold uppercase tracking-wider text-white/90 -mt-0.5">
+                    <span className="text-[8px] sm:text-[9px] font-sans font-bold uppercase tracking-wider text-white/90 -mt-0.5">
                       {timeLabels.hours}
                     </span>
                   </div>
@@ -261,7 +261,7 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
                     <span className="tabular-nums drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
                       {String(timeLeft.minutes).padStart(2, '0')}
                     </span>
-                    <span className="text-[9px] sm:text-[10px] font-sans font-bold uppercase tracking-wider text-white/90 -mt-0.5">
+                    <span className="text-[8px] sm:text-[9px] font-sans font-bold uppercase tracking-wider text-white/90 -mt-0.5">
                       {timeLabels.mins}
                     </span>
                   </div>
@@ -272,7 +272,7 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
                     <span className="tabular-nums text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
                       {String(timeLeft.seconds).padStart(2, '0')}
                     </span>
-                    <span className="text-[9px] sm:text-[10px] font-sans font-bold uppercase tracking-wider text-white/90 -mt-0.5">
+                    <span className="text-[8px] sm:text-[9px] font-sans font-bold uppercase tracking-wider text-white/90 -mt-0.5">
                       {timeLabels.secs}
                     </span>
                   </div>
@@ -300,4 +300,3 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
     </div>
   );
 }
-

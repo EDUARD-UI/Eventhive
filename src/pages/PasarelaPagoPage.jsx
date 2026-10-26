@@ -271,7 +271,7 @@ export default function PasarelaPagoPage() {
                 onClick={() => navigate('/perfil?tab=entradas', { state: { activeTab: 'entradas' } })}
                 className="w-full py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 cursor-pointer"
               >
-                Ver mis boletos digitales / QR
+                Ver mis boletos digitales
               </button>
               <button
                 type="button"

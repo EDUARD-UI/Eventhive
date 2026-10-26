@@ -111,19 +111,19 @@ export default function OrganizadoresPage() {
       {/* Navbar idéntico */}
       <Navbar />
 
-      <main className="flex-1 w-[94%] sm:w-[90%] lg:w-[85%] max-w-7xl mx-auto py-8 sm:py-12 min-w-0 relative z-10">
+      <main className="flex-1 w-[94%] sm:w-[90%] lg:w-[85%] max-w-6xl xl:max-w-7xl mx-auto py-4 sm:py-6 min-w-0 relative z-10">
         {/* Encabezado del directorio y búsqueda, agrupados y centrados */}
-        <header className="relative mb-8 overflow-hidden rounded-3xl border border-slate-200/80 bg-white/85 px-5 py-8 text-center shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-[#0B1428]/85 sm:px-8 sm:py-10">
+        <header className="relative mb-6 overflow-hidden rounded-3xl border border-slate-200/80 bg-white/85 px-5 py-6 text-center shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-[#0B1428]/85 sm:px-8 sm:py-7">
           <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" />
           <div className="relative flex flex-col items-center">
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl lg:text-5xl">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-[32px] font-extrabold tracking-tight text-slate-950 dark:text-white max-w-2xl text-center leading-snug">
               Organizaciones y Productores
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400 sm:text-base">
+            <p className="mt-2.5 max-w-2xl text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-400">
               Directorio oficial de colectivos, promotores y productores culturales en Cartagena.
             </p>
 
-            <div role="search" className="relative mt-6 w-full max-w-xl">
+            <div role="search" className="relative mt-5 sm:mt-6 w-full max-w-xl">
               <label htmlFor="organization-search" className="sr-only">
                 Buscar organización por nombre
               </label>
@@ -133,7 +133,7 @@ export default function OrganizadoresPage() {
                 value={searchTerm}
                 onChange={handleSearchChange}
                 placeholder="Buscar organización por nombre..."
-                className="h-12 w-full rounded-2xl border-2 border-slate-900 dark:border-white bg-white pl-11 pr-11 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-amber-500 dark:focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/15 dark:bg-[#0B0F19] dark:text-white dark:placeholder:text-slate-500"
+                className="h-11 sm:h-12 w-full rounded-2xl border-2 border-slate-900 dark:border-white bg-white pl-11 pr-11 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-amber-500 dark:focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/15 dark:bg-[#0B0F19] dark:text-white dark:placeholder:text-slate-500"
               />
               <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               {searchTerm && (

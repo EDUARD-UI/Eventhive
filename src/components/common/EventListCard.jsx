@@ -97,14 +97,14 @@ export default function EventListCard({
         </div>
 
         {/* Título del evento */}
-        <div className="px-5 pt-1 pb-2">
+        <div className="px-4 sm:px-5 pt-1 pb-1.5">
           <Link
             to={`/eventos/${id}`}
             className="block transition-colors duration-200 text-slate-950 dark:text-white hover:text-amber-600 dark:hover:text-amber-400 font-extrabold"
           >
             <h3
-              className={`text-base sm:text-[17px] tracking-tight uppercase leading-snug line-clamp-3 ${
-                masonry ? 'min-h-0' : 'min-h-[2.75rem]'
+              className={`text-sm sm:text-[15px] tracking-tight uppercase leading-snug line-clamp-2 ${
+                masonry ? 'min-h-0' : 'min-h-[2.4rem]'
               }`}
             >
               {title}
@@ -114,24 +114,24 @@ export default function EventListCard({
       </div>
 
       {/* LÍNEA DE SEPARACIÓN ESTILO TIQUETE */}
-      <div className="w-full px-4 my-1 z-1">
-        <div className="w-full border-b-2 border-dashed border-slate-200 dark:border-white/[0.08]" />
+      <div className="w-full px-4 my-0.5 z-1">
+        <div className="w-full border-b border-dashed border-slate-200 dark:border-white/[0.08]" />
       </div>
 
       {/* SECCIÓN INTERMEDIA: Metadatos del Boleto */}
-      <div className="px-5 py-3 space-y-3 relative z-1">
+      <div className="px-4 sm:px-5 py-2.5 space-y-2.5 relative z-1">
         {/* FECHA Y HORA */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider block font-bold text-slate-400 dark:text-slate-400">
+          <span className="text-[9px] uppercase tracking-wider block font-bold text-slate-400 dark:text-slate-500">
             {t('eventCard.dateAndTime')}
           </span>
           <div className="flex items-center gap-1.5 text-xs mt-0.5 font-bold text-slate-800 dark:text-slate-200">
-            <FiCalendar className="text-amber-600 dark:text-amber-400 shrink-0" size={13} />
+            <FiCalendar className="text-amber-600 dark:text-amber-400 shrink-0" size={12.5} />
             <span>{displayDate}</span>
             {displayTime && (
               <>
                 <span className="text-slate-300 dark:text-slate-600">•</span>
-                <FiClock className="text-amber-600 dark:text-amber-400 shrink-0" size={12} />
+                <FiClock className="text-amber-600 dark:text-amber-400 shrink-0" size={11.5} />
                 <span>{displayTime}</span>
               </>
             )}
@@ -139,24 +139,24 @@ export default function EventListCard({
         </div>
 
         {/* Cápsula de Ubicación */}
-        <div className="flex items-center gap-2 p-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-white/[0.06] text-slate-700 dark:text-slate-300">
-          <FiMapPin className="text-amber-600 dark:text-amber-400 shrink-0" size={13} />
-          <span className="truncate">{location || t('eventCard.defaultCity')}</span>
+        <div className="flex items-center gap-1.5 p-1.5 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-white/[0.06] text-slate-700 dark:text-slate-300">
+          <FiMapPin className="text-amber-600 dark:text-amber-400 shrink-0" size={12.5} />
+          <span className="truncate text-[11px] sm:text-xs">{location || t('eventCard.defaultCity')}</span>
         </div>
       </div>
 
       {/* SEGUNDA LÍNEA DE SEPARACIÓN ESTILO TIQUETE */}
-      <div className="w-full px-4 my-1 z-1">
-        <div className="w-full border-b-2 border-dashed border-slate-200 dark:border-white/[0.08]" />
+      <div className="w-full px-4 my-0.5 z-1">
+        <div className="w-full border-b border-dashed border-slate-200 dark:border-white/[0.08]" />
       </div>
 
       {/* SECCIÓN INFERIOR: Botón de Acción */}
-      <div className="px-5 pt-3 pb-5 flex flex-col items-center relative z-1">
+      <div className="px-4 sm:px-5 pt-2 pb-4 flex flex-col items-center relative z-1">
         <Link
           to={`/eventos/${id}`}
-          className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer bg-slate-950 hover:bg-slate-800 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-slate-950 shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+          className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer bg-slate-950 hover:bg-slate-800 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-slate-950 shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
         >
-          <FiEye size={14} />
+          <FiEye size={13} />
           <span>{t('eventCard.viewEvent')}</span>
         </Link>
       </div>

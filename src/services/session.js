@@ -190,6 +190,8 @@ export const session = {
     }
 
     const fotoUrl =
+      data.urlImagenPerfil ||
+      usuarioObj.urlImagenPerfil ||
       data.fotoUrl ||
       usuarioObj.fotoUrl ||
       data.foto ||
@@ -200,6 +202,7 @@ export const session = {
       usuarioObj.imagen ||
       data.avatar ||
       usuarioObj.avatar ||
+      existing.urlImagenPerfil ||
       existing.fotoUrl ||
       existing.foto ||
       null;
@@ -213,9 +216,14 @@ export const session = {
       rolNombre: normalizedRole,
       fotoUrl,
       foto: fotoUrl,
+      urlImagenPerfil: fotoUrl,
+      avatar: fotoUrl,
     };
 
     localStorage.setItem(USER_KEY, JSON.stringify(userData));
+    try {
+      window.dispatchEvent(new CustomEvent('eventhive_session_updated', { detail: userData }));
+    } catch {}
     return userData;
   },
 
@@ -223,14 +231,31 @@ export const session = {
     const existing = session.getUser() || {};
     const roleToNormalize = fields.role || fields.rol || fields.rolNombre;
     const normalizedRole = roleToNormalize ? normalizeRole(roleToNormalize) : existing.role;
+    const fotoUrl =
+      fields.urlImagenPerfil ||
+      fields.fotoUrl ||
+      fields.foto ||
+      fields.avatar ||
+      existing.urlImagenPerfil ||
+      existing.fotoUrl ||
+      existing.foto ||
+      null;
+
     const updated = {
       ...existing,
       ...fields,
       role: normalizedRole,
       rol: normalizedRole,
       rolNombre: normalizedRole,
+      fotoUrl,
+      foto: fotoUrl,
+      urlImagenPerfil: fotoUrl,
+      avatar: fotoUrl,
     };
     localStorage.setItem(USER_KEY, JSON.stringify(updated));
+    try {
+      window.dispatchEvent(new CustomEvent('eventhive_session_updated', { detail: updated }));
+    } catch {}
     return updated;
   },
 

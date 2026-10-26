@@ -121,7 +121,7 @@ export default function FeaturedEventsCarousel({ events = [] }) {
 
   if (!displayEvents || displayEvents.length === 0) {
     return (
-      <div className="relative w-full rounded-3xl overflow-hidden shadow-xl border border-slate-800 bg-[#0B132B] aspect-[16/9] sm:aspect-[21/9] min-h-[340px] max-h-[480px] flex flex-col items-center justify-center p-6 sm:p-12 text-center select-none">
+      <div className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-slate-800 bg-[#0B132B] aspect-[16/9] sm:aspect-[21/9] min-h-[240px] sm:min-h-[290px] md:min-h-[330px] max-h-[370px] sm:max-h-[390px] flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none">
         {/* Fondo azul profundo institucional con gradiente */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0B132B] via-[#0D1D45] to-[#060B18]" />
 
@@ -183,7 +183,7 @@ export default function FeaturedEventsCarousel({ events = [] }) {
           return (
             <div
               key={id || idx}
-              className="w-full min-w-full flex-shrink-0 relative aspect-[16/9] sm:aspect-[21/9] min-h-[340px] max-h-[480px] overflow-hidden bg-[#0A1122]"
+              className="w-full min-w-full flex-shrink-0 relative aspect-[16/9] sm:aspect-[21/9] min-h-[240px] sm:min-h-[290px] md:min-h-[330px] max-h-[370px] sm:max-h-[390px] overflow-hidden bg-[#0A1122]"
             >
               <Link
                 to={targetUrl}
@@ -207,17 +207,17 @@ export default function FeaturedEventsCarousel({ events = [] }) {
                     <div className="absolute inset-0 bg-gradient-to-t from-[#060B18]/85 via-[#060B18]/25 to-transparent pointer-events-none" />
 
                     {hasCategory && (
-                      <div className="hidden lg:block absolute top-6 left-8 z-20">
-                        <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-slate-900/90 text-amber-400 border border-slate-700 backdrop-blur-sm shadow-sm">
+                      <div className="hidden lg:block absolute top-5 left-6 z-20">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-black uppercase tracking-wider bg-slate-900/90 text-amber-400 border border-slate-700 backdrop-blur-sm shadow-sm">
                           <span>{category}</span>
                         </span>
                       </div>
                     )}
 
-                    <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8 md:p-10 lg:p-12 z-10 pb-8 sm:pb-10 lg:pb-14">
-                      <div className="max-w-xl md:max-w-2xl space-y-2">
+                    <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6 md:p-8 lg:p-10 z-10 pb-6 sm:pb-8 lg:pb-10">
+                      <div className="max-w-xl md:max-w-2xl space-y-1.5 sm:space-y-2">
                         {hasTitle && (
-                          <h3 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white leading-snug tracking-tight drop-shadow-sm group-hover:text-amber-300 transition-colors duration-200 line-clamp-2 uppercase">
+                          <h3 className="text-base sm:text-xl md:text-2xl font-extrabold text-white leading-snug tracking-tight drop-shadow-sm group-hover:text-amber-300 transition-colors duration-200 line-clamp-2 uppercase">
                             {title}
                           </h3>
                         )}
