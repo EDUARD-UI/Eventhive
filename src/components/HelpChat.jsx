@@ -1,4 +1,4 @@
-Ôªøimport { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   FiX,
   FiSend,
@@ -18,7 +18,7 @@ import { useLanguage } from "../context/LanguageContext.jsx";
 /**
  * HelpChat (Conectado a Spring Boot + Groq Llama 3.1)
  * Widget de chat flotante institucional para EventHive.
- * Bot√≥n est√°tico ubicado en el lateral derecho, entre la esquina inferior y el centro vertical.
+ * BotÛn est·tico ubicado en el lateral derecho, entre la esquina inferior y el centro vertical.
  * Solo aparece en las vistas principales ('home', 'buscar', 'organizaciones', 'perfil').
  */
 export default function HelpChat({
@@ -31,7 +31,7 @@ export default function HelpChat({
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Restricci√≥n de rutas: solo vistas principales y perfil de usuario
+  // RestricciÛn de rutas: solo vistas principales y perfil de usuario
   const isAllowedPath = (() => {
     const path = (location?.pathname || '').toLowerCase();
     if (path === '/' || path === '') return true;
@@ -55,7 +55,7 @@ export default function HelpChat({
   const [showFaq, setShowFaq] = useState(false);
   const scrollRef = useRef(null);
 
-  // Limpiar posici√≥n previa guardada de drag & drop si existiera
+  // Limpiar posiciÛn previa guardada de drag & drop si existiera
   useEffect(() => {
     try {
       localStorage.removeItem("eventhive_chat_bubble_pos");
@@ -124,7 +124,7 @@ export default function HelpChat({
     ]);
   };
 
-  // Env√≠o de mensajes conectado al backend de Spring Boot + Groq
+  // EnvÌo de mensajes conectado al backend de Spring Boot + Groq
   const pushUserMessage = async (text) => {
     if (!text.trim()) return;
 
@@ -149,7 +149,7 @@ export default function HelpChat({
       const botReply =
         data?.data?.respuesta ||
         data?.mensaje ||
-        "¬°Hola! ¬øEn qu√© m√°s puedo orientarte sobre EventHive?";
+        "°Hola! øEn quÈ m·s puedo orientarte sobre EventHive?";
 
       setIsTyping(false);
       pushBotMessage({ text: botReply });
@@ -160,38 +160,38 @@ export default function HelpChat({
       const lower = text.toLowerCase();
       if (lower.includes("boleto") || lower.includes("compra") || lower.includes("entrada")) {
         pushBotMessage({
-          text: "Para comprar boletos, explora el cat√°logo de eventos, selecciona tu evento favorito y haz clic en 'Comprar boletos'. Recibir√°s tus entradas con c√≥digo QR digital.",
+          text: "Para comprar boletos, explora el cat·logo de eventos, selecciona tu evento favorito y haz clic en 'Comprar boletos'. Recibir·s tus entradas con cÛdigo QR digital.",
         });
       } else if (lower.includes("pago") || lower.includes("tarjeta") || lower.includes("nequi")) {
         pushBotMessage({
-          text: "Aceptamos tarjetas de cr√©dito/d√©bito (Visa, Mastercard), transferencias PSE, Nequi y Daviplata con verificaci√≥n 100% segura.",
+          text: "Aceptamos tarjetas de crÈdito/dÈbito (Visa, Mastercard), transferencias PSE, Nequi y Daviplata con verificaciÛn 100% segura.",
         });
       } else if (lower.includes("organizar") || lower.includes("publicar") || lower.includes("crear")) {
         pushBotMessage({
-          text: "¬°Genial! Puedes registrarte o cambiar tu rol a Organizaci√≥n desde tu Perfil para publicar y gestionar eventos en EventHive.",
+          text: "°Genial! Puedes registrarte o cambiar tu rol a OrganizaciÛn desde tu Perfil para publicar y gestionar eventos en EventHive.",
         });
       } else {
         pushBotMessage({
-          text: "¬°Hola! En EventHive estamos para ayudarte con tus eventos y boletos. ¬øEn qu√© podemos orientarte hoy?",
+          text: "°Hola! En EventHive estamos para ayudarte con tus eventos y boletos. øEn quÈ podemos orientarte hoy?",
         });
       }
     }
   };
 
   const showUpcomingEvents = async () => {
-    pushUserMessage("Ver eventos pr√≥ximos");
+    pushUserMessage("Ver eventos prÛximos");
     setLoadingEvents(true);
     setShowFaq(false);
     try {
       const events = await getUpcomingEvents();
       pushBotMessage(
         events?.length
-          ? { text: "Estos son los pr√≥ximos eventos en EventHive:", events }
-          : { text: "No hay pr√≥ximos eventos disponibles en este momento. ¬°Vuelve a consultar pronto!" }
+          ? { text: "Estos son los prÛximos eventos en EventHive:", events }
+          : { text: "No hay prÛximos eventos disponibles en este momento. °Vuelve a consultar pronto!" }
       );
     } catch {
       pushBotMessage({
-        text: "No fue posible cargar los pr√≥ximos eventos. Por favor revisa el cat√°logo en unos momentos.",
+        text: "No fue posible cargar los prÛximos eventos. Por favor revisa el cat·logo en unos momentos.",
       });
     } finally {
       setLoadingEvents(false);
@@ -209,7 +209,7 @@ export default function HelpChat({
     pushUserMessage(draft);
   };
 
-  // Solo mostrar si est√° en una ruta permitida o si se encuentra abierto
+  // Solo mostrar si est· en una ruta permitida o si se encuentra abierto
   if (!isAllowedPath && !isOpen) {
     return null;
   }
@@ -220,7 +220,7 @@ export default function HelpChat({
       {isOpen && (
         <aside
           aria-label="Ventana de chat de ayuda EventHive"
-          className="fixed z-[9999] right-4 sm:right-6 bottom-[calc(22%+4.25rem)] sm:bottom-[calc(24%+4.5rem)] w-[calc(100vw-2rem)] max-w-[360px] sm:max-w-[375px] h-[520px] max-h-[65vh] flex flex-col rounded-[28px] overflow-hidden shadow-2xl ring-1 ring-black/10 border border-slate-200/90 dark:border-white/10 bg-white dark:bg-[#0B132B] transition-all animate-fade-in"
+          className="fixed z-[9999] left-4 sm:left-auto sm:right-6 bottom-20 sm:bottom-24 w-[calc(100vw-2rem)] max-w-[360px] sm:max-w-[375px] h-[520px] max-h-[65vh] flex flex-col rounded-[28px] overflow-hidden shadow-2xl ring-1 ring-black/10 border border-slate-200/90 dark:border-white/10 bg-white dark:bg-[#0B132B] transition-all animate-fade-in"
           style={{
             boxShadow: "0 20px 40px -15px rgba(11, 19, 43, 0.35), 0 0 1px 1px rgba(0,0,0,0.06)",
           }}
@@ -236,8 +236,8 @@ export default function HelpChat({
                 />
                 <span
                   className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-[#0B132B]"
-                  title="En l√≠nea"
-                  aria-label="Estado en l√≠nea"
+                  title="En lÌnea"
+                  aria-label="Estado en lÌnea"
                 />
               </div>
 
@@ -318,7 +318,7 @@ export default function HelpChat({
                               {event.title || event.nombre}
                             </p>
                             <p className="text-[10.5px] text-slate-400 truncate">
-                              {event.date || event.fecha || "Pr√≥ximamente"}
+                              {event.date || event.fecha || "PrÛximamente"}
                             </p>
                           </div>
                           <FiChevronRight size={14} className="text-slate-400 shrink-0" />
@@ -339,7 +339,7 @@ export default function HelpChat({
               </div>
             )}
 
-            {/* Botones de Acci√≥n R√°pida (Eventos pr√≥ximos y FAQ) */}
+            {/* Botones de AcciÛn R·pida (Eventos prÛximos y FAQ) */}
             {messages.length === 1 && (
               <div className="pt-2 space-y-2">
                 <button
@@ -440,12 +440,12 @@ export default function HelpChat({
         </aside>
       )}
 
-      {/* 2. BOT√ìN FLOTANTE EST√ÅTICO (Fijo entre esquina inferior derecha y centro vertical) */}
+      {/* 2. BOT”N FLOTANTE EST¡TICO (Fijo entre esquina inferior derecha y centro vertical) */}
       <button
         type="button"
         onClick={handleToggle}
         aria-label={isOpen ? "Cerrar chat de ayuda" : "Abrir chat de ayuda"}
-        className="fixed z-[9999] right-5 sm:right-6 bottom-[22%] sm:bottom-[24%] w-14 h-14 sm:w-15 sm:h-15 rounded-full bg-[#0B132B] border-2 border-amber-500 hover:border-amber-400 shadow-2xl shadow-slate-900/60 hover:shadow-amber-500/30 flex items-center justify-center transition-all select-none group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 cursor-pointer hover:scale-105 active:scale-95 duration-200"
+        className="fixed z-[9999] left-5 sm:left-auto sm:right-6 bottom-5 sm:bottom-6 w-14 h-14 sm:w-15 sm:h-15 rounded-full bg-[#0B132B] border-2 border-amber-500 hover:border-amber-400 shadow-2xl shadow-slate-900/60 hover:shadow-amber-500/30 flex items-center justify-center transition-all select-none group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 cursor-pointer hover:scale-105 active:scale-95 duration-200"
       >
         <img
           src="/LOGO45x50.png"

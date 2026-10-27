@@ -495,6 +495,31 @@ En caso de error, la respuesta suele devolver:
 }
 ```
 
+#### `GET /api/eventos/primer-destacado`
+- Recibe: sin parámetros.
+- Devuelve: `ApiResponse<PrimerEventoDestacadoDTO>`.
+- Permisos: público.
+- Descripción: devuelve el primer evento destacado (`promocionado: true` y en estado `PUBLICADO`), priorizando el próximo temporalmente (`fecha ASC, hora ASC, id ASC`).
+- Estructura devuelta: `id`, `nombre` (alias `titulo`), `urlImagen` (alias `foto`), `fechaCreacion`, `fecha` (ejecución), `hora`.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "Primer evento destacado obtenido",
+  "data": {
+    "id": 12,
+    "nombre": "Festival Estéreo Picnic 2026",
+    "titulo": "Festival Estéreo Picnic 2026",
+    "urlImagen": "https://storage.example/eventos/fep-banner-promocionado.jpg",
+    "foto": "https://storage.example/eventos/fep-banner-promocionado.jpg",
+    "fechaCreacion": "2026-10-01T15:30:00",
+    "fecha": "2026-11-20",
+    "hora": "14:00:00"
+  }
+}
+```
+
 #### `GET /api/eventos/destacados`
 - Recibe: paginación opcional (`page`, `size`, `sort`); `size` es 10 por defecto.
 - Devuelve: `ApiResponse<PagedResponse<EventoDestacadoDTO>>`.
@@ -599,7 +624,9 @@ En caso de error, la respuesta suele devolver:
     },
     "organizacion": {
       "id": 20,
-      "nombre": "Eventica"
+      "nombre": "Eventica",
+      "urlLogo": "https://storage.example/perfilOrganizacion/eventica-logo.jpg",
+      "urlImagen": "https://storage.example/perfilOrganizacion/eventica-logo.jpg"
     },
     "localidades": [
       {
@@ -617,6 +644,52 @@ En caso de error, la respuesta suele devolver:
         "disponibles": 35
       }
     ]
+  }
+}
+```
+
+#### `GET /api/eventos/organizacion/{organizacionId}`
+- Alias disponible: `GET /api/organizaciones/{organizacionId}/eventos`
+- Recibe: `organizacionId` en path, opcional `categoriaId`, paginación (`page`, `size`, `sort`).
+- Devuelve: `ApiResponse<PagedResponse<EventoDTO>>`.
+- Permisos: público (sin autenticación).
+- Descripción: lista los eventos en estado `PUBLICADO` de una organización específica para que los usuarios puedan verlos públicamente en el perfil de la organización. Incluye información de categoría y organización con su respectivo logo.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "Eventos de la organización obtenidos",
+  "data": {
+    "content": [
+      {
+        "id": 15,
+        "titulo": "Festival de Jazz",
+        "descripcion": "Evento musical con artistas locales",
+        "lugar": "Parque Central, Santiago",
+        "foto": "https://storage.example/eventos/festival-jazz.jpg",
+        "fecha": "2026-10-14",
+        "hora": "19:30:00",
+        "estado": "PUBLICADO",
+        "promocionado": true,
+        "categoria": {
+          "id": 1,
+          "nombre": "Música"
+        },
+        "organizacion": {
+          "id": 20,
+          "nombre": "Eventica",
+          "urlLogo": "https://storage.example/perfilOrganizacion/eventica-logo.jpg",
+          "urlImagen": "https://storage.example/perfilOrganizacion/eventica-logo.jpg"
+        }
+      }
+    ],
+    "pageNumber": 0,
+    "pageSize": 10,
+    "totalElements": 1,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
   }
 }
 ```
@@ -1348,19 +1421,105 @@ En caso de error, la respuesta suele devolver:
 }
 ```
 
-#### `POST /api/boletos/checkin/{codigoQR}`
+#### `GET /api/boletos/validar/{codigoQR}`
 - Recibe: `codigoQR` en path.
-- Devuelve: `ApiResponse<Void>`
-- Permisos: REPRESENTANTE o OPERADOR.
-- Ejemplo de respuesta:
+- Devuelve: `ApiResponse<BoletoDTO>`
+- Permisos: REPRESENTANTE u OPERADOR (debe pertenecer a la organización organizadora del evento y tener permiso `CHECK_IN`).
+- Descripción: Escanea y valida si un boleto es auténtico y pertenece a la organización, devolviendo el detalle del boleto, localidad y evento sin marcarlo como consumido.
+- Ejemplo de respuesta exitosa:
 
 ```json
 {
   "success": true,
-  "mensaje": "¡¡Tiquete valido!! check-in realizado",
-  "data": null
+  "mensaje": "Boleto válido",
+  "data": {
+    "id": 501,
+    "tiquete": {
+      "id": 501,
+      "codigoQR": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "localidad": {
+        "id": 1,
+        "nombre": "General",
+        "precio": 25000,
+        "evento": {
+          "id": 15,
+          "titulo": "Festival de Jazz",
+          "fecha": "2026-10-14",
+          "hora": "19:30:00",
+          "lugar": "Parque Central, Santiago"
+        }
+      }
+    }
+  }
 }
 ```
+
+- Errores de validación:
+  - **404 Not Found** (Código QR desconocido o no registrado):
+    ```json
+    {
+      "success": false,
+      "mensaje": "Lo siento, este código no es uno de nuestros boletos"
+    }
+    ```
+  - **403 Forbidden** (Operador de otra organización o sin permiso `CHECK_IN`):
+    ```json
+    {
+      "success": false,
+      "mensaje": "No está autorizado para operar este tiquete"
+    }
+    ```
+  - **400 Bad Request** (Compra no confirmada):
+    ```json
+    {
+      "success": false,
+      "mensaje": "No se puede hacer check-in: la compra se encuentra en estado PENDIENTE"
+    }
+    ```
+
+#### `POST /api/boletos/checkin/{codigoQR}`
+- Recibe: `codigoQR` en path.
+- Devuelve: `ApiResponse<Void>`
+- Permisos: REPRESENTANTE u OPERADOR (debe pertenecer a la organización organizadora del evento y tener permiso `CHECK_IN`).
+- Descripción: Escanea el código QR, valida su existencia y autenticidad en la organización y marca el tiquete como utilizado de forma atómica.
+- Ejemplo de respuesta exitosa:
+
+```json
+{
+  "success": true,
+  "mensaje": "¡¡Tiquete valido!! check-in realizado"
+}
+```
+
+- Errores de validación:
+  - **404 Not Found** (Código QR desconocido o no registrado):
+    ```json
+    {
+      "success": false,
+      "mensaje": "Lo siento, este código no es uno de nuestros boletos"
+    }
+    ```
+  - **400 Bad Request** (Boleto ya utilizado anteriormente):
+    ```json
+    {
+      "success": false,
+      "mensaje": "El tiquete ya fue utilizado"
+    }
+    ```
+  - **403 Forbidden** (Operador de otra organización o sin permiso `CHECK_IN`):
+    ```json
+    {
+      "success": false,
+      "mensaje": "No está autorizado para operar este tiquete"
+    }
+    ```
+  - **400 Bad Request** (Compra no confirmada):
+    ```json
+    {
+      "success": false,
+      "mensaje": "No se puede hacer check-in: la compra se encuentra en estado PENDIENTE"
+    }
+    ```
 
 ---
 
@@ -3700,4 +3859,49 @@ Para la operación en producción (por ejemplo en Render) y desarrollo local, se
 | `JWT_SECRET` | Clave secreta para firma HMAC de tokens JWT | `64+ caracteres aleatorios` |
 | `SUPABASE_URL` | URL del proyecto Supabase Storage | `https://[ref].supabase.co` |
 | `SUPABASE_SECRET_KEY` | Llave de servicio de Supabase | `...` |
+
+---
+
+## 30. Arquitectura de Caché en Memoria (Caffeine Cache)
+
+El backend de EventHive cuenta con una capa de aceleración en memoria RAM utilizando el motor nativo de **Spring Boot Cache** potenciado por **Caffeine Cache**. No requiere servicios externos (como Redis) y reduce el tiempo de respuesta de las consultas frecuentes a **menos de 2 milisegundos**.
+
+### 30.1. Flujo de datos y desvío rápido
+1. **Petición del cliente**: El frontend consulta un endpoint público (por ejemplo, listado de eventos, categorías, banners o mapa).
+2. **Revisión en RAM**: Spring Boot intercepta la llamada con `@Cacheable`. Si los datos ya se encuentran en memoria, se devuelven al instante sin realizar consultas a PostgreSQL ni a Supabase Storage.
+3. **Carga en frío**: Si no están en caché, se consultan en la base de datos o almacenamiento, se almacenan en la memoria RAM con su respectivo tiempo de expiración y se entregan al cliente.
+
+### 30.2. Manejo de URLs de Supabase Storage (Imágenes públicas vs. Documentos privados)
+- **Buckets Públicos (`banners-home`, `categorias-images`, `eventos-images`)**:
+  - Las URLs son permanentes y no caducan.
+  - Tienen TTLs prolongados en memoria sin riesgo de enlaces caídos.
+- **Bucket Privado (`verificacion-docs` para RUTs de Organizaciones)**:
+  - Utiliza **URLs firmadas temporales** generadas por Supabase Storage con vigencia de **60 minutos** (3600 segundos).
+  - El caché `rutFirmado` tiene un TTL estricto de **50 minutos** (`expireAfterWrite(50, TimeUnit.MINUTES)`).
+  - Al expirar **10 minutos antes** de que la firma venza en Supabase, la plataforma regenera automáticamente una URL firmada fresca, eliminando cualquier riesgo de enlaces rotos para los revisores.
+
+### 30.3. Tabla de Cachés y Tiempos de Vida (TTL)
+
+| Nombre de Caché | Endpoints asociados | TTL (Tiempo de expiración) | Capacidad Máxima |
+|---|---|---|---|
+| `banners` | `GET /api/banners-home`<br>`GET /api/banners-home/admin` | 24 horas | 50 entradas |
+| `categorias` | `GET /api/categorias/{id}`<br>`GET /api/categorias/nombres`<br>`GET /api/categorias/top4`<br>`GET /api/categorias/con-eventos` | 24 horas | 100 entradas |
+| `eventosPublicos` | `GET /api/eventos`<br>`GET /api/eventos/proximos`<br>`GET /api/eventos/categoria/{id}` | 30 minutos | 500 entradas |
+| `eventosCarrusel` | `GET /api/eventos/carrusel` | 30 minutos | 50 entradas |
+| `eventosDestacados`| `GET /api/eventos/destacados` | 30 minutos | 100 entradas |
+| `primerDestacado` | `GET /api/eventos/primer-destacado` | 15 minutos | 20 entradas |
+| `eventosMapa` | `GET /api/eventos/mapa` | 15 minutos | 200 entradas |
+| `rutFirmado` | `SupabaseStorageService.generarUrlFirmada` | 50 minutos | 200 entradas |
+
+### 30.4. Desalojo Reactivo Inmediato (`@CacheEvict`)
+Aunque las consultas se sirvan desde la memoria RAM, **si ocurre cualquier cambio en los datos, el caché se purga de inmediato** para que la siguiente consulta cargue la información actualizada:
+
+- **Eventos (`crear`, `actualizar`, `aprobar`, `solicitar corrección`, `rechazar`, `suspender`, `cancelar`, `finalizar`, `eliminar`)**:
+  - Invalida simultáneamente los cachés `eventosPublicos`, `eventosCarrusel`, `eventosDestacados`, `primerDestacado`, `eventosMapa` y `categorias` (para refrescar el conteo de eventos por categoría).
+  - Un nuevo evento publicado aparece al instante a todos los usuarios.
+- **Categorías y Banners (`crear`, `actualizar`, `eliminar`)**:
+  - Desalojan inmediatamente su caché respectivo.
+- **Documentos de Verificación RUT**:
+  - Al reenviar o subir un nuevo RUT diferido, se purga de inmediato el caché de la URL firmada para emitir la nueva referencia.
+
 
