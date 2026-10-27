@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FiCalendar,
@@ -121,7 +121,7 @@ export default function FeaturedEventsCarousel({ events = [] }) {
 
   if (!displayEvents || displayEvents.length === 0) {
     return (
-      <div className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-slate-800 bg-[#0B132B] aspect-[16/9] sm:aspect-[21/9] min-h-[240px] sm:min-h-[290px] md:min-h-[330px] max-h-[370px] sm:max-h-[390px] flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none">
+      <div className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-slate-800 bg-[#0B132B] aspect-[16/9] sm:aspect-[21/9] min-h-[260px] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[400px] max-h-[480px] flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none">
         {/* Fondo azul profundo institucional con gradiente */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0B132B] via-[#0D1D45] to-[#060B18]" />
 
@@ -183,7 +183,7 @@ export default function FeaturedEventsCarousel({ events = [] }) {
           return (
             <div
               key={id || idx}
-              className="w-full min-w-full flex-shrink-0 relative aspect-[16/9] sm:aspect-[21/9] min-h-[240px] sm:min-h-[290px] md:min-h-[330px] max-h-[370px] sm:max-h-[390px] overflow-hidden bg-[#0A1122]"
+              className="w-full min-w-full flex-shrink-0 relative aspect-[16/9] sm:aspect-[21/9] min-h-[260px] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[400px] max-h-[480px] overflow-hidden bg-[#0A1122]"
             >
               <Link
                 to={targetUrl}
