@@ -312,7 +312,7 @@
     "errPasswordMatch": "Passwords do not match."
   },
   "helpChat": {
-    "initialMessage": "Hello! 👋 I'm HiveBot, EventHive's smart assistant. I can show you upcoming events in Cartagena, answer questions about tickets, or explain how to publish your own event.",
+    "initialMessage": "Hello! 👋 Welcome, I'm HiveBot! How can I help you today?",
     "faqTickets": "How do I buy tickets?",
     "faqPayments": "What payment methods do you accept?",
     "faqOrganize": "How do I publish my own event?",
@@ -325,7 +325,8 @@
     "haveQuestion": "I have a question",
     "faqBtn": "I have a question",
     "hideFaqBtn": "Hide questions",
-    "inputPlaceholder": "Ask HiveBot about events...",
+    "inputPlaceholder": "Type your question...",
+    "typeMessage": "Type your question...",
     "sendMessageAria": "Send message",
     "sendAria": "Send message",
     "closeChatAria": "Close help chat",

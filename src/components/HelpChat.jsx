@@ -3,13 +3,8 @@ import {
   FiX,
   FiSend,
   FiCalendar,
-  FiHelpCircle,
   FiChevronRight,
-  FiInfo,
-  FiTag,
-  FiCreditCard,
 } from "react-icons/fi";
-import { getUpcomingEvents } from "../services/eventService.js";
 import { API_BASE_URL } from "../config/api.js";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext.jsx";
@@ -18,7 +13,7 @@ import { useLanguage } from "../context/LanguageContext.jsx";
 /**
  * HelpChat (Conectado a Spring Boot + Groq Llama 3.1)
  * Widget de chat flotante institucional para EventHive.
- * BotÛn est·tico ubicado en el lateral derecho, entre la esquina inferior y el centro vertical.
+ * Bot√≥n est√°tico ubicado en el lateral derecho, entre la esquina inferior y el centro vertical.
  * Solo aparece en las vistas principales ('home', 'buscar', 'organizaciones', 'perfil').
  */
 export default function HelpChat({
@@ -31,7 +26,7 @@ export default function HelpChat({
   const location = useLocation();
   const navigate = useNavigate();
 
-  // RestricciÛn de rutas: solo vistas principales y perfil de usuario
+  // Restricci√≥n de rutas: solo vistas principales y perfil de usuario
   const isAllowedPath = (() => {
     const path = (location?.pathname || '').toLowerCase();
     if (path === '/' || path === '') return true;
@@ -50,23 +45,16 @@ export default function HelpChat({
     },
   ]);
   const [draft, setDraft] = useState("");
-  const [loadingEvents, setLoadingEvents] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [showFaq, setShowFaq] = useState(false);
   const scrollRef = useRef(null);
+  const inputRef = useRef(null);
 
-  // Limpiar posiciÛn previa guardada de drag & drop si existiera
+  // Limpiar posici√≥n previa guardada de drag & drop si existiera
   useEffect(() => {
     try {
       localStorage.removeItem("eventhive_chat_bubble_pos");
     } catch (e) {}
   }, []);
-
-  const faqOptions = [
-    { id: "tickets", text: t("helpChat.faqTickets"), icon: FiTag },
-    { id: "payments", text: t("helpChat.faqPayments"), icon: FiCreditCard },
-    { id: "organize", text: t("helpChat.faqOrganize"), icon: FiInfo },
-  ];
 
   // Actualizar el saludo inicial cuando cambia el idioma si el usuario no ha enviado mensajes
   useEffect(() => {
@@ -93,6 +81,11 @@ export default function HelpChat({
         setMessages([{ id: 1, from: "bot", text: t("helpChat.initialMessage") }]);
       }
       setDraft("");
+      // Enfocar autom√°ticamente el input para que el usuario pueda escribir directamente
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 150);
+      return () => clearTimeout(timer);
     }
   }, [isOpen, t]);
 
@@ -100,7 +93,7 @@ export default function HelpChat({
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isTyping, showFaq]);
+  }, [messages, isTyping]);
 
   const handleToggle = () => {
     if (isOpen) {
@@ -124,7 +117,7 @@ export default function HelpChat({
     ]);
   };
 
-  // EnvÌo de mensajes conectado al backend de Spring Boot + Groq
+  // Env√≠o de mensajes conectado al backend de Spring Boot + Groq
   const pushUserMessage = async (text) => {
     if (!text.trim()) return;
 
@@ -149,7 +142,7 @@ export default function HelpChat({
       const botReply =
         data?.data?.respuesta ||
         data?.mensaje ||
-        "°Hola! øEn quÈ m·s puedo orientarte sobre EventHive?";
+        "¬°Hola! ¬øEn qu√© m√°s puedo orientarte sobre EventHive?";
 
       setIsTyping(false);
       pushBotMessage({ text: botReply });
@@ -160,48 +153,24 @@ export default function HelpChat({
       const lower = text.toLowerCase();
       if (lower.includes("boleto") || lower.includes("compra") || lower.includes("entrada")) {
         pushBotMessage({
-          text: "Para comprar boletos, explora el cat·logo de eventos, selecciona tu evento favorito y haz clic en 'Comprar boletos'. Recibir·s tus entradas con cÛdigo QR digital.",
+          text: "Para comprar boletos, explora el cat√°logo de eventos, selecciona tu evento favorito y haz clic en 'Comprar boletos'. Recibir√°s tus entradas con c√≥digo QR digital.",
         });
       } else if (lower.includes("pago") || lower.includes("tarjeta") || lower.includes("nequi")) {
         pushBotMessage({
-          text: "Aceptamos tarjetas de crÈdito/dÈbito (Visa, Mastercard), transferencias PSE, Nequi y Daviplata con verificaciÛn 100% segura.",
+          text: "Aceptamos tarjetas de cr√©dito/d√©bito (Visa, Mastercard), transferencias PSE, Nequi y Daviplata con verificaci√≥n 100% segura.",
         });
       } else if (lower.includes("organizar") || lower.includes("publicar") || lower.includes("crear")) {
         pushBotMessage({
-          text: "°Genial! Puedes registrarte o cambiar tu rol a OrganizaciÛn desde tu Perfil para publicar y gestionar eventos en EventHive.",
+          text: "¬°Genial! Puedes registrarte o cambiar tu rol a Organizaci√≥n desde tu Perfil para publicar y gestionar eventos en EventHive.",
         });
       } else {
         pushBotMessage({
-          text: "°Hola! En EventHive estamos para ayudarte con tus eventos y boletos. øEn quÈ podemos orientarte hoy?",
+          text: "¬°Hola! En EventHive estamos para ayudarte con tus eventos y boletos. ¬øEn qu√© podemos orientarte hoy?",
         });
       }
     }
   };
 
-  const showUpcomingEvents = async () => {
-    pushUserMessage("Ver eventos prÛximos");
-    setLoadingEvents(true);
-    setShowFaq(false);
-    try {
-      const events = await getUpcomingEvents();
-      pushBotMessage(
-        events?.length
-          ? { text: "Estos son los prÛximos eventos en EventHive:", events }
-          : { text: "No hay prÛximos eventos disponibles en este momento. °Vuelve a consultar pronto!" }
-      );
-    } catch {
-      pushBotMessage({
-        text: "No fue posible cargar los prÛximos eventos. Por favor revisa el cat·logo en unos momentos.",
-      });
-    } finally {
-      setLoadingEvents(false);
-    }
-  };
-
-  const handleFaqClick = (faq) => {
-    pushUserMessage(faq.text);
-    setShowFaq(false);
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -209,7 +178,7 @@ export default function HelpChat({
     pushUserMessage(draft);
   };
 
-  // Solo mostrar si est· en una ruta permitida o si se encuentra abierto
+  // Solo mostrar si est√° en una ruta permitida o si se encuentra abierto
   if (!isAllowedPath && !isOpen) {
     return null;
   }
@@ -236,8 +205,8 @@ export default function HelpChat({
                 />
                 <span
                   className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-[#0B132B]"
-                  title="En lÌnea"
-                  aria-label="Estado en lÌnea"
+                  title="En l√≠nea"
+                  aria-label="Estado en l√≠nea"
                 />
               </div>
 
@@ -318,7 +287,7 @@ export default function HelpChat({
                               {event.title || event.nombre}
                             </p>
                             <p className="text-[10.5px] text-slate-400 truncate">
-                              {event.date || event.fecha || "PrÛximamente"}
+                              {event.date || event.fecha || "Pr√≥ximamente"}
                             </p>
                           </div>
                           <FiChevronRight size={14} className="text-slate-400 shrink-0" />
@@ -339,73 +308,6 @@ export default function HelpChat({
               </div>
             )}
 
-            {/* Botones de AcciÛn R·pida (Eventos prÛximos y FAQ) */}
-            {messages.length === 1 && (
-              <div className="pt-2 space-y-2">
-                <button
-                  onClick={showUpcomingEvents}
-                  disabled={loadingEvents}
-                  className={`w-full flex items-center gap-3 text-left rounded-2xl p-3.5 border transition-all cursor-pointer group shadow-xs ${
-                    isDark
-                      ? "bg-[#16223D] border-white/10 hover:border-amber-400/60 hover:bg-[#1E2E52]"
-                      : "bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-sm hover:bg-amber-50/30"
-                  } disabled:opacity-50`}
-                >
-                  <div className="w-9 h-9 shrink-0 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center border border-amber-500/20 group-hover:scale-105 transition-transform">
-                    <FiCalendar size={17} />
-                  </div>
-                  <span
-                    className={`text-[13.5px] font-semibold ${
-                      isDark ? "text-white" : "text-slate-900"
-                    }`}
-                  >
-                    {loadingEvents ? t("helpChat.searchingEvents") : t("helpChat.viewUpcomingEvents")}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => setShowFaq(!showFaq)}
-                  className={`w-full flex items-center gap-3 text-left rounded-2xl p-3.5 border transition-all cursor-pointer group shadow-xs ${
-                    isDark
-                      ? "bg-[#16223D] border-white/10 hover:border-amber-400/60 hover:bg-[#1E2E52]"
-                      : "bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-sm hover:bg-amber-50/30"
-                  }`}
-                >
-                  <div className="w-9 h-9 shrink-0 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center border border-amber-500/20 group-hover:scale-105 transition-transform">
-                    <FiHelpCircle size={17} />
-                  </div>
-                  <span
-                    className={`text-[13.5px] font-semibold ${
-                      isDark ? "text-white" : "text-slate-900"
-                    }`}
-                  >
-                    {t("helpChat.haveQuestion")}
-                  </span>
-                </button>
-
-                {showFaq && (
-                  <div className="grid grid-cols-1 gap-1.5 pt-1 pl-2 animate-fade-in">
-                    {faqOptions.map((faq) => {
-                      const Icon = faq.icon;
-                      return (
-                        <button
-                          key={faq.id}
-                          onClick={() => handleFaqClick(faq)}
-                          className={`text-left text-xs font-medium py-2 px-3 rounded-xl flex items-center gap-2 border transition-all cursor-pointer ${
-                            isDark
-                              ? "bg-[#121B33] border-white/5 text-slate-300 hover:text-amber-400 hover:border-amber-400/40"
-                              : "bg-white/80 border-slate-200 text-slate-700 hover:text-amber-600 hover:border-amber-400/60"
-                          }`}
-                        >
-                          <Icon size={13} className="text-amber-500 shrink-0" />
-                          <span>{faq.text}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Barra Inferior con Input */}
@@ -418,10 +320,11 @@ export default function HelpChat({
             }`}
           >
             <input
+              ref={inputRef}
               type="text"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder={t("helpChat.typeMessage")}
+              placeholder={t("helpChat.inputPlaceholder") || "Escribe tu pregunta..."}
               className={`flex-1 text-[13.5px] rounded-xl px-3.5 py-2.5 border focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-colors ${
                 isDark
                   ? "bg-[#131E3D] border-white/10 text-white placeholder-slate-400"
@@ -440,7 +343,7 @@ export default function HelpChat({
         </aside>
       )}
 
-      {/* 2. BOT”N FLOTANTE EST¡TICO (Fijo entre esquina inferior derecha y centro vertical) */}
+      {/* 2. BOT√ìN FLOTANTE EST√ÅTICO (Fijo entre esquina inferior derecha y centro vertical) */}
       <button
         type="button"
         onClick={handleToggle}
