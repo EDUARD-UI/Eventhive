@@ -266,8 +266,16 @@ export function LanguageProvider({ children }) {
   }, []);
 
   const t = useCallback(
-    (key, params = {}) => {
+    (key, fallbackOrParams, maybeParams) => {
       if (!key) return '';
+      const fallback = typeof fallbackOrParams === 'string' ? fallbackOrParams : undefined;
+      const params =
+        typeof fallbackOrParams === 'object' && fallbackOrParams !== null
+          ? fallbackOrParams
+          : typeof maybeParams === 'object' && maybeParams !== null
+          ? maybeParams
+          : {};
+
       const activeDict = DICTIONARIES[language] || esData;
       let result = resolveKeyPath(activeDict, key);
 
@@ -276,14 +284,16 @@ export function LanguageProvider({ children }) {
       }
 
       if (result === undefined) {
-        if (language === 'en') {
+        if (fallback !== undefined) {
+          result = fallback;
+        } else if (language === 'en') {
           result = translateRawStringToEn(key) || humanizeKeyFallback(key);
         } else {
           result = humanizeKeyFallback(key);
         }
       }
 
-      if (typeof result === 'string' && params && Object.keys(params).length > 0) {
+      if (typeof result === 'string' && Object.keys(params).length > 0) {
         return Object.entries(params).reduce(
           (str, [paramKey, paramVal]) =>
             str.replace(new RegExp(`\\{\\{${paramKey}\\}\\}`, 'g'), String(paramVal ?? '')),
