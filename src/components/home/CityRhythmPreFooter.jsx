@@ -112,8 +112,8 @@ export default function CityRhythmPreFooter() {
           {/* Columna Derecha: "texto aqui" y "boton aqui" según el diagrama */}
           <div className="lg:col-span-6 flex flex-col items-start text-left space-y-4 lg:pl-6 relative z-10">
             <h2 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl tracking-tight text-slate-950 uppercase leading-tight max-w-lg drop-shadow-2xs">
-              {t('home.preFooterTitle1')} <br />
-              <span className="text-white drop-shadow-xs">{t('home.preFooterTitle2')}</span>
+              TUS EVENTOS AL <br />
+              <span className="text-white drop-shadow-xs">RITMO DE LA CIUDAD</span>
             </h2>
 
             <p className="text-slate-950/85 text-sm sm:text-base font-medium leading-relaxed max-w-lg">

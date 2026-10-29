@@ -5,7 +5,7 @@ export const TABS = [
   { id: 'guardados', label: 'GUARDADOS' },
   { id: 'entradas', label: 'MIS BOLETOS' },
   { id: 'organizaciones', label: 'ORGANIZACIONES' },
-  { id: 'historial', label: 'HISTORIAL' },
+ 
   { id: 'seguridad', label: 'CONFIGURACIÓN' },
 ];
 
@@ -14,7 +14,7 @@ export default function PerfilTabs({
   onTabChange,
   guardadosCount = 0,
   organizacionesCount = 0,
-  historialCount = 0,
+ 
   boletosCount = 0,
 }) {
   const { t } = useLanguage();
@@ -25,8 +25,7 @@ export default function PerfilTabs({
         return guardadosCount;
       case 'organizaciones':
         return organizacionesCount > 0 ? organizacionesCount : null;
-      case 'historial':
-        return historialCount > 0 ? historialCount : null;
+
       case 'entradas':
         return boletosCount;
       default:

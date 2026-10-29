@@ -3,14 +3,14 @@ import { session, isTokenExpired } from './session.js';
 
 
 const buildUrl = (path, params) => {
-  const base = `${API_BASE_URL}${path}`;
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const cleanBase = (API_BASE_URL || '/api').replace(/\/+$/, '');
+  const fullPath = `${cleanBase}${cleanPath}`;
 
-  const url = new URL(
-    base,
-    typeof window !== 'undefined'
-      ? window.location.origin
-      : 'http://localhost:5173'
-  );
+  const url = fullPath.startsWith('http')
+    ? new URL(fullPath)
+    : new URL(fullPath, origin);
 
   Object.entries(params || {}).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {

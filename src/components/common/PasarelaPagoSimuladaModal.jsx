@@ -174,7 +174,7 @@ export default function PasarelaPagoSimuladaModal({
               <div className="font-display font-black text-lg text-slate-950 leading-tight">
                 Event<span className="text-amber-500">Hive</span>
               </div>
-              <p className="text-[10px] text-slate-500">Conéctate al ritmo de la ciudad</p>
+              <p className="text-[10px] text-amber-500/90 font-medium tracking-tight">Tus eventos al ritmo de la ciudad</p>
             </div>
           </div>
 

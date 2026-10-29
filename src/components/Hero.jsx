@@ -150,9 +150,9 @@ export default function Hero() {
         >
           {/* Titular Principal */}
           <h1 className="font-display font-extrabold text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08] tracking-tight mb-6 text-white drop-shadow-lg">
-            <span>{t('hero.titleLine1', 'Conéctate al')} </span>
+            <span>{t('hero.titleLine1', 'Tus Eventos al')} </span>
             <span className="block mt-2 bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 bg-clip-text text-transparent font-black">
-              {t('hero.titleLine2', 'ritmo de la ciudad')}
+              {t('hero.titleLine2', 'Ritmo de la Ciudad')}
             </span>
           </h1>
 

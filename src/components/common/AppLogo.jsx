@@ -5,7 +5,7 @@ export default function AppLogo({
   showName = true,
   showImage = true,
   subtitle = null,
-  subtitleClassName = '',
+  subtitleClassName = 'text-amber-500 dark:text-amber-400 font-medium',
   imageSrc = '/LOGO45x50.png',
   imageClassName = '',
   alt = 'EventHive',
@@ -25,7 +25,7 @@ export default function AppLogo({
             <span>Event</span><span className={hiveClassName}>Hive</span>
           </span>
           {subtitle && (
-            <span className={`text-xs font-normal mt-1 leading-tight ${subtitleClassName}`}>
+            <span className={`text-xs mt-1 leading-tight tracking-tight ${subtitleClassName}`}>
               {subtitle}
             </span>
           )}

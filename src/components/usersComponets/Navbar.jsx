@@ -110,10 +110,12 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
                 className="flex shrink-0 items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-lg"
               >
                 <AppLogo
-                  className="h-8 sm:h-9 w-fit"
+                  className="h-7 sm:h-8 w-fit"
                   textClassName={isDark ? 'text-white' : 'text-[#0B132B]'}
                   hiveClassName="text-amber-500"
                   showImage={false}
+                  subtitle={t('footer.subtitle')}
+                  subtitleClassName="text-[10px] sm:text-xs font-normal text-slate-500 dark:text-slate-300 mt-0.5 sm:mt-1 leading-tight tracking-normal"
                 />
               </Link>
 

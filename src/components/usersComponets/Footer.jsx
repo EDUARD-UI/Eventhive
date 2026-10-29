@@ -110,7 +110,7 @@ export default function Footer({ onHelpClick }) {
           <p>{t('footer.copyright')}</p>
           <div className="flex items-center gap-3">
             <a
-              href="https://instagram.com"
+              href="https://instagram.com/eventhive.ctg"
               target="_blank"
               rel="noreferrer"
               aria-label="Instagram"
