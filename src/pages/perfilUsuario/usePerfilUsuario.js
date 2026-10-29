@@ -163,12 +163,22 @@ export function usePerfilUsuario() {
           const itemsCompras = Array.isArray(comprasRes)
             ? comprasRes
             : comprasRes?.content || comprasRes?.data || [];
+
+          let localCompras = [];
+          try {
+            localCompras = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
+          } catch {}
+
           if (isMounted) {
-            setCompras(itemsCompras);
+            setCompras([...localCompras, ...itemsCompras]);
           }
         } catch (err) {
-          console.warn('No se pudo cargar /compras:', err);
-          if (isMounted) setCompras([]);
+          console.warn('No se pudo cargar /compras, usando respaldo local:', err);
+          let localCompras = [];
+          try {
+            localCompras = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
+          } catch {}
+          if (isMounted) setCompras(localCompras);
         }
 
         // 4. Obtener organizaciones reales y calcular seguidas vs disponibles

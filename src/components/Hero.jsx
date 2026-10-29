@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import videoPromocional from '../assets/video promocional.mp4';
+import videoPromocionalMobile from '../assets/video promocional.mp4';
+import videoPromocionalDesktop from '../assets/16x9.mp4';
 import cartagenaHeroPoster from '../assets/cartagena-hero.jpg';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useLanguage } from '../context/LanguageContext.jsx';
@@ -13,6 +14,30 @@ export default function Hero() {
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const videoRef = useRef(null);
+
+  // Detección responsive para servir el video óptimo según el dispositivo
+  // Móviles (< 768px): video vertical 9:16 ("video promocional")
+  // Pantallas mayores (>= 768px): video panorámico 16:9 ("16x9.mp4")
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(min-width: 768px)').matches;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    const handleMediaChange = (e) => {
+      setIsDesktop(e.matches);
+      setIsVideoReady(false);
+    };
+
+    mediaQuery.addEventListener('change', handleMediaChange);
+    return () => mediaQuery.removeEventListener('change', handleMediaChange);
+  }, []);
+
+  const activeVideoSrc = isDesktop ? videoPromocionalDesktop : videoPromocionalMobile;
 
   // Animación de entrada inicial suave
   useEffect(() => {
@@ -43,7 +68,7 @@ export default function Hero() {
           });
       }
     }
-  }, []);
+  }, [isDesktop]);
 
   return (
     <section
@@ -66,15 +91,18 @@ export default function Hero() {
         />
 
         {/* 
-          Video promocional en MP4:
-          - object-cover + object-center: llena todo el contenedor sin deformar la relación de aspecto original
-          - transform-gpu + [backface-visibility:hidden]: aísla el video en una capa de composición GPU dedicada, evitando re-muestreo difuso
-          - [image-rendering:-webkit-optimize-contrast]: prioriza el contraste de bordes sobre la interpolación bilineal borrosa
-          - opacity-100: evita pases de renderizado offscreen (FBO) que lavan los colores y reducen la nitidez
+          Video en bucle optimizado por dispositivo:
+          - Pantallas mayores: promocional4X3.mp4
+          - Dispositivos móviles: video promocional.mp4
+          - object-cover + object-center: llena el 100% sin deformar la relación de aspecto
+          - transform-gpu + [backface-visibility:hidden]: aísla el video en una capa de composición GPU dedicada
+          - [image-rendering:-webkit-optimize-contrast]: prioriza contraste y bordes definidos
+          - opacity-100: sin pases intermedios de renderizado offscreen
         */}
         <video
+          key={isDesktop ? 'desktop-video' : 'mobile-video'}
           ref={videoRef}
-          src={videoPromocional}
+          src={activeVideoSrc}
           poster={cartagenaHeroPoster}
           autoPlay
           loop
@@ -91,7 +119,9 @@ export default function Hero() {
           className={`absolute inset-0 w-full h-full object-cover object-center transform-gpu will-change-transform [backface-visibility:hidden] [image-rendering:-webkit-optimize-contrast] transition-opacity duration-700 ${
             isVideoReady ? 'opacity-100' : 'opacity-0'
           }`}
-        />
+        >
+          <source src={activeVideoSrc} type="video/mp4" />
+        </video>
 
         {/* Gradiente horizontal sutil para asegurar perfecta legibilidad de texto a la izquierda sin apagar el video */}
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/40 to-transparent pointer-events-none" />

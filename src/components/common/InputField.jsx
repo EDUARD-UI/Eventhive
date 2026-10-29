@@ -24,6 +24,31 @@ export default function InputField({
   const isPassword = type === 'password';
   const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
   const hasError = Boolean(touched && error);
+  const isPhone = type === 'tel' || name === 'phone' || name === 'telefono';
+
+  const handleInputChange = (e) => {
+    if (isPhone) {
+      const sanitized = e.target.value.replace(/\D/g, '').slice(0, 10);
+      e.target.value = sanitized;
+    }
+    onChange?.(e);
+  };
+
+  const handleKeyDown = (e) => {
+    if (isPhone) {
+      const allowedKeys = [
+        'Backspace', 'Tab', 'Enter', 'Escape', 'Delete',
+        'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'
+      ];
+      if (allowedKeys.includes(e.key) || e.ctrlKey || e.metaKey) {
+        return;
+      }
+      if (!/^\d$/.test(e.key)) {
+        e.preventDefault();
+      }
+    }
+    props.onKeyDown?.(e);
+  };
 
   return (
     <div className={`w-full ${className}`}>
@@ -50,7 +75,8 @@ export default function InputField({
           type={inputType}
           placeholder={placeholder}
           value={value}
-          onChange={onChange}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
           onBlur={onBlur}
           disabled={disabled}
           autoComplete={autoComplete}

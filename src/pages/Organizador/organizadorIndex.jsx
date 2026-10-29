@@ -1,3 +1,4 @@
+import BannerVerificacionOrganizacion from '../../components/componentsOrganizador/BannerVerificacionOrganizacion.jsx';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import StandardLayout from '../../layouts/StandardLayout.jsx';
 import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
@@ -294,6 +295,7 @@ export default function OrganizadorIndex() {
   const [creationView, setCreationView] = useState(null);
   const [notification, setNotification] = useState(false);
   const [orgData, setOrgData] = useState(null);
+  const [solicitudVerif, setSolicitudVerif] = useState(null);
 
   // Lista completa de eventos de la organización
   const [allOrgEvents, setAllOrgEvents] = useState([]);
@@ -338,11 +340,18 @@ export default function OrganizadorIndex() {
   }, []);
 
   const loadData = useCallback(() => {
-    // 1. Datos de la organización
+    // 1. Datos de la organización y verificación oficial
     const p1 = organizerService
       .getMiOrganizacion()
       .then((data) => {
         if (data) setOrgData(data);
+      })
+      .catch(() => {});
+
+    const pVerif = organizerService
+      .getMiSolicitudVerificacion()
+      .then((data) => {
+        if (data) setSolicitudVerif(data);
       })
       .catch(() => {});
 
@@ -398,7 +407,7 @@ export default function OrganizadorIndex() {
     // 4. Cartelera inicial
     const p4 = fetchCarteleraPage(0);
 
-    Promise.allSettled([p1, p2, p3, p4]).finally(() => {
+    Promise.allSettled([p1, pVerif, p2, p3, p4]).finally(() => {
       setTimeout(() => {
         setPageLoading(false);
       }, 550);
@@ -413,6 +422,10 @@ export default function OrganizadorIndex() {
     orgData?.nombre || orgData?.razonSocial || session.getUser()?.name || 'Mi Organización';
   const representativeName =
     orgData?.representante || session.getUser()?.name || 'Representante';
+
+  const isOrgApproved =
+    (solicitudVerif?.estado || '').toUpperCase() === 'APROBADA' ||
+    (orgData?.estado || '').toUpperCase() === 'APROBADA';
 
   const activeMenu = menuItems.find((m) => m.id === activeItem);
 
@@ -769,6 +782,15 @@ export default function OrganizadorIndex() {
           </button>
         </div>
       )}
+
+      {/* Banner de Estado de Verificación Institucional (RUT) */}
+      <div className="mb-6">
+        <BannerVerificacionOrganizacion
+          solicitud={solicitudVerif}
+          orgData={orgData}
+          onRefresh={loadData}
+        />
+      </div>
 
       {renderContent()}
 

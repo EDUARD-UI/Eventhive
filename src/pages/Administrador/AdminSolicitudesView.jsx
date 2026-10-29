@@ -1,3 +1,4 @@
+import adminService from '../../features/admin/services/adminService.js';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -27,7 +28,8 @@ export default function AdminSolicitudesView({
   onSolicitarCorreccion,
   onVerDetalle,
 }) {
-  const [modalAccion, setModalAccion] = useState(null); // { solicitud, tipo: 'aprobar' | 'correccion' | 'rechazar' }
+  const [modalAccion, setModalAccion] = useState(null);
+  const [viewingRutId, setViewingRutId] = useState(null); // { solicitud, tipo: 'aprobar' | 'correccion' | 'rechazar' }
   const [motivo, setMotivo] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
@@ -166,6 +168,33 @@ export default function AdminSolicitudesView({
 
                 {/* Acciones de Verificación con Jerarquía y Colores Claramente Diferenciados */}
                 <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-end xl:self-center pt-2 xl:pt-0">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const targetOrgId = sol.organizacionId || sol.id;
+                        setViewingRutId(targetOrgId);
+                        const res = await adminService.getRutUrl(targetOrgId);
+                        const url = res?.rutUrl || res?.data?.rutUrl || res?.url;
+                        if (url) {
+                          window.open(url, '_blank', 'noopener,noreferrer');
+                        } else {
+                          alert('El documento RUT aún no tiene URL pública o activa.');
+                        }
+                      } catch (err) {
+                        alert(err?.message || 'No fue posible abrir el RUT.');
+                      } finally {
+                        setViewingRutId(null);
+                      }
+                    }}
+                    disabled={viewingRutId === (sol.organizacionId || sol.id)}
+                    className="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
+                    title="Consultar archivo RUT oficial cargado"
+                  >
+                    <FileText size={14} className="text-amber-500" />
+                    <span>{viewingRutId === (sol.organizacionId || sol.id) ? 'Abriendo...' : 'Ver RUT'}</span>
+                  </button>
+
                   {onVerDetalle && (
                     <button
                       type="button"

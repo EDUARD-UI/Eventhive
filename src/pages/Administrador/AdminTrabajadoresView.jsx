@@ -1,31 +1,30 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Users,
-  ShieldCheck,
+  UserPlus,
+  Shield,
   Mail,
-  Phone,
   Search,
-  Filter,
   CheckCircle2,
   AlertCircle,
-  Megaphone,
-  UserCheck,
-  UserX,
-  UserPlus,
-  RefreshCw,
+  Clock,
+  RotateCw,
+  Send,
+  Trash2,
+  Phone,
+  Sparkles,
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
-import GmailComposeModal from '../../components/Shared/GmailComposeModal.jsx';
+import ModalInvitacionOficial from '../../components/componentsAdmin/ModalInvitacionOficial.jsx';
 import adminService from '../../features/admin/services/adminService.js';
 import { normalizeRole } from '../../services/session.js';
+import { httpClient } from '../../services/httpClient.js';
 
-export default function AdminTrabajadoresView({
-  onAsignarModerador,
-  onToggleEstadoModerador,
-}) {
+export default function AdminTrabajadoresView() {
+  const [activeTab, setActiveTab] = useState('trabajadores'); // 'trabajadores' | 'invitaciones'
   const [trabajadores, setTrabajadores] = useState([]);
+  const [invitaciones, setInvitaciones] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [rolFilter, setRolFilter] = useState('TODOS'); // 'TODOS' | 'MODERADOR' | 'MARKETING'
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,27 +33,27 @@ export default function AdminTrabajadoresView({
   const [actionLoading, setActionLoading] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState(null);
 
-  // Estado del Modal de Enviar Correo / Invitar (Estilo Gmail)
+  // Modal para Invitar / Enviar Comunicado
   const [mailModal, setMailModal] = useState({
     isOpen: false,
     email: '',
     name: '',
     subject: '',
-    mode: 'email',
-    role: 'MODERADOR',
+    mode: 'invite', // 'invite' | 'comunicado'
   });
 
   // Modal revocar moderador
   const [modalRevocar, setModalRevocar] = useState(null);
 
-  // Carga reactiva de trabajadores desde endpoints reales (GET /moderaciones/moderadores y GET /usuarios/trabajadores/marketing)
+  // Carga reactiva de trabajadores e invitaciones
   const fetchTrabajadores = useCallback(async () => {
     try {
       setLoading(true);
-      const [modsRes, mktgRes, usersRes] = await Promise.allSettled([
+      const [modsRes, mktgRes, usersRes, invsRes] = await Promise.allSettled([
         adminService.getModeradores({ page: 0, size: 100 }),
         adminService.getTrabajadoresMarketing({ page: 0, size: 100 }),
         adminService.getUsuarios({ page: 0, size: 100 }),
+        adminService.getInvitacionesEnviadas({ page: 0, size: 100 }),
       ]);
 
       const modsList =
@@ -72,6 +71,10 @@ export default function AdminTrabajadoresView({
           ? usersRes.value.data
           : [];
 
+      if (invsRes.status === 'fulfilled' && invsRes.value?.data) {
+        setInvitaciones(invsRes.value.data);
+      }
+
       // Mapear moderadores reales
       const formattedMods = modsList.map((m) => ({
         id: m.id,
@@ -79,20 +82,18 @@ export default function AdminTrabajadoresView({
         correo: m.correo || m.email || '',
         telefono: m.telefono || m.phone || 'No registrado',
         rolNombre: 'MODERADOR',
-        activo: m.activo !== false,
       }));
 
-      // Mapear trabajadores de marketing desde el endpoint específico /api/usuarios/trabajadores/marketing
+      // Mapear trabajadores de marketing
       const formattedMktg = mktgList.map((m) => ({
         id: m.id,
         nombre: m.nombre || m.name || 'Especialista Marketing',
         correo: m.correo || m.email || '',
         telefono: m.telefono || m.phone || 'No registrado',
         rolNombre: 'MARKETING',
-        activo: m.activo !== false,
       }));
 
-      // Extraer otros trabajadores de staff de la lista general sin duplicados
+      // Extraer otros staff
       const formattedOtherStaff = usersList
         .filter((u) => {
           const r = normalizeRole(u.rolNombre || u.rol || u.role);
@@ -107,10 +108,8 @@ export default function AdminTrabajadoresView({
           correo: u.correo || u.email || '',
           telefono: u.telefono || 'No registrado',
           rolNombre: normalizeRole(u.rolNombre || u.rol || u.role),
-          activo: u.activo !== false,
         }));
 
-      // Combinar listas sin duplicados por ID
       const mergedMap = new Map();
       [...formattedMods, ...formattedMktg, ...formattedOtherStaff].forEach((t) => {
         if (!mergedMap.has(t.id)) {
@@ -120,7 +119,7 @@ export default function AdminTrabajadoresView({
 
       setTrabajadores(Array.from(mergedMap.values()));
     } catch (err) {
-      console.warn('Error al cargar lista de trabajadores:', err);
+      console.error('Error al cargar integrantes:', err);
     } finally {
       setLoading(false);
     }
@@ -135,27 +134,36 @@ export default function AdminTrabajadoresView({
     return trabajadores.filter((t) => {
       const matchRole =
         rolFilter === 'TODOS' ||
-        (rolFilter === 'MODERADOR' && t.rolNombre === 'MODERADOR') ||
-        (rolFilter === 'MARKETING' && t.rolNombre === 'MARKETING');
-
-      if (!matchRole) return false;
-
-      if (!searchTerm.trim()) return true;
-      const term = searchTerm.toLowerCase();
-      return (
-        t.nombre?.toLowerCase().includes(term) ||
-        t.correo?.toLowerCase().includes(term) ||
-        t.telefono?.toLowerCase().includes(term)
-      );
+        t.rolNombre?.toUpperCase() === rolFilter.toUpperCase();
+      const matchSearch =
+        t.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.correo?.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchRole && matchSearch;
     });
   }, [trabajadores, rolFilter, searchTerm]);
 
-  // Paginación en cliente
-  const paginatedTrabajadores = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredTrabajadores.slice(start, start + pageSize);
-  }, [filteredTrabajadores, currentPage, pageSize]);
+  // Filtrado de invitaciones
+  const filteredInvitaciones = useMemo(() => {
+    return invitaciones.filter((inv) => {
+      return (
+        inv.correo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inv.rol?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
+  }, [invitaciones, searchTerm]);
 
+  const totalItems =
+    activeTab === 'trabajadores'
+      ? filteredTrabajadores.length
+      : filteredInvitaciones.length;
+
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    const source = activeTab === 'trabajadores' ? filteredTrabajadores : filteredInvitaciones;
+    return source.slice(start, start + pageSize);
+  }, [activeTab, filteredTrabajadores, filteredInvitaciones, currentPage, pageSize]);
+
+  // Revocar moderador
   const handleConfirmRevocar = async () => {
     if (!modalRevocar) return;
     try {
@@ -177,17 +185,52 @@ export default function AdminTrabajadoresView({
     }
   };
 
-    const handleInviteSuccess = async (inviteData) => {
+  // Enviar invitación
+  const handleInviteSubmit = async (inviteData) => {
     await adminService.invitarTrabajador(inviteData);
     setFeedbackMsg({
       type: 'success',
-      text: `Invitación enviada exitosamente a "${inviteData.email}" con el rol de ${inviteData.rol}.`,
+      text: `Invitación oficial enviada exitosamente a "${inviteData.email}" con el rol ${inviteData.rol}.`,
     });
-    // Se elimina la llamada prematura a onAsignarModerador(inviteData.email):
-    // La asignación de categorías/zonas a un moderador solo debe realizarse una vez que
-    // el usuario haya aceptado la invitación y cuente con rol activo en la base de datos.
     await fetchTrabajadores();
   };
+
+  // Enviar comunicado administrativo
+  const handleComunicadoSubmit = async ({ destinatario, asunto, mensaje }) => {
+    await httpClient.post('/admin/correos/enviar', {
+      destinatario,
+      asunto,
+      mensaje,
+    });
+    setFeedbackMsg({
+      type: 'success',
+      text: `Comunicado oficial despachado correctamente a "${destinatario}".`,
+    });
+  };
+
+  // Reenviar invitación
+  const handleReenviar = async (correo, rol) => {
+    try {
+      setActionLoading(true);
+      await adminService.reenviarInvitacion(correo, rol);
+      setFeedbackMsg({
+        type: 'success',
+        text: `Se generó un nuevo enlace de invitación para "${correo}" con vigencia de 24 horas.`,
+      });
+      await fetchTrabajadores();
+    } catch (err) {
+      setFeedbackMsg({
+        type: 'error',
+        text: err?.message || 'Error al reenviar la invitación.',
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const countPendientes = invitaciones.filter(
+    (i) => (i.estado || '').toUpperCase() === 'PENDIENTE'
+  ).length;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -201,36 +244,35 @@ export default function AdminTrabajadoresView({
         >
           <div className="flex items-center gap-2">
             {feedbackMsg.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-rose-600" />
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
             )}
             <span>{feedbackMsg.text}</span>
           </div>
           <button
             type="button"
             onClick={() => setFeedbackMsg(null)}
-            className="text-slate-400 hover:text-slate-600 ml-4 font-bold"
+            className="text-slate-400 hover:text-slate-600 ml-4 font-bold cursor-pointer"
           >
             ✕
           </button>
         </div>
       )}
 
-      {/* Encabezado y Buscador Limpio (Mismo diseño institucional) */}
-      <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+      {/* Encabezado y Acciones */}
+      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <Users className="w-5 h-5 text-primary" strokeWidth={1.75} />
-            <span>Directorio de Trabajadores</span>
+          <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+            <Users className="w-5 h-5 text-amber-500" strokeWidth={2} />
+            <span>Gestión del Equipo y Privilegios</span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Usuarios activos con roles de MODERADOR y MARKETING en Eventhive
+            Administra a moderadores y especialistas de marketing, o emite invitaciones seguras con token
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          {/* Botón Redactar Correo estilo Gmail */}
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
           <button
             type="button"
             onClick={() =>
@@ -239,15 +281,15 @@ export default function AdminTrabajadoresView({
                 email: '',
                 name: '',
                 subject: '',
+                mode: 'comunicado',
               })
             }
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-2xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all active:scale-95 shadow-2xs cursor-pointer"
           >
-            <Mail size={15} />
-            <span>Redactar Correo</span>
+            <Mail size={14} className="text-slate-500" />
+            <span>Redactar Comunicado</span>
           </button>
 
-          {/* Botón Invitar Trabajador */}
           <button
             type="button"
             onClick={() =>
@@ -255,19 +297,78 @@ export default function AdminTrabajadoresView({
                 isOpen: true,
                 email: '',
                 name: '',
-                subject: 'Invitación oficial para unirte a EventHive',
+                subject: '',
                 mode: 'invite',
               })
             }
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-sm cursor-pointer"
-            title="Invitar nuevo Moderador o especialista de Marketing mediante Gmail"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold shadow-sm transition-all active:scale-95 cursor-pointer"
           >
-            <UserPlus size={15} />
-            <span>Invitar Trabajador</span>
+            <UserPlus size={14} className="text-amber-400" />
+            <span>Invitar Colaborador</span>
           </button>
+        </div>
+      </div>
 
-          {/* Filtro por Rol */}
-          <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold gap-1">
+      {/* Sistema de Pestañas SaaS */}
+      <div className="flex items-center gap-2 border-b border-slate-200">
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('trabajadores');
+            setCurrentPage(1);
+          }}
+          className={`pb-3 px-3 text-xs font-bold transition-colors cursor-pointer border-b-2 flex items-center gap-2 ${
+            activeTab === 'trabajadores'
+              ? 'border-amber-500 text-slate-950'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Shield size={14} />
+          <span>Integrantes Activos ({trabajadores.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('invitaciones');
+            setCurrentPage(1);
+          }}
+          className={`pb-3 px-3 text-xs font-bold transition-colors cursor-pointer border-b-2 flex items-center gap-2 ${
+            activeTab === 'invitaciones'
+              ? 'border-amber-500 text-slate-950'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Mail size={14} />
+          <span>Invitaciones Enviadas ({invitaciones.length})</span>
+          {countPendientes > 0 && (
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+          )}
+        </button>
+      </div>
+
+      {/* Barra de Filtros y Búsqueda */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="relative w-full md:w-96">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder={
+              activeTab === 'trabajadores'
+                ? 'Buscar por nombre o correo...'
+                : 'Buscar por correo de invitación...'
+            }
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-slate-900 placeholder:text-slate-400"
+          />
+        </div>
+
+        {activeTab === 'trabajadores' && (
+          <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold gap-1 self-end md:self-center">
             {['TODOS', 'MODERADOR', 'MARKETING'].map((rf) => (
               <button
                 key={rf}
@@ -276,111 +377,67 @@ export default function AdminTrabajadoresView({
                   setRolFilter(rf);
                   setCurrentPage(1);
                 }}
-                className={`px-3 py-1.5 rounded-lg transition-all text-xs font-bold ${
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   rolFilter === rf
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
+                    ? 'bg-white text-slate-950 shadow-2xs font-extrabold'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {rf}
               </button>
             ))}
           </div>
-
-          {/* Campo de búsqueda */}
-          <div className="relative flex-1 md:w-72">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" strokeWidth={1.75} />
-            <input
-              type="text"
-              placeholder="Buscar por nombre, correo o teléfono..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={fetchTrabajadores}
-            title="Recargar datos"
-            className="p-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
-          >
-            <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-          </button>
-        </div>
+        )}
       </div>
 
-      {/* Tabla Limpia de Trabajadores */}
+      {/* TABLA PRINCIPAL */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                <th className="py-3.5 px-4">Nombre Completo</th>
-                <th className="py-3.5 px-4">Correo Electrónico</th>
-                <th className="py-3.5 px-4">Teléfono</th>
-                <th className="py-3.5 px-4 text-center">Rol en Sistema</th>
-                <th className="py-3.5 px-4 text-right">Acción Administrativa</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-xs">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-400">
-                    Cargando trabajadores...
-                  </td>
+          {activeTab === 'trabajadores' ? (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                  <th className="py-3.5 px-4">Colaborador</th>
+                  <th className="py-3.5 px-4">Correo</th>
+                  <th className="py-3.5 px-4">Teléfono</th>
+                  <th className="py-3.5 px-4 text-center">Rol Asignado</th>
+                  <th className="py-3.5 px-4 text-right">Acciones</th>
                 </tr>
-              ) : filteredTrabajadores.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-400">
-                    No se encontraron trabajadores registrados.
-                  </td>
-                </tr>
-              ) : (
-                paginatedTrabajadores.map((t) => {
-                  const isMod = t.rolNombre === 'MODERADOR';
-                  return (
-                    <tr key={t.id} className="hover:bg-slate-50/60 transition-colors">
-
-                      {/* Nombre */}
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-sm shrink-0">
-                            {t.nombre?.charAt(0) || 'T'}
-                          </div>
-                          <span className="font-bold text-slate-900">{t.nombre}</span>
-                        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs">
+                {paginatedData.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-12 text-center text-slate-400">
+                      No se encontraron integrantes activos con los criterios seleccionados.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedData.map((t) => (
+                    <tr key={t.id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-slate-900">{t.nombre}</div>
+                        <span className="text-[11px] text-slate-400 font-mono">ID #{t.id}</span>
                       </td>
 
-                      {/* Correo */}
-                      <td className="py-4 px-4 text-slate-600">
-                        <div className="flex items-center gap-1.5">
-                          <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span className="truncate">{t.correo || '—'}</span>
-                        </div>
+                      <td className="py-3.5 px-4 text-slate-600 font-medium">
+                        {t.correo || '—'}
                       </td>
 
-                      {/* Teléfono */}
-                      <td className="py-4 px-4 text-slate-600">
-                        <div className="flex items-center gap-1.5">
-                          <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span>{t.telefono || '—'}</span>
-                        </div>
+                      <td className="py-3.5 px-4 text-slate-500">
+                        {t.telefono || '—'}
                       </td>
 
-                      {/* Rol */}
-                      <td className="py-4 px-4 text-center">
-                        <Badge variant={isMod ? 'primary' : 'neutral'} size="xs">
+                      <td className="py-3.5 px-4 text-center">
+                        <Badge
+                          variant={t.rolNombre === 'MODERADOR' ? 'warning' : 'info'}
+                          size="xs"
+                        >
                           {t.rolNombre}
                         </Badge>
                       </td>
 
-                      {/* Acciones Individuales */}
-                      <td className="py-4 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="inline-flex items-center gap-1.5 justify-end">
                           <button
                             type="button"
                             onClick={() =>
@@ -388,41 +445,116 @@ export default function AdminTrabajadoresView({
                                 isOpen: true,
                                 email: t.correo,
                                 name: t.nombre,
-                                subject: `Comunicación para ${t.nombre} (${t.rolNombre})`,
+                                subject: 'Aviso del equipo administrativo de EventHive',
+                                mode: 'comunicado',
                               })
                             }
-                            className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 text-xs font-bold transition-all active:scale-95"
-                            title="Enviar correo individual a este trabajador"
+                            className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                            title="Enviar comunicado por correo"
                           >
-                            <Mail className="w-3.5 h-3.5 text-slate-500" />
-                            <span>Correo</span>
+                            <Mail size={15} />
                           </button>
 
-                          {isMod && (
+                          {t.rolNombre === 'MODERADOR' && (
                             <button
                               type="button"
                               onClick={() => setModalRevocar(t)}
-                              className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-xl border border-rose-200 text-rose-700 bg-rose-50/60 hover:bg-rose-100 text-xs font-bold transition-all active:scale-95"
-                              title="Revocar permisos de moderador a este usuario"
+                              className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
+                              title="Revocar rol de moderador"
                             >
-                              <UserX className="w-3.5 h-3.5 text-rose-600" />
-                              <span>Revocar</span>
+                              <Trash2 size={15} />
                             </button>
                           )}
                         </div>
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                  ))
+                )}
+              </tbody>
+            </table>
+          ) : (
+            /* TABLA DE INVITACIONES EMITIDAS POR EL ADMINISTRADOR */
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                  <th className="py-3.5 px-4">Correo Invitado</th>
+                  <th className="py-3.5 px-4">Rol Asignado</th>
+                  <th className="py-3.5 px-4">Fecha de Envío</th>
+                  <th className="py-3.5 px-4">Fecha Expiración</th>
+                  <th className="py-3.5 px-4 text-center">Estado</th>
+                  <th className="py-3.5 px-4 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs">
+                {paginatedData.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                      No hay invitaciones emitidas registradas.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedData.map((inv, idx) => {
+                    const estado = (inv.estado || 'PENDIENTE').toUpperCase();
+                    const badgeVariant =
+                      estado === 'ACEPTADA'
+                        ? 'success'
+                        : estado === 'RECHAZADA' || estado === 'EXPIRADA'
+                        ? 'danger'
+                        : 'warning';
+
+                    return (
+                      <tr key={inv.id || idx} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-3.5 px-4 font-bold text-slate-900">
+                          {inv.correo}
+                        </td>
+
+                        <td className="py-3.5 px-4">
+                          <Badge variant="neutral" size="xs">
+                            {inv.rol || 'STAFF'}
+                          </Badge>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-slate-500">
+                          {inv.fechaInvitacion || inv.fechaEnvio || '—'}
+                        </td>
+
+                        <td className="py-3.5 px-4 text-slate-500">
+                          {inv.fechaExpiracion || '24 horas posteriores'}
+                        </td>
+
+                        <td className="py-3.5 px-4 text-center">
+                          <Badge variant={badgeVariant} size="xs">
+                            {estado}
+                          </Badge>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-right">
+                          {(estado === 'PENDIENTE' || estado === 'EXPIRADA') && (
+                            <button
+                              type="button"
+                              onClick={() => handleReenviar(inv.correo, inv.rol)}
+                              disabled={actionLoading}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-950 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                              title="Reenviar enlace con nueva vigencia de 24h"
+                            >
+                              <RotateCw size={12} />
+                              <span>Reenviar</span>
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
 
         {/* Paginación */}
         <Pagination
           currentPage={currentPage}
-          totalItems={filteredTrabajadores.length}
+          totalItems={totalItems}
           pageSize={pageSize}
           onPageChange={setCurrentPage}
           onPageSizeChange={(newSize) => {
@@ -433,26 +565,38 @@ export default function AdminTrabajadoresView({
         />
       </div>
 
-      {/* Modal Confirmar Revocación */}
+      {/* Modal de Invitación / Comunicado */}
+      <ModalInvitacionOficial
+        isOpen={mailModal.isOpen}
+        onClose={() => setMailModal((prev) => ({ ...prev, isOpen: false }))}
+        onSendInvite={handleInviteSubmit}
+        onSendComunicado={handleComunicadoSubmit}
+        mode={mailModal.mode}
+        initialEmail={mailModal.email}
+        initialName={mailModal.name}
+      />
+
+      {/* Modal Confirmación de Revocar Moderador */}
       {modalRevocar && (
-        createPortal(<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
-              <UserX size={24} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 text-center space-y-4">
+            <div className="w-12 h-12 mx-auto rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center">
+              <Trash2 size={24} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">¿Revocar rol de Moderador?</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                ¿Estás seguro de que deseas retirar los permisos de moderación a{' '}
-                <strong className="text-slate-800">{modalRevocar.nombre}</strong>? El usuario volverá al rol base.
+              <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                ¿Revocar rol de Moderador?
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                El usuario <strong>{modalRevocar.nombre}</strong> perderá los privilegios de moderación en la plataforma y volverá a ser CLIENTE.
               </p>
             </div>
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setModalRevocar(null)}
                 disabled={actionLoading}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 Cancelar
               </button>
@@ -460,26 +604,14 @@ export default function AdminTrabajadoresView({
                 type="button"
                 onClick={handleConfirmRevocar}
                 disabled={actionLoading}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-sm"
               >
-                {actionLoading ? 'Revocando...' : 'Sí, revocar'}
+                {actionLoading ? 'Revocando...' : 'Sí, Revocar'}
               </button>
             </div>
           </div>
-        </div>, document.body)
+        </div>
       )}
-
-      {/* Modal Réplica de Gmail para Correo e Invitaciones de Trabajadores */}
-      <GmailComposeModal
-        isOpen={mailModal.isOpen}
-        onClose={() => setMailModal((prev) => ({ ...prev, isOpen: false }))}
-        initialEmail={mailModal.email}
-        initialName={mailModal.name}
-        defaultSubject={mailModal.subject}
-        initialMode={mailModal.mode || 'email'}
-        defaultRole={mailModal.role || 'MODERADOR'}
-        onSuccess={() => fetchTrabajadores()}
-      />
     </div>
   );
 }

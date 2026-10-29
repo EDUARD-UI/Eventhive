@@ -6,21 +6,19 @@ import {
   Edit,
   Trash2,
   Image as ImageIcon,
+  Calendar,
 } from 'lucide-react';
-import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import ModalCategoria from '../../components/componentsAdmin/ModalCategoria.jsx';
 
 export default function AdminCategoriasView({
   categorias = [],
   onSaveCategoria,
-  onToggleEstadoCategoria,
   onEliminarCategoria,
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [categoriaAEditar, setCategoriaAEditar] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filtroEstado, setFiltroEstado] = useState('TODOS'); // 'TODOS' | 'ACTIVAS' | 'INACTIVAS'
 
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,19 +39,12 @@ export default function AdminCategoriasView({
     setModalOpen(false);
   };
 
-  // Filtrado y búsqueda reactiva (Requisito 6: sin campo descripción)
+  // Búsqueda reactiva por nombre (Categorías no tienen estado en backend)
   const filteredCategorias = useMemo(() => {
     return categorias.filter((cat) => {
-      const matchSearch = cat.nombre?.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchEstado =
-        filtroEstado === 'TODOS' ||
-        (filtroEstado === 'ACTIVAS' && cat.activa !== false) ||
-        (filtroEstado === 'INACTIVAS' && cat.activa === false);
-
-      return matchSearch && matchEstado;
+      return cat.nombre?.toLowerCase().includes(searchTerm.toLowerCase());
     });
-  }, [categorias, searchTerm, filtroEstado]);
+  }, [categorias, searchTerm]);
 
   const totalItems = filteredCategorias.length;
   const paginatedCategorias = useMemo(() => {
@@ -63,78 +54,65 @@ export default function AdminCategoriasView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      
-    
+      {/* Encabezado */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <Tag className="w-5 h-5 text-primary" strokeWidth={1.75} />
-            <span>Administración de Categorías de Eventos</span>
+            <Tag className="w-5 h-5 text-amber-500" strokeWidth={2} />
+            <span>Catálogo de Categorías</span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Catálogo temático para clasificar y destacar eventos en la plataforma
+            Clasificación temática oficial de eventos culturales y de entretenimiento
           </p>
         </div>
 
         <button
           type="button"
           onClick={handleOpenCreate}
-          className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition-all active:scale-95 flex items-center gap-2 w-fit"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold shadow-sm transition-all active:scale-95 cursor-pointer w-fit"
         >
-          <Plus className="w-4 h-4" strokeWidth={2} />
+          <Plus className="w-4 h-4 text-amber-400" strokeWidth={2.5} />
           <span>Nueva Categoría</span>
         </button>
       </div>
 
-      {/* Barra de Filtros y Búsqueda */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
-        <div className="relative w-full md:w-96">
+      {/* Barra de Búsqueda */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="relative w-full sm:max-w-md">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" strokeWidth={1.75} />
           <input
             type="text"
-            placeholder="Buscar por nombre de categoría..."
+            placeholder="Buscar categoría por nombre..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-slate-900 placeholder:text-slate-400"
           />
         </div>
 
-        <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
-          <select
-            value={filtroEstado}
-            onChange={(e) => {
-              setFiltroEstado(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="py-2.5 px-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
-          >
-            <option value="TODOS">Todos los Estados</option>
-            <option value="ACTIVAS">Solo Activas</option>
-            <option value="INACTIVAS">Solo Inactivas</option>
-          </select>
+        <div className="text-xs font-semibold text-slate-500 self-end sm:self-center">
+          Total: <span className="text-slate-900 font-bold">{filteredCategorias.length}</span> categorías
         </div>
       </div>
 
-      {/* TABLA DE GESTIÓN DE CATEGORÍAS  */}
+      {/* TABLA DE GESTIÓN DE CATEGORÍAS */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                <th className="py-3.5 px-4">Fotografía</th>
+              <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                <th className="py-3.5 px-4 w-20">Foto</th>
                 <th className="py-3.5 px-4">Nombre de la Categoría</th>
                 <th className="py-3.5 px-4 text-center">Eventos Vinculados</th>
-                <th className="py-3.5 px-4 text-center">Estado</th>
                 <th className="py-3.5 px-4 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
               {paginatedCategorias.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-400">
+                  <td colSpan={4} className="py-12 text-center text-slate-400">
                     No se encontraron categorías coincidentes.
                   </td>
                 </tr>
@@ -146,11 +124,11 @@ export default function AdminCategoriasView({
                   return (
                     <tr
                       key={cat.id}
-                      className="hover:bg-slate-50/60 transition-colors"
+                      className="hover:bg-slate-50/70 transition-colors"
                     >
                       {/* Fotografía entregada por backend */}
                       <td className="py-3.5 px-4">
-                        <div className="w-14 h-12 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-800 border border-slate-200 shrink-0 relative flex items-center justify-center">
+                        <div className="w-14 h-12 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 relative flex items-center justify-center">
                           {imageUrl ? (
                             <img
                               src={imageUrl}
@@ -161,7 +139,7 @@ export default function AdminCategoriasView({
                               }}
                             />
                           ) : (
-                            <div className="w-full h-full bg-slate-200 dark:bg-slate-800" />
+                            <ImageIcon className="w-5 h-5 text-slate-300" />
                           )}
                         </div>
                       </td>
@@ -171,23 +149,17 @@ export default function AdminCategoriasView({
                         <span className="font-bold text-slate-900 text-sm block">
                           {cat.nombre}
                         </span>
+                        <span className="text-[11px] text-slate-400 font-mono">
+                          ID: #{cat.id}
+                        </span>
                       </td>
 
                       {/* Eventos Vinculados */}
                       <td className="py-3.5 px-4 text-center">
-                        <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-xs">
-                          {cat.totalEventos ?? cat.eventosAsociados ?? 0}
+                        <span className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-bold text-xs">
+                          <Calendar size={12} className="text-slate-400" />
+                          <span>{cat.totalEventos ?? cat.eventosAsociados ?? 0}</span>
                         </span>
-                      </td>
-
-                      {/* Estado */}
-                      <td className="py-3.5 px-4 text-center">
-                        <Badge
-                          variant={cat.activa !== false ? 'success' : 'neutral'}
-                          size="xs"
-                        >
-                          {cat.activa !== false ? 'Activa' : 'Inactiva'}
-                        </Badge>
                       </td>
 
                       {/* Acciones */}
@@ -196,7 +168,7 @@ export default function AdminCategoriasView({
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(cat)}
-                            className="p-2 rounded-xl text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors"
+                            className="p-2 rounded-xl text-slate-600 hover:text-amber-600 hover:bg-amber-50 border border-transparent hover:border-amber-200 transition-colors cursor-pointer"
                             title="Editar Categoría"
                           >
                             <Edit className="w-4 h-4" strokeWidth={1.75} />
@@ -205,7 +177,7 @@ export default function AdminCategoriasView({
                           <button
                             type="button"
                             onClick={() => onEliminarCategoria(cat.id)}
-                            className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-colors"
+                            className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-colors cursor-pointer"
                             title={tieneEventos ? 'Desactivación sugerida (tiene eventos asociados)' : 'Eliminar categoría'}
                           >
                             <Trash2 className="w-4 h-4" strokeWidth={1.75} />
@@ -234,7 +206,6 @@ export default function AdminCategoriasView({
         />
       </div>
 
-    
       {modalOpen && (
         <ModalCategoria
           categoria={categoriaAEditar}

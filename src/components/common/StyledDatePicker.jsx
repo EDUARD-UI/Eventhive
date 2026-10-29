@@ -14,6 +14,7 @@ const WEEKDAYS = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'];
  * - Elimina el popover genérico del navegador.
  * - Incluye selector de mes/año, días del mes, selección rápida de "Hoy" y "Limpiar".
  * - Totalmente adaptado a modo claro y modo oscuro.
+ * - Soporte para scroll aislado nativo sin interferir con el scroll general de la página.
  */
 export default function StyledDatePicker({
   id,
@@ -143,7 +144,7 @@ export default function StyledDatePicker({
   })();
 
   return (
-    <div className={`${inlineLabel ? '' : 'space-y-1.5'} relative ${isOpen ? 'z-50' : 'z-10'} ${className}`} ref={containerRef}>
+    <div className={`${inlineLabel ? '' : 'space-y-1.5'} relative ${isOpen ? 'z-50' : 'z-20'} ${className}`} ref={containerRef}>
       {label && !inlineLabel && (
         <label
           htmlFor={id || name}
@@ -247,7 +248,9 @@ export default function StyledDatePicker({
       {/* Calendario Flotante Personalizado */}
       {isOpen && (
         <div
-          className={`absolute left-0 mt-2 z-[100] w-72 sm:w-80 rounded-2xl border p-4 shadow-2xl backdrop-blur-md transition-all animate-fade-in-up ${
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className={`absolute left-0 mt-2 z-[100] w-72 sm:w-80 rounded-2xl border p-4 shadow-2xl backdrop-blur-md transition-all animate-fade-in-up overscroll-contain ${
             isDark
               ? 'bg-[#0B1428] border-slate-700/80 text-white shadow-[0_12px_40px_rgba(0,0,0,0.7)]'
               : 'bg-white border-slate-200 text-slate-900 shadow-[0_12px_35px_rgba(15,23,42,0.15)]'

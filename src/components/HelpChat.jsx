@@ -98,54 +98,53 @@ export default function HelpChat({
   const handleToggle = () => {
     if (isOpen) {
       setInternalOpen(false);
-      if (controlledOnClose) controlledOnClose();
+      controlledOnClose?.();
     } else {
       setInternalOpen(true);
-      if (controlledOnOpen) controlledOnOpen();
+      controlledOnOpen?.();
     }
   };
 
   const handleClose = () => {
     setInternalOpen(false);
-    if (controlledOnClose) controlledOnClose();
+    controlledOnClose?.();
   };
 
-  const pushBotMessage = (payload) => {
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now() + Math.random(), from: "bot", ...payload },
-    ]);
-  };
-
-  // Envío de mensajes conectado al backend de Spring Boot + Groq
-  const pushUserMessage = async (text) => {
-    if (!text.trim()) return;
-
-    setMessages((prev) => [...prev, { id: Date.now(), from: "user", text }]);
+  const pushUserMessage = (text) => {
+    const userMsg = { id: Date.now(), from: "user", text };
+    setMessages((prev) => [...prev, userMsg]);
     setDraft("");
-    setIsTyping(true);
+    sendMessageToBackend(text);
+  };
 
+  const pushBotMessage = ({ text, events = [] }) => {
+    const botMsg = { id: Date.now() + 1, from: "bot", text, events };
+    setMessages((prev) => [...prev, botMsg]);
+  };
+
+  const sendMessageToBackend = async (text) => {
+    setIsTyping(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/chatbot/mensaje`, {
+      const response = await fetch(`${API_BASE_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mensaje: text,
+          message: text,
+          language: language || "es",
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`Error en servidor: ${response.status}`);
+        throw new Error(`Chat error HTTP ${response.status}`);
       }
 
       const data = await response.json();
-      const botReply =
-        data?.data?.respuesta ||
-        data?.mensaje ||
-        "¡Hola! ¿En qué más puedo orientarte sobre EventHive?";
-
       setIsTyping(false);
-      pushBotMessage({ text: botReply });
+
+      pushBotMessage({
+        text: data.reply || data.response || "No pude entender tu solicitud, ¿puedes reformularla?",
+        events: Array.isArray(data.events) ? data.events : [],
+      });
     } catch (err) {
       console.warn("Fallo endpoint del chatbot, usando respuesta de contingencia:", err);
       setIsTyping(false);
@@ -171,7 +170,6 @@ export default function HelpChat({
     }
   };
 
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!draft.trim()) return;
@@ -189,6 +187,8 @@ export default function HelpChat({
       {isOpen && (
         <aside
           aria-label="Ventana de chat de ayuda EventHive"
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
           className="fixed z-[9999] left-4 sm:left-auto sm:right-6 bottom-20 sm:bottom-24 w-[calc(100vw-2rem)] max-w-[360px] sm:max-w-[375px] h-[520px] max-h-[65vh] flex flex-col rounded-[28px] overflow-hidden shadow-2xl ring-1 ring-black/10 border border-slate-200/90 dark:border-white/10 bg-white dark:bg-[#0B132B] transition-all animate-fade-in"
           style={{
             boxShadow: "0 20px 40px -15px rgba(11, 19, 43, 0.35), 0 0 1px 1px rgba(0,0,0,0.06)",
@@ -230,10 +230,12 @@ export default function HelpChat({
             </button>
           </div>
 
-          {/* Cuerpo de Mensajes */}
+          {/* Cuerpo de Mensajes con prevención de scroll global */}
           <div
             ref={scrollRef}
-            className={`flex-1 p-4 overflow-y-auto space-y-3.5 text-sm transition-colors ${
+            data-lenis-prevent="true"
+            onWheel={(e) => e.stopPropagation()}
+            className={`flex-1 p-4 overflow-y-auto overscroll-contain space-y-3.5 text-sm transition-colors ${
               isDark ? "bg-[#0A1024]" : "bg-slate-50/80"
             }`}
           >
@@ -307,7 +309,6 @@ export default function HelpChat({
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce [animation-delay:0.4s]" />
               </div>
             )}
-
           </div>
 
           {/* Barra Inferior con Input */}

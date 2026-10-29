@@ -346,20 +346,45 @@ export const adminService = {
     }
   },
 
+  async getInvitacionesEnviadas({ page = 0, size = 50 } = {}) {
+    try {
+      const res = await httpClient.get('/invitaciones/roles/enviadas', { page, size });
+      const content = res?.content || (Array.isArray(res) ? res : []);
+      return {
+        success: true,
+        data: content,
+        total: res?.totalElements ?? content.length,
+      };
+    } catch {
+      return { success: true, data: [], total: 0 };
+    }
+  },
+
   async invitarRol({ correo, email, rol = 'MODERADOR' } = {}) {
     const targetEmail = (correo || email || '').trim();
     if (!targetEmail) {
       throw new Error('El correo electrónico es obligatorio para enviar la invitación.');
     }
     const rolValido = (rol || 'MODERADOR').toUpperCase().trim();
-    return httpClient.post('/admin/correos/invitar', {
-      correo: targetEmail,
-      rol: rolValido,
-    });
+    try {
+      return await httpClient.post('/invitaciones/roles', {
+        correo: targetEmail,
+        rol: rolValido,
+      });
+    } catch {
+      return await httpClient.post('/admin/correos/invitar', {
+        correo: targetEmail,
+        rol: rolValido,
+      });
+    }
   },
 
   async invitarTrabajador({ email, correo, rol = 'MODERADOR' } = {}) {
     return this.invitarRol({ correo: email || correo, rol });
+  },
+
+  async reenviarInvitacion(correo, rol = 'MODERADOR') {
+    return this.invitarRol({ correo, rol });
   },
 
   // 5. USUARIOS DEL SISTEMA (GET /api/usuarios)

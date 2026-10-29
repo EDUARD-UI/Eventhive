@@ -1,3 +1,4 @@
+import moderationService from '../../services/moderationService.js';
 import React, { useState, useEffect } from 'react';
 import {
   FiArrowLeft,
@@ -43,18 +44,30 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [historial, setHistorial] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
-    organizerService.getEventoDetalle(eventId)
+    const p1 = organizerService.getEventoDetalle(eventId)
       .then((data) => {
         if (isMounted && data) setEvent(data);
       })
-      .catch((err) => console.error('Error cargando detalle:', err))
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
+      .catch((err) => console.error('Error cargando detalle:', err));
+
+    const p2 = moderationService.getHistorialModeracion(eventId, { page: 0, size: 20 })
+      .then((res) => {
+        if (isMounted) {
+          const items = Array.isArray(res) ? res : res?.content || [];
+          setHistorial(items);
+        }
+      })
+      .catch(() => {});
+
+    Promise.allSettled([p1, p2]).finally(() => {
+      if (isMounted) setLoading(false);
+    });
+
     return () => { isMounted = false; };
   }, [eventId]);
 
@@ -131,7 +144,7 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
 
   const estado = event.estado || 'BORRADOR';
   const canEdit = ['BORRADOR', 'EN_CORRECCION'].includes(estado);
-  const canSendReview = estado === 'BORRADOR';
+  const canSendReview = ['BORRADOR', 'EN_CORRECCION'].includes(estado);
   const canCancel = ['PUBLICADO', 'BORRADOR', 'PENDIENTE_REVISION'].includes(estado);
   const canReopen = ['CANCELADO', 'RECHAZADO'].includes(estado);
   const canWithdraw = estado === 'PENDIENTE_REVISION';
@@ -277,6 +290,71 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
 
           {/* Barra de Acciones Disponibles - Oculta si el evento está FINALIZADO */}
           {estado !== 'FINALIZADO' && (
+            <>
+              {/* Advertencia si la organización no está aprobada */}
+            {!orgApproved && (
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 flex items-start gap-3">
+                <FiAlertCircle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                <div className="text-xs">
+                  <p className="font-bold">Organización pendiente de verificación</p>
+                  <p className="mt-0.5 text-amber-800">
+                    Tu organización debe estar verificada y aprobada por la administración antes de enviar eventos a revisión. Sube tu RUT en el panel principal.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Historial de Moderación del Evento */}
+            {historial.length > 0 && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+                <div className="flex items-center gap-2 text-slate-900 font-bold text-sm border-b border-slate-100 pb-2.5">
+                  <FiLayers className="text-amber-500" size={16} />
+                  <span>Historial de Moderación</span>
+                </div>
+
+                <div className="space-y-2.5">
+                  {historial.map((item, idx) => {
+                    const isRechazo = item.accion === 'RECHAZADO' || item.estadoResultante === 'RECHAZADO';
+                    const isCorreccion = item.accion === 'CORRECCION_SOLICITADA' || item.estadoResultante === 'EN_CORRECCION';
+
+                    return (
+                      <div
+                        key={item.id || idx}
+                        className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
+                          isCorreccion
+                            ? 'bg-amber-50/70 border-amber-200 text-amber-950'
+                            : isRechazo
+                            ? 'bg-rose-50/70 border-rose-200 text-rose-950'
+                            : 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="font-extrabold uppercase text-[10px] px-2 py-0.5 rounded-md bg-white border border-slate-200 shadow-2xs">
+                            {item.accion || item.estadoResultante || 'REVISIÓN'}
+                          </span>
+                          <span className="text-[11px] text-slate-500 font-medium">
+                            {item.fecha ? new Date(item.fecha).toLocaleString('es-CO') : 'Reciente'}
+                          </span>
+                        </div>
+
+                        {item.motivo && (
+                          <p className="font-bold text-[11px]">
+                            Motivo: <span className="font-semibold text-slate-700">{item.motivo.replace(/_/g, ' ')}</span>
+                          </p>
+                        )}
+
+                        {item.observacion && (
+                          <p className="bg-white/90 p-2.5 rounded-lg border border-slate-200/60 text-slate-800 font-medium italic">
+                            "{item.observacion}"
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm space-y-3">
               <h4 className="font-display text-sm font-bold text-slate-900 border-b border-slate-100 pb-2.5">
                 Acciones de Gestión
@@ -297,9 +375,20 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
                 {canSendReview && (
                   <button
                     type="button"
-                    onClick={() => handleAction(() => organizerService.enviarRevision(event.id))}
-                    disabled={actionLoading}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
+                    onClick={() => {
+                      if (!orgApproved) {
+                        Swal.fire({
+                          icon: 'warning',
+                          title: 'Organización no verificada',
+                          text: 'Tu organización debe estar aprobada por un administrador antes de enviar eventos a moderación.',
+                        });
+                        return;
+                      }
+                      handleAction(() => organizerService.enviarRevision(event.id), 'Evento enviado a revisión');
+                    }}
+                    disabled={actionLoading || !orgApproved}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:bg-slate-200 text-slate-950 disabled:text-slate-400 text-xs font-black transition-colors disabled:opacity-60 cursor-pointer shadow-xs"
+                    title={!orgApproved ? 'Requiere aprobación de organización' : 'Enviar a moderación'}
                   >
                     <FiSend size={14} /> Enviar a revisión
                   </button>
@@ -343,6 +432,7 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
                 )}
               </div>
             </div>
+            </>
           )}
         </div>
       </div>

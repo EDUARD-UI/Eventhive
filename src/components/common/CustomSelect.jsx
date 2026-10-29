@@ -6,6 +6,7 @@ import { FiChevronDown, FiCheck } from 'react-icons/fi';
  * Componente desplegable estilizado que hace juego idéntico con el botón sin desplegar:
  * - Mismo fondo, bordes, sombras y tipografía.
  * - Despliegue con transiciones suaves, indicador de opción activa y cierre al hacer clic fuera.
+ * - Soporte para scroll aislado nativo sin interferir con el scroll general de la página.
  */
 export default function CustomSelect({
   value,
@@ -41,11 +42,13 @@ export default function CustomSelect({
   };
 
   const isDark = variant === 'dark';
-
   const isInlinePill = Boolean(inlineLabel || Icon);
 
   return (
-    <div ref={containerRef} className={`relative select-none ${isOpen ? 'z-50' : 'z-10'} ${className}`}>
+    <div
+      ref={containerRef}
+      className={`relative select-none ${isOpen ? 'z-50' : 'z-20'} ${className}`}
+    >
       {/* Botón cerrado */}
       {isInlinePill ? (
         <button
@@ -111,11 +114,13 @@ export default function CustomSelect({
         </button>
       )}
 
-      {/* Menú desplegado con exactamente el mismo estilo */}
+      {/* Menú desplegado con prevención de scroll global */}
       {isOpen && (
         <ul
           role="listbox"
-          className={`absolute left-0 right-0 mt-1.5 max-h-60 overflow-y-auto rounded-xl p-1.5 z-[100] shadow-2xl transition-all duration-200 ${
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className={`absolute left-0 right-0 mt-1.5 max-h-60 overflow-y-auto overscroll-contain rounded-xl p-1.5 z-[100] shadow-2xl transition-all duration-200 ${
             isDark
               ? 'bg-[#0D182E] border border-slate-700 text-white shadow-[0_10px_30px_rgba(0,0,0,0.6)]'
               : 'bg-white dark:bg-[#0B1428] border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)]'

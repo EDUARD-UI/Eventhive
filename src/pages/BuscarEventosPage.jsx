@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { FiSearch, FiX, FiCalendar, FiSliders, FiGrid } from 'react-icons/fi';
+import { useSearchParams, Link } from 'react-router-dom';
+import { FiSearch, FiX, FiCalendar, FiGrid, FiArrowUpRight } from 'react-icons/fi';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import HiveBeeLoader from '../components/common/HiveBeeLoader.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
@@ -8,63 +8,37 @@ import EventListCard from '../components/common/EventListCard.jsx';
 import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
 import Pagination from '../components/Shared/Pagination.jsx';
 import CustomSelect from '../components/common/CustomSelect.jsx';
-import { searchEvents, getEvents, getFeaturedEvents } from '../services/eventService.js';
+import { searchEvents, getEvents } from '../services/eventService.js';
 import { getCategoryNames, getFeaturedCategories } from '../services/categoryService.js';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 import StyledDatePicker from '../components/common/StyledDatePicker.jsx';
 import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
-import FeaturedEventCountdownBanner from '../components/common/FeaturedEventCountdownBanner.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useLenisScroll } from '../hooks/useLenisScroll.js';
 
-const SORT_OPTIONS = [
-  { label: 'Fecha más próxima', value: 'fecha,asc' },
-  { label: 'Fecha más lejana', value: 'fecha,desc' },
-  { label: 'Título (A - Z)', value: 'titulo,asc' },
-  { label: 'Título (Z - A)', value: 'titulo,desc' },
-];
-
-const MASONRY_ASPECTS = [
-  'standard',
-  'tall',
-  'wide',
-  'standard',
-  'tall',
-  'wide',
-];
+const PAGE_SIZE = 12;
 
 export default function BuscarEventosPage() {
   useLenisScroll();
   const { isDark } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Columnas dinámicas estilo Pinterest y tamaño de página orgánico
+  // Columnas dinámicas para que las tarjetas encajen orgánicamente sin dejar huecos vacíos
   const [colCount, setColCount] = useState(() => {
-    if (typeof window === 'undefined') return 5;
+    if (typeof window === 'undefined') return 4;
     const w = window.innerWidth;
-    if (w >= 1280) return 5;
     if (w >= 1024) return 4;
     if (w >= 768) return 3;
     if (w >= 640) return 2;
     return 1;
   });
 
-  const [pageSize, setPageSize] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const w = window.innerWidth;
-      return w >= 1280 ? 15 : w >= 1024 ? 12 : 8;
-    }
-    return 15;
-  });
-
   useEffect(() => {
     const handleResize = () => {
       const w = window.innerWidth;
-      const nextCols = w >= 1280 ? 5 : w >= 1024 ? 4 : w >= 768 ? 3 : w >= 640 ? 2 : 1;
+      const nextCols = w >= 1024 ? 4 : w >= 768 ? 3 : w >= 640 ? 2 : 1;
       setColCount((prev) => (prev !== nextCols ? nextCols : prev));
-      const nextSize = w >= 1280 ? 15 : w >= 1024 ? 12 : 8;
-      setPageSize((prev) => (prev !== nextSize ? nextSize : prev));
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -73,7 +47,6 @@ export default function BuscarEventosPage() {
   const tituloParam = searchParams.get('titulo') || '';
   const fechaParam = searchParams.get('fecha') || '';
   const categoriaIdParam = searchParams.get('categoriaId') || '';
-  const sortParam = searchParams.get('sort') || 'fecha,asc';
   const pageParam = Math.max(0, parseInt(searchParams.get('page') || '0', 10));
 
   const [events, setEvents] = useState([]);
@@ -81,8 +54,7 @@ export default function BuscarEventosPage() {
   const [initialScreenLoading, setInitialScreenLoading] = useState(true);
   const [categoryList, setCategoryList] = useState([]);
   const [featuredCategories, setFeaturedCategories] = useState([]);
-  const [featuredEvents, setFeaturedEvents] = useState([]);
-  const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [searchInput, setSearchInput] = useState(tituloParam);
@@ -91,20 +63,19 @@ export default function BuscarEventosPage() {
     if (!loading) {
       const timer = setTimeout(() => {
         setInitialScreenLoading(false);
-      }, 550);
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [loading]);
 
-
-  // Cargar categorías disponibles y eventos destacados para el temporizador
+  // Cargar categorías disponibles y categorías destacadas desde el backend
   useEffect(() => {
     let isMounted = true;
+    setLoadingCategories(true);
     Promise.allSettled([
       getCategoryNames(),
       getFeaturedCategories(),
-      getFeaturedEvents({ page: 0, size: 20 }),
-    ]).then(([namesRes, featRes, featEventsRes]) => {
+    ]).then(([namesRes, featRes]) => {
       if (!isMounted) return;
       if (namesRes.status === 'fulfilled' && Array.isArray(namesRes.value)) {
         setCategoryList(namesRes.value);
@@ -112,10 +83,7 @@ export default function BuscarEventosPage() {
       if (featRes.status === 'fulfilled' && Array.isArray(featRes.value)) {
         setFeaturedCategories(featRes.value);
       }
-      if (featEventsRes.status === 'fulfilled' && Array.isArray(featEventsRes.value)) {
-        setFeaturedEvents(featEventsRes.value);
-      }
-      setLoadingFeatured(false);
+      setLoadingCategories(false);
     });
 
     return () => {
@@ -123,72 +91,12 @@ export default function BuscarEventosPage() {
     };
   }, []);
 
-  // Evento destacado más próximo a la fecha actual (con respaldo en eventos generales)
-  const closestFeaturedEvent = useMemo(() => {
-    const list = featuredEvents.length > 0 ? featuredEvents : events;
-    if (!list || list.length === 0) return null;
-    const now = Date.now();
-
-    const getSafeEventTime = (ev) => {
-      if (!ev) return 0;
-      if (ev.startsAt) {
-        const t = new Date(ev.startsAt).getTime();
-        if (!Number.isNaN(t)) return t;
-      }
-      if (ev.fechaInicio) {
-        const t = new Date(ev.fechaInicio).getTime();
-        if (!Number.isNaN(t)) return t;
-      }
-      if (ev.fecha) {
-        const dateStr = String(ev.fecha).split('T')[0];
-        const parts = dateStr.split('-');
-        if (parts.length === 3) {
-          const year = parseInt(parts[0], 10);
-          const month = parseInt(parts[1], 10) - 1;
-          const day = parseInt(parts[2], 10);
-          let hours = 0;
-          let minutes = 0;
-          if (ev.hora) {
-            const rawHora = String(ev.hora).trim();
-            const isPM = /pm/i.test(rawHora);
-            const isAM = /am/i.test(rawHora);
-            const digits = rawHora.replace(/[^0-9:]/g, '');
-            const timeParts = digits.split(':');
-            hours = parseInt(timeParts[0] || '0', 10);
-            minutes = parseInt(timeParts[1] || '0', 10);
-            if (isPM && hours < 12) hours += 12;
-            if (isAM && hours === 12) hours = 0;
-          }
-          const t = new Date(year, month, day, hours, minutes).getTime();
-          if (!Number.isNaN(t)) return t;
-        }
-      }
-      return 0;
-    };
-
-    const sorted = [...list].sort((a, b) => {
-      const timeA = getSafeEventTime(a);
-      const timeB = getSafeEventTime(b);
-
-      const diffA = timeA - now;
-      const diffB = timeB - now;
-
-      // Priorizar eventos futuros más próximos a la fecha actual
-      if (diffA >= 0 && diffB >= 0) return diffA - diffB;
-      if (diffA >= 0) return -1;
-      if (diffB >= 0) return 1;
-      return Math.abs(diffA) - Math.abs(diffB);
-    });
-
-    return sorted[0] || list[0] || null;
-  }, [featuredEvents, events]);
-
   // Sincronizar input con URL
   useEffect(() => {
     setSearchInput(tituloParam);
   }, [tituloParam]);
 
-  // Cargar eventos según filtros
+  // Cargar eventos con exactamente 12 eventos por página (size=12)
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -199,14 +107,13 @@ export default function BuscarEventosPage() {
         const hasDate = Boolean(fechaParam.trim());
         const hasCategory = Boolean(categoriaIdParam);
 
-        // Caso 1: Búsqueda por título textual
+        // Caso 1: Búsqueda por término textual
         if (hasTitle) {
-          const size = (hasDate || hasCategory) ? 60 : pageSize;
+          const fetchSize = (hasDate || hasCategory) ? 60 : PAGE_SIZE;
           const result = await searchEvents({
             titulo: tituloParam.trim(),
             page: (hasDate || hasCategory) ? 0 : pageParam,
-            size,
-            sort: sortParam,
+            size: fetchSize,
           });
 
           let filtered = result.events || [];
@@ -226,12 +133,12 @@ export default function BuscarEventosPage() {
           }
 
           if (hasDate || hasCategory) {
-            const start = pageParam * pageSize;
-            const paginated = filtered.slice(start, start + pageSize);
+            const start = pageParam * PAGE_SIZE;
+            const paginated = filtered.slice(start, start + PAGE_SIZE);
             return {
               events: paginated,
               total: filtered.length,
-              totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
+              totalPages: Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)),
               currentPage: pageParam,
             };
           }
@@ -239,13 +146,12 @@ export default function BuscarEventosPage() {
           return result;
         }
 
-        // Caso 2: Sin término textual -> consulta nativa al backend con el tamaño dinámico
+        // Caso 2: Sin término textual -> consulta paginada al backend con size: 12
         return await getEvents({
           categoriaId: hasCategory ? Number(categoriaIdParam) : undefined,
           fecha: hasDate ? fechaParam.trim() : undefined,
           page: pageParam,
-          size: pageSize,
-          sort: sortParam,
+          size: PAGE_SIZE,
         });
       } catch (err) {
         console.warn('Error al cargar eventos:', err?.message);
@@ -267,13 +173,13 @@ export default function BuscarEventosPage() {
     return () => {
       isMounted = false;
     };
-  }, [tituloParam, fechaParam, categoriaIdParam, sortParam, pageParam, pageSize]);
+  }, [tituloParam, fechaParam, categoriaIdParam, pageParam]);
 
   const handlePageChange = (newPage) => {
     const next = new URLSearchParams(searchParams);
     next.set('page', String(newPage));
     setSearchParams(next);
-    window.scrollTo({ top: 220, behavior: 'smooth' });
+    window.scrollTo({ top: 180, behavior: 'smooth' });
   };
 
   const handleCategoryChange = (e) => {
@@ -300,20 +206,8 @@ export default function BuscarEventosPage() {
     setSearchParams(next);
   };
 
-  const handleSortChange = (e) => {
-    const val = e.target.value;
-    const next = new URLSearchParams(searchParams);
-    next.delete('page');
-    if (val) {
-      next.set('sort', val);
-    } else {
-      next.delete('sort');
-    }
-    setSearchParams(next);
-  };
-
   const handleSearchSubmit = (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const next = new URLSearchParams(searchParams);
     next.delete('page');
     if (searchInput.trim()) {
@@ -329,30 +223,15 @@ export default function BuscarEventosPage() {
     setSearchParams({});
   };
 
-  // Toggle rápido de categorías chips
-  const handleQuickCategoryToggle = (catId) => {
-    const next = new URLSearchParams(searchParams);
-    next.delete('page');
-    if (String(categoriaIdParam) === String(catId)) {
-      next.delete('categoriaId');
-    } else {
-      next.set('categoriaId', String(catId));
-    }
-    setSearchParams(next);
-  };
-
   const categorySelectOptions = useMemo(() => [
-    { label: 'Eventos (Todas las categorías)', value: '' },
+    { label: 'Todas las categorías', value: '' },
     ...categoryList.map((cat) => ({ label: cat.nombre, value: String(cat.id) })),
   ], [categoryList]);
-  
 
-  const hasActiveFilters = Boolean(
-    tituloParam || fechaParam || categoriaIdParam || (sortParam && sortParam !== 'fecha,asc')
-  );
+  const hasActiveFilters = Boolean(tituloParam || fechaParam || categoriaIdParam);
   const activeCategory = categoryList.find((c) => String(c.id) === String(categoriaIdParam));
 
-  // Distribución en columnas para Grid estilo Pinterest (Masonry)
+  // Distribución en columnas orgánicas: permite que la primera card sea alta y que las demás encajen perfectamente sin dejar huecos
   const masonryColumns = useMemo(() => {
     const cols = Array.from({ length: colCount }, () => []);
     events.forEach((ev, idx) => {
@@ -363,11 +242,11 @@ export default function BuscarEventosPage() {
 
   const skeletonColumns = useMemo(() => {
     const cols = Array.from({ length: colCount }, () => []);
-    Array.from({ length: pageSize }).forEach((_, idx) => {
+    Array.from({ length: PAGE_SIZE }).forEach((_, idx) => {
       cols[idx % colCount].push(idx);
     });
     return cols;
-  }, [pageSize, colCount]);
+  }, [colCount]);
 
   if (initialScreenLoading) {
     return (
@@ -380,45 +259,34 @@ export default function BuscarEventosPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 dark:bg-[#0B0F19] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body relative transition-colors duration-200">
+    <div className="w-full min-h-screen bg-slate-50 dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body relative transition-colors duration-200">
       {/* Fondo interactivo de puntitos */}
       <FloatingDotsBackground />
 
-      {/* Navbar idéntico */}
+      {/* Navbar de EventHive */}
       <Navbar />
 
-      <main className="flex-1 max-w-[1900px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-4 sm:py-6 relative z-10">
-        {/* Encabezado con tarjeta de búsqueda ancha y filtros integrados justo debajo del buscador */}
-        <header className="relative z-30 mb-4 sm:mb-6 rounded-3xl border border-slate-200/80 bg-white/85 px-5 py-6 sm:px-8 sm:py-7 text-center shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-[#0B1428]/85 max-w-6xl xl:max-w-7xl mx-auto w-full transition-colors duration-200">
-          {/* Contenedor con overflow-hidden exclusivo para el resplandor de fondo para no cortar los desplegables */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl"
+      <main className="flex-1 max-w-[1550px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 relative z-10">
+        {/* BARRA DE FILTROS FLOTANTE CON SEARCH ALARGADO Y Z-INDEX ELEVADO */}
+        {/* 1) Search (Alargado) -> 2) Categorías -> 3) Fecha (Cuándo) -> Botón "Buscar eventos" */}
+        <section aria-label="Buscador y filtros" className="w-full max-w-6xl mx-auto mb-10 sm:mb-12 relative z-50">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="w-full relative z-50 rounded-2xl md:rounded-full bg-white dark:bg-[#111A2E]/95 border border-slate-200 dark:border-white/10 p-2 sm:p-2.5 shadow-lg dark:shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-center gap-2.5 md:gap-3 transition-colors"
           >
-            <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" />
-          </div>
-
-          <div className="relative flex flex-col items-center">
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-[32px] font-extrabold tracking-tight text-slate-950 dark:text-white max-w-2xl text-center leading-snug">
-              Descubre conciertos, festivales, experiencias culturales y deportivas en La Heroica.
-            </h1>
-
-            {/* Buscador dentro de la tarjeta */}
-            <form role="search" onSubmit={handleSearchSubmit} className="relative mt-5 sm:mt-6 w-full max-w-xl">
-              <label htmlFor="event-search" className="sr-only">
-                Buscar eventos por nombre
-              </label>
+            {/* 1. Buscador ALARGADO (Mayor ancho y expansión visual) */}
+            <div className="relative flex-1 w-full min-w-[280px] lg:min-w-[420px]">
+              <FiSearch
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+                size={18}
+              />
               <input
                 id="event-search"
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Buscar eventos por nombre..."
-                className="h-11 sm:h-12 w-full rounded-2xl border-2 border-slate-900 dark:border-white bg-white pl-11 pr-11 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-amber-500 dark:focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/15 dark:bg-[#0B0F19] dark:text-white dark:placeholder:text-slate-500"
-              />
-              <FiSearch
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                size={18}
+                placeholder="Buscar por evento, lugar o artista..."
+                className="h-11 sm:h-12 w-full rounded-xl md:rounded-full bg-transparent pl-11 pr-9 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
               />
               {searchInput && (
                 <button
@@ -430,155 +298,158 @@ export default function BuscarEventosPage() {
                     next.delete('page');
                     setSearchParams(next);
                   }}
-                  aria-label="Limpiar búsqueda"
-                  className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 cursor-pointer"
+                  aria-label="Limpiar término"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white cursor-pointer"
                 >
                   ✕
                 </button>
               )}
-            </form>
+            </div>
 
-            {/* Filtros Horizontales y Compactos: DENTRO de la tarjeta y justo debajo del buscador */}
-            <div className="w-full mt-5 pt-4 sm:mt-6 sm:pt-5 border-t border-slate-200/60 dark:border-slate-800/80 relative z-30">
-              <div className="flex flex-wrap xl:flex-nowrap items-center justify-center gap-2.5 sm:gap-3.5 w-full">
-                {/* 1. Selector en línea "Categoría" */}
-                <div className="w-full sm:w-[calc(50%-6px)] lg:w-auto lg:min-w-[210px] xl:min-w-[220px] lg:flex-1 relative z-30">
-                  <CustomSelect
-                    value={categoriaIdParam}
-                    onChange={handleCategoryChange}
-                    options={categorySelectOptions}
-                    placeholder="Todas las categorías"
-                    variant={isDark ? 'dark' : 'light'}
-                    inlineLabel="Categoría"
-                    icon={FiGrid}
-                  />
-                </div>
+            {/* Divisor en desktop */}
+            <div className="hidden md:block h-7 w-[1px] bg-slate-200 dark:bg-white/10 shrink-0" />
 
-                {/* 2. Selector en línea "Fecha" */}
-                <div className="w-full sm:w-[calc(50%-6px)] lg:w-auto lg:min-w-[190px] xl:min-w-[200px] lg:flex-1 relative z-30">
-                  <StyledDatePicker
-                    id="filtro-fecha"
-                    name="filtro-fecha"
-                    inlineLabel="Fecha"
-                    value={fechaParam}
-                    onChange={handleDateChange}
-                    variant={isDark ? 'dark' : 'light'}
-                    placeholder="Cualquier fecha"
-                  />
-                </div>
-                
+            {/* 2. Categorías */}
+            <div className="w-full md:w-auto md:min-w-[190px] relative z-50">
+              <CustomSelect
+                value={categoriaIdParam}
+                onChange={handleCategoryChange}
+                options={categorySelectOptions}
+                placeholder="Todas las categorías"
+                variant={isDark ? 'dark' : 'light'}
+                inlineLabel="Categoría"
+                icon={FiGrid}
+              />
+            </div>
 
-                {/* 4. Selector en línea "Ordenar Por" */}
-                <div className="w-full sm:w-[calc(50%-6px)] lg:w-auto lg:min-w-[190px] xl:min-w-[200px] lg:flex-1 relative z-20">
-                  <CustomSelect
-                    value={sortParam}
-                    onChange={handleSortChange}
-                    options={SORT_OPTIONS}
-                    placeholder="Ordenar por"
-                    variant={isDark ? 'dark' : 'light'}
-                    inlineLabel="Ordenar Por"
-                    icon={FiSliders}
-                  />
-                </div>
+            {/* Divisor en desktop */}
+            <div className="hidden md:block h-7 w-[1px] bg-slate-200 dark:bg-white/10 shrink-0" />
 
-                {/* Botón rápido Limpiar todo cuando hay filtros aplicados */}
-                {hasActiveFilters && (
+            {/* 3. Fecha (Cuándo) */}
+            <div className="w-full md:w-auto md:min-w-[180px] relative z-50">
+              <StyledDatePicker
+                id="filtro-fecha"
+                name="filtro-fecha"
+                inlineLabel="Cuándo"
+                value={fechaParam}
+                onChange={handleDateChange}
+                variant={isDark ? 'dark' : 'light'}
+                placeholder="Cualquier fecha"
+              />
+            </div>
+
+            {/* Botón Buscar eventos */}
+            <button
+              type="submit"
+              className="w-full md:w-auto h-11 sm:h-12 px-6 rounded-xl md:rounded-full bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-black text-xs sm:text-sm tracking-wide transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0"
+            >
+              <FiSearch size={16} />
+              <span>Buscar eventos</span>
+            </button>
+          </form>
+
+          {/* Chips de filtros activos si los hay */}
+          {hasActiveFilters && (
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-3 px-2">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                Filtros activos:
+              </span>
+              {activeCategory && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold">
+                  {activeCategory.nombre}
                   <button
                     type="button"
-                    onClick={handleClearFilters}
-                    className="h-[54px] px-4 rounded-2xl bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 dark:bg-slate-800/80 dark:hover:bg-rose-950/40 dark:text-slate-300 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700/80 flex items-center justify-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer shrink-0 shadow-xs active:scale-95"
-                    title="Limpiar todos los filtros"
+                    onClick={() => {
+                      const next = new URLSearchParams(searchParams);
+                      next.delete('categoriaId');
+                      next.delete('page');
+                      setSearchParams(next);
+                    }}
+                    className="hover:text-amber-900 dark:hover:text-white cursor-pointer"
                   >
-                    <FiX size={15} />
-                    <span className="hidden sm:inline">Limpiar</span>
+                    ×
                   </button>
-                )}
-              </div>
-
-              {/* Chips informativos de filtros activos */}
-              {hasActiveFilters && (
-                <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2.5 px-2">
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-1">
-                    Filtros activos:
-                  </span>
-                  {activeCategory && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[11px] font-bold">
-                      {activeCategory.nombre}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const next = new URLSearchParams(searchParams);
-                          next.delete('categoriaId');
-                          next.delete('page');
-                          setSearchParams(next);
-                        }}
-                        className="hover:text-amber-900 dark:hover:text-white cursor-pointer ml-0.5"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  )}
-                  {fechaParam && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[11px] font-bold">
-                      {fechaParam}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const next = new URLSearchParams(searchParams);
-                          next.delete('fecha');
-                          next.delete('page');
-                          setSearchParams(next);
-                        }}
-                        className="hover:text-amber-900 dark:hover:text-white cursor-pointer ml-0.5"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  )}
-                  {tituloParam && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[11px] font-bold">
-                      “{tituloParam}”
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSearchInput('');
-                          const next = new URLSearchParams(searchParams);
-                          next.delete('titulo');
-                          next.delete('page');
-                          setSearchParams(next);
-                        }}
-                        className="hover:text-amber-900 dark:hover:text-white cursor-pointer ml-0.5"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  )}
-                </div>
+                </span>
               )}
+              {fechaParam && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold">
+                  {fechaParam}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = new URLSearchParams(searchParams);
+                      next.delete('fecha');
+                      next.delete('page');
+                      setSearchParams(next);
+                    }}
+                    className="hover:text-amber-900 dark:hover:text-white cursor-pointer"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              {tituloParam && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold">
+                  “{tituloParam}”
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchInput('');
+                      const next = new URLSearchParams(searchParams);
+                      next.delete('titulo');
+                      next.delete('page');
+                      setSearchParams(next);
+                    }}
+                    className="hover:text-amber-900 dark:hover:text-white cursor-pointer"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="text-xs text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 font-bold ml-1 cursor-pointer flex items-center gap-1"
+              >
+                <FiX size={13} />
+                <span>Limpiar filtros</span>
+              </button>
             </div>
+          )}
+        </section>
+
+        {/* TÍTULO DE SELECCIÓN EDITORIAL */}
+        <section aria-label="Selección Editorial" className="w-full mb-6 sm:mb-8 relative z-0">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <span className="text-amber-500 dark:text-amber-400 font-black text-xs uppercase tracking-widest block mb-1">
+                SELECCIÓN EDITORIAL
+              </span>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-slate-950 dark:text-white">
+                Lo que está pasando
+              </h2>
+            </div>
+
+            {totalElements > 0 && (
+              <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-semibold">
+                {totalElements} {totalElements === 1 ? 'evento disponible' : 'eventos disponibles'}
+              </span>
+            )}
           </div>
-        </header>
+        </section>
 
-        {/* Contador de próximo evento destacado en formato cinemático */}
-        <div className="w-full max-w-6xl xl:max-w-7xl mx-auto my-3 sm:my-5 relative z-0">
-          <FeaturedEventCountdownBanner
-            event={closestFeaturedEvent}
-            isLoading={loadingFeatured}
-          />
-        </div>
-
-        {/* Distribución de Tarjetas Estilo Pinterest (Masonry Grid al 100% de ancho sin barra lateral) */}
-        <section aria-label="Cartelera de eventos" className="w-full">
+        {/* GRID DE EVENTOS: Las cards encajan orgánicamente sin dejar huecos vacíos */}
+        <section aria-label="Cartelera de eventos" className="w-full relative z-0">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 sm:gap-6 items-start w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6 items-start w-full">
               {skeletonColumns.map((colItems, colIdx) => (
                 <div key={colIdx} className="flex flex-col gap-5 sm:gap-6 w-full min-w-0">
                   {colItems.map((n) => (
                     <div key={n} className="w-full">
                       <EventCardSkeleton
-                        notchBg="bg-[#F8FAFC] dark:bg-[#070D1B]"
+                        featured={n === 0}
                         masonry={true}
-                        aspectVariant={MASONRY_ASPECTS[n % MASONRY_ASPECTS.length]}
+                        notchBg="bg-[#F8FAFC] dark:bg-[#070D1B]"
                       />
                     </div>
                   ))}
@@ -587,17 +458,16 @@ export default function BuscarEventosPage() {
             </div>
           ) : events.length > 0 ? (
             <>
-              {/* Cuadrícula Masonry: Adaptabilidad de alturas y densidad orgánica */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 sm:gap-6 items-start w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6 items-start w-full">
                 {masonryColumns.map((colItems, colIdx) => (
                   <div key={colIdx} className="flex flex-col gap-5 sm:gap-6 w-full min-w-0">
                     {colItems.map(({ event, index }) => (
-                      <div key={event.id} className="w-full">
+                      <div key={event.id || index} className="w-full">
                         <EventListCard
                           event={event}
+                          featured={index === 0}
                           masonry={true}
                           notchBg="bg-[#F8FAFC] dark:bg-[#070D1B]"
-                          aspectVariant={MASONRY_ASPECTS[index % MASONRY_ASPECTS.length]}
                         />
                       </div>
                     ))}
@@ -605,13 +475,13 @@ export default function BuscarEventosPage() {
                 ))}
               </div>
 
-              {/* Componente de Paginación Minimalista y Centrado (sin offset de sidebar) */}
-              {totalElements > pageSize && (
+              {/* Paginación exacta de 12 eventos por página */}
+              {totalElements > PAGE_SIZE && (
                 <div className="mt-12 w-full max-w-lg mx-auto flex justify-center">
                   <Pagination
                     currentPage={pageParam + 1}
                     totalItems={totalElements}
-                    pageSize={pageSize}
+                    pageSize={PAGE_SIZE}
                     onPageChange={(p) => handlePageChange(p - 1)}
                     minimal={true}
                   />
@@ -619,13 +489,13 @@ export default function BuscarEventosPage() {
               )}
             </>
           ) : (
-            <div className="w-full max-w-lg mx-auto flex flex-col items-center rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-12 text-center shadow-sm my-8">
+            <div className="w-full max-w-lg mx-auto flex flex-col items-center rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111A2E] p-10 text-center shadow-sm my-8">
               <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 <FiCalendar size={24} />
               </div>
-              <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-2">
+              <h3 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-2">
                 No encontramos eventos con estos criterios
-              </h2>
+              </h3>
               <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto mb-6 leading-relaxed">
                 Prueba ajustando la fecha, cambiando de categoría o restableciendo los filtros para ver toda la cartelera cultural.
               </p>
@@ -639,67 +509,86 @@ export default function BuscarEventosPage() {
             </div>
           )}
         </section>
+
+        {/* 3. SECCIÓN DE CATEGORÍAS DESTACADAS MÁS ANCHA */}
+        {(loadingCategories || featuredCategories.length > 0) && (
+          <section aria-label="Explora por interés" className="w-full mt-16 sm:mt-24 pt-10 border-t border-slate-200 dark:border-white/10">
+            <div className="flex items-end justify-between mb-6 sm:mb-8">
+              <div>
+                <span className="text-amber-500 dark:text-amber-400 font-black text-xs uppercase tracking-widest block mb-1">
+                  EXPLORA POR INTERÉS
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-950 dark:text-white">
+                  Tu ciudad, a tu manera
+                </h2>
+              </div>
+
+              <Link
+                to="/categorias"
+                className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-amber-500 hover:text-amber-400 uppercase tracking-wider transition-colors"
+              >
+                <span>Ver todas</span>
+                <FiArrowUpRight size={16} />
+              </Link>
+            </div>
+
+            {loadingCategories ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 w-full">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="rounded-2xl h-52 sm:h-60 md:h-64 bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 w-full">
+                {featuredCategories.slice(0, 4).map((cat) => {
+                  const imageUrl = cat.imagenUrl || cat.urlFoto || cat.foto || cat.imagen;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => {
+                        const next = new URLSearchParams(searchParams);
+                        next.delete('page');
+                        next.set('categoriaId', String(cat.id));
+                        setSearchParams(next);
+                        window.scrollTo({ top: 180, behavior: 'smooth' });
+                      }}
+                      className="group relative rounded-2xl h-52 sm:h-60 md:h-64 bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600 overflow-hidden flex flex-col justify-end p-4 sm:p-5 text-left transition-all duration-300 ease-out hover:-translate-y-1 shadow-md active:scale-95 cursor-pointer w-full"
+                    >
+                      {imageUrl && (
+                        <div className="absolute inset-0">
+                          <ImageWithFallback
+                            src={imageUrl}
+                            alt={cat.nombre}
+                            className="w-full h-full"
+                            imgClassName="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
+                      )}
+                      {/* Máscara inferior suave para legibilidad sin oscurecer la imagen completa */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
+
+                      <div className="relative z-10 w-full min-w-0">
+                        <h4 className="text-sm sm:text-base font-extrabold uppercase text-white truncate tracking-tight group-hover:text-amber-300 transition-colors drop-shadow-sm">
+                          {cat.nombre}
+                        </h4>
+                        <span className="text-xs text-slate-200 font-semibold block mt-1 drop-shadow-xs">
+                          {cat.totalEventos ?? 0} {(cat.totalEventos ?? 0) === 1 ? 'evento' : 'eventos'}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
       </main>
-
-      {/* 2. Sección de Categorías Destacadas (Ocupa todo el ancho de la pantalla) */}
-      {featuredCategories.length > 0 && (
-        <section className="w-full py-10 sm:py-14 px-4 sm:px-6 md:px-8 lg:px-8 xl:px-10 border-t border-slate-200/80 dark:border-transparent bg-white/70 dark:bg-transparent relative z-10 transition-colors duration-200">
-          <div className="w-full mb-6 sm:mb-8 text-center max-w-2xl mx-auto">
-            <h3 className="text-xl sm:text-2xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
-              Categorías Destacadas
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 font-normal">
-              Explora las experiencias culturales más populares en Cartagena.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-4 sm:gap-5 w-full">
-            {featuredCategories.map((cat) => {
-              const imageUrl = cat.imagenUrl || cat.urlFoto || cat.foto || cat.imagen;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => {
-                    const next = new URLSearchParams();
-                    next.set('categoriaId', String(cat.id));
-                    setSearchParams(next);
-                    window.scrollTo({ top: 120, behavior: 'smooth' });
-                  }}
-                  className="group relative rounded-2xl h-48 sm:h-56 md:h-60 bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600 overflow-hidden flex flex-col justify-end p-4 sm:p-5 text-left transition-all duration-300 ease-out hover:-translate-y-1 shadow-md active:scale-95 cursor-pointer w-full"
-                >
-                  {imageUrl && (
-                    <div className="absolute inset-0">
-                      <ImageWithFallback
-                        src={imageUrl}
-                        alt={cat.nombre}
-                        className="w-full h-full object-cover opacity-100 group-hover:scale-105 transition-transform duration-500"
-                        showText={false}
-                      />
-                    </div>
-                  )}
-                  {/* Máscara inferior suave para legibilidad sin oscurecer la imagen completa */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
-
-                  <div className="relative z-10 w-full min-w-0">
-                    <h4 className="text-sm sm:text-base font-extrabold uppercase text-white truncate tracking-tight group-hover:text-amber-300 transition-colors drop-shadow-sm">
-                      {cat.nombre}
-                    </h4>
-                    <span className="text-xs text-slate-200 font-semibold block mt-1 drop-shadow-xs">
-                      {cat.totalEventos ?? 0} {(cat.totalEventos ?? 0) === 1 ? 'evento' : 'eventos'}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       {/* Pre-Footer compartido */}
       <CityRhythmPreFooter />
 
-      {/* Footer idéntico */}
+      {/* Footer corporativo */}
       <Footer />
     </div>
   );

@@ -218,7 +218,7 @@ export default function AceptarInvitacionPage() {
                   <span className="text-slate-500 font-medium">Correo electrónico:</span>
                   <strong className="text-slate-900 font-semibold flex items-center gap-1.5">
                     <FiMail size={13} className="text-slate-400" />
-                    <span>{invitacionData?.correoInvitado || '—'}</span>
+                    <span>{invitacionData?.correo || invitacionData?.correoInvitado || '—'}</span>
                   </strong>
                 </div>
 
@@ -226,7 +226,7 @@ export default function AceptarInvitacionPage() {
                   <span className="text-slate-500 font-medium">Rol asignado:</span>
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 font-black text-[11px] border border-amber-300/80">
                     <FiShield size={11} className="text-amber-700" />
-                    {invitacionData?.rolDestino || 'COLABORADOR'}
+                    {invitacionData?.rol || invitacionData?.rolDestino || 'COLABORADOR'}
                   </span>
                 </div>
 
@@ -275,8 +275,16 @@ export default function AceptarInvitacionPage() {
                     <input
                       type="tel"
                       value={telefono}
-                      onChange={(e) => setTelefono(e.target.value)}
-                      placeholder="+57 300 123 4567"
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setTelefono(digits);
+                      }}
+                      onKeyDown={(e) => {
+                        const allowed = ['Backspace', 'Tab', 'Enter', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+                        if (allowed.includes(e.key) || e.ctrlKey || e.metaKey) return;
+                        if (!/^\d$/.test(e.key)) e.preventDefault();
+                      }}
+                      placeholder="10 dígitos numéricos (ej: 3001234567)"
                       required
                       className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                     />

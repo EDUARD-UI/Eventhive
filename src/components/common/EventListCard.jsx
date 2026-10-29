@@ -6,15 +6,17 @@ import { useLanguage } from '../../context/LanguageContext.jsx';
 
 /**
  * EventListCard
- * Card vertical estilo Boleto/Ticket:
- * - Todas las imágenes se muestran 100% completas (fit="contain") sin importar el tamaño del div.
- * - Modo oscuro y claro con colores corporativos y contraste impecable.
+ * Card estilo Boleto/Ticket:
+ * - Solo la primera card (featured={true}) es alta (aspect-[4/5]).
+ * - Las demás cards quedan exactamente como estaban antes (aspect-[16/10], compactas y sin estirarse).
+ * - En todas las cards la información queda abajo de la imagen.
  */
 export default function EventListCard({
   event,
   notchBg = 'bg-[#F8FAFC]',
   aspectVariant = 'standard',
   masonry = false,
+  featured = false,
 }) {
   const { t } = useLanguage();
 
@@ -32,30 +34,34 @@ export default function EventListCard({
     promocionado,
   } = event;
 
-  const isGolden = Boolean(promocionado);
+  const isGolden = Boolean(promocionado) || featured;
   const displayDate = shortDate || date || t('eventCard.dateTbd');
   const displayTime = formattedTime ? formatHora12(formattedTime) : (event.hora ? formatHora12(event.hora) : null);
 
-  const aspectClass =
-    aspectVariant === 'portrait'
-      ? 'aspect-[4/5]'
-      : aspectVariant === 'tall'
-      ? 'aspect-[4/3]'
-      : aspectVariant === 'wide'
-      ? 'aspect-[16/9]'
-      : aspectVariant === 'compact'
-      ? 'aspect-[2/1]'
-      : 'aspect-[16/10]';
+  // Solo la primera card (featured) es alta. Las demás quedan exactamente en su proporción estándar como estaban antes.
+  const aspectClass = featured
+    ? 'aspect-[4/5]'
+    : aspectVariant === 'portrait'
+    ? 'aspect-[4/5]'
+    : aspectVariant === 'tall'
+    ? 'aspect-[4/3]'
+    : aspectVariant === 'wide'
+    ? 'aspect-[16/9]'
+    : aspectVariant === 'compact'
+    ? 'aspect-[2/1]'
+    : 'aspect-[16/10]';
 
   return (
     <article
-      className={`group relative ${
-        masonry ? 'h-auto break-inside-avoid' : 'h-full'
-      } rounded-3xl transition-all duration-300 ease-out flex flex-col justify-between overflow-hidden bg-white dark:bg-[#151D2F] border border-slate-200/90 dark:border-white/[0.07] hover:border-slate-400/80 hover:dark:bg-slate-800 hover:dark:border-white/15 shadow-sm hover:shadow-md hover:-translate-y-1`}
+      className={`group relative h-auto rounded-3xl transition-all duration-300 ease-out flex flex-col justify-between overflow-hidden bg-white dark:bg-[#151D2F] border ${
+        featured
+          ? 'border-amber-500/40 dark:border-amber-400/40 shadow-md ring-1 ring-amber-500/10'
+          : 'border-slate-200/90 dark:border-white/[0.07]'
+      } hover:border-slate-400/80 hover:dark:bg-slate-800 hover:dark:border-white/15 shadow-sm hover:shadow-md hover:-translate-y-1`}
     >
-      {/* SECCIÓN SUPERIOR: Portada + Título */}
+      {/* SECCIÓN SUPERIOR: Portada (alta solo si es featured) + Título */}
       <div className="relative z-10">
-        {/* Imagen del evento: Siempre completa sin importar el tamaño del div */}
+        {/* Imagen del evento */}
         <div
           className={`relative ${aspectClass} overflow-hidden rounded-2xl m-3.5 mb-2.5 bg-slate-900 border border-slate-100 dark:border-white/10 shadow-xs`}
         >
@@ -66,10 +72,10 @@ export default function EventListCard({
               className="w-full h-full"
               imgClassName="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
               fallbackText={category || t('eventCard.defaultCategory')}
-              iconSize={24}
+              iconSize={featured ? 28 : 24}
             />
 
-            {/* Máscara suave para garantizar contraste de los badges sin tapar la imagen */}
+            {/* Máscara suave para legibilidad */}
             <div
               className="absolute inset-0 pointer-events-none opacity-40 group-hover:opacity-50 transition-opacity duration-300"
               style={{
@@ -87,11 +93,11 @@ export default function EventListCard({
             </span>
           )}
 
-          {/* Badge Destacado en dorado limpio con icono FiStar (sin emojis) */}
+          {/* Badge Destacado */}
           {isGolden && (
             <span className="absolute top-2.5 right-2.5 bg-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-sm flex items-center gap-1 border border-amber-400 z-10">
               <FiStar size={11} className="fill-slate-950 text-slate-950" />
-              <span>{t('eventCard.featuredBadge')}</span>
+              <span>{featured ? 'DESTACADO' : t('eventCard.featuredBadge')}</span>
             </span>
           )}
         </div>
@@ -102,11 +108,7 @@ export default function EventListCard({
             to={`/eventos/${id}`}
             className="block transition-colors duration-200 text-slate-950 dark:text-white hover:text-amber-600 dark:hover:text-amber-400 font-extrabold"
           >
-            <h3
-              className={`text-sm sm:text-[15px] tracking-tight uppercase leading-snug line-clamp-2 ${
-                masonry ? 'min-h-0' : 'min-h-[2.4rem]'
-              }`}
-            >
+            <h3 className="text-sm sm:text-[15px] tracking-tight uppercase leading-snug line-clamp-2 min-h-[2.4rem]">
               {title}
             </h3>
           </Link>

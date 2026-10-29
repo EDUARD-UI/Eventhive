@@ -2,23 +2,26 @@ export default function EventCardSkeleton({
   notchBg = 'bg-[#F8FAFC]',
   aspectVariant = 'standard',
   masonry = false,
+  featured = false,
 }) {
-  const aspectClass =
-    aspectVariant === 'portrait'
-      ? 'aspect-[4/5]'
-      : aspectVariant === 'tall'
-      ? 'aspect-[4/3]'
-      : aspectVariant === 'wide'
-      ? 'aspect-[16/9]'
-      : aspectVariant === 'compact'
-      ? 'aspect-[2/1]'
-      : 'aspect-[16/10]';
+  // Solo la primera card es alta (aspect-[4/5]). Las demás quedan en su tamaño estándar (aspect-[16/10]).
+  const aspectClass = featured
+    ? 'aspect-[4/5]'
+    : aspectVariant === 'portrait'
+    ? 'aspect-[4/5]'
+    : aspectVariant === 'tall'
+    ? 'aspect-[4/3]'
+    : aspectVariant === 'wide'
+    ? 'aspect-[16/9]'
+    : aspectVariant === 'compact'
+    ? 'aspect-[2/1]'
+    : 'aspect-[16/10]';
 
   return (
     <div
-      className={`relative bg-white dark:bg-[#151D2F] rounded-3xl border border-slate-200/90 dark:border-white/[0.07] shadow-sm flex flex-col justify-between overflow-hidden animate-pulse ${
-        masonry ? 'h-auto break-inside-avoid' : ''
-      }`}
+      className={`relative bg-white dark:bg-[#151D2F] rounded-3xl border ${
+        featured ? 'border-amber-500/30' : 'border-slate-200/90 dark:border-white/[0.07]'
+      } shadow-sm flex flex-col justify-between overflow-hidden animate-pulse h-auto`}
     >
       {/* Portada Skeleton */}
       <div className="p-3.5 pb-2">

@@ -93,6 +93,19 @@ export function useLenisScroll(options = {}, onScroll = null) {
       smoothWheel: true,
       wheelMultiplier: 0.95,
       touchMultiplier: 1.2,
+      prevent: (node) => {
+        if (!node) return false;
+        if (typeof node.hasAttribute === 'function' && node.hasAttribute('data-lenis-prevent')) {
+          return true;
+        }
+        if (typeof node.closest === 'function') {
+          if (node.closest('[data-lenis-prevent]')) return true;
+          if (node.closest('[role="listbox"], [role="dialog"], aside, .overflow-y-auto, .overscroll-contain')) {
+            return true;
+          }
+        }
+        return false;
+      },
       ...options,
     });
 
@@ -140,5 +153,3 @@ export function useLenisScroll(options = {}, onScroll = null) {
 }
 
 export default useLenisScroll;
-
-

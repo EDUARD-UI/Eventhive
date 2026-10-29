@@ -385,9 +385,18 @@ export const organizerService = {
     return httpClient.delete(`/deseos/${eventoId}`);
   },
 
-  /** GET /api/verificacion/mi-solicitud */
-  getMiSolicitudVerificacion() {
-    return httpClient.get('/verificacion/mi-solicitud');
+  /** GET /api/verificacion/mis-solicitudes o /api/verificacion/mi-solicitud */
+  async getMiSolicitudVerificacion() {
+    try {
+      return await httpClient.get('/verificacion/mis-solicitudes');
+    } catch {
+      return await httpClient.get('/verificacion/mi-solicitud');
+    }
+  },
+
+  /** PATCH /api/verificacion/{solicitudId}/reenviar (multipart con 'datos' JSON y 'rut' opcional) */
+  reenviarSolicitudVerificacion(solicitudId, formData) {
+    return httpClient.patch(`/verificacion/${solicitudId}/reenviar`, formData, { isFormData: true });
   },
 
   /** POST /api/verificacion/solicitar (multipart con archivo 'rut') */
