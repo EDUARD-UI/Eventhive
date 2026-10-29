@@ -1,4 +1,3 @@
-import BannerVerificacionOrganizacion from '../../components/componentsOrganizador/BannerVerificacionOrganizacion.jsx';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import StandardLayout from '../../layouts/StandardLayout.jsx';
 import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
@@ -293,6 +292,7 @@ export default function OrganizadorIndex() {
   }, [dynamicMenuItems, activeItem]);
 
   const [creationView, setCreationView] = useState(null);
+  const [editingEvent, setEditingEvent] = useState(null);
   const [notification, setNotification] = useState(false);
   const [orgData, setOrgData] = useState(null);
   const [solicitudVerif, setSolicitudVerif] = useState(null);
@@ -378,7 +378,7 @@ export default function OrganizadorIndex() {
     const p3 = organizerService
       .getEventosOrganizador({ page: 0, size: 200 })
       .then((events) => {
-        const list = events || [];
+        const list = (events || []).filter((e) => (e.estado || '').toUpperCase() !== 'FINALIZADO' && (e.rawStatus || '').toUpperCase() !== 'FINALIZADO');
         setAllOrgEvents(list);
 
         const activos = list.filter((e) => e.estado === 'PUBLICADO').length;
@@ -783,14 +783,7 @@ export default function OrganizadorIndex() {
         </div>
       )}
 
-      {/* Banner de Estado de Verificación Institucional (RUT) */}
-      <div className="mb-6">
-        <BannerVerificacionOrganizacion
-          solicitud={solicitudVerif}
-          orgData={orgData}
-          onRefresh={loadData}
-        />
-      </div>
+      
 
       {renderContent()}
 
@@ -799,7 +792,11 @@ export default function OrganizadorIndex() {
         <EventDetailView
           eventId={selectedEventId}
           onBack={() => setSelectedEventId(null)}
-          onEdit={() => {}}
+          onEdit={(eventToEdit) => {
+            setSelectedEventId(null);
+            setEditingEvent(eventToEdit);
+            setCreationView('wizard');
+          }}
           isDrawer={true}
         />
       )}

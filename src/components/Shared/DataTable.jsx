@@ -89,7 +89,7 @@ export default function DataTable({
                     setTableSearch(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-full sm:w-56 rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-3 text-xs text-slate-700 outline-none focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/10 transition-all"
+                  className="w-full sm:w-56 rounded-xl border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-xs text-slate-700 outline-none focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/10 transition-all"
                 />
               </div>
             )}
@@ -111,7 +111,7 @@ export default function DataTable({
       <div className="overflow-x-auto w-full">
         <table className="w-full min-w-[650px] border-collapse text-left">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            <tr className="border-b border-slate-200 bg-white text-[11px] font-bold uppercase tracking-wider text-slate-500">
               {columns.map((col, idx) => (
                 <th
                   key={col.key || idx}

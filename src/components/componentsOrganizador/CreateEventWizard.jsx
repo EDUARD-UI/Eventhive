@@ -436,9 +436,7 @@ export default function CreateEventWizard({
           <h2 className="text-xl sm:text-2xl font-black text-[#0B1B3D] tracking-tight">
             Publicar Nuevo Evento Cultural
           </h2>
-          <p className="mt-1 text-xs text-slate-600 font-medium">
-            Completa los datos esenciales para registrar tu evento oficial en Eventhive Cartagena.
-          </p>
+          
         </div>
 
         <button
@@ -452,24 +450,7 @@ export default function CreateEventWizard({
         </button>
       </div>
 
-      {/* 2. GUÍA BREVE ARRIBA DEL WIZARD (Requerimiento 3) */}
-      <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-200/10 border-2 border-amber-300/80 rounded-2xl p-4 sm:p-5 text-slate-900 shadow-xs">
-        <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 font-black text-sm">
-            <FiInfo size={16} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="text-xs font-black uppercase tracking-wider text-[#0B1B3D]">
-              Guía de Creación de Eventos
-            </h4>
-            <p className="text-xs text-slate-700 mt-0.5 leading-relaxed">
-              Completa la información en 5 pasos sencillos: <strong>1) Datos básicos</strong>,{' '}
-              <strong>2) Ubicación exacta en el mapa</strong>, <strong>3) Localidades y precios</strong>,{' '}
-              <strong>4) Portada oficial</strong> y <strong>5) Revisión</strong>. Si tu organización tiene verificación pendiente de RUT, el evento quedará guardado como borrador hasta su aprobación.
-            </p>
-          </div>
-        </div>
-      </div>
+      
 
       {/* 3. Stepper de Progreso */}
       <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
@@ -515,9 +496,7 @@ export default function CreateEventWizard({
               <h3 className="text-base font-black text-[#0B1B3D] uppercase tracking-wider">
                 1. Información Básica
               </h3>
-              <p className="text-xs text-slate-500">
-                Define el nombre, categoría, fecha, hora y descripción general del evento.
-              </p>
+              
             </div>
 
             <div className="space-y-4">
@@ -530,7 +509,7 @@ export default function CreateEventWizard({
                   value={form.titulo}
                   onChange={(e) => updateForm('titulo', e.target.value)}
                   placeholder="Ej: Festival Internacional de Música de Cartagena"
-                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
+                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                   required
                 />
               </div>
@@ -543,7 +522,7 @@ export default function CreateEventWizard({
                   <select
                     value={form.categoriaId}
                     onChange={(e) => updateForm('categoriaId', e.target.value)}
-                    className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
+                    className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
                   >
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
@@ -579,7 +558,7 @@ export default function CreateEventWizard({
                     value={form.hora}
                     min={!isHistoricalEvent && form.fecha === todayStr ? currentTimeStr : undefined}
                     onChange={(e) => updateForm('hora', e.target.value)}
-                    className={`w-full text-xs font-semibold px-4 py-2.5 rounded-xl border bg-slate-50 outline-none transition-all cursor-pointer ${
+                    className={`w-full text-xs font-semibold px-4 py-2.5 rounded-xl border bg-white outline-none transition-all cursor-pointer ${
                       !isHistoricalEvent && form.fecha === todayStr && form.hora && form.hora < currentTimeStr
                         ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-200'
                         : 'border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/20'
@@ -607,7 +586,7 @@ export default function CreateEventWizard({
                   value={form.descripcion}
                   onChange={(e) => updateForm('descripcion', e.target.value)}
                   placeholder="Detalla los artistas participantes, la agenda cultural, recomendaciones de acceso y requisitos de ingreso."
-                  className="w-full text-xs font-medium px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all resize-none leading-relaxed"
+                  className="w-full text-xs font-medium px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all resize-none leading-relaxed"
                   required
                 />
               </div>
@@ -622,9 +601,7 @@ export default function CreateEventWizard({
               <h3 className="text-base font-black text-[#0B1B3D] uppercase tracking-wider">
                 2. Ubicación del Evento y Mapa
               </h3>
-              <p className="text-xs text-slate-500">
-                Escribe el nombre del lugar e indica el punto exacto en el mapa interactivo haciendo clic sobre él.
-              </p>
+              
             </div>
 
             {/* Campo Manual: Nombre del Lugar (Requerimiento 4) */}
@@ -637,30 +614,13 @@ export default function CreateEventWizard({
                 value={form.lugar}
                 onChange={(e) => updateForm('lugar', e.target.value)}
                 placeholder="Ej: Plaza de la Aduana, Centro Histórico / Teatro Adolfo Mejía"
-                className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
+                className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                 required
               />
-              <p className="text-[11px] text-slate-400 mt-1">
-                Escribe el nombre reconocible del recinto o plaza para que los asistentes lo identifiquen fácilmente.
-              </p>
+              
             </div>
 
-            {/* Indicador de coordenadas obtenidas del mapa */}
-            <div className="flex flex-wrap items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
-              <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                <FiMapPin className="text-brand" size={14} />
-                <span>Punto Geográfico Seleccionado:</span>
-              </span>
-              <span className="font-mono bg-white px-2.5 py-1 rounded-md border border-slate-200 text-slate-800 font-bold">
-                Lat: {Number(form.latitud).toFixed(5)}
-              </span>
-              <span className="font-mono bg-white px-2.5 py-1 rounded-md border border-slate-200 text-slate-800 font-bold">
-                Lng: {Number(form.longitud).toFixed(5)}
-              </span>
-              <span className="text-[11px] text-slate-500 italic ml-auto">
-                (Haz clic en cualquier punto del mapa para mover el marcador)
-              </span>
-            </div>
+            
 
             {/* Contenedor del Mapa Leaflet */}
             <div className="h-80 w-full rounded-2xl overflow-hidden border-2 border-slate-200 relative shadow-inner z-0">
@@ -695,9 +655,7 @@ export default function CreateEventWizard({
                 <h3 className="text-base font-black text-[#0B1B3D] uppercase tracking-wider">
                   3. Localidades y Aforos
                 </h3>
-                <p className="text-xs text-slate-500">
-                  Configura las zonas de acceso, precios de venta y aforo disponible.
-                </p>
+                
               </div>
               <button
                 type="button"
@@ -780,9 +738,7 @@ export default function CreateEventWizard({
               <h3 className="text-base font-black text-[#0B1B3D] uppercase tracking-wider">
                 4. Imagen Oficial del Evento
               </h3>
-              <p className="text-xs text-slate-500">
-                Sube la imagen de portada que se mostrará en las cards de la cartelera y en el detalle del evento.
-              </p>
+              
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
@@ -836,9 +792,7 @@ export default function CreateEventWizard({
               <h3 className="text-base font-black text-[#0B1B3D] uppercase tracking-wider">
                 5. Revisión Final de la Información
               </h3>
-              <p className="text-xs text-slate-500">
-                Verifica todos los datos antes de registrar el evento oficial en la cartelera.
-              </p>
+              
             </div>
 
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4 text-xs">
@@ -862,7 +816,7 @@ export default function CreateEventWizard({
                 <p className="flex items-center gap-2">
                   <FiCalendar className="text-brand shrink-0" size={14} />
                   <span>
-                    <strong>Fecha y hora:</strong> {form.fecha} a las {form.hora}
+                    <strong>Fecha y hora:</strong> {formatFechaHora(form.fecha, form.hora)}
                   </span>
                 </p>
                 <p className="flex items-center gap-2">

@@ -487,7 +487,7 @@ export default function MarketingBannersView() {
                     value={editingBanner.titulo || ''}
                     onChange={(e) => handleFieldChange('titulo', e.target.value)}
                     placeholder="Ej. Vive el Festival de Música de Cartagena"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-xs sm:text-sm text-slate-800 transition-all outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-xs sm:text-sm text-slate-800 transition-all outline-none"
                   />
                 </div>
 
@@ -502,7 +502,7 @@ export default function MarketingBannersView() {
                       value={editingBanner.textoBoton || ''}
                       onChange={(e) => handleFieldChange('textoBoton', e.target.value)}
                       placeholder="Ej. Ver Entradas / Conocer Más"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-xs sm:text-sm text-slate-800 transition-all outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-xs sm:text-sm text-slate-800 transition-all outline-none"
                     />
                   </div>
 
@@ -515,7 +515,7 @@ export default function MarketingBannersView() {
                       value={editingBanner.enlaceUrl || ''}
                       onChange={(e) => handleFieldChange('enlaceUrl', e.target.value)}
                       placeholder="Ej. /eventos/15 o /buscar"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-xs sm:text-sm text-slate-800 transition-all outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-xs sm:text-sm text-slate-800 transition-all outline-none"
                     />
                   </div>
                 </div>

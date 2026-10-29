@@ -14,6 +14,7 @@ import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 import StyledDatePicker from '../components/common/StyledDatePicker.jsx';
 import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
+import { formatFecha } from '../utils/formatters.js';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useLenisScroll } from '../hooks/useLenisScroll.js';
 
@@ -331,7 +332,7 @@ export default function BuscarEventosPage() {
                 id="filtro-fecha"
                 name="filtro-fecha"
                 inlineLabel="Cuándo"
-                value={fechaParam}
+                value={formatFecha(fechaParam)}
                 onChange={handleDateChange}
                 variant={isDark ? 'dark' : 'light'}
                 placeholder="Cualquier fecha"

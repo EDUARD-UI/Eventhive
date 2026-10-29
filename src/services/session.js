@@ -49,9 +49,10 @@ export const getDashboardPathForRole = (role) => {
     case 'MARKETING':
       return '/marketing';
     case 'REPRESENTANTE':
-    case 'OPERADOR':
     case 'ORGANIZADOR':
       return '/organizacion';
+    case 'OPERADOR':
+      return '/';
     case 'MODERADOR':
       return '/moderador';
     case 'CLIENTE':

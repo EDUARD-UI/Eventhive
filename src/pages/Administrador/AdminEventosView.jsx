@@ -16,6 +16,7 @@ import {
   Ticket,
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
+import { formatFecha, formatFechaHora } from '../../utils/formatters.js';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import AdminEventCard from '../../components/componentsAdmin/AdminEventCard.jsx';
 
@@ -141,7 +142,7 @@ export default function AdminEventosView({
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                <tr className="bg-white border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
                   <th className="py-3.5 px-4">Evento / Título</th>
                   <th className="py-3.5 px-4">Organización</th>
                   <th className="py-3.5 px-4">Fecha y Lugar</th>
@@ -151,7 +152,7 @@ export default function AdminEventosView({
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
                 {paginatedEvents.map((ev) => (
-                  <tr key={ev.id} className="hover:bg-slate-50/60 transition-colors">
+                  <tr key={ev.id} className="hover:bg-white transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="font-bold text-slate-900 hover:text-primary transition-colors cursor-pointer" onClick={() => onVerDetalle(ev)}>
                         {ev.titulo}
@@ -164,7 +165,7 @@ export default function AdminEventosView({
                       {ev.organizacion?.nombre || ev.organizacion || 'Organización'}
                     </td>
                     <td className="py-3.5 px-4 text-slate-600">
-                      <div>{ev.fecha}</div>
+                      <div>{formatFecha(ev.fecha)}</div>
                       <div className="text-[11px] text-slate-400">{ev.lugar}</div>
                     </td>
                     <td className="py-3.5 px-4 text-center">

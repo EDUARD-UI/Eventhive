@@ -102,7 +102,7 @@ export default function AdminCategoriasView({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+              <tr className="bg-white border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
                 <th className="py-3.5 px-4 w-20">Foto</th>
                 <th className="py-3.5 px-4">Nombre de la Categoría</th>
                 <th className="py-3.5 px-4 text-center">Eventos Vinculados</th>
@@ -124,7 +124,7 @@ export default function AdminCategoriasView({
                   return (
                     <tr
                       key={cat.id}
-                      className="hover:bg-slate-50/70 transition-colors"
+                      className="hover:bg-white transition-colors"
                     >
                       {/* Fotografía entregada por backend */}
                       <td className="py-3.5 px-4">
@@ -149,9 +149,7 @@ export default function AdminCategoriasView({
                         <span className="font-bold text-slate-900 text-sm block">
                           {cat.nombre}
                         </span>
-                        <span className="text-[11px] text-slate-400 font-mono">
-                          ID: #{cat.id}
-                        </span>
+                        
                       </td>
 
                       {/* Eventos Vinculados */}

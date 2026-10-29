@@ -1913,7 +1913,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/organizaciones/mi-organizacion`
 - Recibe: sin body.
 - Devuelve: `ApiResponse<OrganizacionDTO>`
-- Permisos: REPRESENTANTE.
+- Permisos: REPRESENTANTE u OPERADOR.
 - Ejemplo de respuesta:
 
 ```json
@@ -1946,35 +1946,9 @@ En caso de error, la respuesta suele devolver:
 - Permisos: REPRESENTANTE.
 - Descripción: actualiza los datos de la organización del representante autenticado y, si se envía `imagen`, reemplaza su logo en Supabase Storage. Si no se envía imagen, conserva el logo actual.
 
-#### `GET /api/organizaciones/mis-invitaciones`
-- Recibe: paginación.
-- Devuelve: `ApiResponse<PagedResponse<InvitacionOrganizacionDTO>>`
-- Permisos: autenticado.
-- Ejemplo de respuesta:
-
-```json
-{
-  "success": true,
-  "mensaje": "Invitaciones pendientes obtenidas",
-  "data": {
-    "content": [
-      {
-        "id": 3,
-        "correoInvitado": "carlos@email.com",
-        "organizacionNombre": "Eventica SpA",
-        "invitadoPorNombre": "Ana Pérez",
-        "estado": "PENDIENTE",
-        "fechaInvitacion": "2026-09-26T10:30:00",
-        "fechaRespuesta": null
-      }
-    ]
-  }
-}
-```
-
 #### `GET /api/organizaciones/invitaciones-enviadas`
 - Recibe: paginación.
-- Devuelve: `ApiResponse<PagedResponse<InvitacionOrganizacionDTO>>`
+- Devuelve: `ApiResponse<PagedResponse<InvitacionRolEnviadaDTO>>`
 - Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
@@ -1986,12 +1960,13 @@ En caso de error, la respuesta suele devolver:
     "content": [
       {
         "id": 4,
-        "correoInvitado": "usuario@correo.com",
-        "organizacionNombre": "Eventica SpA",
-        "invitadoPorNombre": "Carlos Pérez",
-        "estado": "ENVIADA",
-        "fechaInvitacion": "2026-09-26T10:30:00",
-        "fechaRespuesta": null
+        "correo": "operador@eventos.com",
+        "rol": "OPERADOR",
+        "fechaInvitacion": "2026-10-21T18:30:00",
+        "fechaExpiracion": "2026-10-22T18:30:00",
+        "fechaAceptacion": null,
+        "estado": "PENDIENTE",
+        "organizacionNombre": "Eventica SpA"
       }
     ]
   }
@@ -2135,35 +2110,6 @@ Los operadores se agregan mediante invitación por correo, aceptan o rechazan la
 {
   "success": true,
   "mensaje": "Invitación enviada",
-  "data": null
-}
-```
-
-#### `PATCH /api/organizaciones/invitaciones/{invitacionId}/aceptar`
-- Recibe: `invitacionId` en path.
-- Devuelve: `ApiResponse<Void>`
-- Permisos: público/autenticado según flujo de negocio.
-- Ruta heredada para invitaciones anteriores; las invitaciones nuevas se aceptan con `POST /api/invitaciones/roles/aceptar`.
-- Ejemplo de respuesta:
-
-```json
-{
-  "success": true,
-  "mensaje": "Invitación aceptada",
-  "data": null
-}
-```
-
-#### `PATCH /api/organizaciones/invitaciones/{operadorId}/rechazar`
-- Recibe: `operadorId` en path.
-- Devuelve: `ApiResponse<Void>`
-- Permisos: autenticado.
-- Ejemplo de respuesta:
-
-```json
-{
-  "success": true,
-  "mensaje": "Invitación rechazada",
   "data": null
 }
 ```
@@ -3112,6 +3058,11 @@ de un solo uso y vence 24 horas después del envío.
 - Público. Para una cuenta nueva, body: `{ "token": "...", "nombre": "Nombre", "telefono": "+573001112233", "clave": "contraseña segura" }`. Para una cuenta CLIENTE existente basta con `{ "token": "..." }`.
 - La cuenta CLIENTE conserva nombre, teléfono y contraseña; al aceptar se cambia su rol y, para OPERADOR, se vincula a la organización que envió la invitación. Los demás roles existentes (REPRESENTANTE, MODERADOR, OPERADOR, ADMINISTRADOR o MARKETING) no pueden aceptar otra invitación.
 
+#### `POST /api/invitaciones/roles/rechazar`
+- Público. Permite al invitado rechazar la invitación explícitamente.
+- Parámetro: Puede enviarse como query param `?token=...` o como JSON en el body `{ "token": "..." }`.
+- Marca la invitación con `fechaRechazo`. Una invitación pendiente no puede ser reenviada; debe ser aceptada o rechazada. Una vez rechazada, ya no se puede utilizar ni validar, y se habilita la posibilidad de emitir una nueva invitación si es necesario.
+
 #### `GET /api/invitaciones/roles/enviadas`
 - ADMINISTRADOR o REPRESENTANTE. Devuelve la lista paginada de invitaciones enviadas por la persona autenticada.
 
@@ -3534,6 +3485,21 @@ Este módulo administra los dos espacios promocionales propios de Eventhive. No 
   }
   ```
 
+#### `POST /api/invitaciones/roles/rechazar`
+- **Roles autorizados**: Público / Destinatario de la invitación.
+- **Parámetro**: Acepta `token` vía query param (`?token=...`) o JSON en el body (`{ "token": "..." }`).
+- **Reglas**:
+  - Marca la invitación como rechazada (`fechaRechazo = now()`).
+  - Las invitaciones no se pueden reenviar mientras se encuentren pendientes; el invitado debe aceptarla o rechazarla.
+  - Al ser rechazada, su estado cambia a `RECHAZADA` y no se podrá usar posteriormente.
+- **Respuesta**: HTTP 200 OK.
+  ```json
+  {
+    "success": true,
+    "mensaje": "Invitación rechazada correctamente"
+  }
+  ```
+
 ---
 
 ## 24. Correos administrativos oficiales
@@ -3603,7 +3569,7 @@ Este módulo administra los dos espacios promocionales propios de Eventhive. No 
 #### `GET /api/organizaciones/invitaciones-enviadas`
 - **Roles autorizados**: `REPRESENTANTE`.
 - **Descripción**: Consulta el historial y estado de invitaciones emitidas para la organización del representante.
-- **Devuelve**: `ApiResponse<PagedResponse<InvitacionOrganizacionDTO>>`
+- **Devuelve**: `ApiResponse<PagedResponse<InvitacionRolEnviadaDTO>>`
 - **Respuesta**: HTTP 200 OK.
 
 #### `GET /api/organizaciones/mis-operadores`
@@ -3903,5 +3869,18 @@ Aunque las consultas se sirvan desde la memoria RAM, **si ocurre cualquier cambi
   - Desalojan inmediatamente su caché respectivo.
 - **Documentos de Verificación RUT**:
   - Al reenviar o subir un nuevo RUT diferido, se purga de inmediato el caché de la URL firmada para emitir la nueva referencia.
+
+---
+
+## 31. Monitoreo de Salud y Keep-Alive
+
+### Base: `/api/health` y `/health`
+
+Endpoints ultraligeros de sondeo de estado operativo, diseñados para consumir 0 memoria RAM y no realizar consultas a la base de datos ni procesamiento de seguridad JWT.
+
+#### `GET /api/health` o `GET /health`
+- **Público**: libre acceso (excluido de `JwtAuthFilter` y configurado con `permitAll()` en `SecurityConfig`).
+- Devuelve: `{"status":"UP"}` con Content-Type `application/json` y código HTTP 200 OK.
+- **Keep-Alive automático**: Tarea programada cada 13 minutos (`@Scheduled(fixedRate = 780000)`) que efectúa un ping HTTP ligero al servicio (usando `RENDER_EXTERNAL_URL` o `http://localhost:PORT/api/health`), evitando que instancias gratuitas en plataformas en la nube (Render, Koyeb) entren en suspensión por inactividad.
 
 

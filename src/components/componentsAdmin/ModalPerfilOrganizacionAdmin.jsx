@@ -18,6 +18,7 @@ import {
 import Badge from '../Shared/Badge.jsx';
 import Swal from 'sweetalert2';
 import adminService from '../../features/admin/services/adminService.js';
+import { formatFecha } from '../../utils/formatters.js';
 
 export default function ModalPerfilOrganizacionAdmin({
   organizacion,
@@ -174,7 +175,7 @@ export default function ModalPerfilOrganizacionAdmin({
                 </p>
                 <p className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" strokeWidth={1.75} />
-                  <span>Registrada el: <strong>{organizacion.fechaCreacion || organizacion.fechaRegistro || '—'}</strong></span>
+                  <span>Registrada el: <strong>{organizacion.fechaCreacion || organizacion.fechaRegistro ? formatFecha(organizacion.fechaCreacion || organizacion.fechaRegistro) : '—'}</strong></span>
                 </p>
               </div>
             </div>

@@ -27,21 +27,10 @@ import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import PlanCard from '../../components/Shared/PlanCard.jsx';
 import EventDetailView from '../Organizador/EventDetailView.jsx';
-import { formatPrice, formatHora12 } from '../../utils/formatters.js';
+import { formatPrice, formatHora12, formatFechaHora } from '../../utils/formatters.js';
 import { promotionPlanService } from '../../services/promotionPlanService.js';
 
-const formatFechaHora = (fechaStr) => {
-  if (!fechaStr || fechaStr === '—') return '—';
-  try {
-    const d = new Date(fechaStr);
-    if (isNaN(d.getTime())) return fechaStr;
-    const fecha = d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
-    const hora = formatHora12(fechaStr);
-    return hora ? `${fecha} · ${hora}` : fecha;
-  } catch {
-    return fechaStr;
-  }
-};
+// formatFechaHora imported from utils/formatters.js
 
 export default function MarketingPromocionesView({ initialTab = 'eventos', onNavigateTab }) {
   const [activeSubTab, setActiveSubTab] = useState(initialTab || 'eventos'); // 'eventos' | 'planes'
@@ -551,7 +540,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                   setCurrentPage(1);
                 }}
                 placeholder="Buscar por evento u organización..."
-                className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20 focus:border-amber-400 transition-all"
+                className="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20 focus:border-amber-400 transition-all"
               />
             </div>
 
@@ -594,7 +583,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-slate-700">
-                  <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <thead className="bg-white border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     <tr>
                       <th className="py-3.5 px-4">Evento</th>
                       <th className="py-3.5 px-4">Organización</th>
@@ -612,7 +601,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                       const hasPromoImage = Boolean(p.urlImagenDestacado);
 
                       return (
-                        <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                        <tr key={p.id} className="hover:bg-white transition-colors">
                           {/* Evento (Sin IDs internos visibles) */}
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-3">
@@ -866,7 +855,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                     value={planForm.nombre}
                     onChange={(e) => setPlanForm({ ...planForm, nombre: e.target.value })}
                     placeholder="Ej. Plan Banner Premium"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none"
                   />
                 </div>
 
@@ -881,7 +870,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                     value={planForm.codigo}
                     onChange={(e) => setPlanForm({ ...planForm, codigo: e.target.value.toUpperCase() })}
                     placeholder="EJ: PLAN_BANNER_PREMIUM"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none font-mono"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none font-mono"
                   />
                   <p className="text-[11px] text-slate-400 mt-1">Identificador único del plan en mayúsculas.</p>
                 </div>
@@ -896,7 +885,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                     value={planForm.detallePublicidad}
                     onChange={(e) => setPlanForm({ ...planForm, detallePublicidad: e.target.value })}
                     placeholder="Detalles sobre los beneficios publicitarios que ofrece este plan a la organización..."
-                    className="w-full p-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none resize-none"
+                    className="w-full p-3 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none resize-none"
                   />
                 </div>
 
@@ -913,7 +902,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                     value={planForm.precio}
                     onChange={(e) => setPlanForm({ ...planForm, precio: e.target.value })}
                     placeholder="100000"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none font-mono"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none font-mono"
                   />
                   <p className="text-[11px] text-slate-400 mt-1">
                     Precio fijo de contratación del plan en COP.
@@ -934,7 +923,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                     value={planForm.comisionPorcentaje}
                     onChange={(e) => setPlanForm({ ...planForm, comisionPorcentaje: e.target.value })}
                     placeholder="10"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none font-mono"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none font-mono"
                   />
                   <p className="text-[11px] text-slate-400 mt-1">
                     Porcentaje de comisión comercial sobre ventas de entradas (entre 0% y 100%).
@@ -1116,7 +1105,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                     value={inputPromoImage}
                     onChange={(e) => setInputPromoImage(e.target.value)}
                     placeholder="https://..."
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 transition-all outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 transition-all outline-none"
                   />
                   <p className="text-[11px] text-slate-400 mt-1">
                     Esta imagen se asignará a <code>url_imagen_destacado</code> y se utilizará en el carrusel principal.

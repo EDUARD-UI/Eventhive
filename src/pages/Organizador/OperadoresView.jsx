@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   FiUsers,
   FiUserPlus,
@@ -6,38 +6,29 @@ import {
   FiShield,
   FiTrash2,
   FiClock,
-  FiCheckCircle,
-  FiXCircle,
   FiRefreshCw,
-  FiAlertCircle,
-  FiEdit2,
-  FiX,
-  FiCheck,
-  FiEye,
-  FiUser,
-  FiCalendar,
-  FiPhone,
+  FiSearch,
+  FiRotateCw,
+  FiSend,
 } from 'react-icons/fi';
 import { organizerService } from '../../services/organizerService.js';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
 import GmailComposeModal from '../../components/Shared/GmailComposeModal.jsx';
+import Pagination from '../../components/Shared/Pagination.jsx';
+import { formatFechaHora } from '../../utils/formatters.js';
 import { showSuccessAlert, showErrorAlert, showConfirmAlert } from '../../utils/alertUtils.js';
-
-const PERMISOS_DISPONIBLES = [
-  { id: 'CHECK_IN', label: 'Check-in de Asistentes', desc: 'Escanear boletos y validar ingresos con código QR al evento' },
-  { id: 'CREAR_EVENTO', label: 'Crear Eventos', desc: 'Registrar nuevos borradores de eventos para la organización' },
-  { id: 'EDITAR_EVENTO', label: 'Editar Eventos', desc: 'Modificar detalles, fechas, localidades o precios de eventos existentes' },
-  { id: 'CANCELAR_EVENTO', label: 'Cancelar Eventos', desc: 'Suspender o cancelar eventos publicados de la organización' },
-];
 
 export default function OperadoresView() {
   const [operadores, setOperadores] = useState([]);
   const [invitaciones, setInvitaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('operadores'); // 'operadores' | 'invitaciones'
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  // Modal Enviar Correo / Invitar (Réplica de Gmail)
+  // Modal Enviar Correo Directo
   const [emailModal, setEmailModal] = useState({
     isOpen: false,
     email: '',
@@ -47,15 +38,10 @@ export default function OperadoresView() {
     role: 'OPERADOR',
   });
 
-  // Drawer Lateral Expulsar Operador
-  const [operadorToExpulsar, setOperadorToExpulsar] = useState(null);
-  const [isExpelling, setIsExpelling] = useState(false);
-  const [expulsarError, setExpulsarError] = useState(null);
-
-  // Drawer Lateral Permisos
-  const [editingOperador, setEditingOperador] = useState(null);
-  const [selectedPermisos, setSelectedPermisos] = useState([]);
-  const [isUpdatingPermisos, setIsUpdatingPermisos] = useState(false);
+  // Modal Invitar Operador
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [isInviting, setIsInviting] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -91,183 +77,149 @@ export default function OperadoresView() {
     fetchData();
   }, []);
 
-  // Enviar invitación oficial a operador
+  // Enviar invitación a operador
   const handleInvite = async (e) => {
     e.preventDefault();
     const emailTrim = inviteEmail.trim();
     if (!emailTrim) {
-      setInviteError('Por favor ingresa el correo del operador a invitar.');
+      await showErrorAlert({
+        title: 'Correo obligatorio',
+        text: 'Por favor ingresa el correo del operador a invitar.',
+      });
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(emailTrim)) {
-      setInviteError('Ingresa un correo electrónico con formato válido.');
+      await showErrorAlert({
+        title: 'Correo no válido',
+        text: 'Ingresa un correo electrónico con formato válido.',
+      });
       return;
     }
 
     setIsInviting(true);
-    setInviteError(null);
     try {
       await organizerService.invitarOperador(emailTrim);
       await showSuccessAlert({
         title: 'Invitación enviada',
         text: `Se ha enviado la invitación exitosamente a ${emailTrim}. El enlace será válido por 24 horas.`,
-        badge: 'Invitación Despachada',
       });
       setInviteEmail('');
       setShowInviteModal(false);
       fetchData();
     } catch (err) {
-      const msg =
-        err.message ||
-        'No se pudo enviar la invitación. Verifica que el usuario exista y no pertenezca ya a otra organización.';
-      setInviteError(msg);
       await showErrorAlert({
         title: 'Error al enviar invitación',
-        text: msg,
-        badge: 'Invitación Fallida',
+        text: err.message || 'No se pudo enviar la invitación al operador.',
       });
     } finally {
       setIsInviting(false);
     }
   };
 
-  // Reenviar invitación desde la tabla de invitaciones
+  // Reenviar invitación
   const handleReenviarInvitacion = async (correo) => {
     try {
       await organizerService.invitarOperador(correo);
       await showSuccessAlert({
         title: 'Invitación reenviada',
         text: `Se ha generado un nuevo enlace válido por 24 horas y se reenvió el correo a ${correo}.`,
-        badge: 'Correo Reenviado',
-        timer: 2000,
-        showConfirmButton: false,
       });
       fetchData();
     } catch (err) {
       await showErrorAlert({
         title: 'Error al reenviar',
         text: err.message || 'No fue posible reenviar la invitación en este momento.',
-        badge: 'Reenvío Fallido',
       });
     }
   };
 
-  // Expulsar operador confirmado desde el Drawer
-  const handleConfirmExpulsar = async () => {
-    if (!operadorToExpulsar) return;
-    setIsExpelling(true);
-    setExpulsarError(null);
+  // Revocar / Desvincular operador
+  const handleRevocarOperador = async (op) => {
+    const nombre = op.nombre || op.nombreCompleto || 'Operador';
+    const confirmed = await showConfirmAlert({
+      title: '¿Desvincular operador?',
+      text: `Se revocará el rol de operador a "${nombre}" y quedará desvinculado de la organización.`,
+      confirmButtonText: 'Sí, revocar rol',
+      confirmButtonColor: '#e11d48',
+    });
+
+    if (!confirmed) return;
+
     try {
-      await organizerService.expulsarOperador(operadorToExpulsar.id || operadorToExpulsar.operadorId);
+      await organizerService.expulsarOperador(op.id || op.operadorId);
       await showSuccessAlert({
         title: 'Operador retirado',
-        text: 'El operador ha sido desvinculado de la organización.',
-        badge: 'Operador Desvinculado',
-        timer: 1800,
-        showConfirmButton: false,
+        text: `"${nombre}" ha sido desvinculado de la organización exitosamente.`,
       });
-      setOperadorToExpulsar(null);
-      fetchData();
-    } catch (err) {
-      const msg = err.message || 'Ocurrió un error al intentar expulsar al operador.';
-      setExpulsarError(msg);
-      await showErrorAlert({
-        title: 'Error al desvincular operador',
-        text: msg,
-        badge: 'Operación Fallida',
-      });
-    } finally {
-      setIsExpelling(false);
-    }
-  };
-
-  // Abrir modal de permisos
-  const openPermisosModal = (operador) => {
-    setEditingOperador(operador);
-    const permisosActuales = operador.permisos || [];
-    setSelectedPermisos(Array.isArray(permisosActuales) ? permisosActuales : []);
-  };
-
-  // Guardar permisos
-  const handleSavePermisos = async () => {
-    if (!editingOperador) return;
-    setIsUpdatingPermisos(true);
-    try {
-      await organizerService.actualizarPermisosOperador(
-        editingOperador.id || editingOperador.operadorId,
-        selectedPermisos
-      );
-      await showSuccessAlert({
-        title: 'Permisos actualizados',
-        text: 'Los permisos del operador se actualizaron correctamente.',
-        badge: 'Permisos Guardados',
-        timer: 1800,
-        showConfirmButton: false,
-      });
-      setEditingOperador(null);
       fetchData();
     } catch (err) {
       await showErrorAlert({
-        title: 'Error al actualizar permisos',
-        text: err.message || 'No se pudieron actualizar los permisos del operador.',
-        badge: 'Actualización Fallida',
+        title: 'Error al desvincular',
+        text: err.message || 'No se pudo revocar el rol al operador.',
       });
-    } finally {
-      setIsUpdatingPermisos(false);
     }
   };
 
-  const togglePermiso = (permisoId) => {
-    setSelectedPermisos((prev) =>
-      prev.includes(permisoId)
-        ? prev.filter((p) => p !== permisoId)
-        : [...prev, permisoId]
-    );
-  };
+  const filteredOperadores = useMemo(() => {
+    return operadores.filter((op) => {
+      const nombre = (op.nombre || op.nombreCompleto || '').toLowerCase();
+      const correo = (op.correo || op.email || '').toLowerCase();
+      const term = searchTerm.toLowerCase().trim();
+      return !term || nombre.includes(term) || correo.includes(term);
+    });
+  }, [operadores, searchTerm]);
+
+  const filteredInvitaciones = useMemo(() => {
+    return invitaciones.filter((inv) => {
+      const correo = (inv.correo || inv.correoInvitado || inv.email || '').toLowerCase();
+      const term = searchTerm.toLowerCase().trim();
+      return !term || correo.includes(term);
+    });
+  }, [invitaciones, searchTerm]);
+
+  const currentList = activeTab === 'operadores' ? filteredOperadores : filteredInvitaciones;
+  const paginatedList = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return currentList.slice(start, start + pageSize);
+  }, [currentList, currentPage, pageSize]);
 
   const pendientesCount = invitaciones.filter(
     (i) => (i.estado || '').toUpperCase() === 'PENDIENTE'
   ).length;
 
   return (
-    <div className="space-y-6">
-      {/* 1. Header con botón de enviar correo */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* 1. Header con botón de invitar operador */}
+      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            Gestión de Trabajadores
+          <h2 className="font-display text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <FiUsers className="w-5 h-5 text-amber-500" />
+            <span>Gestión de Operadores</span>
           </h2>
           <p className="mt-1 text-xs text-slate-500 max-w-xl">
-            Administra los operadores y colaboradores de tu organización, comunícate mediante correo y gestiona sus permisos.
+            Supervisa los operadores vinculados a tu organización, envía correos directos y gestiona sus roles
           </p>
         </div>
-        <div className="flex items-center gap-3">
+
+        <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={fetchData}
             title="Recargar datos"
-            className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors"
+            disabled={loading}
+            className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
           >
             <FiRefreshCw size={15} className={loading ? 'animate-spin' : ''} />
           </button>
 
           <button
             type="button"
-            onClick={() => {
-              setEmailModal({
-                isOpen: true,
-                email: '',
-                name: '',
-                subject: 'Invitación para unirte a nuestro equipo de Operadores en EventHive',
-                mode: 'invite',
-                role: 'OPERADOR',
-              });
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-black uppercase tracking-wider shadow-sm transition-all active:scale-95 cursor-pointer"
+            onClick={() => setShowInviteModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-xs transition-all active:scale-95 cursor-pointer"
           >
             <FiUserPlus size={15} />
-            <span>Invitar</span>
+            <span>Invitar Operador</span>
           </button>
         </div>
       </div>
@@ -295,7 +247,7 @@ export default function OperadoresView() {
         <StatCard
           label="Total Gestionados"
           value={operadores.length + invitaciones.length}
-          change="Histórico de invitaciones y colaboradores"
+          change="Histórico de colaboradores"
           trend="up"
           icon={FiShield}
           iconBg="bg-emerald-50"
@@ -303,507 +255,328 @@ export default function OperadoresView() {
         />
       </div>
 
-      {/* 3. Selector de Pestaña */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
-        <button
-          type="button"
-          onClick={() => setActiveTab('operadores')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-            activeTab === 'operadores'
-              ? 'bg-brand text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <FiUsers size={14} />
-          <span>Operadores ({operadores.length})</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('invitaciones')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-            activeTab === 'invitaciones'
-              ? 'bg-brand text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <FiMail size={14} />
-          <span>Invitaciones Enviadas ({invitaciones.length})</span>
-          {pendientesCount > 0 && (
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-          )}
-        </button>
+      {/* 3. Selector de Pestaña y Buscador */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('operadores');
+              setCurrentPage(1);
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+              activeTab === 'operadores'
+                ? 'bg-[#0B1B3D] text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <FiUsers size={14} />
+            <span>Operadores ({operadores.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('invitaciones');
+              setCurrentPage(1);
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+              activeTab === 'invitaciones'
+                ? 'bg-[#0B1B3D] text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <FiMail size={14} />
+            <span>Invitaciones ({invitaciones.length})</span>
+            {pendientesCount > 0 && (
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            )}
+          </button>
+        </div>
+
+        <div className="relative w-full md:w-80">
+          <FiSearch className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            placeholder={
+              activeTab === 'operadores'
+                ? 'Buscar por nombre o correo...'
+                : 'Buscar por correo de invitación...'
+            }
+            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+          />
+        </div>
       </div>
 
-      {/* 4. Contenido */}
-      {loading ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-xs">
-          <div className="w-8 h-8 mx-auto mb-3 border-2 border-brand border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Cargando operadores e invitaciones...
-          </p>
-        </div>
-      ) : activeTab === 'operadores' ? (
-        operadores.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center shadow-xs">
-            <div className="w-12 h-12 mx-auto rounded-2xl bg-blue-50 text-brand flex items-center justify-center mb-3 text-xl">
-              <FiUsers size={22} />
-            </div>
-            <h4 className="font-bold text-base text-slate-900 mb-1">
-              No tienes operadores registrados
-            </h4>
-            <p className="text-xs text-slate-500 max-w-md mx-auto mb-4">
-              Invita colaboradores a tu organización para que apoyen en el check-in de accesos o en la gestión de eventos.
-            </p>
-            <button
-              type="button"
-              onClick={() => setShowInviteModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-black uppercase tracking-wider shadow-sm transition-all"
-            >
-              <FiUserPlus size={14} />
-              <span>Enviar primera invitación</span>
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {operadores.map((op) => {
-              const permisos = op.permisos || [];
-              const id = op.id || op.operadorId;
-              const nombre = op.nombre || op.nombreCompleto || 'Operador';
-              const correo = op.correo || op.email || 'Sin correo registrado';
-
-              return (
-                <div
-                  key={id || correo}
-                  className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
-                >
-                  <div>
-                    {/* Header Operador */}
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-blue-50 text-brand border border-blue-100 flex items-center justify-center font-bold text-sm shrink-0">
-                          {nombre.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-sm text-slate-900 truncate">
-                            {nombre}
-                          </h4>
-                          <p className="text-[11px] text-slate-500 truncate">{correo}</p>
-                        </div>
-                      </div>
-                      <Badge variant={op.activo === false ? 'danger' : 'success'} size="sm">
-                        {op.activo === false ? 'Inactivo' : 'Activo'}
-                      </Badge>
-                    </div>
-
-                    {/* Permisos */}
-                    <div className="mt-4 pt-3 border-t border-slate-100">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">
-                        Permisos Asignados ({permisos.length})
-                      </span>
-                      {permisos.length === 0 ? (
-                        <p className="text-[11px] text-slate-400 italic">
-                          Sin permisos especiales asignados.
-                        </p>
-                      ) : (
-                        <div className="flex flex-wrap gap-1.5">
-                          {permisos.map((p) => (
-                            <span
-                              key={p}
-                              className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200"
-                            >
-                              {p}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Acciones */}
-                  <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-1.5 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() => openPermisosModal(op)}
-                      className="px-2.5 py-1.5 rounded-lg bg-[#0B1B3D] text-amber-300 hover:bg-slate-900 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-                      title="Ver detalles completos del operador y sus permisos"
-                    >
-                      <FiEye size={12} />
-                      <span>Ver Detalle</span>
-                    </button>
-
-                    <div className="flex items-center gap-1.5">
-
-
-                      <button
-                        type="button"
-                        onClick={() => openPermisosModal(op)}
-                        className="px-2 py-1.5 rounded-lg border border-amber-300/80 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                        title="Gestionar permisos"
-                      >
-                        <FiEdit2 size={12} />
-                        <span>Permisos</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setOperadorToExpulsar(op)}
-                        className="px-2 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                        title="Expulsar de la organización"
-                      >
-                        <FiTrash2 size={12} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )
-      ) : (
-        /* Pestaña: Invitaciones Enviadas */
-        invitaciones.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center shadow-xs">
-            <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3 text-xl">
-              <FiMail size={22} />
-            </div>
-            <h4 className="font-bold text-base text-slate-900 mb-1">
-              No hay invitaciones enviadas
-            </h4>
-            <p className="text-xs text-slate-500 max-w-md mx-auto mb-4">
-              Las invitaciones enviadas por correo para vincular operadores aparecerán en esta sección.
-            </p>
-          </div>
-        ) : (
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+      {/* 4. Tabla Principal */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
+          {activeTab === 'operadores' ? (
+            /* TABLA DE OPERADORES */
+            <table className="w-full text-left border-collapse bg-white">
+              <thead className="bg-white border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                <tr>
+                  <th className="py-4 px-4">Operador</th>
+                  <th className="py-4 px-4">Correo Electrónico</th>
+                  <th className="py-4 px-4">Teléfono</th>
+                  <th className="py-4 px-4 text-center">Estado</th>
+                  <th className="py-4 px-4 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs bg-white">
+                {loading ? (
                   <tr>
-                    <th className="py-3.5 px-4">Correo Invitado</th>
-                    <th className="py-3.5 px-4">Estado</th>
-                    <th className="py-3.5 px-4">Fecha de Envío</th>
-                    <th className="py-3.5 px-4 text-right">Acciones</th>
+                    <td colSpan={5} className="py-12 text-center text-slate-400">
+                      <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                      Cargando operadores...
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                  {invitaciones.map((inv, idx) => {
-                    const estado = (inv.estado || 'PENDIENTE').toUpperCase();
-                    const badgeVariant =
-                      estado === 'ACEPTADA'
-                        ? 'success'
-                        : estado === 'RECHAZADA'
-                        ? 'danger'
-                        : 'warning';
-                    const targetEmail = inv.correo || inv.correoInvitado || inv.email;
+                ) : paginatedList.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-12 text-center text-slate-400">
+                      <FiUsers className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                      No se encontraron operadores activos en tu organización.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedList.map((op, idx) => {
+                    const nombre = op.nombre || op.nombreCompleto || 'Operador';
+                    const correo = op.correo || op.email || 'Sin correo registrado';
+                    const telefono = op.telefono || op.phone || '—';
 
                     return (
-                      <tr key={inv.id || idx} className="hover:bg-slate-50/60 transition-colors">
-                        <td className="py-3.5 px-4 flex items-center gap-2 font-semibold text-slate-900">
-                          <FiMail className="text-slate-400" size={14} />
-                          <span>{targetEmail}</span>
+                      <tr key={op.id || correo || idx} className="hover:bg-slate-50/70 transition-colors">
+                        {/* Nombre del operador sin ID */}
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 font-bold flex items-center justify-center shrink-0 border border-amber-100">
+                              {nombre.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-slate-900 truncate">
+                                {nombre}
+                              </p>
+                              <span className="text-[11px] text-slate-400">
+                                Rol: Operador
+                              </span>
+                            </div>
+                          </div>
                         </td>
-                        <td className="py-3.5 px-4">
-                          <Badge variant={badgeVariant} size="sm">
+
+                        <td className="py-4 px-4 text-slate-600 font-medium">
+                          {correo}
+                        </td>
+
+                        <td className="py-4 px-4 text-slate-500">
+                          {telefono}
+                        </td>
+
+                        <td className="py-4 px-4 text-center">
+                          <Badge variant={op.activo === false ? 'danger' : 'success'} size="xs">
+                            {op.activo === false ? 'Inactivo' : 'Activo'}
+                          </Badge>
+                        </td>
+
+                        {/* Acciones: Correo directo y Revocar rol */}
+                        <td className="py-4 px-4 text-right">
+                          <div className="inline-flex items-center gap-1.5 justify-end">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setEmailModal({
+                                  isOpen: true,
+                                  email: correo,
+                                  name: nombre,
+                                  subject: 'Comunicación de la organización en EventHive',
+                                  mode: 'email',
+                                  role: 'OPERADOR',
+                                })
+                              }
+                              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                              title={`Enviar correo directo a ${nombre}`}
+                            >
+                              <FiMail size={15} />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleRevocarOperador(op)}
+                              className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
+                              title="Revocar rol de operador"
+                            >
+                              <FiTrash2 size={15} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          ) : (
+            /* TABLA DE INVITACIONES */
+            <table className="w-full text-left border-collapse bg-white">
+              <thead className="bg-white border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                <tr>
+                  <th className="py-4 px-4">Correo Invitado</th>
+                  <th className="py-4 px-4 text-center">Estado</th>
+                  <th className="py-4 px-4">Fecha de Envío</th>
+                  <th className="py-4 px-4 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs bg-white">
+                {loading ? (
+                  <tr>
+                    <td colSpan={4} className="py-12 text-center text-slate-400">
+                      <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                      Cargando invitaciones...
+                    </td>
+                  </tr>
+                ) : paginatedList.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-12 text-center text-slate-400">
+                      <FiMail className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                      No hay invitaciones enviadas en este momento.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedList.map((inv, idx) => {
+                    const estado = (inv.estado || 'PENDIENTE').toUpperCase();
+                    const targetEmail = inv.correo || inv.correoInvitado || inv.email || '—';
+
+                    return (
+                      <tr key={inv.id || idx} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-4 px-4 font-semibold text-slate-800">
+                          {targetEmail}
+                        </td>
+                        <td className="py-4 px-4 text-center">
+                          <Badge
+                            variant={
+                              estado === 'ACEPTADA'
+                                ? 'success'
+                                : estado === 'RECHAZADA'
+                                ? 'danger'
+                                : 'warning'
+                            }
+                            size="xs"
+                          >
                             {estado}
                           </Badge>
                         </td>
-                        <td className="py-3.5 px-4 text-slate-500">
-                          {inv.fechaEnvio || inv.fechaInvitacion || inv.creadoEn || 'Fecha no registrada'}
+                        <td className="py-4 px-4 text-slate-600 whitespace-nowrap">
+                          {inv.fechaCreacion || inv.fechaEnvio || inv.fecha
+                            ? formatFechaHora(inv.fechaCreacion || inv.fechaEnvio || inv.fecha)
+                            : '—'}
                         </td>
-                        <td className="py-3.5 px-4 text-right">
-                          {(estado === 'PENDIENTE' || estado === 'EXPIRADA' || estado === 'RECHAZADA') && (
+                        <td className="py-4 px-4 text-right">
+                          {estado === 'PENDIENTE' && (
                             <button
                               type="button"
                               onClick={() => handleReenviarInvitacion(targetEmail)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold transition-all cursor-pointer shadow-2xs"
-                              title="Reenviar enlace de invitación (válido por 24h)"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                              title="Reenviar invitación de acceso"
                             >
-                              <FiRefreshCw size={11} />
+                              <FiRotateCw size={12} />
                               <span>Reenviar</span>
                             </button>
                           )}
                         </td>
                       </tr>
                     );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )
-      )}
-
-
-
-      {/* DRAWER LATERAL DERECHO: Expulsar Operador */}
-      {operadorToExpulsar && (
-        <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
-          <div
-            className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
-            onClick={() => setOperadorToExpulsar(null)}
-          />
-
-          <div
-            className="relative z-50 w-full sm:w-[480px] md:w-[520px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div>
-              {/* Cabecera del Drawer */}
-              <div className="bg-rose-950 text-white p-6 relative">
-                <button
-                  type="button"
-                  onClick={() => setOperadorToExpulsar(null)}
-                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
-                  title="Cerrar panel"
-                >
-                  <FiX size={18} />
-                </button>
-
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-rose-500 text-white flex items-center justify-center font-black shadow-md">
-                    <FiTrash2 size={22} />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-rose-300 inline-block mb-1">
-                      Desvinculación Oficial
-                    </span>
-                    <h3 className="font-display text-lg font-bold text-white">
-                      Expulsar Operador
-                    </h3>
-                  </div>
-                </div>
-              </div>
-
-              {/* Contenido */}
-              <div className="p-6 space-y-5">
-                {expulsarError && (
-                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
-                    <FiAlertCircle className="shrink-0 text-rose-600" size={15} />
-                    <span>{expulsarError}</span>
-                  </div>
+                  })
                 )}
-
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                  <p className="text-xs text-slate-500 uppercase font-bold">Colaborador a retirar:</p>
-                  <p className="text-sm font-black text-slate-900">
-                    {operadorToExpulsar.nombre || 'Operador'}
-                  </p>
-                  <p className="text-xs text-slate-600 font-medium">
-                    {operadorToExpulsar.correo}
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-900 leading-relaxed space-y-2">
-                  <p className="font-bold">⚠️ Esta acción tendrá los siguientes efectos inmediatos:</p>
-                  <ul className="list-disc list-inside space-y-1 text-[11px] text-rose-800">
-                    <li>Se removerá la afiliación con tu organización.</li>
-                    <li>Perderá acceso al escaneo y check-in de boletos en tus eventos.</li>
-                    <li>No podrá acceder a la edición ni creación de eventos de tu empresa.</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setOperadorToExpulsar(null)}
-                disabled={isExpelling}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-white text-xs font-bold uppercase tracking-wider transition-all"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmExpulsar}
-                disabled={isExpelling}
-                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black uppercase tracking-wider shadow-sm transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
-              >
-                {isExpelling && (
-                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                )}
-                <span>Confirmar Expulsión</span>
-              </button>
-            </div>
-          </div>
+              </tbody>
+            </table>
+          )}
         </div>
-      )}
 
-      {/* MODAL LATERAL DERECHO: Detalle del Usuario y Gestión de Permisos (Requisito 13) */}
-      {editingOperador && (
-        <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
-          {/* Backdrop oscuro con blur suave */}
-          <div
-            className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
-            onClick={() => setEditingOperador(null)}
-          />
+        {currentList.length > pageSize && (
+          <div className="p-4 border-t border-slate-100 bg-white">
+            <Pagination
+              currentPage={currentPage}
+              totalItems={currentList.length}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
+      </div>
 
-          {/* Drawer Lateral Derecho */}
+      {/* MODAL INVITAR OPERADOR */}
+      {showInviteModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 backdrop-blur-2xs p-4 animate-in fade-in duration-200">
           <div
-            className="relative z-50 w-full sm:w-[500px] md:w-[560px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
+            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div>
-              {/* Cabecera del Drawer */}
-              <div className="bg-[#0B1B3D] text-white p-6 relative">
-                <button
-                  type="button"
-                  onClick={() => setEditingOperador(null)}
-                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
-                  title="Cerrar panel"
-                >
-                  <FiX size={18} />
-                </button>
-
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-400 text-slate-950 font-black text-xl flex items-center justify-center shrink-0 shadow-md">
-                    {(editingOperador.nombre || editingOperador.correo || 'OP')
-                      .slice(0, 2)
-                      .toUpperCase()}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-amber-300 inline-block mb-1">
-                      Detalle de Colaborador
-                    </span>
-                    <h3 className="font-display text-lg sm:text-xl font-bold text-white truncate">
-                      {editingOperador.nombre || 'Operador sin nombre'}
-                    </h3>
-                    <p className="text-xs text-slate-300 truncate">
-                      {editingOperador.correo || 'Sin correo registrado'}
-                    </p>
-                  </div>
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                  <FiUserPlus size={18} />
                 </div>
-              </div>
-
-              {/* Contenido del Drawer */}
-              <div className="p-6 space-y-6">
-                {/* 1. Datos del Usuario */}
                 <div>
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
-                    <FiUser size={13} className="text-amber-500" />
-                    <span>Información del Usuario</span>
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Rol en Organización</span>
-                      <strong className="text-slate-800 font-black">OPERADOR</strong>
-                    </div>
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Estado</span>
-                      <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
-                        <FiCheckCircle size={12} /> Activo
-                      </span>
-                    </div>
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 col-span-2">
-                      <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Teléfono</span>
-                      <strong className="text-slate-800">{editingOperador.telefono || 'No registrado'}</strong>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 2. Permisos y Accesos a Paneles */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                      <FiShield size={13} className="text-brand" />
-                      <span>Permisos y Paneles Habilitados</span>
-                    </h4>
-                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                      {selectedPermisos.length} activos
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 mb-3">
-                    Los operadores solo podrán visualizar los paneles y acciones asignados por el representante.
+                  <h3 className="font-display text-base font-bold text-slate-900">
+                    Invitar Nuevo Operador
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    El usuario recibirá un correo con enlace seguro por 24 horas
                   </p>
-
-                  <div className="space-y-2.5">
-                    {PERMISOS_DISPONIBLES.map((perm) => {
-                      const isSelected = selectedPermisos.includes(perm.id);
-                      return (
-                        <div
-                          key={perm.id}
-                          onClick={() => togglePermiso(perm.id)}
-                          className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${
-                            isSelected
-                              ? 'border-brand bg-blue-50/50 shadow-2xs text-slate-900'
-                              : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
-                          }`}
-                        >
-                          <div
-                            className={`w-5 h-5 rounded-md border mt-0.5 flex items-center justify-center transition-colors ${
-                              isSelected
-                                ? 'bg-brand border-brand text-white'
-                                : 'border-slate-300 bg-white'
-                            }`}
-                          >
-                            {isSelected && <FiCheck size={12} />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-slate-900">{perm.label}</p>
-                            <p className="text-[11px] text-slate-500 leading-relaxed">{perm.desc}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Pie del Drawer con Acciones */}
-            <div className="p-6 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between gap-3 flex-wrap">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmailModal({
-                    isOpen: true,
-                    email: editingOperador.correo,
-                    name: editingOperador.nombre,
-                    subject: 'Información de la organización',
-                  });
-                }}
-                className="px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
-              >
-                <FiMail size={13} />
-                <span>Enviar Correo</span>
-              </button>
+            <form onSubmit={handleInvite} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Correo Electrónico del Operador *
+                </label>
+                <input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="operador@ejemplo.com"
+                  required
+                  className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+                />
+              </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setEditingOperador(null)}
-                  disabled={isUpdatingPermisos}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                  onClick={() => setShowInviteModal(false)}
+                  disabled={isInviting}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
-                  type="button"
-                  onClick={handleSavePermisos}
-                  disabled={isUpdatingPermisos}
-                  className="px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-black uppercase tracking-wider shadow-sm transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
+                  type="submit"
+                  disabled={isInviting}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold uppercase tracking-wider shadow-xs transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {isUpdatingPermisos && (
-                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  )}
-                  <span>Guardar Permisos</span>
+                  <FiSend size={13} />
+                  <span>{isInviting ? 'Enviando...' : 'Enviar Invitación'}</span>
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
-      {/* Modal Réplica de Gmail para Correo e Invitación de Operadores */}
+
+      {/* COMPOSITOR DE CORREO DIRECTO */}
       <GmailComposeModal
         isOpen={emailModal.isOpen}
         onClose={() => setEmailModal((prev) => ({ ...prev, isOpen: false }))}
         initialEmail={emailModal.email}
         initialName={emailModal.name}
         defaultSubject={emailModal.subject}
-        initialMode={emailModal.mode || 'email'}
-        defaultRole={emailModal.role || 'OPERADOR'}
-        onSuccess={() => fetchData()}
+        defaultRole="OPERADOR"
+        initialMode="email"
       />
     </div>
   );

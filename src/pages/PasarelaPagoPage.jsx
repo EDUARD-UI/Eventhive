@@ -132,7 +132,7 @@ export default function PasarelaPagoPage() {
   const comisionServicio = Math.round(precioBaseTotal * 0.10); // Comisión del 10% de EventHive
   const total = precioBaseTotal + comisionServicio;
 
-  const eventDateFormatted = event?.shortDate || event?.fecha || 'Fecha por confirmar';
+  const eventDateFormatted = event?.fecha ? formatFecha(event.fecha) : (event?.shortDate || 'Fecha por confirmar');
 
   // Procesar pago exclusivamente con Tarjeta
   const handlePagar = async (e) => {

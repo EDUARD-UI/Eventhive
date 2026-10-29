@@ -273,7 +273,7 @@ export default function AdminOrganizacionesView({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+              <tr className="bg-white border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
                 <th className="py-3.5 px-4">Razón Social</th>
                 <th className="py-3.5 px-4">Representante Legal</th>
                 <th className="py-3.5 px-4">Fecha de Creación</th>
@@ -312,7 +312,7 @@ export default function AdminOrganizacionesView({
                   return (
                     <tr
                       key={org.id}
-                      className="hover:bg-slate-50/60 transition-colors"
+                      className="hover:bg-white transition-colors"
                     >
                   
                       <td className="py-4 px-4">

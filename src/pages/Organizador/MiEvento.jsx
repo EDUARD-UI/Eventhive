@@ -15,7 +15,7 @@ import Badge from '../../components/Shared/Badge.jsx';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import { organizerService } from '../../services/organizerService.js';
 import { getCategoryNames } from '../../services/categoryService.js';
-import { formatHora12 } from '../../utils/formatters.js';
+import { formatHora12, formatFecha, formatHora24, formatFechaHora } from '../../utils/formatters.js';
 import Swal from 'sweetalert2';
 
 const toneMap = {
@@ -58,7 +58,8 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
     ])
       .then(([eventsData, categoriesData]) => {
         if (!isMounted) return;
-        const normalized = (eventsData || []).map((e) => ({
+        const validEvents = (eventsData || []).filter((e) => (e.estado || '').toUpperCase() !== 'FINALIZADO' && (e.rawStatus || '').toUpperCase() !== 'FINALIZADO');
+        const normalized = validEvents.map((e) => ({
           ...e,
           id: e.id,
           title: e.titulo || e.title || 'Sin título',
@@ -170,10 +171,10 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
             </p>
             <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mt-0.5">
               <FiCalendar size={11} className="text-slate-400" />
-              <span>{row.date}</span>
+              <span>{formatFecha(row.date)}</span>
               <span className="text-slate-300">•</span>
               <FiClock size={11} className="text-slate-400" />
-              <span>{row.time || '7:00 PM'}</span>
+              <span>{formatHora24(row.time)}</span>
             </div>
           </div>
         </div>
@@ -281,7 +282,7 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-sm">
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Filtro por Categoría */}
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-1.5 text-xs">
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs">
             <span className="text-slate-400 font-medium">Categoría:</span>
             <select
               value={category}
@@ -298,7 +299,7 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
           </div>
 
           {/* Filtro por Estado */}
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-1.5 text-xs">
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs">
             <span className="text-slate-400 font-medium">Estado:</span>
             <select
               value={statusFilter}
@@ -309,8 +310,7 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
               <option value="PUBLICADO">Publicados (Activos)</option>
               <option value="BORRADOR">Borrador</option>
               <option value="PENDIENTE_REVISION">En revisión</option>
-              <option value="FINALIZADO">Finalizados</option>
-              <option value="CANCELADO">Cancelados</option>
+                            <option value="CANCELADO">Cancelados</option>
               <option value="SUSPENDIDO">Suspendidos</option>
               <option value="EN_CORRECCION">En corrección</option>
             </select>

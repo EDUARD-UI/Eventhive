@@ -90,8 +90,10 @@ export default function InicioSesion() {
 
       // Redirección por rol: Clientes van a Home (/), Organizadores a /organizacion, etc.
       let destination = '/';
-      if (userRole === 'REPRESENTANTE' || userRole === 'OPERADOR' || userRole === 'ORGANIZADOR') {
+      if (userRole === 'REPRESENTANTE' || userRole === 'ORGANIZADOR') {
         destination = '/organizacion';
+      } else if (userRole === 'OPERADOR') {
+        destination = '/';
       } else if (userRole === 'ADMINISTRADOR' || userRole === 'ADMIN') {
         destination = '/admin';
       } else if (userRole === 'MODERADOR') {

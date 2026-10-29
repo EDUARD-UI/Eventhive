@@ -100,7 +100,7 @@ export default function ModalCategoria({ categoria, onClose, onSave }) {
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 placeholder="Ej: Festivales y Conciertos"
-                className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 transition-all"
+                className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 transition-all"
               />
             </div>
 

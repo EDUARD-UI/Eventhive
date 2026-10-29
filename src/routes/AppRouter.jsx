@@ -33,7 +33,7 @@ function GuestOnlyRoute({ children }) {
 
   if (token && user?.role) {
     const role = normalizeRole(user.role);
-    if (role === 'CLIENTE') {
+    if (role === 'CLIENTE' || role === 'OPERADOR') {
       return <Navigate to="/" replace />;
     }
     return <Navigate to={getDashboardPathForRole(user.role)} replace />;
@@ -92,7 +92,7 @@ export default function AppRouter() {
         <Route
           path="/organizacion"
           element={
-            <RutaProtegida rolesPermitidos={['REPRESENTANTE', 'OPERADOR']}>
+            <RutaProtegida rolesPermitidos={['REPRESENTANTE']}>
               <OrganizadorIndex />
             </RutaProtegida>
           }

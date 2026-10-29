@@ -1,8 +1,16 @@
 import { API_BASE_URL } from '../config/api.js';
 import { session, isTokenExpired } from './session.js';
 
+
 const buildUrl = (path, params) => {
-  const url = new URL(`${API_BASE_URL}${path}`);
+  const base = `${API_BASE_URL}${path}`;
+
+  const url = new URL(
+    base,
+    typeof window !== 'undefined'
+      ? window.location.origin
+      : 'http://localhost:5173'
+  );
 
   Object.entries(params || {}).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
@@ -12,6 +20,7 @@ const buildUrl = (path, params) => {
 
   return url;
 };
+
 
 // Evita que peticiones concurrentes intenten refrescar el token en paralelo.
 // Todas comparten la misma promesa de renovación en curso.

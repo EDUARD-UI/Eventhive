@@ -4,6 +4,7 @@ import AdminLayout from '../../layouts/AdminLayout.jsx';
 
 import {
   TrendingUp,
+  Sparkles,
   Building2,
   Calendar,
   ShieldCheck,
@@ -29,6 +30,7 @@ import AdminCategoriasView from './AdminCategoriasView.jsx';
 import Swal from 'sweetalert2';
 import AdminSolicitudesView from './AdminSolicitudesView.jsx';
 import AdminPerfilView from './AdminPerfilView.jsx';
+import AdminSugerenciasAscensoView from './AdminSugerenciasAscensoView.jsx';
 
 // Modales del Módulo de Administración
 import ModalPerfilOrganizacionAdmin from '../../components/componentsAdmin/ModalPerfilOrganizacionAdmin.jsx';
@@ -223,6 +225,7 @@ export default function AdminPanel() {
         icon: ClipboardList,
         count: solicitudesVerificacion.length > 0 ? solicitudesVerificacion.length : null,
       },
+      { id: 'sugerencias-ascenso', label: 'Sugerencias de Ascenso', icon: Sparkles },
       { id: 'trabajadores', label: 'Trabajadores', icon: Users },
       { id: 'reportes', label: 'Métricas Comerciales', icon: BarChart3 },
       { id: 'usuarios', label: 'Directorio Usuarios', icon: Users },
@@ -699,6 +702,9 @@ export default function AdminPanel() {
             onEliminarCategoria={handleEliminarCategoria}
           />
         );
+
+      case 'sugerencias-ascenso':
+        return <AdminSugerenciasAscensoView />;
 
       case 'solicitudes':
         return (

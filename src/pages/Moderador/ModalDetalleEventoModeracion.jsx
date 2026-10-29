@@ -17,7 +17,7 @@ import {
 } from 'react-icons/fi';
 import Badge from '../../components/Shared/Badge.jsx';
 import moderationService from '../../services/moderationService.js';
-import { formatHora12 } from '../../utils/formatters.js';
+import { formatHora12, formatFecha, formatHora24, formatFechaHora } from '../../utils/formatters.js';
 import L from 'leaflet';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 
@@ -224,7 +224,7 @@ export default function ModalDetalleEventoModeracion({
               </div>
               <div>
                 <p className="text-[10px] uppercase font-bold text-slate-400">Fecha</p>
-                <p className="font-semibold text-slate-800">{evento.fecha || 'Sin fecha'}</p>
+                <p className="font-semibold text-slate-800">{evento.fecha ? formatFecha(evento.fecha) : 'Sin fecha'}</p>
               </div>
             </div>
 
@@ -234,7 +234,7 @@ export default function ModalDetalleEventoModeracion({
               </div>
               <div>
                 <p className="text-[10px] uppercase font-bold text-slate-400">Hora</p>
-                <p className="font-semibold text-slate-800">{evento.hora ? formatHora12(evento.hora) : 'Sin hora'}</p>
+                <p className="font-semibold text-slate-800">{evento.hora ? formatHora24(evento.hora) : 'Sin hora'}</p>
               </div>
             </div>
 

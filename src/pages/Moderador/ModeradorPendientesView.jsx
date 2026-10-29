@@ -14,7 +14,7 @@ import {
 } from 'react-icons/fi';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
-import { formatHora12 } from '../../utils/formatters.js';
+import { formatHora12, formatFecha, formatHora24, formatFechaHora } from '../../utils/formatters.js';
 
 export default function ModeradorPendientesView({
   pendientes = [],
@@ -171,7 +171,7 @@ export default function ModeradorPendientesView({
                           <div className="flex items-center gap-1.5">
                             <FiCalendar className="text-brand shrink-0" size={13} />
                             <span>
-                              {evento.fecha} {evento.hora ? `· ${formatHora12(evento.hora)}` : ''}
+                              {evento.fecha ? formatFecha(evento.fecha) : ''} {evento.hora ? `· ${formatHora24(evento.hora)}` : ''}
                             </span>
                           </div>
                         )}

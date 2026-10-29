@@ -79,7 +79,7 @@ export default function ModeradorMotivosView({ motivos = [], loading = false }) 
               placeholder="Buscar motivo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-800 outline-none focus:bg-white focus:border-brand"
+              className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:bg-white focus:border-brand"
             />
           </div>
         </div>

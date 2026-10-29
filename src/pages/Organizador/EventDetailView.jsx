@@ -16,7 +16,7 @@ import {
 import Badge from '../../components/Shared/Badge.jsx';
 import { organizerService } from '../../services/organizerService.js';
 import Swal from 'sweetalert2';
-import { formatHora12 } from '../../utils/formatters.js';
+import { formatHora12, formatFecha, formatHora24, formatFechaHora } from '../../utils/formatters.js';
 
 const toneMap = {
   PUBLICADO: 'active',
@@ -222,7 +222,7 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
                 <FiCalendar size={15} className="text-amber-500 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <span className="text-[10px] text-slate-400 uppercase font-bold block">Fecha</span>
-                  <span className="font-bold text-slate-800 truncate block">{event.fecha || 'No definida'}</span>
+                  <span className="font-bold text-slate-800 truncate block">{event.fecha ? formatFecha(event.fecha) : 'No definida'}</span>
                 </div>
               </div>
 
@@ -230,7 +230,7 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
                 <FiClock size={15} className="text-amber-600 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <span className="text-[10px] text-slate-400 uppercase font-bold block">Hora</span>
-                  <span className="font-bold text-slate-800 truncate block">{event.hora ? formatHora12(event.hora) : 'No definida'}</span>
+                  <span className="font-bold text-slate-800 truncate block">{event.hora ? formatHora24(event.hora) : 'No definida'}</span>
                 </div>
               </div>
 
@@ -333,7 +333,7 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
                             {item.accion || item.estadoResultante || 'REVISIÓN'}
                           </span>
                           <span className="text-[11px] text-slate-500 font-medium">
-                            {item.fecha ? new Date(item.fecha).toLocaleString('es-CO') : 'Reciente'}
+                            {item.fecha ? formatFechaHora(item.fecha) : 'Reciente'}
                           </span>
                         </div>
 

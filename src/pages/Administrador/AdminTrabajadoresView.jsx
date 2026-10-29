@@ -168,10 +168,14 @@ export default function AdminTrabajadoresView() {
     if (!modalRevocar) return;
     try {
       setActionLoading(true);
-      await adminService.revocarModerador(modalRevocar.id);
+      if (modalRevocar.rolNombre === 'MARKETING') {
+        await adminService.revocarRolMarketing(modalRevocar.id);
+      } else {
+        await adminService.revocarModerador(modalRevocar.id);
+      }
       setFeedbackMsg({
         type: 'success',
-        text: `El rol de moderador fue revocado exitosamente a "${modalRevocar.nombre}".`,
+        text: `El rol de ${modalRevocar.rolNombre.toLowerCase()} fue revocado exitosamente a "${modalRevocar.nombre}".`,
       });
       setModalRevocar(null);
       await fetchTrabajadores();
@@ -281,23 +285,6 @@ export default function AdminTrabajadoresView() {
                 email: '',
                 name: '',
                 subject: '',
-                mode: 'comunicado',
-              })
-            }
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all active:scale-95 shadow-2xs cursor-pointer"
-          >
-            <Mail size={14} className="text-slate-500" />
-            <span>Redactar Comunicado</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              setMailModal({
-                isOpen: true,
-                email: '',
-                name: '',
-                subject: '',
                 mode: 'invite',
               })
             }
@@ -396,7 +383,7 @@ export default function AdminTrabajadoresView() {
           {activeTab === 'trabajadores' ? (
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                <tr className="bg-white border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
                   <th className="py-3.5 px-4">Colaborador</th>
                   <th className="py-3.5 px-4">Correo</th>
                   <th className="py-3.5 px-4">Teléfono</th>
@@ -413,10 +400,10 @@ export default function AdminTrabajadoresView() {
                   </tr>
                 ) : (
                   paginatedData.map((t) => (
-                    <tr key={t.id} className="hover:bg-slate-50/70 transition-colors">
+                    <tr key={t.id} className="hover:bg-white transition-colors">
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-slate-900">{t.nombre}</div>
-                        <span className="text-[11px] text-slate-400 font-mono">ID #{t.id}</span>
+                        
                       </td>
 
                       <td className="py-3.5 px-4 text-slate-600 font-medium">
@@ -455,16 +442,14 @@ export default function AdminTrabajadoresView() {
                             <Mail size={15} />
                           </button>
 
-                          {t.rolNombre === 'MODERADOR' && (
-                            <button
+                          <button
                               type="button"
                               onClick={() => setModalRevocar(t)}
                               className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
-                              title="Revocar rol de moderador"
+                              title={`Revocar rol de ${t.rolNombre.toLowerCase()}`}
                             >
                               <Trash2 size={15} />
                             </button>
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -476,7 +461,7 @@ export default function AdminTrabajadoresView() {
             /* TABLA DE INVITACIONES EMITIDAS POR EL ADMINISTRADOR */
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                <tr className="bg-white border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
                   <th className="py-3.5 px-4">Correo Invitado</th>
                   <th className="py-3.5 px-4">Rol Asignado</th>
                   <th className="py-3.5 px-4">Fecha de Envío</th>
@@ -503,7 +488,7 @@ export default function AdminTrabajadoresView() {
                         : 'warning';
 
                     return (
-                      <tr key={inv.id || idx} className="hover:bg-slate-50/70 transition-colors">
+                      <tr key={inv.id || idx} className="hover:bg-white transition-colors">
                         <td className="py-3.5 px-4 font-bold text-slate-900">
                           {inv.correo}
                         </td>

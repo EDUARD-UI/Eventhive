@@ -149,7 +149,7 @@ export default function AdminModeradoresView({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+              <tr className="bg-white border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
                 <th className="py-3.5 px-4">Nombre Completo</th>
                 <th className="py-3.5 px-4">Correo Electrónico</th>
                 <th className="py-3.5 px-4">Teléfono</th>

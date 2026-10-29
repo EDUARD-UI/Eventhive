@@ -135,7 +135,7 @@ export default function StyledDatePicker({
       const parts = value.split('-');
       if (parts.length === 3) {
         const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-        return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+        return formatFecha(value);
       }
       return value;
     } catch {

@@ -6,13 +6,84 @@ export function formatPrice(value) {
 }
 
 /**
+ * Formatea una fecha estrictamente en formato {dia/mes/año} (DD/MM/YYYY).
+ * Soporta cadenas ISO ("2026-10-14T19:30:00"), formato fecha ("2026-10-14"),
+ * Date objects y timestamps.
+ */
+export function formatFecha(dateVal) {
+  if (!dateVal && dateVal !== 0) return '';
+  if (typeof dateVal === 'string') {
+    const clean = dateVal.trim();
+    const datePart = clean.includes('T') ? clean.split('T')[0] : clean.split(' ')[0];
+    const parts = datePart.split('-');
+    if (parts.length === 3 && parts[0].length === 4) {
+      const [year, month, day] = parts;
+      return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+    }
+    const slashParts = datePart.split('/');
+    if (slashParts.length === 3 && slashParts[2].length === 4) {
+      return datePart;
+    }
+  }
+  const d = dateVal instanceof Date ? dateVal : new Date(dateVal);
+  if (isNaN(d.getTime())) return String(dateVal);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+/**
+ * Formatea una hora en formato de 24 horas {hora/minutos} (HH:mm).
+ */
+export function formatHora24(timeVal) {
+  if (!timeVal && timeVal !== 0) return '';
+  if (timeVal instanceof Date) {
+    return `${String(timeVal.getHours()).padStart(2, '0')}:${String(timeVal.getMinutes()).padStart(2, '0')}`;
+  }
+  const str = String(timeVal).trim();
+  if (str.includes('T') || (str.includes('-') && str.includes(' '))) {
+    const timePart = str.includes('T') ? str.split('T')[1] : str.split(' ')[1];
+    return formatHora24(timePart);
+  }
+  const match12h = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
+  if (match12h) {
+    let hours = parseInt(match12h[1], 10);
+    const minutes = match12h[2];
+    const modifier = match12h[3].toUpperCase();
+    if (modifier === 'PM' && hours < 12) hours += 12;
+    else if (modifier === 'AM' && hours === 12) hours = 0;
+    return `${String(hours).padStart(2, '0')}:${minutes}`;
+  }
+  const match24h = str.match(/^(\d{1,2}):(\d{2})/);
+  if (match24h) {
+    return `${match24h[1].padStart(2, '0')}:${match24h[2].padStart(2, '0')}`;
+  }
+  return str;
+}
+
+/**
+ * Formatea fecha y hora estrictamente según la regla:
+ * {dia/mes/año} y si tiene hora acompañando es {hora/minutos} (ej: "14/10/2026 19:30").
+ */
+export function formatFechaHora(dateVal, timeVal = null) {
+  if (!dateVal && dateVal !== 0) return '';
+  const dateFormatted = formatFecha(dateVal);
+  let timeStr = '';
+  if (timeVal) {
+    timeStr = formatHora24(timeVal);
+  } else if (typeof dateVal === 'string' && (dateVal.includes('T') || dateVal.includes(' '))) {
+    const rawTime = dateVal.includes('T') ? dateVal.split('T')[1] : dateVal.split(' ')[1];
+    timeStr = formatHora24(rawTime);
+  } else if (dateVal instanceof Date) {
+    timeStr = `${String(dateVal.getHours()).padStart(2, '0')}:${String(dateVal.getMinutes()).padStart(2, '0')}`;
+  }
+  return timeStr ? `${dateFormatted} ${timeStr}` : dateFormatted;
+}
+
+/**
  * Formatea cualquier valor de hora o fecha/hora en formato estricto de 12 horas (hh:mm AM/PM).
  * Ejemplos: "08:30 AM", "12:00 PM", "07:45 PM".
- * Soporta instancias de Date, cadenas ISO ("2026-10-13T20:30:00"), strings 24h ("20:30", "08:15:00")
- * y cadenas existentes AM/PM normalizándolas.
- *
- * @param {string|Date|number} timeValue
- * @returns {string} Hora formateada como "hh:mm AM" o "hh:mm PM".
  */
 export function formatHora12(timeValue) {
   if (!timeValue && timeValue !== 0) return '';
@@ -27,13 +98,11 @@ export function formatHora12(timeValue) {
     const str = String(timeValue).trim();
     if (!str) return '';
 
-    // 1. Si contiene fecha ISO o timestamp ("2026-10-13T20:30:00" o "2026-10-13 20:30:00")
     if (str.includes('T') || (str.includes('-') && str.includes(' '))) {
       const timePart = str.includes('T') ? str.split('T')[1] : str.split(' ')[1];
       return formatHora12(timePart);
     }
 
-    // 2. Si viene con formato 12 horas AM/PM (ej: "7:30 PM", "07:30 pm", "12:00 AM")
     const match12h = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
     if (match12h) {
       hours = parseInt(match12h[1], 10);
@@ -42,7 +111,6 @@ export function formatHora12(timeValue) {
       if (modifier === 'PM' && hours < 12) hours += 12;
       else if (modifier === 'AM' && hours === 12) hours = 0;
     } else {
-      // 3. Si viene en formato 24h: HH:mm o HH:mm:ss o 24:00
       const match24h = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?/);
       if (match24h) {
         hours = parseInt(match24h[1], 10);
@@ -53,7 +121,6 @@ export function formatHora12(timeValue) {
     }
   }
 
-  // Corregir horas >= 24 (ej: 24:00 -> 00:00)
   if (hours >= 24) hours = hours % 24;
 
   const modifier = hours >= 12 ? 'PM' : 'AM';
@@ -137,4 +204,3 @@ export function getCategoryGradient(category = '') {
   }
   return 'bg-gradient-to-br from-[#0a1838] via-[#152e69] to-[#007bff]';
 }
-

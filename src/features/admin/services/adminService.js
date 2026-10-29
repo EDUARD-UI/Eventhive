@@ -619,6 +619,30 @@ export const adminService = {
   async getRutUrl(orgId) {
     return httpClient.get(`/organizaciones/${orgId}/rut-url`);
   },
+
+  // 15. SUGERENCIAS DE ASCENSO DE ORGANIZACIÓN (GET /api/organizaciones/sugerencias-pendientes)
+  async getSugerenciasAscenso({ page = 0, size = 50 } = {}) {
+    try {
+      const res = await httpClient.get('/organizaciones/sugerencias-pendientes', { page, size });
+      const content = res?.content || res?.data?.content || (Array.isArray(res) ? res : []);
+      return {
+        success: true,
+        data: content,
+        total: res?.totalElements ?? content.length,
+      };
+    } catch (err) {
+      console.warn('Error al obtener sugerencias de ascenso:', err);
+      return { success: true, data: [], total: 0 };
+    }
+  },
+
+  async aprobarSugerenciaAscenso(sugerenciaId) {
+    return httpClient.patch(`/organizaciones/${sugerenciaId}/aprobar-sugerencia`);
+  },
+
+  async rechazarSugerenciaAscenso(sugerenciaId) {
+    return httpClient.patch(`/organizaciones/${sugerenciaId}/rechazar-sugerencia`);
+  },
 };
 
 export default adminService;

@@ -180,7 +180,7 @@ export default function AsistentesView() {
       header: 'Boleto / Asiento',
       key: 'entrada',
       render: (val) => (
-        <span className="font-mono text-xs font-bold text-slate-700 bg-slate-50 px-2 py-1 rounded border border-slate-200">
+        <span className="font-mono text-xs font-bold text-slate-700 bg-white px-2 py-1 rounded border border-slate-200">
           {val}
         </span>
       ),
@@ -421,8 +421,8 @@ export default function AsistentesView() {
       {/* 4. Modal para Crear o Editar Asistente */}
       {editingAttendee && (
         createPortal(
-        <div className="fixed inset-0 z-[100] flex min-h-screen w-screen items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-start justify-between gap-3 pb-4 border-b border-slate-100">
               <div>
                 <h3 className="font-display text-lg font-bold text-slate-900">

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
+import { formatFechaHora } from '../../utils/formatters.js';
 
 export default function AdminHistorialView({ auditLogs: initialLogs = [] }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,7 +44,7 @@ export default function AdminHistorialView({ auditLogs: initialLogs = [] }) {
         usuarioNombre: 'Carlos Administrador',
         usuarioRol: 'ADMINISTRADOR',
         elementoTipo: 'USUARIO',
-        elementoNombre: 'Sofía Martínez (ID: 22)',
+        elementoNombre: 'Sofía Martínez',
         resultado: 'APLICADO',
         detalles: 'Conclusión de periodo contractual de moderación.',
       },
@@ -174,7 +175,7 @@ export default function AdminHistorialView({ auditLogs: initialLogs = [] }) {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
 
@@ -200,7 +201,7 @@ export default function AdminHistorialView({ auditLogs: initialLogs = [] }) {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+              <tr className="bg-white border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
                 <th className="py-3.5 px-4">Fecha / Hora</th>
                 <th className="py-3.5 px-4">Acción Realizada</th>
                 <th className="py-3.5 px-4">Usuario Responsable</th>
@@ -229,7 +230,7 @@ export default function AdminHistorialView({ auditLogs: initialLogs = [] }) {
                       <td className="py-4 px-4 text-slate-600 whitespace-nowrap font-mono text-[11px]">
                         <span className="flex items-center gap-1.5">
                           <Clock className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{log.fecha}</span>
+                          <span>{formatFechaHora(log.fecha)}</span>
                         </span>
                       </td>
 

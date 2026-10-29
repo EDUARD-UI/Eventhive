@@ -13,7 +13,7 @@ import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import moderationService from '../../services/moderationService.js';
 import categoryService from '../../services/categoryService.js';
-import { formatHora12 } from '../../utils/formatters.js';
+import { formatHora12, formatFecha, formatHora24, formatFechaHora } from '../../utils/formatters.js';
 
 const ESTADOS_DISPONIBLES = [
   { value: 'TODOS', label: 'Todos los estados' },
@@ -191,7 +191,7 @@ export default function ModeradorHistorialView({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[750px] border-collapse text-left">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <tr className="border-b border-slate-200 bg-white text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 <th className="px-5 py-3.5">Evento</th>
                 <th className="px-5 py-3.5">Organización</th>
                 <th className="px-5 py-3.5">Categoría</th>
@@ -239,7 +239,7 @@ export default function ModeradorHistorialView({
                   return (
                     <tr
                       key={evento.id}
-                      className="hover:bg-slate-50/60 transition-colors"
+                      className="hover:bg-white transition-colors"
                     >
                       {/* Evento */}
                       <td className="px-5 py-4">

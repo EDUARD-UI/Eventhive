@@ -270,7 +270,7 @@ export default function GmailComposeModal({
         <div className="bg-[#f2f6fc] px-4 py-2.5 flex items-center justify-between select-none border-b border-[#e5e9f0] shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             <h2 id="gmail-compose-heading" className="text-xs sm:text-sm font-semibold text-[#1f1f1f] truncate">
-              {mode === 'invite' ? 'Nueva invitación institucional' : 'Mensaje nuevo'}
+              'Mensaje directo al usuario'
             </h2>
             {isSending && (
               <span className="text-[11px] text-[#0b57d0] font-medium animate-pulse ml-1">

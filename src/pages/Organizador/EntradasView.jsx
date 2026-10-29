@@ -49,8 +49,9 @@ export default function EntradasView() {
 
   // Eventos para el resumen de ventas
   const eventosGanancias = useMemo(() => {
-    if (estadisticas.eventos.length > 0) {
-      return estadisticas.eventos.map((ev, idx) => ({
+    const activeEvs = estadisticas.eventos.filter((ev) => (ev.estado || '').toUpperCase() !== 'FINALIZADO');
+    if (activeEvs.length > 0) {
+      return activeEvs.map((ev, idx) => ({
         key: `ev-stat-${idx}`,
         titulo: ev.titulo || ev.nombre || ev.nombreEvento || 'Evento',
         boletasVendidas: ev.boletasVendidas ?? ev.totalBoletasVendidas ?? 0,
@@ -133,7 +134,7 @@ export default function EntradasView() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <thead className="bg-white border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 <tr>
                   <th className="py-3.5 px-4">Nombre del Evento</th>
                   <th className="py-3.5 px-4 text-center">Boletas Vendidas</th>

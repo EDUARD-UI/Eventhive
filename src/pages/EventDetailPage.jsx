@@ -17,7 +17,7 @@ import EventListCard from '../components/common/EventListCard.jsx';
 import PasarelaPagoSimuladaModal from '../components/common/PasarelaPagoSimuladaModal.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
-import { getCategoryGradient } from '../utils/formatters.js';
+import { getCategoryGradient, formatFecha, formatHora24 } from '../utils/formatters.js';
 import { useLenisScroll } from '../hooks/useLenisScroll.js';
 import { useLanguage } from '../context/LanguageContext.jsx';
 
@@ -535,12 +535,12 @@ export default function EventDetailPage() {
                     <div className="flex flex-wrap items-center gap-4 font-semibold text-sm sm:text-base text-slate-700 dark:text-slate-300">
                       <div className="flex items-center gap-2">
                         <FiCalendar className="text-amber-500 shrink-0" size={18} />
-                        <span>{event.date}</span>
+                        <span>{formatFecha(event.fecha || event.date)}</span>
                       </div>
                       {event.hora && (
                         <div className="flex items-center gap-2">
                           <FiClock className="text-amber-500 shrink-0" size={17} />
-                          <span>{event.hora}</span>
+                          <span>{formatHora24(event.hora)}</span>
                         </div>
                       )}
                     </div>

@@ -161,16 +161,7 @@ export default function AdminUsuariosView({
             <option value="ADMINISTRADOR">Administradores</option>
           </select>
 
-          {/* Botón Redactar Correo Estilo Gmail */}
-          <button
-            type="button"
-            onClick={() => setMailModal({ isOpen: true, email: '', name: '', subject: '' })}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-xs cursor-pointer shrink-0"
-            title="Redactar comunicado institucional con Gmail"
-          >
-            <Mail size={15} />
-            <span>Redactar Correo</span>
-          </button>
+          
         </div>
       </div>
 
@@ -179,7 +170,7 @@ export default function AdminUsuariosView({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+              <tr className="bg-white border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
                 <th className="py-3.5 px-4">Nombre de Usuario</th>
                 <th className="py-3.5 px-4">Teléfono</th>
                 <th className="py-3.5 px-4 text-center">Rol del Usuario</th>
@@ -211,7 +202,7 @@ export default function AdminUsuariosView({
                       : null;
 
                   return (
-                    <tr key={user.id} className="hover:bg-slate-50/60 transition-colors">
+                    <tr key={user.id} className="hover:bg-white transition-colors">
 
                       {/* Nombre de Usuario */}
                       <td className="py-4 px-4">
@@ -245,7 +236,7 @@ export default function AdminUsuariosView({
                       {/* Organización Vinculada */}
                       <td className="py-4 px-4">
                         {orgName ? (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-800 font-medium">
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white border border-slate-200/80 text-slate-800 font-medium">
                             <Building2 className="w-3.5 h-3.5 text-primary shrink-0" />
                             <span className="font-semibold">{orgName}</span>
                           </div>
@@ -262,7 +253,7 @@ export default function AdminUsuariosView({
                           <button
                             type="button"
                             onClick={() => setSelectedUserForDrawer(user)}
-                            className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 text-xs font-bold transition-all active:scale-95"
+                            className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-white text-xs font-bold transition-all active:scale-95"
                             title="Ver detalle y editar usuario"
                           >
                             <Eye className="w-3.5 h-3.5 text-slate-500" />
@@ -279,7 +270,7 @@ export default function AdminUsuariosView({
                                 subject: `Comunicación para ${user.nombre}`,
                               })
                             }
-                            className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 text-xs font-bold transition-all active:scale-95"
+                            className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-white text-xs font-bold transition-all active:scale-95"
                             title="Enviar correo individual a este usuario"
                           >
                             <Mail className="w-3.5 h-3.5 text-slate-500" />

@@ -1,4 +1,5 @@
 import adminService from '../../features/admin/services/adminService.js';
+import { formatFecha, formatFechaHora } from '../../utils/formatters.js';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -160,7 +161,7 @@ export default function AdminSolicitudesView({
                     {sol.fechaSolicitud && (
                       <div className="flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>Enviado: {sol.fechaSolicitud.split('T')[0]}</span>
+                        <span>Enviado: {formatFecha(sol.fechaSolicitud)}</span>
                       </div>
                     )}
                   </div>

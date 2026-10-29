@@ -68,11 +68,11 @@ export default function ModalPromocion({ onClose, onSave, promocion }) {
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 sm:p-6 overflow-y-auto no-scrollbar animate-in fade-in duration-200"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 sm:p-6 overflow-y-auto  animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] overflow-y-auto no-scrollbar p-6 shadow-2xl border border-slate-100"
+        className="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] overflow-y-auto  p-6 shadow-2xl border border-slate-100"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -113,7 +113,7 @@ export default function ModalPromocion({ onClose, onSave, promocion }) {
                   value={codigo}
                   onChange={(e) => setCodigo(e.target.value.toUpperCase())}
                   placeholder="Ej: CARTAGENA20"
-                  className="w-full text-xs font-mono uppercase font-bold px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 transition-all"
+                  className="w-full text-xs font-mono uppercase font-bold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 transition-all"
                 />
               </div>
 
@@ -127,7 +127,7 @@ export default function ModalPromocion({ onClose, onSave, promocion }) {
                   value={eventoNombre}
                   onChange={(e) => setEventoNombre(e.target.value)}
                   placeholder="Ej: Festival de Jazz 2026 (o vacío para global)"
-                  className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 transition-all"
+                  className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 transition-all"
                 />
               </div>
 
@@ -163,7 +163,7 @@ export default function ModalPromocion({ onClose, onSave, promocion }) {
                     value={valor}
                     onChange={(e) => setValor(e.target.value)}
                     placeholder={tipo === 'Porcentaje' ? '20%' : '$15.000 COP'}
-                    className="w-full text-xs font-bold px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#087fea] transition-all"
+                    className="w-full text-xs font-bold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-[#087fea] transition-all"
                   />
                 </div>
               </div>
@@ -179,7 +179,7 @@ export default function ModalPromocion({ onClose, onSave, promocion }) {
                     required
                     value={limite}
                     onChange={(e) => setLimite(Number(e.target.value))}
-                    className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#087fea] transition-all"
+                    className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-[#087fea] transition-all"
                   />
                 </div>
 
@@ -193,7 +193,7 @@ export default function ModalPromocion({ onClose, onSave, promocion }) {
                     value={expira}
                     onChange={(e) => setExpira(e.target.value)}
                     placeholder="31 Dic 2026"
-                    className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#087fea] transition-all"
+                    className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-[#087fea] transition-all"
                   />
                 </div>
               </div>
@@ -208,7 +208,7 @@ export default function ModalPromocion({ onClose, onSave, promocion }) {
                   value={bannerTexto}
                   onChange={(e) => setBannerTexto(e.target.value)}
                   placeholder="Mensaje de impacto que verá el usuario en la plataforma"
-                  className="w-full text-xs font-medium px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#087fea] transition-all"
+                  className="w-full text-xs font-medium px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-[#087fea] transition-all"
                 />
               </div>
 

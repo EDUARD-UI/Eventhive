@@ -142,7 +142,7 @@ export default function ModalInvitarTrabajadorAdmin({
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   placeholder="Ej: Carlos Silva"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 text-xs sm:text-sm text-slate-800 transition-all outline-none"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 text-xs sm:text-sm text-slate-800 transition-all outline-none"
                 />
               </div>
             </div>
@@ -160,7 +160,7 @@ export default function ModalInvitarTrabajadorAdmin({
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="colaborador@eventhive.com"
                   required
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 text-xs sm:text-sm text-slate-800 transition-all outline-none"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 text-xs sm:text-sm text-slate-800 transition-all outline-none"
                 />
               </div>
             </div>
@@ -177,7 +177,7 @@ export default function ModalInvitarTrabajadorAdmin({
                   value={telefono}
                   onChange={(e) => setTelefono(e.target.value)}
                   placeholder="3001234567"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 text-xs sm:text-sm text-slate-800 transition-all outline-none"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 text-xs sm:text-sm text-slate-800 transition-all outline-none"
                 />
               </div>
             </div>
@@ -192,7 +192,7 @@ export default function ModalInvitarTrabajadorAdmin({
                 <select
                   value={rol}
                   onChange={(e) => setRol(e.target.value)}
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 text-xs sm:text-sm text-slate-800 transition-all outline-none bg-white font-bold"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 text-xs sm:text-sm text-slate-800 transition-all outline-none bg-white font-bold"
                 >
                   <option value="MODERADOR">MODERADOR (Revisión y supervisión de eventos)</option>
                   <option value="MARKETING">MARKETING (Gestión de banners y promociones)</option>
@@ -213,7 +213,7 @@ export default function ModalInvitarTrabajadorAdmin({
                 value={mensaje}
                 onChange={(e) => setMensaje(e.target.value)}
                 placeholder="Te invitamos a ser parte del equipo operativo de EventHive..."
-                className="w-full p-3 rounded-xl border border-slate-200 focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 text-xs sm:text-sm text-slate-800 transition-all outline-none resize-none"
+                className="w-full p-3 rounded-xl border border-slate-200 bg-white focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 text-xs sm:text-sm text-slate-800 transition-all outline-none resize-none"
               />
             </div>
           </form>
