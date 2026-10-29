@@ -1,7 +1,7 @@
 /**
  * Configuración de la URL base del backend para EventHive.
- * En desarrollo local (Vite dev server) enruta a través de '/api' para evitar errores de CORS.
- * En producción se conecta directamente al backend en Render.
+ * Conecta directamente al backend desplegado en Render (o a la URL definida en VITE_API_URL).
+ * El backend de Spring Boot ya cuenta con soporte CORS completo para http://localhost:5173.
  */
 
 const RENDER_API_URL = 'https://eventhive-backend-p903.onrender.com/api';
@@ -16,7 +16,7 @@ export const formatApiUrl = (url) => {
 
 export const API_BASE_URL = customUrl
   ? formatApiUrl(customUrl)
-  : (import.meta.env.DEV ? '/api' : RENDER_API_URL);
+  : RENDER_API_URL;
 
 export const getApiBaseUrl = () => API_BASE_URL;
 
