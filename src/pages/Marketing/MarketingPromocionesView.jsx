@@ -1006,7 +1006,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
             </div>
 
             {/* Footer fijo del drawer */}
-            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-3">
+            <div className="p-6 border-t border-slate-100 bg-white flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setPlanDrawerOpen(false)}
@@ -1152,7 +1152,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-3">
+            <div className="p-6 border-t border-slate-100 bg-white flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setPromoImageModalEvent(null)}

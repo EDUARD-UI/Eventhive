@@ -567,7 +567,12 @@ export default function AdminTrabajadoresView() {
                 disabled={actionLoading}
                 className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-sm"
               >
-                {actionLoading ? 'Revocando...' : 'Sí, Revocar'}
+                {actionLoading ? (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                    Revocando...
+                  </span>
+                ) : 'Sí, Revocar'}
               </button>
             </div>
           </div>

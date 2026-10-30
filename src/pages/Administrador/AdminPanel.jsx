@@ -760,7 +760,7 @@ export default function AdminPanel() {
               toast.type === 'error'
                 ? 'bg-rose-50/95 border-rose-200 text-rose-800'
                 : toast.type === 'info'
-                ? 'bg-indigo-50/95 border-indigo-200 text-indigo-800'
+                ? 'bg-blue-50/95 border-blue-200 text-blue-800'
                 : 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
             }`}
           >

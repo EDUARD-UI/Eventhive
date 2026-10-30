@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { FiInbox, FiSearch } from 'react-icons/fi';
 import Pagination from './Pagination.jsx';
+import ActionButton from './ActionButton.jsx';
 
 export default function DataTable({
   title,
@@ -95,13 +96,13 @@ export default function DataTable({
             )}
 
             {actionLabel && (
-              <button
-                type="button"
+              <ActionButton
                 onClick={onAction}
-                className="inline-flex items-center gap-1 rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 transition-colors"
+                variant="primary"
+                className="gap-1 px-3 py-1.5"
               >
                 {actionLabel}
-              </button>
+              </ActionButton>
             )}
           </div>
         </div>

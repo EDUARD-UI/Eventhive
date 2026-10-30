@@ -487,7 +487,12 @@ export default function ModalDetalleEventoModeracion({
                         : 'bg-amber-600 hover:bg-amber-700'
                     }`}
                   >
-                    {actionLoading ? 'Procesando...' : 'Confirmar Envío'}
+                    {actionLoading ? (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                        Procesando...
+                      </span>
+                    ) : 'Confirmar Envío'}
                   </button>
                 </div>
               </form>
@@ -496,7 +501,7 @@ export default function ModalDetalleEventoModeracion({
         </div>
 
         {/* Footer de Acciones del Moderador (Requisito 5.2: solo para PENDIENTE_REVISION) */}
-        <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="p-4 sm:p-5 bg-white border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <span className="text-[11px] text-slate-500 font-medium">
             Revisión técnica de publicación
           </span>

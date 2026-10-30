@@ -29,3 +29,26 @@
   --panel-brand-light: rgba(8, 127, 234, 0.12);
   --panel-sidebar-bg: #131b2e;
 }
+
+.panel-theme {
+  --panel-bg: #f4f6fa;
+  --panel-card-bg: #ffffff;
+  --panel-border: #e2e8f0;
+  --panel-border-subtle: #edf2f7;
+  --panel-text-main: #172033;
+  --panel-text-muted: #64748b;
+  --panel-brand: #087fea;
+  --panel-brand-hover: #0066c9;
+  --panel-brand-light: #e8f2ff;
+  --panel-accent: #ffc107;
+  --panel-accent-dark: #d9a406;
+  --panel-sidebar-bg: #131b2e;
+}
+
+:is(.admin-theme, .moderador-theme, .panel-theme) :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='file']),
+  select,
+  textarea
+) {
+  background-color: #ffffff;
+}

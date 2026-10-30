@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import {
   FiLock,
@@ -24,7 +24,7 @@ import { organizerService } from '../services/organizerService.js';
 import { getEventById } from '../services/eventService.js';
 import { session } from '../services/session.js';
 import { useTheme } from '../context/ThemeContext.jsx';
-import { formatHora12 } from '../utils/formatters.js';
+import { formatFecha } from '../utils/formatters.js';
 
 // Chip EMV metálico dorado para la tarjeta dorada ámbar
 function EmvGoldChip() {

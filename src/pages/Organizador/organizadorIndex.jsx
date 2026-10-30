@@ -614,7 +614,7 @@ export default function OrganizadorIndex() {
 
                 <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-purple-50 text-purple-600">
+                    <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600">
                       <FiCalendar size={18} />
                     </div>
                     <div>

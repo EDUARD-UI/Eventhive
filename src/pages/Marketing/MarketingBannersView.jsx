@@ -523,7 +523,7 @@ export default function MarketingBannersView() {
             </div>
 
             {/* Footer con Acciones */}
-            <div className="p-6 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+            <div className="p-6 bg-white border-t border-slate-200 flex items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={handleDeleteBanner}
@@ -550,7 +550,11 @@ export default function MarketingBannersView() {
                   disabled={savingPos !== null}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-300 font-black text-xs uppercase tracking-wider shadow-sm transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
-                  <Save size={14} />
+                  {savingPos !== null ? (
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-amber-300/40 border-t-amber-300" />
+                  ) : (
+                    <Save size={14} />
+                  )}
                   <span>{savingPos !== null ? 'Guardando...' : 'Guardar Cambios'}</span>
                 </button>
               </div>

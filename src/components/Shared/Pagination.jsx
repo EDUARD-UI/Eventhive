@@ -107,7 +107,7 @@ export default function Pagination({
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3.5 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0B1428]/50 text-xs text-slate-600 dark:text-slate-400 select-none ${className}`}
+      className={`flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3.5 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0B1428] text-xs text-slate-600 dark:text-slate-400 select-none ${className}`}
     >
       {/* Información de registros y selector de tamaño */}
       <div className="flex flex-wrap items-center gap-3 text-slate-500 dark:text-slate-400">

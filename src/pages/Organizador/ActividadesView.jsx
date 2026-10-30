@@ -70,7 +70,7 @@ const ACTIVIDADES_SEED = [
     icono: FiShield,
     estado: 'Vigente',
     tone: 'active',
-    color: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+    color: 'bg-blue-50 text-blue-600 border-blue-200',
   },
   {
     id: 4,
@@ -333,8 +333,8 @@ export default function ActividadesView() {
           change="En 2 salas simultáneas"
           trend="up"
           icon={FiCheckCircle}
-          iconBg="bg-purple-50"
-          iconColor="text-purple-600"
+          iconBg="bg-blue-50"
+          iconColor="text-blue-600"
         />
       </div>
 

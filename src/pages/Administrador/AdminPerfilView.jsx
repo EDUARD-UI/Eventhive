@@ -531,7 +531,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 </h4>
                 <span className="text-[11px] text-slate-500 font-medium">Boletos emitidos</span>
               </div>
-              <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-600">
+              <div className="p-3 rounded-2xl bg-blue-50 text-blue-600">
                 <Ticket className="w-6 h-6" />
               </div>
             </div>
@@ -741,7 +741,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
               </form>
             </div>
 
-            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-3">
+            <div className="p-6 border-t border-slate-100 bg-white flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setShowEditDrawer(false)}

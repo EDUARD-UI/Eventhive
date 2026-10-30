@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
+import ActionButton from '../../components/Shared/ActionButton.jsx';
 import adminService from '../../features/admin/services/adminService.js';
 
 export default function AdminModeradoresView({
@@ -176,7 +177,7 @@ export default function AdminModeradoresView({
 
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center font-bold text-indigo-700 text-sm shrink-0">
+                        <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center font-bold text-blue-700 text-sm shrink-0">
                           {mod.nombre?.charAt(0) || 'M'}
                         </div>
                         <span className="font-bold text-slate-900">{mod.nombre}</span>
@@ -207,15 +208,15 @@ export default function AdminModeradoresView({
 
 
                     <td className="py-4 px-4 text-right">
-                      <button
-                        type="button"
+                      <ActionButton
                         onClick={() => setModalRevocar(mod)}
-                        className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-xl border border-rose-200 text-rose-700 bg-rose-50/60 hover:bg-rose-100 text-xs font-bold transition-all active:scale-95"
+                        variant="danger"
+                        className="gap-1.5 py-1.5 px-3"
                         title="Revocar permisos de moderador a este usuario"
                       >
-                        <UserX className="w-3.5 h-3.5 text-rose-600" />
+                        <UserX className="w-3.5 h-3.5" />
                         <span>Revocar Rol</span>
-                      </button>
+                      </ActionButton>
                     </td>
                   </tr>
                 ))
@@ -273,14 +274,15 @@ export default function AdminModeradoresView({
                 >
                   Cancelar
                 </button>
-                <button
-                  type="button"
+                <ActionButton
                   onClick={handleConfirmRevocar}
+                  variant="danger"
                   disabled={actionLoading}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-xs transition-all active:scale-95 disabled:opacity-50"
+                  loadingText="Procesando revocación..."
+                  className="px-4 py-2"
                 >
-                  {actionLoading ? 'Procesando...' : 'Confirmar Revocación'}
-                </button>
+                  Confirmar Revocación
+                </ActionButton>
               </div>
             </div>
           </div>

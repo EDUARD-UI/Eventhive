@@ -913,7 +913,7 @@ export default function PerfilOrganizador() {
               </div>
 
               {/* Footer del Drawer */}
-              <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 bg-slate-50 dark:bg-[#070D1B]">
+              <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 bg-white dark:bg-[#0B1428]">
                 <button
                   type="button"
                   onClick={() => setIsEditDrawerOpen(false)}

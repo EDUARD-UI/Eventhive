@@ -244,7 +244,7 @@ export default function AdminHistorialView({ auditLogs: initialLogs = [] }) {
                       {/* Usuario que realizó la acción */}
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-700 font-bold flex items-center justify-center text-xs shrink-0 border border-indigo-100">
+                          <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 font-bold flex items-center justify-center text-xs shrink-0 border border-blue-100">
                             {usuarioNombre.charAt(0)}
                           </div>
                           <div>

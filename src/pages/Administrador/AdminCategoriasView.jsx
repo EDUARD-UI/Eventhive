@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import ModalCategoria from '../../components/componentsAdmin/ModalCategoria.jsx';
+import ActionButton from '../../components/Shared/ActionButton.jsx';
 
 export default function AdminCategoriasView({
   categorias = [],
@@ -66,14 +67,14 @@ export default function AdminCategoriasView({
           </p>
         </div>
 
-        <button
-          type="button"
+        <ActionButton
           onClick={handleOpenCreate}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold shadow-sm transition-all active:scale-95 cursor-pointer w-fit"
+          variant="primary"
+          className="w-fit px-4 py-2.5"
         >
-          <Plus className="w-4 h-4 text-amber-400" strokeWidth={2.5} />
+          <Plus className="w-4 h-4" strokeWidth={2.5} />
           <span>Nueva Categoría</span>
-        </button>
+        </ActionButton>
       </div>
 
       {/* Barra de Búsqueda */}
@@ -172,14 +173,14 @@ export default function AdminCategoriasView({
                             <Edit className="w-4 h-4" strokeWidth={1.75} />
                           </button>
 
-                          <button
-                            type="button"
+                          <ActionButton
                             onClick={() => onEliminarCategoria(cat.id)}
-                            className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-colors cursor-pointer"
+                            variant="danger"
+                            className="rounded-xl p-2"
                             title={tieneEventos ? 'Desactivación sugerida (tiene eventos asociados)' : 'Eliminar categoría'}
                           >
                             <Trash2 className="w-4 h-4" strokeWidth={1.75} />
-                          </button>
+                          </ActionButton>
                         </div>
                       </td>
                     </tr>

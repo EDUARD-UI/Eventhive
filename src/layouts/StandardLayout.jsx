@@ -15,7 +15,7 @@ export default function StandardLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f4f6fa] font-body text-[#172033]">
+    <div className="panel-theme flex h-screen overflow-hidden bg-[#f4f6fa] font-body text-[#172033]">
       <Sidebar
         role={role}
         items={menuItems}

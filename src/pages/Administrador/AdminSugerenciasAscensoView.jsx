@@ -16,6 +16,7 @@ import Pagination from '../../components/Shared/Pagination.jsx';
 import adminService from '../../features/admin/services/adminService.js';
 import { formatFechaHora } from '../../utils/formatters.js';
 import { showSuccessAlert, showErrorAlert, showConfirmAlert } from '../../utils/alertUtils.js';
+import ActionButton from '../../components/Shared/ActionButton.jsx';
 
 export default function AdminSugerenciasAscensoView() {
   const [sugerencias, setSugerencias] = useState([]);
@@ -44,23 +45,24 @@ export default function AdminSugerenciasAscensoView() {
   }, [fetchSugerencias]);
 
   const handleAprobar = async (item) => {
-    const confirmed = await showConfirmAlert({
-      title: '¿Aprobar ascenso de nivel?',
-      text: `La organización "${item.organizacionNombre || 'Organización'}" pasará de nivel ${item.nivelActual} a ${item.nivelSugerido}.`,
-      confirmButtonText: 'Sí, aprobar ascenso',
-      confirmButtonColor: '#059669',
-    });
-
-    if (!confirmed) return;
-
+    if (actionLoading) return;
     setActionLoading(true);
     try {
+      const confirmed = await showConfirmAlert({
+        title: '¿Aprobar ascenso de nivel?',
+        text: `La organización "${item.organizacionNombre || 'Organización'}" pasará de nivel ${item.nivelActual} a ${item.nivelSugerido}.`,
+        confirmButtonText: 'Sí, aprobar ascenso',
+        confirmButtonColor: '#059669',
+      });
+
+      if (confirmed !== true) return;
+
       await adminService.aprobarSugerenciaAscenso(item.id);
       await showSuccessAlert({
         title: 'Ascenso aprobado',
         text: `El nivel de la organización se actualizó exitosamente a ${item.nivelSugerido}.`,
       });
-      fetchSugerencias();
+      await fetchSugerencias();
     } catch (err) {
       await showErrorAlert({
         title: 'Error al aprobar',
@@ -72,23 +74,24 @@ export default function AdminSugerenciasAscensoView() {
   };
 
   const handleRechazar = async (item) => {
-    const confirmed = await showConfirmAlert({
-      title: '¿Rechazar sugerencia de ascenso?',
-      text: `Se descartará la propuesta de ascenso para "${item.organizacionNombre || 'Organización'}".`,
-      confirmButtonText: 'Sí, rechazar',
-      confirmButtonColor: '#e11d48',
-    });
-
-    if (!confirmed) return;
-
+    if (actionLoading) return;
     setActionLoading(true);
     try {
+      const confirmed = await showConfirmAlert({
+        title: '¿Rechazar sugerencia de ascenso?',
+        text: `Se descartará la propuesta de ascenso para "${item.organizacionNombre || 'Organización'}".`,
+        confirmButtonText: 'Sí, rechazar',
+        confirmButtonColor: '#e11d48',
+      });
+
+      if (confirmed !== true) return;
+
       await adminService.rechazarSugerenciaAscenso(item.id);
       await showSuccessAlert({
         title: 'Sugerencia rechazada',
         text: 'La sugerencia ha sido descartada.',
       });
-      fetchSugerencias();
+      await fetchSugerencias();
     } catch (err) {
       await showErrorAlert({
         title: 'Error al rechazar',
@@ -116,7 +119,7 @@ export default function AdminSugerenciasAscensoView() {
     const n = (nivel || '').toUpperCase();
     if (n === 'ORO' || n === 'GOLD') return 'warning';
     if (n === 'PLATA' || n === 'SILVER') return 'neutral';
-    if (n === 'DIAMANTE' || n === 'PLATINO') return 'accent';
+    if (n === 'DIAMANTE' || n === 'PLATINO') return 'primary';
     return 'info';
   };
 
@@ -244,26 +247,26 @@ export default function AdminSugerenciasAscensoView() {
                     {/* Acciones */}
                     <td className="py-4 px-4 text-right">
                       <div className="inline-flex items-center gap-2 justify-end">
-                        <button
-                          type="button"
+                        <ActionButton
                           onClick={() => handleAprobar(item)}
+                          variant="success"
                           disabled={actionLoading}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                          className="gap-1 px-3 py-1.5"
                           title="Aprobar ascenso de nivel"
                         >
                           <CheckCircle2 size={13} />
                           <span>Aprobar</span>
-                        </button>
-                        <button
-                          type="button"
+                        </ActionButton>
+                        <ActionButton
                           onClick={() => handleRechazar(item)}
+                          variant="danger"
                           disabled={actionLoading}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-xs transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                          className="gap-1 px-3 py-1.5"
                           title="Rechazar sugerencia"
                         >
                           <XCircle size={13} />
                           <span>Rechazar</span>
-                        </button>
+                        </ActionButton>
                       </div>
                     </td>
                   </tr>
@@ -287,4 +290,3 @@ export default function AdminSugerenciasAscensoView() {
     </div>
   );
 }
-

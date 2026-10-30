@@ -345,7 +345,12 @@ export default function AdminSolicitudesView({
                       : 'bg-rose-600 hover:bg-rose-700 ring-1 ring-rose-500'
                   }`}
                 >
-                  {actionLoading ? 'Procesando...' : 'Confirmar'}
+                  {actionLoading ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                      Procesando...
+                    </span>
+                  ) : 'Confirmar'}
                 </button>
               </div>
             </form>

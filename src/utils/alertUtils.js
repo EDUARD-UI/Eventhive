@@ -107,6 +107,7 @@ export const showConfirmAlert = ({
   confirmButtonText = 'Confirmar',
   cancelButtonText = 'Cancelar',
   isDanger = false,
+  confirmButtonColor,
 } = {}) => {
   return Swal.fire({
     icon: isDanger ? 'warning' : 'question',
@@ -115,10 +116,10 @@ export const showConfirmAlert = ({
     showCancelButton: true,
     confirmButtonText,
     cancelButtonText,
-    confirmButtonColor: isDanger ? '#e11d48' : '#0B1B3D',
+    confirmButtonColor: confirmButtonColor || (isDanger ? '#e11d48' : '#0B1B3D'),
     cancelButtonColor: '#64748b',
     reverseButtons: true,
-  }).then((res) => res.isConfirmed);
+  }).then((res) => res.isConfirmed === true);
 };
 
 /**

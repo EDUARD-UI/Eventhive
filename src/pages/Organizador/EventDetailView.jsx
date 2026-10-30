@@ -246,7 +246,7 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
               </div>
 
               <div className="flex items-center gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-100 min-w-0 sm:col-span-2">
-                <FiTag size={15} className="text-purple-600 shrink-0" />
+                <FiTag size={15} className="text-brand shrink-0" />
                 <div className="min-w-0 flex-1">
                   <span className="text-[10px] text-slate-400 uppercase font-bold block">Categoría</span>
                   <span className="font-bold text-slate-800 truncate block">{event.categoria?.nombre || 'Sin categoría'}</span>

@@ -19,6 +19,7 @@ import Badge from '../../components/Shared/Badge.jsx';
 import { formatFecha, formatFechaHora } from '../../utils/formatters.js';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import AdminEventCard from '../../components/componentsAdmin/AdminEventCard.jsx';
+import ActionButton from '../../components/Shared/ActionButton.jsx';
 
 export default function AdminEventosView({
   eventos = [],
@@ -193,27 +194,29 @@ export default function AdminEventosView({
                         </button>
                         <button
                           onClick={() => onVerHistorial(ev)}
-                          className="p-2 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                          className="p-2 rounded-xl text-slate-500 hover:text-brand hover:bg-brand/10 transition-colors"
                           title="Historial de Auditoría"
                         >
                           <History className="w-4 h-4" strokeWidth={1.75} />
                         </button>
                         {ev.estado === 'SUSPENDIDO' ? (
-                          <button
+                          <ActionButton
                             onClick={() => onReactivarEvento(ev)}
-                            className="p-2 rounded-xl text-emerald-600 hover:bg-emerald-50 transition-colors"
+                            variant="success"
+                            className="p-2"
                             title="Reactivar Evento"
                           >
                             <CheckCircle2 className="w-4 h-4" strokeWidth={1.75} />
-                          </button>
+                          </ActionButton>
                         ) : (
-                          <button
+                          <ActionButton
                             onClick={() => onSuspenderEvento(ev)}
-                            className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-colors"
+                            variant="danger"
+                            className="p-2"
                             title="Suspender Administrativamente"
                           >
                             <Ban className="w-4 h-4" strokeWidth={1.75} />
-                          </button>
+                          </ActionButton>
                         )}
                       </div>
                     </td>

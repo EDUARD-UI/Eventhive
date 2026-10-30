@@ -83,7 +83,7 @@ export default function MarketingPanel() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f1f5f9] font-body text-slate-800">
+    <div className="admin-theme flex h-screen overflow-hidden bg-[#f1f5f9] font-body text-slate-800">
       {/* Sidebar de Navegación */}
       <Sidebar
         role="Marketing"
