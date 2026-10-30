@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
   const backendTarget =
     env.VITE_BACKEND_TARGET ||
     (env.VITE_LOCAL_API_URL ? env.VITE_LOCAL_API_URL.replace(/\/api\/?$/, '') : '') ||
-    'https://eventhive-backend-p903.onrender.com';
+    'https://eventhive-bggyerbvhwa6akbq.brazilsouth-01.azurewebsites.net';
 
   return {
     plugins: [react()],
