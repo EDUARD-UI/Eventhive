@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from '../components/Shared/Sidebar.jsx';
 import Header from '../components/Shared/Header.jsx';
 import { session } from '../services/session.js';
+import { useDashboardTheme } from '../hooks/useDashboardTheme.js';
 
 export default function ModeradorLayout({
   menuItems = [],
@@ -14,6 +15,7 @@ export default function ModeradorLayout({
   searchPlaceholder = 'Buscar en moderación...',
   children,
 }) {
+  useDashboardTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const currentUser = session.getUser();
 

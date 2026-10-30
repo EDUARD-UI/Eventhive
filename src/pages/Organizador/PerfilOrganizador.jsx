@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
+
 import {
   FiCheck,
   FiMail,
@@ -53,7 +53,7 @@ export default function PerfilOrganizador() {
     estado: '',
     nit: '',
   });
-  const [orgLoading, setOrgLoading] = useState(true);
+
   const [orgImageFile, setOrgImageFile] = useState(null);
   const [orgImagePreview, setOrgImagePreview] = useState(null);
   const orgImageRef = useRef(null);
@@ -68,7 +68,7 @@ export default function PerfilOrganizador() {
     urlImagenPerfil: null,
     rolNombre: '',
   });
-  const [repLoading, setRepLoading] = useState(true);
+
   const [repImageFile, setRepImageFile] = useState(null);
   const [repImagePreview, setRepImagePreview] = useState(null);
   const repImageRef = useRef(null);
@@ -131,8 +131,7 @@ export default function PerfilOrganizador() {
       }
     } catch (e) {
       console.warn('Error cargando datos de organización:', e);
-    } finally {
-      setOrgLoading(false);
+
     }
   };
 
@@ -153,8 +152,7 @@ export default function PerfilOrganizador() {
       }
     } catch (e) {
       console.warn('Error cargando datos del representante:', e);
-    } finally {
-      setRepLoading(false);
+
     }
   };
 
@@ -398,16 +396,7 @@ export default function PerfilOrganizador() {
   const orgDisplayImage = orgImagePreview || orgProfile.urlLogo;
   const repDisplayImage = repImagePreview || repProfile.urlImagenPerfil || repProfile.imagenPerfil;
 
-  if (orgLoading && repLoading) {
-    return (
-      <HiveBeeLoader
-        text="Cargando..."
-        subtext="Cargando perfil de la organización"
-        fullScreen={false}
-      />
-    );
-  }
-
+  
   return (
     <div className="space-y-6">
       {/* 1. Header con Tab Switcher y Botón de Edición en Modal Lateral */}

@@ -27,15 +27,32 @@ import { useLenisScroll } from '../hooks/useLenisScroll.js';
 
 const PAGE_SIZE = 6;
 
+// Caché en memoria para transiciones instantáneas entre páginas
+let cachedOrgsData = null;
+
+const hasVisitedOrganizaciones = () => {
+  try {
+    return sessionStorage.getItem('eh_visited_organizaciones') === 'true';
+  } catch {
+    return false;
+  }
+};
+
 export default function OrganizadoresPage() {
   useLenisScroll();
+  const isFirstVisit = !hasVisitedOrganizaciones();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState('directorio'); // 'directorio' | 'informacion'
-  const [organizations, setOrganizations] = useState([]);
-  const [totalElements, setTotalElements] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [initialScreenLoading, setInitialScreenLoading] = useState(true);
+
+  // Inicializar con datos en caché para evitar pantalla de carga al reingresar
+  const [organizations, setOrganizations] = useState(() => (cachedOrgsData ? cachedOrgsData.organizations : []));
+  const [totalElements, setTotalElements] = useState(() => (cachedOrgsData ? cachedOrgsData.totalElements : 0));
+  const [loading, setLoading] = useState(() => !cachedOrgsData);
+  const [initialScreenLoading, setInitialScreenLoading] = useState(
+    () => isFirstVisit && !cachedOrgsData
+  );
 
   // Determinar rol para el botón de acción principal
   const currentUser = session.getUser();
@@ -44,7 +61,9 @@ export default function OrganizadoresPage() {
 
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
+    if (!cachedOrgsData || searchTerm.trim() || currentPage > 1) {
+      setLoading(true);
+    }
 
     const fetchOrgs = async () => {
       try {
@@ -72,8 +91,17 @@ export default function OrganizadoresPage() {
     fetchOrgs()
       .then((res) => {
         if (!isMounted) return;
-        setOrganizations(res?.organizations || []);
-        setTotalElements(res?.total ?? (res?.organizations ? res.organizations.length : 0));
+        const orgs = res?.organizations || [];
+        const total = res?.total ?? orgs.length;
+        setOrganizations(orgs);
+        setTotalElements(total);
+
+        if (!searchTerm.trim() && currentPage === 1) {
+          cachedOrgsData = {
+            organizations: orgs,
+            totalElements: total,
+          };
+        }
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -86,9 +114,14 @@ export default function OrganizadoresPage() {
 
   useEffect(() => {
     if (!loading) {
+      try {
+        sessionStorage.setItem('eh_visited_organizaciones', 'true');
+      } catch {
+        // Safe fallback
+      }
       const timer = setTimeout(() => {
         setInitialScreenLoading(false);
-      }, 450);
+      }, 400);
       return () => clearTimeout(timer);
     }
   }, [loading]);
@@ -123,22 +156,17 @@ export default function OrganizadoresPage() {
           <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-amber-500/10 dark:bg-amber-400/10 blur-3xl" />
           <div aria-hidden="true" className="pointer-events-none absolute -left-16 -bottom-20 h-56 w-56 rounded-full bg-amber-500/5 dark:bg-amber-400/5 blur-3xl" />
 
-          <div className="relative flex flex-col items-center">
-            {/* Pill superior institucional */}
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-400/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-[11px] font-bold uppercase tracking-widest mb-3">
-              <FiAward size={12} className="text-amber-500" />
-              Directorio Cultural Oficial
-            </span>
+          <div className="relative flex w-full flex-col items-stretch">
 
-            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-950 dark:text-white max-w-2xl text-center leading-tight">
-              Organizaciones y Colectivos
+            <h1 className="w-full font-display text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-950 dark:text-white text-left leading-tight">
+              Organizaciones y Productores
             </h1>
-            <p className="mt-2.5 max-w-xl text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+            <p className="mt-2.5 w-full text-left text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-400">
               Conecta con los productores, colectivos y promotores independientes que impulsan la cartelera cultural y de entretenimiento en Cartagena.
             </p>
 
             {/* Input de Búsqueda Sutil y Ergonómico */}
-            <div role="search" className="relative mt-6 sm:mt-7 w-full max-w-lg">
+            <div role="search" className="relative mt-6 sm:mt-7 w-full">
               <label htmlFor="organization-search" className="sr-only">
                 Buscar organización por nombre
               </label>
@@ -190,22 +218,11 @@ export default function OrganizadoresPage() {
               }`}
             >
               <FiInfo size={14} className={activeTab === 'informacion' ? 'text-amber-500' : ''} />
-              <span>Para Productores</span>
+              <span>Información</span>
             </button>
           </div>
 
-          <div className="self-end sm:self-auto">
-            <Link
-              to={isOrganizer ? '/organizacion' : '/registro'}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm tracking-wide shadow-xs hover:shadow-md transition-all duration-200 active:scale-95 group cursor-pointer"
-            >
-              <span>{isOrganizer ? 'Ir al panel de organizador' : 'Registrar organización'}</span>
-              <FiArrowRight
-                size={15}
-                className="transition-transform duration-200 group-hover:translate-x-1"
-              />
-            </Link>
-          </div>
+          
         </div>
 
         {/* Tab 1: Directorio de Tarjetas de Organización */}

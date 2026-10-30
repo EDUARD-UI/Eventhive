@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
 import { Link } from 'react-router-dom';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
@@ -19,6 +19,9 @@ import CategoryRibbonBanner from '../components/home/CategoryRibbonBanner.jsx';
 import HiveEmptyState from '../components/home/HiveEmptyState.jsx';
 import HomeBannersSection from '../components/home/HomeBannersSection.jsx';
 import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
+import Scroll3DReveal from '../components/home/Scroll3DReveal.jsx';
+import UpcomingEventsScrollShowcase from '../components/home/UpcomingEventsScrollShowcase.jsx';
+import MapDynamicBackground from '../components/home/MapDynamicBackground.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import CustomSelect from '../components/common/CustomSelect.jsx';
@@ -371,160 +374,150 @@ export default function Home() {
       {/* Hero Principal con Buscador Integrado */}
       <Hero />
 
-      {/* 2. Carrusel Principal de Eventos Premium con Ancla de Desplazamiento Suave y Animación de Entrada */}
+      {/* 2. Carrusel Principal de Eventos Premium con Animación 3D Scroll Stage */}
       <section
         id="carousel-section"
         ref={carouselSectionRef}
-        className={`w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-6 pb-8 sm:pt-10 sm:pb-12 max-w-[1850px] mx-auto relative z-10 scroll-mt-20 transition-all duration-1000 ease-out transform ${
-          carouselRevealed
-            ? 'opacity-100 translate-y-0 filter blur-0 scale-100'
-            : 'opacity-0 translate-y-12 filter blur-[2px] scale-[0.98]'
-        }`}
+        className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-6 pb-8 sm:pt-10 sm:pb-12 max-w-[1850px] mx-auto relative z-10 scroll-mt-20"
       >
-        {isLoadingEvents ? (
-          <div className="w-full rounded-2xl sm:rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[260px] sm:min-h-[320px] md:min-h-[360px] max-h-[480px] bg-slate-200 dark:bg-slate-800/80 border border-slate-300/40 dark:border-slate-700/60 animate-pulse relative overflow-hidden flex flex-col justify-end p-5 sm:p-10 shadow-sm">
-            <div className="w-24 sm:w-28 h-5 sm:h-6 bg-slate-300 dark:bg-slate-700 rounded-md mb-3" />
-            <div className="w-3/4 sm:w-2/3 h-6 sm:h-9 bg-slate-300 dark:bg-slate-700 rounded-lg mb-2.5" />
-            <div className="w-1/2 h-4 bg-slate-300 dark:bg-slate-700/80 rounded mb-4 hidden sm:block" />
-            <div className="w-28 sm:w-36 h-8 sm:h-10 bg-slate-300 dark:bg-slate-700 rounded-xl" />
-          </div>
-        ) : (
-          <FeaturedEventsCarousel events={carouselEvents} />
-        )}
+        <Scroll3DReveal variant="tilt-up" duration={1050} glowAccent={true}>
+          {isLoadingEvents ? (
+            <div className="w-full rounded-2xl sm:rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[260px] sm:min-h-[320px] md:min-h-[360px] max-h-[480px] bg-slate-200 dark:bg-slate-800/80 border border-slate-300/40 dark:border-slate-700/60 animate-pulse relative overflow-hidden flex flex-col justify-end p-5 sm:p-10 shadow-sm">
+              <div className="w-24 sm:w-28 h-5 sm:h-6 bg-slate-300 dark:bg-slate-700 rounded-md mb-3" />
+              <div className="w-3/4 sm:w-2/3 h-6 sm:h-9 bg-slate-300 dark:bg-slate-700 rounded-lg mb-2.5" />
+              <div className="w-1/2 h-4 bg-slate-300 dark:bg-slate-700/80 rounded mb-4 hidden sm:block" />
+              <div className="w-28 sm:w-36 h-8 sm:h-10 bg-slate-300 dark:bg-slate-700 rounded-xl" />
+            </div>
+          ) : (
+            <FeaturedEventsCarousel events={carouselEvents} />
+          )}
+        </Scroll3DReveal>
       </section>
 
       {/* Cintas Cruzadas entre el Carrusel Principal y los Eventos Próximos */}
-      <CrossedRibbonsBanner badgeText={t('home.ribbonText')} />
+      <Scroll3DReveal variant="ribbon-depth" duration={900}>
+        <CrossedRibbonsBanner badgeText={t('home.ribbonText')} />
+      </Scroll3DReveal>
 
-      {/* 3. Próximos Eventos: Título centrado y Grilla de Boletos */}
-      <section id="proximos" className="w-full px-4 sm:px-6 lg:px-8 py-10 sm:py-14 md:py-16 bg-white/60 dark:bg-slate-900/40 transition-colors duration-200">
+      {/* 3. Próximos Eventos: Showcase Animado Sincronizado al Scroll en 3D */}
+      <section id="proximos" className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 bg-white/60 dark:bg-slate-900/40 transition-colors duration-200 overflow-hidden">
         <div className="max-w-6xl xl:max-w-7xl mx-auto">
-          <div className="flex flex-col items-center justify-center mb-10 text-center relative">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
-              {t('home.upcomingEvents')}
-            </h2>
+          <Scroll3DReveal variant="fade-elevate" duration={800}>
+            <div className="flex flex-col items-center justify-center mb-10 text-center relative">
+             
 
-            <div className="mt-3">
-              <Link
-                to="/buscar"
-                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 group"
-              >
-                <span>{t('home.viewFullLineup')}</span>
-                <FiArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-1" />
-              </Link>
-            </div>
-          </div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
+                {t('home.upcomingEvents')}
+              </h2>
 
-          {isLoadingEvents ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
-              {[1, 2, 3, 4].map((n) => (
-                <div key={n}>
-                  <EventCardSkeleton
-                    aspectVariant="standard"
-                  />
-                </div>
-              ))}
+              <div className="mt-3">
+                <Link
+                  to="/buscar"
+                  className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 group"
+                >
+                  <span>{t('home.viewFullLineup')}</span>
+                  <FiArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-1" />
+                </Link>
+              </div>
             </div>
-          ) : upcomingEvents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
-              {upcomingEvents.slice(0, 4).map((event) => (
-                <div key={event.id}>
-                  <EventListCard
-                    event={event}
-                    aspectVariant="standard"
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <HiveEmptyState
-              title={t('home.emptyUpcomingTitle')}
-              subtitle={t('home.emptyUpcomingSubtitle')}
-              showAction={false}
-            />
-          )}
+          </Scroll3DReveal>
+
+          <UpcomingEventsScrollShowcase
+            events={upcomingEvents}
+            isLoading={isLoadingEvents}
+            emptyTitle={t('home.emptyUpcomingTitle')}
+            emptySubtitle={t('home.emptyUpcomingSubtitle')}
+          />
         </div>
       </section>
 
-      {/* 4. Mapa de Eventos en Cartagena con Animación de Aparición Suave */}
+      {/* 4. Mapa de Eventos en Cartagena con Fondo de Puntos Flotantes, Perspectiva 3D y Elevación Interactiva */}
       <section
         id="mapa"
         ref={mapSectionRef}
-        className={`w-full bg-slate-100 dark:bg-[#0B0F19] text-slate-900 dark:text-white px-6 sm:px-12 lg:px-20 py-16 sm:py-20 relative z-0 isolate overflow-hidden border-y border-slate-200 dark:border-white/[0.08] transition-all duration-1000 ease-out transform ${
-          mapRevealed
-            ? 'opacity-100 translate-y-0 filter blur-0 scale-100'
-            : 'opacity-0 translate-y-16 filter blur-[3px] scale-[0.98]'
-        }`}
+        className="w-full bg-slate-100 dark:bg-[#0B0F19] text-slate-900 dark:text-white px-4 sm:px-10 lg:px-20 py-16 sm:py-22 relative z-0 isolate overflow-hidden border-y border-slate-200 dark:border-white/[0.08]"
       >
+        {/* Fondo animado de puntos flotantes y ondas de radar detrás del mapa */}
+        <MapDynamicBackground />
 
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className={`mb-8 relative z-20 flex flex-col items-center justify-center text-center transition-all duration-700 ease-out transform ${
-            mapRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-6">
-              {t('home.eventMap')}
-            </h2>
+          <Scroll3DReveal variant="fade-elevate" duration={850} className="relative z-30">
+            <div className="mb-8 relative z-20 flex flex-col items-center justify-center text-center">
+              
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-6">
+                {t('home.eventMap')}
+              </h2>
 
-            <div className="flex flex-wrap items-center justify-center gap-3 relative z-30">
-              {/* Botón Geolocalización */}
-              <button
-                type="button"
-                onClick={() => requestLocation(selectedDistance !== 'all' ? selectedDistance : null)}
-                disabled={isLocating}
-                className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95 shadow-sm cursor-pointer ${userLocation
-                  ? 'border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-700'
-                  : 'border-amber-500 bg-amber-500 hover:bg-amber-400 text-slate-950'
-                  }`}
-                title={userLocation ? t('home.locationActiveTitle') : t('home.activateMyLocation')}
-              >
-                {isLocating ? (
-                  <>
-                    <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                    <span>{t('home.gettingLocation')}</span>
-                  </>
-                ) : userLocation ? (
-                  <>
-                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                    <span>{t('home.myLocationActive')}</span>
-                  </>
-                ) : (
-                  <>
-                    <FiNavigation className="text-slate-950 shrink-0" size={14} />
-                    <span>{t('home.activateMyLocation')}</span>
-                  </>
-                )}
-              </button>
+              <div className="flex flex-wrap items-center justify-center gap-3 relative z-30">
+                {/* Botón Geolocalización */}
+                <button
+                  type="button"
+                  onClick={() => requestLocation(selectedDistance !== 'all' ? selectedDistance : null)}
+                  disabled={isLocating}
+                  className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95 shadow-sm cursor-pointer ${userLocation
+                    ? 'border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-700'
+                    : 'border-amber-500 bg-amber-500 hover:bg-amber-400 text-slate-950'
+                    }`}
+                  title={userLocation ? t('home.locationActiveTitle') : t('home.activateMyLocation')}
+                >
+                  {isLocating ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                      <span>{t('home.gettingLocation')}</span>
+                    </>
+                  ) : userLocation ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                      <span>{t('home.myLocationActive')}</span>
+                    </>
+                  ) : (
+                    <>
+                      <FiNavigation className="text-slate-950 shrink-0" size={14} />
+                      <span>{t('home.activateMyLocation')}</span>
+                    </>
+                  )}
+                </button>
 
-              {/* Selector Categoría con CustomSelect sincronizado con el tema */}
-              <div className="w-48 sm:w-56 relative z-30">
-                <CustomSelect
-                  value={selectedCategory}
-                  onChange={(event) => setSelectedCategory(event.target.value)}
-                  options={categoryOptions}
-                  placeholder={t('home.allCategories')}
-                  variant={isDark ? 'dark' : 'light'}
-                />
-              </div>
+                {/* Selector Categoría con CustomSelect sincronizado con el tema */}
+                <div className="w-48 sm:w-56 relative z-30">
+                  <CustomSelect
+                    value={selectedCategory}
+                    onChange={(event) => setSelectedCategory(event.target.value)}
+                    options={categoryOptions}
+                    placeholder={t('home.allCategories')}
+                    variant={isDark ? 'dark' : 'light'}
+                  />
+                </div>
 
-              {/* Selector Distancia con CustomSelect sincronizado con el tema */}
-              <div className="w-44 sm:w-52 relative z-30">
-                <CustomSelect
-                  value={selectedDistance}
-                  onChange={(event) => handleDistanceChange(event.target.value)}
-                  options={distanceOptions}
-                  placeholder={t('home.distance')}
-                  variant={isDark ? 'dark' : 'light'}
-                />
+                {/* Selector Distancia con CustomSelect sincronizado con el tema */}
+                <div className="w-44 sm:w-52 relative z-30">
+                  <CustomSelect
+                    value={selectedDistance}
+                    onChange={(event) => handleDistanceChange(event.target.value)}
+                    options={distanceOptions}
+                    placeholder={t('home.distance')}
+                    variant={isDark ? 'dark' : 'light'}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          </Scroll3DReveal>
 
-          {/* Contenedor del Mapa con elevación y retraso escalonado fluido */}
-          <div className={`relative z-0 isolate overflow-hidden rounded-3xl border border-slate-300 dark:border-white/10 shadow-2xl h-[440px] sm:h-[500px] bg-slate-100 transition-all duration-1000 delay-150 ease-out transform ${
-            mapRevealed
-              ? 'opacity-100 translate-y-0 scale-100'
-              : 'opacity-40 translate-y-12 scale-[0.97]'
-          }`}>
+          {/* Contenedor del Mapa con Elevación 3D, Stickers Flotantes e Iluminación Perimetral */}
+          <Scroll3DReveal variant="tilt-up" delay={140} duration={1100} glowAccent={true} className="relative z-10">
+            {/* Sticker flotante superior izquierdo del mapa */}
+            <div className="hidden sm:inline-flex items-center gap-1.5 pointer-events-none absolute -top-4 left-6 z-30 px-3.5 py-1.5 rounded-2xl bg-amber-400 text-slate-950 font-black text-[11px] uppercase tracking-wider border-2 border-slate-950 shadow-[0_5px_0_0_rgba(15,23,42,1)] -rotate-2">
+              <FiMapPin size={13} />
+              <span>{filteredMapEvents.length} Experiencias Activas</span>
+            </div>
+
+            
+
+            <div className="relative z-0 isolate overflow-hidden rounded-[28px] border-2 border-slate-900/80 dark:border-amber-400/35 shadow-[0_20px_50px_-12px_rgba(15,23,42,0.4)] dark:shadow-[0_20px_55px_-12px_rgba(245,158,11,0.18)] h-[440px] sm:h-[500px] bg-slate-100 ring-1 ring-black/5 dark:ring-white/10">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/80 to-transparent z-20"
+              />
             <MapContainer
               center={userLocation ? [userLocation.lat, userLocation.lng] : [10.415, -75.54]}
               zoom={13}
@@ -656,17 +649,24 @@ export default function Home() {
                 );
               })}
             </MapContainer>
-          </div>
+            </div>
+          </Scroll3DReveal>
         </div>
       </section>
-      {/* 5. Carrusel de Categorías con Barra Inclinada y Ticker sin recuadros */}
-      <section className="w-full py-8 sm:py-12 bg-transparent transition-colors duration-200">
-        <CategoryRibbonBanner />
-        <CategoryTickerCarousel />
+
+      {/* 5. Carrusel de Categorías con Fondo Animado de Partículas, Cinta Cinética y Ticker 3D */}
+      <section className="relative w-full py-10 sm:py-14 bg-transparent transition-colors duration-200 overflow-hidden isolate">
+        <MapDynamicBackground className="opacity-70" />
+        <Scroll3DReveal variant="ribbon-depth" duration={950} glowAccent={true} className="relative z-10">
+          <CategoryRibbonBanner />
+        </Scroll3DReveal>
+        <Scroll3DReveal variant="tilt-up" delay={140} duration={1000} className="relative z-10">
+          <CategoryTickerCarousel />
+        </Scroll3DReveal>
       </section>
 
-      {/* 6. Banners Asimétricos con Ancla para Desplazamiento Suave */}
-      <section id="banners-section" className="relative scroll-mt-20 my-10 sm:my-14">
+      {/* 6. Banners Interactivos 3D (Evento Destacado & Organizadores) */}
+      <section id="banners-section" className="relative scroll-mt-20 my-8 sm:my-12 overflow-hidden">
         <HomeBannersSection />
       </section>
 
@@ -674,19 +674,16 @@ export default function Home() {
       <div
         id="footer-unified-group"
         ref={footerGroupRef}
-        className={`w-full transition-all duration-1000 ease-out transform ${
-          footerGroupRevealed
-            ? 'opacity-100 translate-y-0 filter blur-0 scale-100'
-            : 'opacity-0 translate-y-14 filter blur-[2px] scale-[0.98]'
-        }`}
       >
-        <section id="prefooter-section" className="relative scroll-mt-16">
-          <CityRhythmPreFooter />
-        </section>
+        <Scroll3DReveal variant="fade-elevate" duration={950}>
+          <section id="prefooter-section" className="relative scroll-mt-16">
+            <CityRhythmPreFooter />
+          </section>
 
-        <footer id="footer-section">
-          <Footer />
-        </footer>
+          <footer id="footer-section">
+            <Footer />
+          </footer>
+        </Scroll3DReveal>
       </div>
     </div>
   );

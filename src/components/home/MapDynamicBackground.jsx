@@ -1,16 +1,17 @@
 import React, { useEffect, useRef } from 'react';
+import { useTheme } from '../../context/ThemeContext.jsx';
 
 /**
  * MapDynamicBackground
- * Fondo dinámico de alta fidelidad para el contenedor oscuro del Mapa (#0A1325):
- * - Partículas de polvo de oro/polen de colmena flotando suavemente a 60 FPS.
- * - Destellos sutiles (twinkle) con micro-resplandores dorados (#F59E0B y #FBBF24).
- * - Gradientes de luz ambiental profunda integrados.
- * - Estricto pointer-events-none y z-0 para no interferir con Leaflet ni sus controles.
- * - Pausa automática cuando la ventana está oculta para conservar batería y GPU.
+ * Fondo interactivo de puntos flotantes (Floating Dots) + destellos dorados
+ * diseñado específicamente para el contenedor de la sección del Mapa de Eventos.
+ * - Adapta los puntos flotantes al modo claro (puntos oscuros y ámbar) y modo oscuro (puntos blancos y dorados).
+ * - Incluye ondas de radar concéntricas sutiles que refuerzan la temática de geolocalización en vivo.
+ * - Renderizado a 60 FPS en Canvas con pointer-events-none para no interferir con Leaflet.
  */
 export default function MapDynamicBackground({ className = '' }) {
   const canvasRef = useRef(null);
+  const { isDark } = useTheme();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -21,35 +22,46 @@ export default function MapDynamicBackground({ className = '' }) {
 
     let animId;
     let width = canvas.parentElement?.clientWidth || window.innerWidth;
-    let height = canvas.parentElement?.clientHeight || 600;
+    let height = canvas.parentElement?.clientHeight || 700;
     let particles = [];
     let isVisible = true;
 
-    // Paleta dorada y azul-noche de EventHive
-    const goldPalette = [
+    const darkModePalette = [
+      'rgba(255, 255, 255, ', // Blanco puro (Floating dots)
+      'rgba(248, 250, 252, ', // Slate 50
       'rgba(245, 158, 11, ',  // Amber 500
       'rgba(251, 191, 36, ',  // Amber 400
-      'rgba(252, 211, 77, ',  // Amber 300
-      'rgba(56, 189, 248, ',  // Sky 400 (micro-reflejos)
+      'rgba(253, 230, 138, ', // Amber 200
     ];
 
+    const lightModePalette = [
+      'rgba(15, 23, 42, ',    // Slate 900 (Floating dots en modo claro)
+      'rgba(30, 41, 59, ',    // Slate 800
+      'rgba(217, 119, 6, ',   // Amber 600
+      'rgba(245, 158, 11, ',  // Amber 500
+    ];
+
+    const activePalette = isDark ? darkModePalette : lightModePalette;
+
     const createParticle = () => {
-      const isGold = Math.random() > 0.15;
+      const rand = Math.random();
+      const radius = rand < 0.5 ? Math.random() * 0.6 + 0.6 : Math.random() * 0.9 + 1.1;
+      const isGlint = Math.random() > 0.55;
+
       return {
         x: Math.random() * width,
         y: Math.random() * height,
-        radius: Math.random() * 1.2 + 0.5, // 0.5px a 1.7px
-        colorPrefix: isGold
-          ? goldPalette[Math.floor(Math.random() * (goldPalette.length - 1))]
-          : goldPalette[goldPalette.length - 1],
-        baseAlpha: Math.random() * 0.4 + 0.2, // 0.2 a 0.6
-        twinkleSpeed: Math.random() * 0.03 + 0.015,
+        radius,
+        colorPrefix: activePalette[Math.floor(Math.random() * activePalette.length)],
+        baseAlpha: Math.random() * 0.35 + 0.5,
+        twinkleSpeed: Math.random() * 0.035 + 0.015,
         twinklePhase: Math.random() * Math.PI * 2,
-        twinkleAmp: Math.random() * 0.25 + 0.15,
-        speedY: -(Math.random() * 0.28 + 0.08), // Flotación ascendente lenta
-        swaySpeed: Math.random() * 0.018 + 0.008,
-        swayAmp: Math.random() * 0.5 + 0.2,
+        twinkleAmp: Math.random() * 0.3 + 0.15,
+        speedY: -(Math.random() * 0.32 + 0.12),
+        swaySpeed: Math.random() * 0.02 + 0.008,
+        swayAmp: Math.random() * 0.45 + 0.2,
         swayPhase: Math.random() * Math.PI * 2,
+        isGlint,
       };
     };
 
@@ -69,15 +81,11 @@ export default function MapDynamicBackground({ className = '' }) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
 
-      const targetCount = Math.max(35, Math.min(75, Math.floor((width * height) / 18000)));
+      const targetCount = Math.max(90, Math.min(200, Math.floor((width * height) / 7000)));
       if (particles.length === 0) {
         particles = Array.from({ length: targetCount }, createParticle);
-      } else if (particles.length < targetCount) {
-        for (let i = particles.length; i < targetCount; i++) {
-          particles.push(createParticle());
-        }
-      } else if (particles.length > targetCount) {
-        particles = particles.slice(0, targetCount);
+      } else {
+        particles = Array.from({ length: targetCount }, createParticle);
       }
     };
 
@@ -112,19 +120,19 @@ export default function MapDynamicBackground({ className = '' }) {
         if (p.x > width + 10) p.x = -5;
 
         const twinkle = Math.sin(timeSec * 2 * Math.PI * p.twinkleSpeed + p.twinklePhase);
-        const alpha = Math.max(0.1, Math.min(0.85, p.baseAlpha + twinkle * p.twinkleAmp));
+        const alpha = Math.max(0.25, Math.min(0.95, p.baseAlpha + twinkle * p.twinkleAmp));
 
-        // Partícula dorada brillante
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = `${p.colorPrefix}${alpha.toFixed(3)})`;
         ctx.fill();
 
-        // Halo tenue para las partículas más vivas
-        if (twinkle > 0.6) {
+        if (p.isGlint && twinkle > 0.55) {
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius * 2.2, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(245, 158, 11, ${(alpha * 0.18).toFixed(3)})`;
+          ctx.arc(p.x, p.y, p.radius * 2.4, 0, Math.PI * 2);
+          ctx.fillStyle = isDark
+            ? `rgba(251, 191, 36, ${(alpha * 0.25).toFixed(3)})`
+            : `rgba(217, 119, 6, ${(alpha * 0.2).toFixed(3)})`;
           ctx.fill();
         }
       }
@@ -150,21 +158,25 @@ export default function MapDynamicBackground({ className = '' }) {
       window.removeEventListener('resize', resize);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [isDark]);
 
   return (
     <div
       aria-hidden="true"
       className={`absolute inset-0 pointer-events-none select-none overflow-hidden z-0 ${className}`}
     >
-      {/* Resplandor radial tenue ambiental centralizado */}
+      {/* Resplandores ambientales y anillos de radar concéntricos detrás del mapa */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background:
-            'radial-gradient(ellipse 65% 45% at 50% 25%, rgba(245, 158, 11, 0.07) 0%, rgba(10, 19, 37, 0) 80%), radial-gradient(circle 350px at 85% 80%, rgba(14, 165, 233, 0.05) 0%, transparent 70%)',
+          background: isDark
+            ? 'radial-gradient(ellipse 65% 50% at 50% 50%, rgba(245, 158, 11, 0.09) 0%, rgba(10, 19, 37, 0) 75%)'
+            : 'radial-gradient(ellipse 65% 50% at 50% 50%, rgba(245, 158, 11, 0.12) 0%, rgba(248, 250, 252, 0) 75%)',
         }}
       />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] sm:w-[760px] sm:h-[760px] rounded-full border border-amber-500/10 dark:border-amber-400/10 animate-pulse" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[720px] h-[720px] sm:w-[1040px] sm:h-[1040px] rounded-full border border-slate-300/40 dark:border-white/[0.04]" />
+
       <canvas
         ref={canvasRef}
         className="w-full h-full block pointer-events-none"

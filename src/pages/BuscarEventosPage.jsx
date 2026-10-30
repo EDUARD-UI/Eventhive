@@ -20,10 +20,43 @@ import { useLenisScroll } from '../hooks/useLenisScroll.js';
 
 const PAGE_SIZE = 12;
 
+// Caché en memoria para retorno instantáneo entre vistas
+let cachedEventsData = null;
+let cachedCategoriesData = null;
+
+const hasVisitedBuscar = () => {
+  try {
+    return sessionStorage.getItem('eh_visited_buscar') === 'true';
+  } catch {
+    return false;
+  }
+};
+
 export default function BuscarEventosPage() {
   useLenisScroll();
   const { isDark } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [ribbonTilt, setRibbonTilt] = useState(0);
+
+  useEffect(() => {
+    let frame = 0;
+    const updateTilt = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const scrollProgress = Math.min(window.scrollY / 900, 1);
+        setRibbonTilt(scrollProgress * 5);
+      });
+    };
+    updateTilt();
+    window.addEventListener('scroll', updateTilt, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', updateTilt);
+    };
+  }, []);
+
+  // Determinar si es la primera vez que se visita la página en esta sesión
+  const isFirstVisit = !hasVisitedBuscar();
 
   // Columnas dinámicas para que las tarjetas encajen orgánicamente sin dejar huecos vacíos
   const [colCount, setColCount] = useState(() => {
@@ -50,21 +83,37 @@ export default function BuscarEventosPage() {
   const categoriaIdParam = searchParams.get('categoriaId') || '';
   const pageParam = Math.max(0, parseInt(searchParams.get('page') || '0', 10));
 
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [initialScreenLoading, setInitialScreenLoading] = useState(true);
-  const [categoryList, setCategoryList] = useState([]);
-  const [featuredCategories, setFeaturedCategories] = useState([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
-  const [totalElements, setTotalElements] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
+  // Inicializar con caché si existe para evitar mostrar pantalla de carga al reingresar
+  const [events, setEvents] = useState(() => (cachedEventsData ? cachedEventsData.events : []));
+  const [loading, setLoading] = useState(() => !cachedEventsData);
+  const [initialScreenLoading, setInitialScreenLoading] = useState(
+    () => isFirstVisit && !cachedEventsData
+  );
+  const [categoryList, setCategoryList] = useState(
+    () => (cachedCategoriesData ? cachedCategoriesData.names : [])
+  );
+  const [featuredCategories, setFeaturedCategories] = useState(
+    () => (cachedCategoriesData ? cachedCategoriesData.featured : [])
+  );
+  const [loadingCategories, setLoadingCategories] = useState(() => !cachedCategoriesData);
+  const [totalElements, setTotalElements] = useState(
+    () => (cachedEventsData ? cachedEventsData.totalElements : 0)
+  );
+  const [totalPages, setTotalPages] = useState(
+    () => (cachedEventsData ? cachedEventsData.totalPages : 1)
+  );
   const [searchInput, setSearchInput] = useState(tituloParam);
 
   useEffect(() => {
     if (!loading) {
+      try {
+        sessionStorage.setItem('eh_visited_buscar', 'true');
+      } catch {
+        // Safe fallback
+      }
       const timer = setTimeout(() => {
         setInitialScreenLoading(false);
-      }, 500);
+      }, 400);
       return () => clearTimeout(timer);
     }
   }, [loading]);
@@ -72,18 +121,19 @@ export default function BuscarEventosPage() {
   // Cargar categorías disponibles y categorías destacadas desde el backend
   useEffect(() => {
     let isMounted = true;
-    setLoadingCategories(true);
+    if (!cachedCategoriesData) {
+      setLoadingCategories(true);
+    }
     Promise.allSettled([
       getCategoryNames(),
       getFeaturedCategories(),
     ]).then(([namesRes, featRes]) => {
       if (!isMounted) return;
-      if (namesRes.status === 'fulfilled' && Array.isArray(namesRes.value)) {
-        setCategoryList(namesRes.value);
-      }
-      if (featRes.status === 'fulfilled' && Array.isArray(featRes.value)) {
-        setFeaturedCategories(featRes.value);
-      }
+      const names = namesRes.status === 'fulfilled' && Array.isArray(namesRes.value) ? namesRes.value : [];
+      const feat = featRes.status === 'fulfilled' && Array.isArray(featRes.value) ? featRes.value : [];
+      setCategoryList(names);
+      setFeaturedCategories(feat);
+      cachedCategoriesData = { names, featured: feat };
       setLoadingCategories(false);
     });
 
@@ -100,7 +150,9 @@ export default function BuscarEventosPage() {
   // Cargar eventos con exactamente 12 eventos por página (size=12)
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
+    if (!cachedEventsData || tituloParam || fechaParam || categoriaIdParam || pageParam > 0) {
+      setLoading(true);
+    }
 
     const loadData = async () => {
       try {
@@ -163,9 +215,20 @@ export default function BuscarEventosPage() {
     loadData()
       .then(({ events: results, total, totalPages: pages }) => {
         if (!isMounted) return;
-        setEvents(results || []);
-        setTotalElements(total || (results ? results.length : 0));
-        setTotalPages(pages || 1);
+        const validEvents = results || [];
+        const validTotal = total || validEvents.length;
+        const validPages = pages || 1;
+        setEvents(validEvents);
+        setTotalElements(validTotal);
+        setTotalPages(validPages);
+
+        if (!tituloParam.trim() && !fechaParam.trim() && !categoriaIdParam && pageParam === 0) {
+          cachedEventsData = {
+            events: validEvents,
+            totalElements: validTotal,
+            totalPages: validPages,
+          };
+        }
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -306,6 +369,14 @@ export default function BuscarEventosPage() {
                 </button>
               )}
             </div>
+            {/* Botón Buscar eventos */}
+            <button
+              type="submit"
+              aria-label="Buscar eventos"
+              className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-amber-500 p-0 text-slate-950 shadow-md transition-all duration-200 hover:bg-amber-400 active:scale-95 sm:h-12 sm:w-12"
+            >
+              <FiSearch size={18} className="block shrink-0" />
+            </button>
 
             {/* Divisor en desktop */}
             <div className="hidden md:block h-7 w-[1px] bg-slate-200 dark:bg-white/10 shrink-0" />
@@ -339,14 +410,7 @@ export default function BuscarEventosPage() {
               />
             </div>
 
-            {/* Botón Buscar eventos */}
-            <button
-              type="submit"
-              className="w-full md:w-auto h-11 sm:h-12 px-6 rounded-xl md:rounded-full bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-black text-xs sm:text-sm tracking-wide transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0"
-            >
-              <FiSearch size={16} />
-              <span>Buscar eventos</span>
-            </button>
+            
           </form>
 
           {/* Chips de filtros activos si los hay */}
@@ -431,11 +495,7 @@ export default function BuscarEventosPage() {
               </h2>
             </div>
 
-            {totalElements > 0 && (
-              <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-semibold">
-                {totalElements} {totalElements === 1 ? 'evento disponible' : 'eventos disponibles'}
-              </span>
-            )}
+            
           </div>
         </section>
 
@@ -511,42 +571,47 @@ export default function BuscarEventosPage() {
           )}
         </section>
 
-        {/* 3. SECCIÓN DE CATEGORÍAS DESTACADAS MÁS ANCHA */}
+        {/* 3. CINTA CINÉTICA Y CATEGORÍAS DESTACADAS */}
         {(loadingCategories || featuredCategories.length > 0) && (
-          <section aria-label="Explora por interés" className="w-full mt-16 sm:mt-24 pt-10 border-t border-slate-200 dark:border-white/10">
-            <div className="flex items-end justify-between mb-6 sm:mb-8">
-              <div>
-                <span className="text-amber-500 dark:text-amber-400 font-black text-xs uppercase tracking-widest block mb-1">
-                  EXPLORA POR INTERÉS
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-950 dark:text-white">
-                  Tu ciudad, a tu manera
-                </h2>
-              </div>
+          <section aria-label="Explora por interés" className="relative isolate w-full mt-16 sm:mt-24 pt-10 border-t border-slate-200 dark:border-white/10 overflow-hidden">
+            <style>{`
+              @keyframes categoryDrift { 0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); } 50% { transform: translate3d(12px, -18px, 0) rotate(12deg); } }
+              @keyframes categoryShimmer { 0% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+              @keyframes categoryGlow { to { transform: rotate(360deg); } }
+              @media (prefers-reduced-motion: reduce) { .category-motion { animation: none !important; transition: none !important; } }
+            `}</style>
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+              <div className="absolute -top-10 left-[12%] h-40 w-40 rounded-full bg-amber-400/10 blur-3xl" />
+              <div className="absolute top-1/3 right-[8%] h-48 w-48 rounded-full bg-fuchsia-500/10 blur-3xl" />
+              {Array.from({ length: 9 }).map((_, i) => (
+                <span key={i} className="category-motion absolute h-1.5 w-1.5 rounded-full bg-amber-400/70 shadow-[0_0_14px_rgba(251,191,36,0.8)]" style={{ left: `${8 + ((i * 13) % 87)}%`, top: `${10 + ((i * 19) % 78)}%`, animation: `categoryDrift ${4 + (i % 4)}s ease-in-out ${i * -0.6}s infinite` }} />
+              ))}
+            </div>
 
-              <Link
-                to="/categorias"
-                className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-amber-500 hover:text-amber-400 uppercase tracking-wider transition-colors"
-              >
-                <span>Ver todas</span>
-                <FiArrowUpRight size={16} />
+            <div className="relative z-10 mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:mb-8">
+              <div>
+                <span className="text-amber-500 dark:text-amber-400 font-black text-xs uppercase tracking-widest block mb-1">EXPLORA POR INTERÉS</span>
+                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-950 dark:text-white">Tu ciudad, a tu manera</h2>
+              </div>
+              <Link to="/categorias" className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-amber-500 hover:text-amber-400 uppercase tracking-wider transition-colors">
+                <span>Ver todas</span><FiArrowUpRight size={16} />
               </Link>
             </div>
 
             {loadingCategories ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 w-full">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="rounded-2xl h-52 sm:h-60 md:h-64 bg-slate-200 dark:bg-slate-800 animate-pulse" />
-                ))}
+              <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 w-full">
+                {Array.from({ length: 4 }).map((_, i) => <div key={i} className="rounded-2xl h-52 sm:h-60 md:h-64 bg-slate-200 dark:bg-slate-800 animate-pulse" />)}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 w-full">
-                {featuredCategories.slice(0, 4).map((cat) => {
+              <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 w-full">
+                {featuredCategories.slice(0, 4).map((cat, index) => {
                   const imageUrl = cat.imagenUrl || cat.urlFoto || cat.foto || cat.imagen;
+                  const eventCount = cat.totalEventos ?? 0;
                   return (
                     <button
                       key={cat.id}
                       type="button"
+                      aria-label={`${cat.nombre}, ${eventCount} ${eventCount === 1 ? 'evento' : 'eventos'}`}
                       onClick={() => {
                         const next = new URLSearchParams(searchParams);
                         next.delete('page');
@@ -554,29 +619,22 @@ export default function BuscarEventosPage() {
                         setSearchParams(next);
                         window.scrollTo({ top: 180, behavior: 'smooth' });
                       }}
-                      className="group relative rounded-2xl h-52 sm:h-60 md:h-64 bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600 overflow-hidden flex flex-col justify-end p-4 sm:p-5 text-left transition-all duration-300 ease-out hover:-translate-y-1 shadow-md active:scale-95 cursor-pointer w-full"
+                      className="group category-motion relative isolate flex h-52 w-full cursor-pointer flex-col justify-end overflow-hidden rounded-2xl border border-white/20 bg-slate-900 p-4 text-left shadow-lg transition-all duration-300 ease-out hover:-translate-y-2 hover:rotate-1 hover:shadow-[0_20px_50px_rgba(245,158,11,0.25)] active:scale-95 sm:h-60 sm:p-5 md:h-64"
+                      style={{ transitionDelay: `${index * 35}ms` }}
                     >
-                      {imageUrl && (
-                        <div className="absolute inset-0">
-                          <ImageWithFallback
-                            src={imageUrl}
-                            alt={cat.nombre}
-                            className="w-full h-full"
-                            imgClassName="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-                      )}
-                      {/* Máscara inferior suave para legibilidad sin oscurecer la imagen completa */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
-
+                      <div aria-hidden="true" className="absolute -inset-[2px] -z-10 rounded-[18px] bg-[conic-gradient(from_var(--glow-angle),#f59e0b,#ec4899,#8b5cf6,#22d3ee,#f59e0b)] opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100 category-motion" style={{ animation: 'categoryGlow 5s linear infinite' }} />
+                      {imageUrl && <div className="absolute inset-0"><ImageWithFallback src={imageUrl} alt={cat.nombre} className="w-full h-full" imgClassName="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" /></div>}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
+                      <span className="absolute right-3 top-3 z-10 rounded-full border border-white/25 bg-black/45 px-3 py-1.5 text-[10px] font-extrabold tracking-wide text-white backdrop-blur-md">
+                        {eventCount} {eventCount === 1 ? 'EVENTO' : 'EVENTOS'}
+                      </span>
+                      <span aria-hidden="true" className="absolute right-3 bottom-14 z-10 flex h-9 w-9 translate-y-2 items-center justify-center rounded-full bg-amber-400 text-slate-950 opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100"><FiArrowUpRight size={18} /></span>
                       <div className="relative z-10 w-full min-w-0">
-                        <h4 className="text-sm sm:text-base font-extrabold uppercase text-white truncate tracking-tight group-hover:text-amber-300 transition-colors drop-shadow-sm">
-                          {cat.nombre}
-                        </h4>
-                        <span className="text-xs text-slate-200 font-semibold block mt-1 drop-shadow-xs">
-                          {cat.totalEventos ?? 0} {(cat.totalEventos ?? 0) === 1 ? 'evento' : 'eventos'}
-                        </span>
+                        <h4 className="text-sm sm:text-base font-extrabold uppercase text-white truncate tracking-tight transition-colors group-hover:text-amber-300 drop-shadow-sm">{cat.nombre}</h4>
+                        <span className="mt-1 block text-xs font-semibold text-slate-200 drop-shadow-xs">Descubre experiencias</span>
                       </div>
+                      <span aria-hidden="true" className="absolute bottom-0 left-0 h-1 w-full origin-left scale-x-0 bg-gradient-to-r from-amber-400 via-pink-500 to-violet-500 transition-transform duration-500 group-hover:scale-x-100" />
+                      <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 skew-x-[-20deg] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 category-motion" style={{ animation: 'categoryShimmer 1.1s ease-out' }} />
                     </button>
                   );
                 })}

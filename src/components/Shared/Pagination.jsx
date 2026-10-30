@@ -12,6 +12,7 @@ export default function Pagination({
   className = '',
   minimal = false,
   showInfo = true,
+  variant = 'dashboard', // 'dashboard' | 'white' | 'themed'
 }) {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const safePage = Math.min(Math.max(1, currentPage), totalPages);
@@ -42,8 +43,9 @@ export default function Pagination({
     }
   };
 
-  // Modo minimalista y centrado para vistas de cara al cliente (sin texto "Mostrando...")
-  if (minimal || !showInfo) {
+  // Modo minimalista y centrado para vistas de cara al cliente (EVENTOS / ORGANIZACION)
+  // Cambia dinámicamente según el modo claro / oscuro activo en las páginas públicas.
+  if (minimal || !showInfo || variant === 'themed') {
     if (totalPages <= 1) return null;
 
     return (
@@ -105,27 +107,29 @@ export default function Pagination({
     );
   }
 
+  // Paginación de tablas dentro de todos los Dashboards (Admin, Moderador, Organizador, Marketing)
+  // Exclusivamente blanco puro e invariable para mantener uniformidad total con la arquitectura de tablas.
   return (
     <div
-      className={`flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3.5 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0B1428]/50 text-xs text-slate-600 dark:text-slate-400 select-none ${className}`}
+      className={`flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3.5 border-t border-slate-100 bg-white text-xs text-slate-600 select-none ${className}`}
     >
       {/* Información de registros y selector de tamaño */}
-      <div className="flex flex-wrap items-center gap-3 text-slate-500 dark:text-slate-400">
+      <div className="flex flex-wrap items-center gap-3 text-slate-500">
         <span>
           Mostrando{' '}
-          <strong className="font-semibold text-slate-800 dark:text-slate-200">
+          <strong className="font-semibold text-slate-800">
             {totalItems === 0 ? 0 : `${startRecord}-${endRecord}`}
           </strong>{' '}
-          de <strong className="font-semibold text-slate-800 dark:text-slate-200">{totalItems}</strong> registros
+          de <strong className="font-semibold text-slate-800">{totalItems}</strong> registros
         </span>
 
         {showPageSize && onPageSizeChange && totalItems > 0 && (
-          <div className="flex items-center gap-1.5 ml-1 sm:ml-3 pl-3 border-l border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-1.5 ml-1 sm:ml-3 pl-3 border-l border-slate-200">
             <span className="text-[11px] text-slate-400">Filas:</span>
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1428] px-2 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-sm outline-none focus:border-amber-500 cursor-pointer hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+              className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 shadow-xs outline-none focus:border-amber-500 cursor-pointer hover:border-slate-300 transition-colors"
             >
               {pageSizeOptions.map((opt) => (
                 <option key={opt} value={opt}>
@@ -144,7 +148,7 @@ export default function Pagination({
           onClick={() => handlePageClick(safePage - 1)}
           disabled={safePage <= 1}
           aria-label="Página anterior"
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1428] text-slate-600 dark:text-slate-300 shadow-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-[#0B1428]"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-xs transition-all hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
         >
           <FiChevronLeft size={15} />
         </button>
@@ -155,7 +159,7 @@ export default function Pagination({
               return (
                 <span
                   key={`ellipsis-${idx}`}
-                  className="flex h-8 w-8 items-center justify-center text-slate-400 dark:text-slate-500 text-xs"
+                  className="flex h-8 w-8 items-center justify-center text-slate-400 text-xs"
                 >
                   …
                 </span>
@@ -168,10 +172,10 @@ export default function Pagination({
                 type="button"
                 onClick={() => handlePageClick(p)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex h-8 min-w-[32px] px-2 items-center justify-center rounded-lg text-xs font-semibold shadow-sm transition-all ${
+                className={`flex h-8 min-w-[32px] px-2 items-center justify-center rounded-lg text-xs font-semibold shadow-xs transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow-amber-500/20 shadow-md'
-                    : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1428] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-amber-500 text-slate-950 font-bold shadow-amber-500/20 shadow-sm'
+                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900'
                 }`}
               >
                 {p}
@@ -185,7 +189,7 @@ export default function Pagination({
           onClick={() => handlePageClick(safePage + 1)}
           disabled={safePage >= totalPages}
           aria-label="Página siguiente"
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1428] text-slate-600 dark:text-slate-300 shadow-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-[#0B1428]"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-xs transition-all hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
         >
           <FiChevronRight size={15} />
         </button>

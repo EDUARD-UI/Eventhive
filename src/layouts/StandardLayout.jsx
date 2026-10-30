@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from '../components/Shared/Sidebar.jsx';
 import Header from '../components/Shared/Header.jsx';
+import { useDashboardTheme } from '../hooks/useDashboardTheme.js';
 
 export default function StandardLayout({
   role = 'Organización',
@@ -12,6 +13,7 @@ export default function StandardLayout({
   children,
   maxWidthClass = 'max-w-[1280px]',
 }) {
+  useDashboardTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
