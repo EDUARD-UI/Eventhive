@@ -200,6 +200,7 @@ export default function DataTable({
             setCurrentPage(1);
           }}
           pageSizeOptions={pageSizeOptions}
+          variant="white"
         />
       )}
     </section>

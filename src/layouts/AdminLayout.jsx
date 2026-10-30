@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from '../components/Shared/Sidebar.jsx';
 import Header from '../components/Shared/Header.jsx';
 import { session } from '../services/session.js';
+import { useDashboardTheme } from '../hooks/useDashboardTheme.js';
 
 export default function AdminLayout({
   menuItems = [],
@@ -12,6 +13,7 @@ export default function AdminLayout({
   onSearchChange,
   children,
 }) {
+  useDashboardTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const sessionUser = session.getUser();
   const userName = sessionUser?.name || 'Administrador';

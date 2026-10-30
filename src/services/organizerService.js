@@ -6,7 +6,7 @@ const normalizeOrganization = (organization) => ({
   id: String(organization.id),
   name: organization.razonSocial || organization.nombre || 'Organización',
   razonSocial: organization.razonSocial || organization.nombre || 'Organización',
-  category: organization.categoria?.nombre || organization.categoria || 'Productor Cultural',
+  category: organization.categoria?.nombre || organization.categoria || '',
   description: organization.descripcion || '',
   avatar:
     organization.urlLogo ||

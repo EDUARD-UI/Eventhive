@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   FiCheck,
   FiUserPlus,
-  FiAward,
   FiStar,
   FiUsers,
   FiCalendar,
@@ -42,8 +41,6 @@ export default function OrganizationListCard({ org }) {
     imagenPerfil,
     description,
     descripcion,
-    category,
-    categoria,
     verified,
     estado,
     rating,
@@ -62,7 +59,6 @@ export default function OrganizationListCard({ org }) {
   const desc = descripcion || description || 'Organización cultural y productora de experiencias en Cartagena de Indias.';
   const repName = representante || org.nombreRepresentante || '';
   const imgUrl = urlLogo || imagenPerfil || avatar || logo || imagen || null;
-  const orgCategory = (typeof categoria === 'object' ? categoria?.nombre : categoria) || category || 'Cultura & Arte';
   const isVerified = verified || estado === 'APROBADA' || estado === 'VERIFICADA';
   const displayRating = promedioRating ?? rating ?? null;
   const totalEvents = totalEventosCreados ?? eventsCount ?? 0;
@@ -100,56 +96,37 @@ export default function OrganizationListCard({ org }) {
 
   return (
     <article className="group relative bg-white dark:bg-[#0E1626] rounded-3xl border border-slate-200/90 dark:border-slate-800/90 hover:border-amber-400/50 dark:hover:border-amber-400/40 shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 ease-out flex flex-col justify-between overflow-hidden">
-      {/* 1. COVER BANNER SUPERIOR CON TEXTURA Y GLOW AMBIENTAL */}
-      <div className="relative h-24 sm:h-28 w-full bg-gradient-to-r from-slate-900 via-[#101A2E] to-slate-950 overflow-hidden shrink-0">
-        {/* Patrón de puntos geométricos sutiles */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 opacity-25 bg-[radial-gradient(#F59E0B_1px,transparent_1px)] [background-size:14px_14px]"
-        />
-        {/* Glow cálido ambiental en la esquina */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-8 -right-8 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl group-hover:bg-amber-400/30 transition-all duration-500"
-        />
-
-        {/* Badges superiores alineados en extremos */}
-        <div className="relative z-10 p-3 sm:p-3.5 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold text-amber-300 uppercase tracking-wider">
-            <FiAward size={11} className="text-amber-400 shrink-0" />
-            <span className="truncate max-w-[130px]">{orgCategory}</span>
-          </span>
-
-          {isVerified ? (
-            <span
-              title="Organización verificada en EventHive"
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-emerald-300 text-[10px] font-black uppercase tracking-wider"
-            >
-              <FiCheck size={11} strokeWidth={3} />
-              <span>Verificada</span>
-            </span>
-          ) : displayRating ? (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-amber-300 text-[10px] font-bold">
-              <FiStar size={11} fill="currentColor" />
-              <span>{Number(displayRating).toFixed(1)}</span>
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-slate-300 text-[10px] font-medium">
-              <FiMapPin size={10} className="text-amber-400" />
-              <span>Cartagena</span>
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* 2. CUERPO DE LA TARJETA: LOGO FLOTANTE, TÍTULO, REPRESENTANTE Y DESCRIPCIÓN */}
-      <div className="relative px-5 sm:px-6 pb-5 pt-0 flex-1 flex flex-col justify-between -mt-9">
+      {/* 1. CUERPO DE LA TARJETA: ESTADO, LOGO, TÍTULO Y DESCRIPCIÓN */}
+      <div className="relative px-5 sm:px-6 py-5 flex-1 flex flex-col justify-between">
         <div>
+          {/* Estado de la organización */}
+          <div className="flex items-center justify-end gap-2 mb-4">
+            {isVerified ? (
+              <span
+                title="Organización verificada en EventHive"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider"
+              >
+                <FiCheck size={11} strokeWidth={3} />
+                <span>Verificada</span>
+              </span>
+            ) : displayRating ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-[10px] font-bold">
+                <FiStar size={11} fill="currentColor" />
+                <span>{Number(displayRating).toFixed(1)}</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-medium">
+                <FiMapPin size={10} className="text-amber-500" />
+                <span>Cartagena</span>
+              </span>
+            )}
+          </div>
+
           {/* Fila del Logo solapado y Botón Seguir */}
           <div className="flex items-end justify-between gap-3 mb-3">
             <Link
               to={`/organizaciones/${id}`}
-              className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden bg-white dark:bg-[#070D1B] border-3 border-white dark:border-[#0E1626] shadow-md group-hover:scale-105 transition-transform duration-300 shrink-0 block"
+              className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-white dark:bg-[#070D1B] border-3 border-white dark:border-[#0E1626] shadow-md group-hover:scale-105 transition-transform duration-300 shrink-0 block"
               aria-label={`Ver perfil de ${title}`}
             >
               <ImageWithFallback
@@ -157,7 +134,7 @@ export default function OrganizationListCard({ org }) {
                 alt={title}
                 className="w-full h-full object-cover"
                 fallbackText={title}
-                iconSize={26}
+                iconSize={34}
               />
             </Link>
 

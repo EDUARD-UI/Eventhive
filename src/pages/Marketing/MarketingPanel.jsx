@@ -7,6 +7,7 @@ import MarketingPromocionesView from './MarketingPromocionesView.jsx';
 import MarketingBannersView from './MarketingBannersView.jsx';
 import AdminPerfilView from '../Administrador/AdminPerfilView.jsx';
 import { session } from '../../services/session.js';
+import { useDashboardTheme } from '../../hooks/useDashboardTheme.js';
 
 const menuItems = [
   { id: 'eventos', label: 'Eventos Promocionados', icon: Sparkles },
@@ -16,6 +17,7 @@ const menuItems = [
 ];
 
 export default function MarketingPanel() {
+  useDashboardTheme();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'eventos';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
