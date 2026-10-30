@@ -708,9 +708,16 @@ export default function OrganizadorIndex() {
         <>
           <div className="lg:hidden">
             <CreateEventWizard
+              initialEvent={editingEvent}
               isDrawer={false}
-              onBack={returnToEvents}
-              onSave={showSuccess}
+              onBack={() => {
+                setEditingEvent(null);
+                returnToEvents();
+              }}
+              onSave={() => {
+                setEditingEvent(null);
+                showSuccess();
+              }}
             />
           </div>
           <div className="hidden lg:block">
@@ -791,6 +798,7 @@ export default function OrganizadorIndex() {
       {selectedEventId && (
         <EventDetailView
           eventId={selectedEventId}
+          orgApproved={isOrgApproved}
           onBack={() => setSelectedEventId(null)}
           onEdit={(eventToEdit) => {
             setSelectedEventId(null);
@@ -805,9 +813,16 @@ export default function OrganizadorIndex() {
       {creationView === 'wizard' && (
         <div className="hidden lg:block">
           <CreateEventWizard
+            initialEvent={editingEvent}
             isDrawer={true}
-            onBack={returnToEvents}
-            onSave={showSuccess}
+            onBack={() => {
+              setEditingEvent(null);
+              returnToEvents();
+            }}
+            onSave={() => {
+              setEditingEvent(null);
+              showSuccess();
+            }}
           />
         </div>
       )}

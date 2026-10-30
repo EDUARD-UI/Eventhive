@@ -12,6 +12,8 @@ import {
   FiUsers,
   FiRotateCcw,
   FiX,
+  FiAlertCircle,
+  FiLayers,
 } from 'react-icons/fi';
 import Badge from '../../components/Shared/Badge.jsx';
 import { organizerService } from '../../services/organizerService.js';
@@ -40,7 +42,7 @@ const labelMap = {
   RECHAZADO: 'Rechazado',
 };
 
-export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = true }) {
+export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = true, orgApproved = true }) {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);

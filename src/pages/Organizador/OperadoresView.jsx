@@ -100,20 +100,20 @@ export default function OperadoresView() {
     setIsInviting(true);
     try {
       await organizerService.invitarOperador(emailTrim);
+      setShowInviteModal(false);
+      setInviteEmail('');
+      setIsInviting(false);
       await showSuccessAlert({
         title: 'Invitación enviada',
         text: `Se ha enviado la invitación exitosamente a ${emailTrim}. El enlace será válido por 24 horas.`,
       });
-      setInviteEmail('');
-      setShowInviteModal(false);
       fetchData();
     } catch (err) {
+      setIsInviting(false);
       await showErrorAlert({
         title: 'Error al enviar invitación',
         text: err.message || 'No se pudo enviar la invitación al operador.',
       });
-    } finally {
-      setIsInviting(false);
     }
   };
 
@@ -323,21 +323,21 @@ export default function OperadoresView() {
                   <th className="py-4 px-4">Operador</th>
                   <th className="py-4 px-4">Correo Electrónico</th>
                   <th className="py-4 px-4">Teléfono</th>
-                  <th className="py-4 px-4 text-center">Estado</th>
+                  
                   <th className="py-4 px-4 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs bg-white">
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-400">
+                    <td colSpan={4} className="py-12 text-center text-slate-400">
                       <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                       Cargando operadores...
                     </td>
                   </tr>
                 ) : paginatedList.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-400">
+                    <td colSpan={4} className="py-12 text-center text-slate-400">
                       <FiUsers className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                       No se encontraron operadores activos en tu organización.
                     </td>
@@ -375,11 +375,7 @@ export default function OperadoresView() {
                           {telefono}
                         </td>
 
-                        <td className="py-4 px-4 text-center">
-                          <Badge variant={op.activo === false ? 'danger' : 'success'} size="xs">
-                            {op.activo === false ? 'Inactivo' : 'Activo'}
-                          </Badge>
-                        </td>
+
 
                         {/* Acciones: Correo directo y Revocar rol */}
                         <td className="py-4 px-4 text-right">

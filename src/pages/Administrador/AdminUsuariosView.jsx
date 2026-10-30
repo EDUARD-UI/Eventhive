@@ -39,53 +39,66 @@ export default function AdminUsuariosView({
   });
 
   // Carga reactiva de usuarios desde endpoint paginado GET /api/usuarios o búsqueda
+  // Carga del directorio completo para filtrado 100% en Frontend
   const fetchUsuarios = useCallback(async () => {
     try {
       setLoading(true);
-      if (searchTerm.trim()) {
-        const res = await adminService.buscarUsuarios({
-          nombre: searchTerm.trim(),
-          page: currentPage - 1,
-          size: pageSize,
-        });
-        if (res.success) {
-          setUsuariosList(res.data);
-          setTotalItems(res.total);
-        }
-      } else {
-        const res = await adminService.getUsuarios({
-          page: currentPage - 1,
-          size: pageSize,
-        });
-        if (res.success) {
-          setUsuariosList(res.data);
-          setTotalItems(res.total);
-        }
+      const res = await adminService.getUsuarios({
+        page: 0,
+        size: 200,
+      });
+      if (res.success && Array.isArray(res.data)) {
+        setUsuariosList(res.data);
       }
     } catch (err) {
-      console.warn('Error al cargar lista paginada de usuarios:', err);
+      console.warn('Error al cargar lista de usuarios:', err);
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, searchTerm]);
+  }, []);
 
   useEffect(() => {
-    fetchUsuarios();
-  }, [fetchUsuarios]);
-
-  useEffect(() => {
-    if (initialUsuarios && initialUsuarios.length > 0 && !searchTerm && filtroRol === 'TODOS') {
+    if (initialUsuarios && initialUsuarios.length > 0) {
       setUsuariosList(initialUsuarios);
-      setTotalItems(initialUsuarios.length);
+    } else {
+      fetchUsuarios();
     }
-  }, [initialUsuarios]);
+  }, [initialUsuarios, fetchUsuarios]);
 
-  // Filtrado reactivo por rol
-  const filteredUsers = usuariosList.filter((user) => {
-    const rol = (user.rolNombre || user.rol || '').toUpperCase();
-    if (filtroRol !== 'TODOS' && rol !== filtroRol) return false;
-    return true;
-  });
+  // Filtrado 100% en el Frontend por Rol y Búsqueda
+  const filteredUsers = React.useMemo(() => {
+    return usuariosList.filter((user) => {
+      // 1. Filtrado por Rol en el Frontend
+      if (filtroRol !== 'TODOS') {
+        const userRoles = Array.isArray(user.roles) && user.roles.length > 0
+          ? user.roles.map((r) => (typeof r === 'object' && r !== null ? r.nombre || r.name || '' : String(r)).toUpperCase())
+          : [(user.rolNombre || user.rol || 'CLIENTE').toUpperCase()];
+
+        if (!userRoles.includes(filtroRol.toUpperCase())) {
+          return false;
+        }
+      }
+
+      // 2. Filtrado por término de búsqueda en el Frontend
+      if (searchTerm.trim()) {
+        const term = searchTerm.toLowerCase().trim();
+        const nombre = (user.nombre || user.name || '').toLowerCase();
+        const correo = (user.correo || user.email || '').toLowerCase();
+        const tel = (user.telefono || user.phone || '').toLowerCase();
+        if (!nombre.includes(term) && !correo.includes(term) && !tel.includes(term)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [usuariosList, filtroRol, searchTerm]);
+
+  // Paginación en Frontend
+  const paginatedUsers = React.useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredUsers.slice(start, start + pageSize);
+  }, [filteredUsers, currentPage, pageSize]);
 
   const getRoleBadgeVariant = (rol) => {
     const r = (rol || '').toUpperCase();
@@ -192,7 +205,7 @@ export default function AdminUsuariosView({
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((user) => {
+                paginatedUsers.map((user) => {
                   const rolDisplay = user.rolNombre || user.rol || 'CLIENTE';
                   const orgName =
                     typeof user.organizacion === 'object' && user.organizacion !== null
@@ -289,7 +302,7 @@ export default function AdminUsuariosView({
         {/* Paginación */}
         <Pagination
           currentPage={currentPage}
-          totalItems={totalItems}
+          totalItems={filteredUsers.length}
           pageSize={pageSize}
           onPageChange={setCurrentPage}
           onPageSizeChange={(newSize) => {

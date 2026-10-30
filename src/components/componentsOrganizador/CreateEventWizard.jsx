@@ -25,7 +25,7 @@ import {
   showPendingRutAlert,
 } from '../../utils/alertUtils.js';
 import { organizerService } from '../../services/organizerService.js';
-import { formatPrice, formatHora23 } from '../../utils/formatters.js';
+import { formatPrice, formatHora23, formatFechaHora } from '../../utils/formatters.js';
 import StyledDatePicker from '../common/StyledDatePicker.jsx';
 
 // Pin temático ámbar colmena para Leaflet
@@ -138,6 +138,60 @@ export default function CreateEventWizard({
   );
 
   const [dateTimeError, setDateTimeError] = useState(null);
+
+  // Carga reactiva de los datos del evento al editar
+  useEffect(() => {
+    if (!initialEvent) return;
+
+    let fechaClean = '';
+    let horaClean = '';
+
+    if (initialEvent.fecha) {
+      if (typeof initialEvent.fecha === 'string' && initialEvent.fecha.includes('T')) {
+        const [f, h] = initialEvent.fecha.split('T');
+        fechaClean = f;
+        horaClean = h ? h.substring(0, 5) : '';
+      } else {
+        fechaClean = initialEvent.fecha;
+      }
+    }
+
+    if (initialEvent.hora) {
+      horaClean = formatHora23(initialEvent.hora);
+    }
+
+    const catId =
+      initialEvent.categoriaId ||
+      initialEvent.categoria?.id ||
+      (typeof initialEvent.categoria === 'number' ? initialEvent.categoria : '') ||
+      '';
+
+    setForm({
+      titulo: initialEvent.titulo || initialEvent.nombre || '',
+      descripcion: initialEvent.descripcion || '',
+      categoriaId: String(catId || ''),
+      fecha: fechaClean,
+      hora: horaClean,
+      lugar: initialEvent.lugar || initialEvent.direccion || '',
+      latitud: Number(initialEvent.latitud) || 10.4236,
+      longitud: Number(initialEvent.longitud) || -75.5478,
+    });
+
+    if (initialEvent.foto || initialEvent.imagenUrl || initialEvent.urlFoto) {
+      setFotoPreview(initialEvent.foto || initialEvent.imagenUrl || initialEvent.urlFoto);
+    }
+
+    if (Array.isArray(initialEvent.localidades) && initialEvent.localidades.length > 0) {
+      setLocalidades(
+        initialEvent.localidades.map((loc) => ({
+          id: loc.id,
+          nombre: loc.nombre || loc.tipo || 'General',
+          precio: Number(loc.precio ?? loc.price ?? 0),
+          capacidad: Number(loc.capacidad ?? loc.cupos ?? loc.capacity ?? 100),
+        }))
+      );
+    }
+  }, [initialEvent]);
 
   const DEFAULT_CATEGORIES = [
     { id: 1, nombre: 'Música y Conciertos' },
@@ -369,47 +423,54 @@ export default function CreateEventWizard({
         formData.append('foto', fotoFile);
       }
 
-      const createdEvent = await organizerService.crearEvento(formData);
-      const eventoId = createdEvent?.id || createdEvent?.eventoId || createdEvent?.data?.id;
+      const isEditing = Boolean(initialEvent?.id || initialEvent?.eventoId);
+      const targetId = initialEvent?.id || initialEvent?.eventoId;
 
-      // 2. Registrar localidades para el evento si hay ID
-      if (eventoId && localidades.length > 0) {
-        for (const loc of localidades) {
-          try {
-            await organizerService.agregarLocalidad(eventoId, {
-              nombre: loc.nombre.trim(),
-              precio: Number(loc.precio) || 0,
-              capacidad: Number(loc.capacidad) || 1,
-            });
-          } catch (e) {
-            console.warn('Error registrando localidad:', loc.nombre, e);
+      let resultEvent;
+      if (isEditing) {
+        resultEvent = await organizerService.editarEvento(targetId, formData);
+        await showSuccessAlert({
+          title: '¡Evento Actualizado!',
+          text: 'Las modificaciones del evento han sido guardadas exitosamente.',
+        });
+      } else {
+        resultEvent = await organizerService.crearEvento(formData);
+        const eventoId = resultEvent?.id || resultEvent?.eventoId || resultEvent?.data?.id;
+
+        // Registrar localidades para el evento si hay ID
+        if (eventoId && localidades.length > 0) {
+          for (const loc of localidades) {
+            try {
+              await organizerService.agregarLocalidad(eventoId, {
+                nombre: loc.nombre.trim(),
+                precio: Number(loc.precio) || 0,
+                capacidad: Number(loc.capacidad) || 1,
+              });
+            } catch (e) {
+              console.warn('Error registrando localidad:', loc.nombre, e);
+            }
           }
+        }
+
+        const estadoEvento = (resultEvent?.estado || '').toUpperCase();
+        const backendMsg = resultEvent?._mensaje || resultEvent?.mensaje;
+
+        if (estadoEvento === 'BORRADOR' || resultEvent?.requiereRut) {
+          await showPendingRutAlert();
+        } else if (estadoEvento === 'MODERACION') {
+          await showInfoAlert({
+            title: 'Evento enviado a moderación',
+            text: 'El evento ha sido enviado a moderación y será revisado antes de publicarse en cartelera.',
+          });
+        } else {
+          await showSuccessAlert({
+            title: '¡Evento Creado!',
+            text: backendMsg || 'Tu evento ha sido creado y publicado exitosamente.',
+          });
         }
       }
 
-      // 3. Manejo de estado del evento y SweetAlert2 según requerimiento
-      const estadoEvento = (createdEvent?.estado || '').toUpperCase();
-      const backendMsg = createdEvent?._mensaje || createdEvent?.mensaje;
-
-      // REQUERIMIENTO 5:
-      // Si la organización está en PENDIENTE_REVISION y backend devuelve BORRADOR:
-      if (estadoEvento === 'BORRADOR' || createdEvent?.requiereRut) {
-        await showPendingRutAlert();
-      } else if (estadoEvento === 'MODERACION') {
-        await showInfoAlert({
-          title: 'Evento enviado a moderación',
-          text: 'El evento ha sido enviado a moderación y será revisado antes de publicarse en cartelera.',
-          badge: 'En Revisión',
-        });
-      } else {
-        await showSuccessAlert({
-          title: '¡Evento Creado!',
-          text: backendMsg || 'Tu evento ha sido creado y publicado exitosamente.',
-          badge: 'Evento Publicado',
-        });
-      }
-
-      if (onSave) onSave(createdEvent);
+      if (onSave) onSave(resultEvent);
     } catch (err) {
       console.error('Error al crear evento:', err);
       await showErrorAlert({

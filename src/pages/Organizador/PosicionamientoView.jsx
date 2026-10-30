@@ -184,11 +184,21 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
     } catch (err) {
       setPagoStatus('FALLIDO');
       console.error('Error en contratación de promoción:', err);
-      await showErrorAlert({
-        title: 'Error en la operación',
-        text: err?.message || 'No se pudo completar el flujo de pago de la promoción.',
-        badge: 'Operación Fallida',
-      });
+      const isAlreadyActiveOrPending =
+        err?.message?.toLowerCase().includes('posicionamiento activo') ||
+        err?.message?.toLowerCase().includes('pago pendiente');
+
+      if (isAlreadyActiveOrPending) {
+        await showWarningAlert({
+          title: 'Promoción ya en curso',
+          text: err.message || 'Este evento ya cuenta con un posicionamiento activo o un pago en proceso de validación.',
+        });
+      } else {
+        await showErrorAlert({
+          title: 'Error en la operación',
+          text: err?.message || 'No se pudo completar el flujo de pago de la promoción.',
+        });
+      }
     } finally {
       setProcesando(false);
     }

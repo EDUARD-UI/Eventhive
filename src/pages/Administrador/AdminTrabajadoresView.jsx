@@ -20,6 +20,7 @@ import ModalInvitacionOficial from '../../components/componentsAdmin/ModalInvita
 import adminService from '../../features/admin/services/adminService.js';
 import { normalizeRole } from '../../services/session.js';
 import { httpClient } from '../../services/httpClient.js';
+import { showSuccessAlert, showErrorAlert } from '../../utils/alertUtils.js';
 
 export default function AdminTrabajadoresView() {
   const [activeTab, setActiveTab] = useState('trabajadores'); // 'trabajadores' | 'invitaciones'
@@ -31,7 +32,6 @@ export default function AdminTrabajadoresView() {
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [feedbackMsg, setFeedbackMsg] = useState(null);
 
   // Modal para Invitar / Enviar Comunicado
   const [mailModal, setMailModal] = useState({
@@ -173,16 +173,16 @@ export default function AdminTrabajadoresView() {
       } else {
         await adminService.revocarModerador(modalRevocar.id);
       }
-      setFeedbackMsg({
-        type: 'success',
+      setModalRevocar(null);
+      await showSuccessAlert({
+        title: 'Rol revocado',
         text: `El rol de ${modalRevocar.rolNombre.toLowerCase()} fue revocado exitosamente a "${modalRevocar.nombre}".`,
       });
-      setModalRevocar(null);
       await fetchTrabajadores();
     } catch (err) {
-      setFeedbackMsg({
-        type: 'error',
-        text: err?.message || 'Error al revocar el rol de moderador.',
+      await showErrorAlert({
+        title: 'Error al revocar rol',
+        text: err?.message || 'Error al revocar el rol.',
       });
     } finally {
       setActionLoading(false);
@@ -192,8 +192,8 @@ export default function AdminTrabajadoresView() {
   // Enviar invitación
   const handleInviteSubmit = async (inviteData) => {
     await adminService.invitarTrabajador(inviteData);
-    setFeedbackMsg({
-      type: 'success',
+    await showSuccessAlert({
+      title: 'Invitación enviada',
       text: `Invitación oficial enviada exitosamente a "${inviteData.email}" con el rol ${inviteData.rol}.`,
     });
     await fetchTrabajadores();
@@ -206,8 +206,8 @@ export default function AdminTrabajadoresView() {
       asunto,
       mensaje,
     });
-    setFeedbackMsg({
-      type: 'success',
+    await showSuccessAlert({
+      title: 'Comunicado enviado',
       text: `Comunicado oficial despachado correctamente a "${destinatario}".`,
     });
   };
@@ -217,14 +217,14 @@ export default function AdminTrabajadoresView() {
     try {
       setActionLoading(true);
       await adminService.reenviarInvitacion(correo, rol);
-      setFeedbackMsg({
-        type: 'success',
+      await showSuccessAlert({
+        title: 'Invitación reenviada',
         text: `Se generó un nuevo enlace de invitación para "${correo}" con vigencia de 24 horas.`,
       });
       await fetchTrabajadores();
     } catch (err) {
-      setFeedbackMsg({
-        type: 'error',
+      await showErrorAlert({
+        title: 'Error al reenviar',
         text: err?.message || 'Error al reenviar la invitación.',
       });
     } finally {
@@ -238,31 +238,7 @@ export default function AdminTrabajadoresView() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {feedbackMsg && (
-        <div
-          className={`p-4 rounded-2xl flex items-center justify-between text-xs font-semibold ${
-            feedbackMsg.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-              : 'bg-rose-50 text-rose-800 border border-rose-200'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            {feedbackMsg.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-            )}
-            <span>{feedbackMsg.text}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setFeedbackMsg(null)}
-            className="text-slate-400 hover:text-slate-600 ml-4 font-bold cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+      
 
       {/* Encabezado y Acciones */}
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

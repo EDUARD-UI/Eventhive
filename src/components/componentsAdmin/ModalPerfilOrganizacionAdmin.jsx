@@ -68,7 +68,7 @@ export default function ModalPerfilOrganizacionAdmin({
 
       {/* Drawer lateral derecho */}
       <div
-        className="relative z-50 w-full sm:w-[620px] md:w-[680px] lg:w-[740px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
+        className="relative z-50 w-full sm:w-[620px] md:w-[680px] lg:w-[740px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-[#0B1B3D] text-white p-6 relative">
@@ -113,7 +113,7 @@ export default function ModalPerfilOrganizacionAdmin({
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 flex-1">
           {/* 1. Métricas Agregadas */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
