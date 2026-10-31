@@ -27,7 +27,7 @@ const customPinIcon = () =>
     html: `
       <div style="position: relative; width: 30px; height: 38px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));">
         <svg viewBox="0 0 34 42" width="30" height="38" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M17 0C7.61 0 0 7.61 0 17C0 27.5 14.5 40.5 16.1 41.9C16.6 42.3 17.4 42.3 17.9 41.9C19.5 40.5 34 27.5 34 17C34 7.61 26.39 0 17 0Z" fill="#087fea" stroke="#FFFFFF" stroke-width="2"/>
+          <path d="M17 0C7.61 0 0 7.61 0 17C0 27.5 14.5 40.5 16.1 41.9C16.6 42.3 17.4 42.3 17.9 41.9C19.5 40.5 34 27.5 34 17C34 7.61 26.39 0 17 0Z" fill="#f59e0b" stroke="#FFFFFF" stroke-width="2"/>
           <circle cx="17" cy="17" r="5" fill="#FFFFFF"/>
         </svg>
       </div>
@@ -216,10 +216,10 @@ export default function ModalDetalleEventoModeracion({
 
         {/* Contenido scrolleable con pestañas / secciones */}
         <div className="p-6 sm:p-7 overflow-y-auto space-y-6 flex-1 text-xs text-slate-700">
-          {/* Metadata Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Metadata Grid (Fecha y Hora sin recuadro de aforo) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
                 <FiCalendar size={16} />
               </div>
               <div>
@@ -229,7 +229,7 @@ export default function ModalDetalleEventoModeracion({
             </div>
 
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
                 <FiClock size={16} />
               </div>
               <div>
@@ -237,28 +237,12 @@ export default function ModalDetalleEventoModeracion({
                 <p className="font-semibold text-slate-800">{evento.hora ? formatHora24(evento.hora) : 'Sin hora'}</p>
               </div>
             </div>
-
-            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
-                <FiUsers size={16} />
-              </div>
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-400">Aforo Calculado</p>
-                <p className="font-semibold text-slate-800">
-                  {loadingLocalidades
-                    ? 'Calculando...'
-                    : totalAforo > 0
-                    ? `${totalAforo.toLocaleString()} personas`
-                    : 'Sin localidades'}
-                </p>
-              </div>
-            </div>
           </div>
 
           {/* Ubicación y Mapa Geográfico (Requisito 5.1 - sin coordenadas numéricas) */}
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
             <div className="flex items-center gap-2 text-slate-800 font-bold">
-              <FiMapPin className="text-brand" size={16} />
+              <FiMapPin className="text-amber-500" size={16} />
               <span>Ubicación del Evento</span>
             </div>
             <p className="text-slate-600 pl-6 text-xs">{evento.lugar || 'Ubicación no especificada'}</p>
@@ -306,7 +290,7 @@ export default function ModalDetalleEventoModeracion({
           <div>
             <div className="flex items-center justify-between mb-2.5">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                <FiLayers className="text-brand" size={14} />
+                <FiLayers className="text-amber-500" size={14} />
                 <span>Localidades y Precios ({localidades.length})</span>
               </h4>
               {totalAforo > 0 && (
@@ -329,22 +313,23 @@ export default function ModalDetalleEventoModeracion({
                 {localidades.map((loc, idx) => (
                   <div
                     key={loc.id || idx}
-                    className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3"
+                    className="p-3.5 rounded-2xl bg-white border border-slate-200/80 flex items-center justify-between gap-3 shadow-2xs"
                   >
                     <div>
-                      <p className="font-bold text-slate-800 text-xs">
-                        {loc.nombre || `Localidad #${idx + 1}`}
+                      <p className="font-bold text-slate-900 text-xs">
+                        {loc.nombre || loc.nombreLocalidad || `Localidad #${idx + 1}`}
                       </p>
                       <p className="text-[11px] text-slate-500 mt-0.5">
-                        Capacidad: {loc.capacidad ? `${loc.capacidad} cupos` : 'N/D'}
-                        {loc.cantidadDisponible !== undefined &&
-                          loc.cantidadDisponible !== null && (
-                            <span> · Disp: {loc.cantidadDisponible}</span>
-                          )}
+                        Capacidad: <strong className="text-slate-700">{loc.capacidad ?? loc.capacidadTotal ?? 0} cupos</strong>
+                        {loc.disponibles !== undefined && loc.disponibles !== null ? (
+                          <span> · Disponibles: <strong className="text-emerald-600">{loc.disponibles}</strong></span>
+                        ) : loc.cantidadDisponible !== undefined && loc.cantidadDisponible !== null ? (
+                          <span> · Disponibles: <strong className="text-emerald-600">{loc.cantidadDisponible}</strong></span>
+                        ) : null}
                       </p>
                     </div>
                     <div className="text-right">
-                      <span className="font-display font-extrabold text-sm text-brand">
+                      <span className="font-display font-black text-sm text-amber-600">
                         {loc.precio === 0 || !loc.precio
                           ? 'Gratis'
                           : new Intl.NumberFormat('es-CO', {
@@ -363,7 +348,7 @@ export default function ModalDetalleEventoModeracion({
           {/* Historial de moderaciones reales del evento */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2.5 flex items-center gap-1.5">
-              <FiFileText className="text-brand" size={14} />
+              <FiFileText className="text-amber-500" size={14} />
               <span>Historial de Moderación del Evento</span>
             </h4>
 
@@ -531,9 +516,19 @@ export default function ModalDetalleEventoModeracion({
                   type="button"
                   onClick={() => onAprobar(evento.id)}
                   disabled={actionLoading}
-                  className="px-5 py-2 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-bold shadow-md shadow-brand/20 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md shadow-emerald-600/20 transition-all active:scale-95 disabled:opacity-60 flex items-center gap-1.5 cursor-pointer"
                 >
-                  <FiCheck size={14} /> Aprobar y Publicar
+                  {actionLoading ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Aprobando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FiCheck size={14} strokeWidth={2.5} />
+                      <span>Aprobar y Publicar</span>
+                    </>
+                  )}
                 </button>
               </>
             ) : !actionType ? (

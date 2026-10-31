@@ -26,8 +26,10 @@ export default function Registro() {
 
         if (!values.nit?.trim()) {
           errors.nit = t('auth.errNitReq');
-        } else if (values.nit.trim().length < 6) {
-          errors.nit = t('auth.errNitMin');
+        } else if (values.nit.trim().length < 9) {
+          errors.nit = 'El NIT debe tener al menos 9 caracteres.';
+        } else if (values.nit.trim().length > 12) {
+          errors.nit = 'El NIT no debe superar los 12 caracteres.';
         }
 
         if (!values.correoEmpresarial?.trim()) {
@@ -59,10 +61,8 @@ export default function Registro() {
         const cleanPhone = sanitizePhone(values.phone);
         if (!cleanPhone) {
           errors.phone = t('auth.errPhoneReq');
-        } else if (cleanPhone.length < 7) {
-          errors.phone = t('auth.errPhoneMin');
-        } else if (cleanPhone.length > 10 || (values.phone || '').length > 10) {
-          errors.phone = t('auth.errPhoneMax');
+        } else if (cleanPhone.length !== 10) {
+          errors.phone = 'El teléfono debe tener exactamente 10 dígitos.';
         }
       }
 

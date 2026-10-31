@@ -25,11 +25,14 @@ export default function InputField({
   const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
   const hasError = Boolean(touched && error);
   const isPhone = type === 'tel' || name === 'phone' || name === 'telefono';
+  const isNit = name === 'nit';
 
   const handleInputChange = (e) => {
     if (isPhone) {
       const sanitized = e.target.value.replace(/\D/g, '').slice(0, 10);
       e.target.value = sanitized;
+    } else if (isNit) {
+      e.target.value = e.target.value.slice(0, 12);
     }
     onChange?.(e);
   };
@@ -81,16 +84,18 @@ export default function InputField({
           disabled={disabled}
           autoComplete={autoComplete}
           {...props}
-          className={`w-full rounded-xl border bg-white dark:bg-[#070D1B] text-xs sm:text-sm text-slate-900 dark:text-white transition-all outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500
+          className={`w-full rounded-xl border text-xs sm:text-sm transition-all outline-none
             ${Icon ? 'pl-9' : 'pl-3.5'}
             ${isPassword ? 'pr-10' : 'pr-3.5'}
-            py-2
+            py-2.5
             ${
               hasError
-                ? 'border-rose-400 bg-rose-50/20 dark:bg-rose-950/20 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                : 'border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:bg-white dark:focus:bg-[#0B132B]'
+                ? 'border-rose-400 bg-rose-50/30 text-slate-900 placeholder:text-slate-400 dark:border-rose-500 dark:bg-rose-950/25 dark:text-slate-100 dark:placeholder:text-slate-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                : disabled
+                  ? 'border-slate-200 bg-slate-100 text-slate-500 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:placeholder:text-slate-500'
+                  : 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 hover:border-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/25 focus:bg-white dark:border-slate-700 dark:bg-[#070D1B] dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:bg-[#0B132B]'
             }
-            ${disabled ? 'bg-slate-100 dark:bg-slate-800 opacity-60 cursor-not-allowed' : ''}
+            ${disabled ? 'cursor-not-allowed opacity-75' : ''}
           `}
         />
 

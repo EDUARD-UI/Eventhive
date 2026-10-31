@@ -30,7 +30,7 @@ export default function AdminEventCard({
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
 
         {/* Categoría Badge */}
-        <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-[#087fea] text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm">
+        <span className="absolute top-3 left-3 bg-amber-500 text-slate-950 text-[11px] font-black px-2.5 py-1 rounded-lg shadow-sm">
           {evento.categoria}
         </span>
 
@@ -67,7 +67,7 @@ export default function AdminEventCard({
 
           <div className="mt-3 space-y-1.5 text-xs text-slate-600">
             <div className="flex items-center gap-2 truncate">
-              <div className="p-1 rounded-md bg-blue-50 text-[#087fea] shrink-0">
+              <div className="p-1 rounded-md bg-amber-50 text-amber-600 shrink-0">
                 <Calendar className="w-3.5 h-3.5" strokeWidth={1.75} />
               </div>
               <span>

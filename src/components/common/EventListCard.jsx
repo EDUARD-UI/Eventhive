@@ -8,8 +8,9 @@ import { useLanguage } from '../../context/LanguageContext.jsx';
 /**
  * EventListCard
  * Card estilo Boleto/Ticket:
- * - Soporta imágenes verticales/altas adaptando la proporción suavemente con límite máximo (max-h) y fix-cover.
- * - Primera tarjeta destacada (featured={true}) alta con aspect-[4/5].
+ * - Las imágenes altas/verticales ocupan SIEMPRE el 100% del ancho del boleto (sin achicarse de ancho)
+ *   y aumentan su altura de forma controlada (h-64 sm:h-72) con fix-cover (object-cover).
+ * - La primera tarjeta destacada (featured={true}) usa aspect-[4/5].
  * - En todas las cards la información queda abajo de la imagen de forma consistente.
  */
 export default function EventListCard({
@@ -18,6 +19,7 @@ export default function EventListCard({
   aspectVariant = 'standard',
   masonry = false,
   featured = false,
+  equalHeight = false,
 }) {
   const { t } = useLanguage();
   const [isTallImage, setIsTallImage] = useState(false);
@@ -42,29 +44,32 @@ export default function EventListCard({
 
   const handleImageLoad = (e) => {
     const { naturalWidth, naturalHeight } = e?.target || {};
-    if (naturalWidth && naturalHeight && naturalHeight > naturalWidth * 1.12) {
-      setIsTallImage(true);
+    if (masonry) {
+      setIsTallImage(Boolean(naturalWidth && naturalHeight && naturalHeight > naturalWidth * 1.1));
     }
   };
 
-  // Proporción adaptable si la imagen es alta, con límite para no desbordar
-  const baseAspect = featured
-    ? 'aspect-[4/5] max-h-[340px]'
-    : isTallImage
-    ? 'aspect-[3/4] sm:aspect-[4/5] max-h-[290px] sm:max-h-[310px]'
+  // Altura del contenedor de imagen:
+  // Para evitar que la imagen se quede corta de ancho, no usamos max-h combinado con aspect-ratio vertical,
+  // ya que la especificación CSS achica el ancho proporcionalmente.
+  // Cuando la imagen es vertical (alta), se le asigna altura adaptable (h-64 sm:h-72) llenando el 100% del ancho.
+  const imageContainerHeight = featured
+    ? 'aspect-[4/5]'
+    : masonry && isTallImage
+    ? 'h-64 sm:h-72'
     : aspectVariant === 'portrait'
-    ? 'aspect-[4/5] max-h-[320px]'
+    ? 'aspect-[4/5]'
     : aspectVariant === 'tall'
-    ? 'aspect-[4/3] max-h-[280px]'
+    ? 'aspect-[4/3]'
     : aspectVariant === 'wide'
-    ? 'aspect-[16/9] max-h-[240px]'
+    ? 'aspect-[16/9]'
     : aspectVariant === 'compact'
-    ? 'aspect-[2/1] max-h-[200px]'
-    : 'aspect-[16/10] max-h-[250px]';
+    ? 'aspect-[2/1]'
+    : 'aspect-[16/10]';
 
   return (
     <article
-      className={`group relative h-auto rounded-3xl transition-all duration-300 ease-out flex flex-col justify-between overflow-hidden bg-white dark:bg-[#151D2F] border ${
+      className={`group relative ${equalHeight ? 'h-full' : 'h-auto'} rounded-3xl transition-all duration-300 ease-out flex flex-col justify-between overflow-hidden bg-white dark:bg-[#151D2F] border ${
         featured
           ? 'border-amber-500/40 dark:border-amber-400/40 shadow-md ring-1 ring-amber-500/10'
           : 'border-slate-200/90 dark:border-white/[0.07]'
@@ -72,9 +77,9 @@ export default function EventListCard({
     >
       {/* SECCIÓN SUPERIOR: Portada adaptable + Título */}
       <div className="relative z-10">
-        {/* Imagen del evento adaptable con fix-cover */}
+        {/* Imagen del evento: siempre ocupa el 100% del ancho disponible con fix-cover */}
         <div
-          className={`relative ${baseAspect} overflow-hidden rounded-2xl m-3.5 mb-2.5 bg-slate-900 border border-slate-100 dark:border-white/10 shadow-xs transition-all duration-300`}
+          className={`relative ${imageContainerHeight} overflow-hidden rounded-2xl m-3.5 mb-2.5 bg-slate-900 border border-slate-100 dark:border-white/10 shadow-xs transition-all duration-300`}
         >
           <Link to={`/eventos/${id}`} className="block w-full h-full relative">
             <ImageWithFallback

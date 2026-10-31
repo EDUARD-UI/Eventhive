@@ -189,7 +189,7 @@ export default function UpcomingEventsScrollShowcase({
       />
 
       {/* Grilla de tarjetas con efecto abanico 3D y desfase parallax fluido */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7 items-start relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7 items-stretch relative z-10">
         {displayedEvents.map((event, idx) => (
           <AnimatedCardItem
             key={event.id || idx}
@@ -197,7 +197,7 @@ export default function UpcomingEventsScrollShowcase({
             scrollProgress={scrollProgress}
             isVisible={isVisible}
           >
-            <EventListCard event={event} aspectVariant="standard" />
+            <EventListCard event={event} aspectVariant="standard" equalHeight />
           </AnimatedCardItem>
         ))}
       </div>

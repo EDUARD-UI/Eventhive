@@ -1,11 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiBookmark, FiArrowRight } from 'react-icons/fi';
 import PerfilEventCard from '../../../components/perfilUsuario/PerfilEventCard.jsx';
 import { useLanguage } from '../../../context/LanguageContext.jsx';
+import Pagination from '../../../components/Shared/Pagination.jsx';
+
+const SAVED_EVENTS_PAGE_SIZE = 6;
 
 export default function GuardadosPartial({ guardados = [], onRemoveDeseo }) {
   const { t } = useLanguage();
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(guardados.length / SAVED_EVENTS_PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const visibleEvents = guardados.slice(
+    (safePage - 1) * SAVED_EVENTS_PAGE_SIZE,
+    safePage * SAVED_EVENTS_PAGE_SIZE
+  );
 
   if (guardados.length === 0) {
     return (
@@ -31,15 +41,24 @@ export default function GuardadosPartial({ guardados = [], onRemoveDeseo }) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-      {guardados.map((evento) => (
-        <PerfilEventCard
-          key={evento.id}
-          event={evento}
-          showFavoriteButton={true}
-          onRemoveFavorite={onRemoveDeseo}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        {visibleEvents.map((evento) => (
+          <PerfilEventCard
+            key={evento.id}
+            event={evento}
+            showFavoriteButton={true}
+            onRemoveFavorite={onRemoveDeseo}
+          />
+        ))}
+      </div>
+      <Pagination
+        currentPage={safePage}
+        totalItems={guardados.length}
+        pageSize={SAVED_EVENTS_PAGE_SIZE}
+        onPageChange={setCurrentPage}
+        minimal
+      />
+    </>
   );
 }

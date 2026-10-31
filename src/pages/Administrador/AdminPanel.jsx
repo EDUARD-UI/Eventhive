@@ -111,10 +111,14 @@ export default function AdminPanel() {
   const [modalModeradorAsignar, setModalModeradorAsignar] = useState(null);
 
   const showToast = useCallback((message, type = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => {
-      setToast(null);
-    }, 4500);
+    Swal.fire({
+      icon: type === 'error' ? 'error' : type === 'info' ? 'info' : 'success',
+      title: type === 'error' ? 'Error' : 'Operación exitosa',
+      text: typeof message === 'string' ? message : String(message),
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#0B1B3D',
+      timer: 3000,
+    });
   }, []);
 
   // Carga inicial de datos desde adminService
@@ -755,33 +759,7 @@ export default function AdminPanel() {
       onSelect={handleSelectTab}
       title={menuItems.find((item) => item.id === currentTab)?.label || 'Resumen Global'}
     >
-      {/* Toast de Notificaciones Flotante */}
-      {toast && (
-        <div className="fixed top-5 right-5 z-50 animate-in fade-in slide-in-from-top-4 duration-200">
-          <div
-            className={`px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 backdrop-blur-md text-xs font-semibold ${
-              toast.type === 'error'
-                ? 'bg-rose-50/95 border-rose-200 text-rose-800'
-                : toast.type === 'info'
-                ? 'bg-blue-50/95 border-blue-200 text-blue-800'
-                : 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
-            }`}
-          >
-            {toast.type === 'error' ? (
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-            ) : (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            )}
-            <span>{toast.message}</span>
-            <button
-              onClick={() => setToast(null)}
-              className="text-slate-400 hover:text-slate-700 ml-2"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* Contenido Dinámico de la Pestaña Activa */}
       {renderCurrentView()}

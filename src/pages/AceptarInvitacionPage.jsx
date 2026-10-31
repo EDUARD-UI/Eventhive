@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import {
   FiCheckCircle,
@@ -12,7 +12,8 @@ import {
   FiHome,
 } from 'react-icons/fi';
 import { httpClient } from '../services/httpClient.js';
-import HexagonalHivePattern from '../components/common/HexagonalHivePattern.jsx';
+import AuthLayout from '../components/auth/AuthLayout.jsx';
+import InputField from '../components/common/InputField.jsx';
 import { showSuccessAlert, showErrorAlert } from '../utils/alertUtils.js';
 
 export default function AceptarInvitacionPage() {
@@ -135,231 +136,161 @@ export default function AceptarInvitacionPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-slate-900 via-[#0B1B3D] to-slate-950 text-white flex flex-col justify-center items-center p-4 sm:p-6 overflow-hidden">
-      {/* Fondo hexagonal decorativo */}
-      <div className="absolute inset-0 pointer-events-none opacity-30">
-        <HexagonalHivePattern />
-      </div>
-
-      <div className="relative z-10 w-full max-w-lg">
-        {/* Cabecera de Marca */}
-        <div className="text-center mb-6">
-          <Link to="/" className="inline-flex items-center gap-2 mb-3 group">
-            <div className="w-10 h-10 rounded-2xl bg-amber-400 text-slate-950 font-black flex items-center justify-center text-xl shadow-lg group-hover:scale-105 transition-transform">
-              EH
-            </div>
-            <span className="font-display font-black text-2xl tracking-tight text-white">
-              Event<span className="text-amber-400">Hive</span>
-            </span>
-          </Link>
-          <p className="text-xs text-slate-400">
-            Plataforma Integral de Eventos y Gestión Cultural
-          </p>
+    <AuthLayout
+      title={validating ? 'Verificando invitación' : validationError ? 'Invitación no válida' : 'Completa tu registro'}
+      subtitle={
+        validating
+          ? 'Estamos validando la autenticidad y vigencia del enlace recibido.'
+          : validationError
+            ? 'El enlace de invitación no está disponible.'
+            : 'Activa tu cuenta para comenzar a colaborar con EventHive.'
+      }
+    >
+      {validating ? (
+        <div className="py-10 text-center space-y-4">
+          <div className="w-10 h-10 border-3 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-slate-600 dark:text-slate-300">Verificando invitación...</p>
         </div>
-
-        {/* Tarjeta de Contenido */}
-        <div className="bg-white text-slate-800 rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden">
-          {validating ? (
-            <div className="p-10 text-center space-y-4">
-              <div className="w-10 h-10 border-3 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto" />
-              <h3 className="font-bold text-base text-slate-900">
-                Verificando invitación...
-              </h3>
-              <p className="text-xs text-slate-500">
-                Estamos validando la autenticidad y vigencia del enlace recibido.
-              </p>
-            </div>
-          ) : validationError ? (
-            <div className="p-8 text-center space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto text-2xl shadow-inner">
-                <FiAlertCircle size={28} />
-              </div>
-              <h3 className="font-display text-lg font-black text-slate-900">
-                Enlace No Válido o Expirado
-              </h3>
-              <p className="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto">
-                {validationError}
-              </p>
-              <div className="pt-2 flex justify-center gap-3">
-                <Link
-                  to="/"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
-                >
-                  <FiHome size={14} />
-                  <span>Ir al Inicio</span>
-                </Link>
-                <Link
-                  to="/iniciosesion"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B1B3D] hover:bg-slate-900 text-white text-xs font-bold transition-all shadow-sm"
-                >
-                  <span>Iniciar Sesión</span>
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <div>
-              {/* Encabezado de la invitación */}
-              <div className="bg-[#0B1B3D] text-white p-6 relative">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 mb-2">
-                  <FiCheckCircle size={13} />
-                  <span>Invitación Oficial Verificada</span>
-                </div>
-                <h2 className="font-display text-xl font-bold text-white leading-tight">
-                  ¡Te han invitado a EventHive!
-                </h2>
-                <p className="text-xs text-slate-300 mt-1">
-                  Completa tus datos para activar tu cuenta y comenzar a colaborar.
+      ) : validationError ? (
+        <div className="p-6 rounded-2xl border border-rose-200 bg-rose-50 text-center dark:border-rose-900/70 dark:bg-rose-950/30">
+          <FiAlertCircle size={28} className="mx-auto mb-3 text-rose-600 dark:text-rose-400" />
+          <p className="text-sm text-rose-800 dark:text-rose-200">{validationError}</p>
+          <div className="pt-5 flex justify-center gap-3">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 transition-colors"
+            >
+              <FiHome size={14} />
+              <span>Ir al Inicio</span>
+            </Link>
+            <Link
+              to="/iniciosesion"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow-sm"
+            >
+              <span>Iniciar Sesión</span>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3.5 space-y-2 dark:border-amber-500/25 dark:bg-amber-500/10">
+            <div className="flex items-start gap-2 text-xs">
+              <FiCheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <div className="min-w-0">
+                <p className="font-semibold text-slate-700 dark:text-slate-200">Invitación oficial verificada</p>
+                <p className="mt-1 flex items-center gap-1.5 break-all text-slate-600 dark:text-slate-400">
+                  <FiMail size={13} className="shrink-0" />
+                  {invitacionData?.correo || invitacionData?.correoInvitado || '—'}
                 </p>
               </div>
-
-              {/* Resumen del Rol e Invitación */}
-              <div className="p-6 border-b border-slate-100 bg-slate-50/70 space-y-2.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 font-medium">Correo electrónico:</span>
-                  <strong className="text-slate-900 font-semibold flex items-center gap-1.5">
-                    <FiMail size={13} className="text-slate-400" />
-                    <span>{invitacionData?.correo || invitacionData?.correoInvitado || '—'}</span>
-                  </strong>
-                </div>
-
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 font-medium">Rol asignado:</span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 font-black text-[11px] border border-amber-300/80">
-                    <FiShield size={11} className="text-amber-700" />
-                    {invitacionData?.rol || invitacionData?.rolDestino || 'COLABORADOR'}
-                  </span>
-                </div>
-
-                {invitacionData?.organizacionNombre && (
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500 font-medium">Organización:</span>
-                    <strong className="text-slate-900 font-bold">
-                      {invitacionData.organizacionNombre}
-                    </strong>
-                  </div>
-                )}
-              </div>
-
-              {/* Formulario */}
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                {formError && (
-                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
-                    <FiAlertCircle size={16} className="text-rose-600 shrink-0" />
-                    <span>{formError}</span>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Nombre Completo <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <FiUser className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
-                    <input
-                      type="text"
-                      value={nombre}
-                      onChange={(e) => setNombre(e.target.value)}
-                      placeholder="Ej: Carlos Silva"
-                      required
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Teléfono Móvil <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <FiPhone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
-                    <input
-                      type="tel"
-                      value={telefono}
-                      onChange={(e) => {
-                        const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
-                        setTelefono(digits);
-                      }}
-                      onKeyDown={(e) => {
-                        const allowed = ['Backspace', 'Tab', 'Enter', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
-                        if (allowed.includes(e.key) || e.ctrlKey || e.metaKey) return;
-                        if (!/^\d$/.test(e.key)) e.preventDefault();
-                      }}
-                      placeholder="10 dígitos numéricos (ej: 3001234567)"
-                      required
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                      Contraseña <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <FiLock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
-                      <input
-                        type="password"
-                        value={clave}
-                        onChange={(e) => setClave(e.target.value)}
-                        placeholder="Mínimo 8 caracteres"
-                        required
-                        minLength={8}
-                        className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                      Confirmar Contraseña <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <FiLock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
-                      <input
-                        type="password"
-                        value={confirmarClave}
-                        onChange={(e) => setConfirmarClave(e.target.value)}
-                        placeholder="Repite la contraseña"
-                        required
-                        minLength={8}
-                        className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-3">
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full py-3.5 px-4 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-98 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    {submitting ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Activando cuenta...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Aceptar Invitación y Entrar</span>
-                        <FiArrowRight size={15} />
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
             </div>
-          )}
-        </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-slate-600 dark:text-slate-400">Rol asignado:</span>
+              <span className="inline-flex items-center gap-1 rounded-md border border-amber-300/80 bg-amber-100 px-2 py-0.5 font-bold text-amber-900 dark:border-amber-400/30 dark:bg-amber-400/15 dark:text-amber-200">
+                <FiShield size={11} />
+                {invitacionData?.rol || invitacionData?.rolDestino || 'COLABORADOR'}
+              </span>
+            </div>
+            {invitacionData?.organizacionNombre && (
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Organización:{' '}
+                <strong className="text-slate-800 dark:text-slate-200">
+                  {invitacionData.organizacionNombre}
+                </strong>
+              </p>
+            )}
+          </div>
 
-        <div className="text-center mt-6 text-xs text-slate-500">
-          ¿Tienes dudas sobre esta invitación? Contáctanos a{' '}
-          <a href="mailto:soporte@eventhive.live" className="text-amber-400 hover:underline font-semibold">
-            soporte@eventhive.live
-          </a>
+          <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+            {formError && (
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-medium flex items-center gap-2">
+                <FiAlertCircle size={15} className="shrink-0" />
+                <span>{formError}</span>
+              </div>
+            )}
+
+            <InputField
+              id="nombre"
+              name="nombre"
+              type="text"
+              label="Nombre completo"
+              placeholder="Ej: Carlos Silva"
+              icon={FiUser}
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              required
+              autoComplete="name"
+            />
+            <InputField
+              id="telefono"
+              name="telefono"
+              type="tel"
+              label="Teléfono móvil"
+              placeholder="10 dígitos numéricos"
+              icon={FiPhone}
+              value={telefono}
+              onChange={(e) => setTelefono(e.target.value)}
+              required
+              maxLength={10}
+              autoComplete="tel"
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <InputField
+                id="clave"
+                name="clave"
+                type="password"
+                label="Contraseña"
+                placeholder="Mínimo 8 caracteres"
+                icon={FiLock}
+                value={clave}
+                onChange={(e) => setClave(e.target.value)}
+                required
+                minLength={8}
+                autoComplete="new-password"
+              />
+              <InputField
+                id="confirmarClave"
+                name="confirmarClave"
+                type="password"
+                label="Confirmar contraseña"
+                placeholder="Repite la contraseña"
+                icon={FiLock}
+                value={confirmarClave}
+                onChange={(e) => setConfirmarClave(e.target.value)}
+                required
+                minLength={8}
+                autoComplete="new-password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full mt-2.5 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 hover:shadow-amber-500/35 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {submitting ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                  <span>Activando cuenta...</span>
+                </>
+              ) : (
+                <>
+                  <span>Aceptar invitación</span>
+                  <FiArrowRight size={15} />
+                </>
+              )}
+            </button>
+          </form>
         </div>
+      )}
+
+      <div className="mt-5 flex justify-end items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+        <span>¿Tienes dudas sobre esta invitación?</span>
+        <a href="mailto:soporte@eventhive.live" className="font-semibold text-amber-600 dark:text-amber-400 hover:underline">
+          Contáctanos
+        </a>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

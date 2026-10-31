@@ -27,6 +27,11 @@ import { showLoginAlert } from '../../utils/alertUtils.js';
  */
 export default function OrganizationListCard({ org }) {
   const navigate = useNavigate();
+  const initialFollowers = org?.totalSeguidores ?? org?.followers ?? 0;
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followersCount, setFollowersCount] = useState(initialFollowers);
+  const [isLoadingFollow, setIsLoadingFollow] = useState(false);
+
   if (!org) return null;
 
   const {
@@ -41,7 +46,6 @@ export default function OrganizationListCard({ org }) {
     imagenPerfil,
     description,
     descripcion,
-    verified,
     estado,
     rating,
     promedioRating,
@@ -51,15 +55,10 @@ export default function OrganizationListCard({ org }) {
     totalEventosCreados,
   } = org;
 
-  const [isFollowing, setIsFollowing] = useState(false);
-  const initialFollowers = totalSeguidores ?? followers ?? 0;
-  const [followersCount, setFollowersCount] = useState(initialFollowers);
-
   const title = razonSocial || name || 'Organización';
   const desc = descripcion || description || 'Organización cultural y productora de experiencias en Cartagena de Indias.';
   const repName = representante || org.nombreRepresentante || '';
   const imgUrl = urlLogo || imagenPerfil || avatar || logo || imagen || null;
-  const isVerified = verified || estado === 'APROBADA' || estado === 'VERIFICADA';
   const displayRating = promedioRating ?? rating ?? null;
   const totalEvents = totalEventosCreados ?? eventsCount ?? 0;
 
@@ -76,6 +75,9 @@ export default function OrganizationListCard({ org }) {
       return;
     }
 
+    if (isLoadingFollow) return;
+    setIsLoadingFollow(true);
+
     const nextState = !isFollowing;
     setIsFollowing(nextState);
     setFollowersCount((prev) => (nextState ? prev + 1 : Math.max(0, prev - 1)));
@@ -88,9 +90,10 @@ export default function OrganizationListCard({ org }) {
       }
     } catch (err) {
       console.warn('Error al actualizar estado de seguimiento:', err);
-      // Revertir en caso de falla
       setIsFollowing(!nextState);
       setFollowersCount((prev) => (!nextState ? prev + 1 : Math.max(0, prev - 1)));
+    } finally {
+      setIsLoadingFollow(false);
     }
   };
 
@@ -99,17 +102,9 @@ export default function OrganizationListCard({ org }) {
       {/* 1. CUERPO DE LA TARJETA: ESTADO, LOGO, TÍTULO Y DESCRIPCIÓN */}
       <div className="relative px-5 sm:px-6 py-5 flex-1 flex flex-col justify-between">
         <div>
-          {/* Estado de la organización */}
+          {/* Header con Rating o Ubicación */}
           <div className="flex items-center justify-end gap-2 mb-4">
-            {isVerified ? (
-              <span
-                title="Organización verificada en EventHive"
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider"
-              >
-                <FiCheck size={11} strokeWidth={3} />
-                <span>Verificada</span>
-              </span>
-            ) : displayRating ? (
+            {displayRating ? (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-[10px] font-bold">
                 <FiStar size={11} fill="currentColor" />
                 <span>{Number(displayRating).toFixed(1)}</span>
@@ -138,17 +133,23 @@ export default function OrganizationListCard({ org }) {
               />
             </Link>
 
-            {/* Botón interactivo 'Seguir' tipo pill estilizado */}
+            {/* Botón interactivo 'Seguir' estilo EventDetailPage dorado ámbar */}
             <button
               type="button"
+              disabled={isLoadingFollow}
               onClick={handleFollowToggle}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 ${
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer active:scale-95 shadow-xs disabled:opacity-75 disabled:cursor-not-allowed ${
                 isFollowing
-                  ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
-                  : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 hover:bg-amber-500 hover:text-slate-950 hover:border-amber-500'
+                  ? 'bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
+                  : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/10'
               }`}
             >
-              {isFollowing ? (
+              {isLoadingFollow ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  <span>{isFollowing ? 'Dejando...' : 'Siguiendo...'}</span>
+                </>
+              ) : isFollowing ? (
                 <>
                   <FiCheck size={13} strokeWidth={2.5} />
                   <span>Siguiendo</span>

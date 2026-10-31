@@ -1,3 +1,4 @@
+import Swal from 'sweetalert2';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ModeradorLayout from '../../layouts/ModeradorLayout.jsx';
@@ -49,10 +50,14 @@ export default function ModeradorPanel() {
   const [actionLoading, setActionLoading] = useState(false);
 
   const showToast = useCallback((message, type = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => {
-      setToast(null);
-    }, 4500);
+    Swal.fire({
+      icon: type === 'error' ? 'error' : 'success',
+      title: type === 'error' ? 'Error' : 'Operación exitosa',
+      text: typeof message === 'string' ? message : String(message),
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#0B1B3D',
+      timer: 3000,
+    });
   }, []);
 
   // 1. Cargar Estadísticas reales del Moderador
@@ -212,32 +217,7 @@ export default function ModeradorPanel() {
       title={activeHeaderInfo.title}
       subtitle={activeHeaderInfo.subtitle}
     >
-      {/* Toast Notification */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 duration-200">
-          <div
-            className={`flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl text-xs font-semibold border ${
-              toast.type === 'error'
-                ? 'bg-rose-900 text-white border-rose-800 shadow-rose-950/20'
-                : 'bg-slate-900 text-white border-slate-800 shadow-slate-950/20'
-            }`}
-          >
-            {toast.type === 'error' ? (
-              <FiAlertCircle className="text-rose-400 shrink-0" size={17} />
-            ) : (
-              <FiCheckCircle className="text-emerald-400 shrink-0" size={17} />
-            )}
-            <span>{toast.message}</span>
-            <button
-              type="button"
-              onClick={() => setToast(null)}
-              className="ml-2 text-slate-400 hover:text-white"
-            >
-              <FiX size={15} />
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* Vistas según la pestaña activa */}
       {currentTab === 'resumen' && (

@@ -53,7 +53,7 @@ const ACTIVIDADES_SEED = [
     icono: FiCheckCircle,
     estado: 'Acreditado',
     tone: 'blue',
-    color: 'bg-blue-50 text-brand border-blue-200',
+    color: 'bg-amber-50 text-amber-700 border-amber-200',
   },
   {
     id: 3,
@@ -70,7 +70,7 @@ const ACTIVIDADES_SEED = [
     icono: FiShield,
     estado: 'Vigente',
     tone: 'active',
-    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   },
   {
     id: 4,
@@ -138,7 +138,7 @@ const ACTIVIDADES_SEED = [
     icono: FiCheckCircle,
     estado: 'Acreditado',
     tone: 'blue',
-    color: 'bg-blue-50 text-brand border-blue-200',
+    color: 'bg-amber-50 text-amber-700 border-amber-200',
   },
   {
     id: 8,
@@ -315,7 +315,7 @@ export default function ActividadesView() {
           change="↑ 18% vs jornada previa"
           trend="up"
           icon={FiActivity}
-          iconBg="bg-blue-50"
+          iconBg="bg-amber-50"
           iconColor="text-brand"
         />
         <StatCard
@@ -333,8 +333,8 @@ export default function ActividadesView() {
           change="En 2 salas simultáneas"
           trend="up"
           icon={FiCheckCircle}
-          iconBg="bg-blue-50"
-          iconColor="text-blue-600"
+          iconBg="bg-amber-50"
+          iconColor="text-amber-600"
         />
       </div>
 
@@ -356,7 +356,7 @@ export default function ActividadesView() {
             }}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
               filtro === btn.id
-                ? 'bg-brand text-white shadow-sm shadow-brand/20'
+                ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
                 : 'bg-white text-slate-600 border border-slate-200/90 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >
@@ -375,7 +375,7 @@ export default function ActividadesView() {
                 return (
                   <div
                     key={act.id}
-                    className="p-4 sm:p-5 flex items-start gap-4 hover:bg-blue-50/20 transition-colors group"
+                    className="p-4 sm:p-5 flex items-start gap-4 hover:bg-amber-50/20 transition-colors group"
                   >
                     <div
                       className={`w-11 h-11 rounded-2xl flex items-center justify-center border shrink-0 shadow-2xs group-hover:scale-105 transition-transform ${act.color}`}

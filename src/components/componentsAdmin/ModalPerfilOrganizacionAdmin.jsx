@@ -80,7 +80,7 @@ export default function ModalPerfilOrganizacionAdmin({
 
       {/* Drawer lateral derecho */}
       <div
-        className="relative z-50 w-full sm:w-[620px] md:w-[680px] lg:w-[740px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col"
+        className="relative z-50 w-full sm:w-[620px] md:w-[680px] lg:w-[740px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-start"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-[#0B1B3D] text-white p-6 relative">
@@ -148,7 +148,7 @@ export default function ModalPerfilOrganizacionAdmin({
                 </p>
               </div>
               <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                <p className="text-xl font-display font-extrabold text-brand">
+                <p className="text-xl font-display font-extrabold text-amber-600">
                   {organizacion.totalSeguidores || organizacion.followers || 0}
                 </p>
                 <p className="text-[11px] text-slate-500 mt-0.5">Seguidores</p>
@@ -174,11 +174,11 @@ export default function ModalPerfilOrganizacionAdmin({
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-200/60">
                 <p className="flex items-center gap-1.5">
-                  <UserCheck className="w-3.5 h-3.5 text-brand shrink-0" strokeWidth={1.75} />
+                  <UserCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" strokeWidth={1.75} />
                   <span>Representante: <strong className="text-slate-900">{organizacion.representanteLegal || organizacion.representanteNombre || organizacion.representante || '—'}</strong></span>
                 </p>
                 <p className="flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-brand shrink-0" strokeWidth={1.75} />
+                  <Mail className="w-3.5 h-3.5 text-amber-600 shrink-0" strokeWidth={1.75} />
                   <span className="truncate">{organizacion.correoContacto || organizacion.email || organizacion.correo || '—'}</span>
                 </p>
                 <p className="flex items-center gap-1.5">
@@ -203,7 +203,7 @@ export default function ModalPerfilOrganizacionAdmin({
 
             <div className="p-4 rounded-2xl border border-slate-200 bg-white flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-blue-50 text-brand">
+                <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600">
                   <FileText className="w-5 h-5" strokeWidth={1.75} />
                 </div>
                 <div>

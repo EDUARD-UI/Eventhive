@@ -33,13 +33,12 @@ export default function PerfilOrganizacionPublicoPage() {
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
-  const [activeTab, setActiveTab] = useState('todos'); // 'todos' | 'publicados' | 'finalizados'
   const [eventsPage, setEventsPage] = useState(1);
-  const [activeSlide, setActiveSlide] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
+    setEventsPage(1);
 
     Promise.all([
       organizationService.getOrganizationById(id),
@@ -92,64 +91,18 @@ export default function PerfilOrganizacionPublicoPage() {
     }
   };
 
-  const filteredEvents = useMemo(() => {
+  const activeEvents = useMemo(() => {
     return events.filter((ev) => {
       const isPast = ev.startsAt ? new Date(ev.startsAt) < new Date() : false;
       const estado = (ev.estado || (isPast ? 'FINALIZADO' : 'PUBLICADO')).toUpperCase();
-
-      if (activeTab === 'publicados') {
-        return estado === 'PUBLICADO' || (!isPast && estado !== 'FINALIZADO');
-      }
-      if (activeTab === 'finalizados') {
-        return estado === 'FINALIZADO' || isPast;
-      }
-      return true;
+      return estado === 'PUBLICADO' && !isPast;
     });
-  }, [events, activeTab]);
+  }, [events]);
 
   const paginatedEvents = useMemo(() => {
     const start = (eventsPage - 1) * EVENTS_PAGE_SIZE;
-    return filteredEvents.slice(start, start + EVENTS_PAGE_SIZE);
-  }, [filteredEvents, eventsPage]);
-
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    setEventsPage(1);
-  };
-
-  const counts = useMemo(() => {
-    let publicados = 0;
-    let finalizados = 0;
-    events.forEach((ev) => {
-      const isPast = ev.startsAt ? new Date(ev.startsAt) < new Date() : false;
-      const estado = (ev.estado || (isPast ? 'FINALIZADO' : 'PUBLICADO')).toUpperCase();
-      if (estado === 'FINALIZADO' || isPast) {
-        finalizados++;
-      } else {
-        publicados++;
-      }
-    });
-    return {
-      todos: events.length,
-      publicados,
-      finalizados,
-    };
-  }, [events]);
-
-  //Hasta 3 eventos destacados para el carrusel superior del Hero
-  const featuredSlides = useMemo(() => {
-    const promoted = events.filter((ev) => ev.promocionado);
-    const baseList = promoted.length > 0 ? [...promoted, ...events.filter((e) => !e.promocionado)] : events;
-    return baseList.slice(0, 3);
-  }, [events]);
-
-  useEffect(() => {
-    if (featuredSlides.length <= 1) return;
-    const timer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % featuredSlides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [featuredSlides.length]);
+    return activeEvents.slice(start, start + EVENTS_PAGE_SIZE);
+  }, [activeEvents, eventsPage]);
 
   if (loading) {
     return (
@@ -189,7 +142,6 @@ export default function PerfilOrganizacionPublicoPage() {
     );
   }
 
-  const currentHeroEvent = featuredSlides[activeSlide] || featuredSlides[0] || null;
   const socialInstagram =
     organization.instagram ||
     organization.redesSociales?.instagram ||
@@ -203,7 +155,7 @@ export default function PerfilOrganizacionPublicoPage() {
       <Navbar />
 
       <main className="flex-1 relative z-10">
-        {/* 1. HERO BANNER / CARRUSEL SUPERIOR DE 3 EVENTOS DESTACADOS */}
+        {/* Encabezado del perfil público de la organización */}
         <section className="w-full bg-gradient-to-b from-[#04499E] via-[#0A2652] to-[#0B132B] text-white pt-6 pb-8 sm:pb-10 px-4 sm:px-8 lg:px-12 border-b border-white/10 relative overflow-hidden">
           {/* Brillos ambientales */}
           <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -224,76 +176,13 @@ export default function PerfilOrganizacionPublicoPage() {
               </Link>
             </div>
 
-            {/* Slide del Evento Destacado */}
-            {currentHeroEvent ? (
-              <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 lg:gap-12">
-                {/* Imagen / Contenedor cálido dorado del Slide */}
-                <div className="w-full md:w-[380px] lg:w-[440px] shrink-0">
-                  <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#A6783A] via-[#8F652D] to-[#6E4B1F] shadow-2xl border border-amber-300/25">
-                    {currentHeroEvent.photo && (
-                      <ImageWithFallback
-                        src={currentHeroEvent.photo}
-                        alt={currentHeroEvent.title}
-                        showText={false}
-                        className="w-full h-full object-cover"
-                        imgClassName="w-full h-full object-cover transition-transform duration-700"
-                        fallbackClassName="w-full h-full bg-[#9C7038]"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* Texto del Evento Destacado y CTA */}
-                <div className="flex-1 text-center md:text-left">
-                  <p className="text-base sm:text-xl font-extrabold text-white tracking-tight mb-1">
-                    Eventos Destacados
-                  </p>
-                  <h2 className="text-2xl sm:text-4xl lg:text-[42px] font-black text-white uppercase tracking-tight leading-tight mb-5 line-clamp-2">
-                    {currentHeroEvent.title}
-                  </h2>
-                  <Link
-                    to={`/eventos/${currentHeroEvent.id}`}
-                    className="inline-flex items-center justify-center px-7 py-2.5 rounded-full border border-white/60 hover:border-amber-400 hover:bg-amber-400 hover:text-slate-950 text-white text-xs font-bold uppercase tracking-widest transition-all duration-200 shadow-sm"
-                  >
-                    VER DETALLES
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 lg:gap-12">
-                <div className="w-full md:w-[380px] lg:w-[440px] shrink-0">
-                  <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#A6783A] via-[#8F652D] to-[#6E4B1F] shadow-2xl border border-amber-300/25" />
-                </div>
-                <div className="flex-1 text-center md:text-left">
-                  <p className="text-base sm:text-xl font-extrabold text-white tracking-tight mb-1">
-                    Eventos Destacados
-                  </p>
-                  <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight leading-tight mb-4">
-                    {organization.name}
-                  </h2>
-                </div>
-              </div>
-            )}
-
-            {/* Indicadores / Puntos de navegación del carrusel centrados abajo */}
-            <div className="flex items-center justify-center gap-2 mt-6">
-              {(featuredSlides.length > 0 ? featuredSlides : [null, null, null]).map((slide, idx) => {
-                const isActive = idx === activeSlide;
-                return (
-                  <button
-                    key={slide?.id || idx}
-                    type="button"
-                    aria-label={`Ir al evento destacado ${idx + 1}`}
-                    onClick={() => slide && setActiveSlide(idx)}
-                    className={`transition-all duration-300 rounded-full cursor-pointer ${
-                      isActive
-                        ? 'w-7 h-1.5 bg-white shadow-xs'
-                        : 'w-1.5 h-1.5 bg-white/45 hover:bg-white/75'
-                    }`}
-                  />
-                );
-              })}
+            <div className="py-8 sm:py-12 text-center">
+              <p className="text-xs sm:text-sm font-extrabold uppercase tracking-[0.2em] text-amber-300 mb-3">
+                Perfil de organización
+              </p>
+              <h1 className="text-2xl sm:text-4xl lg:text-[42px] font-black text-white uppercase tracking-tight leading-tight">
+                {organization.name}
+              </h1>
             </div>
           </div>
         </section>
@@ -364,7 +253,7 @@ export default function PerfilOrganizacionPublicoPage() {
                   <div className="px-1.5 flex flex-col items-center justify-center">
                     <FiCalendar className="text-amber-500 dark:text-amber-400 mb-1.5" size={15} />
                     <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight">
-                      {counts.publicados}
+                      {activeEvents.length}
                     </span>
                     <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
                       EVENTOS ACTIVOS
@@ -422,45 +311,8 @@ export default function PerfilOrganizacionPublicoPage() {
                 NUESTRAS EXPERIENCIAS CULTURALES
               </h2>
 
-              {/* Pestañas de Filtro (Tabs pill style): TODOS, ACTIVOS, FINALIZADOS */}
-              <div className="inline-flex flex-wrap items-center p-1 rounded-full bg-slate-200/80 dark:bg-[#1C2029] border border-slate-300/80 dark:border-white/10 mb-7">
-                <button
-                  type="button"
-                  onClick={() => handleTabChange('todos')}
-                  className={`px-5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                    activeTab === 'todos'
-                      ? 'bg-white text-slate-950 shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  TODOS ({counts.todos})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTabChange('publicados')}
-                  className={`px-5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                    activeTab === 'publicados'
-                      ? 'bg-white text-slate-950 shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  ACTIVOS ({counts.publicados})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTabChange('finalizados')}
-                  className={`px-5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                    activeTab === 'finalizados'
-                      ? 'bg-white text-slate-950 shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  FINALIZADOS ({counts.finalizados})
-                </button>
-              </div>
-
               {/* Grid de tarjetas de eventos (3 columnas como en la maqueta) */}
-              {filteredEvents.length > 0 ? (
+              {activeEvents.length > 0 ? (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                     {paginatedEvents.map((event, idx) => {
@@ -556,11 +408,11 @@ export default function PerfilOrganizacionPublicoPage() {
                   </div>
 
                   {/* Paginación Minimalista y Centrada */}
-                  {filteredEvents.length > EVENTS_PAGE_SIZE && (
+                  {activeEvents.length > EVENTS_PAGE_SIZE && (
                     <div className="mt-10 flex justify-center w-full">
                       <Pagination
                         currentPage={eventsPage}
-                        totalItems={filteredEvents.length}
+                        totalItems={activeEvents.length}
                         pageSize={EVENTS_PAGE_SIZE}
                         onPageChange={(p) => {
                           setEventsPage(p);
@@ -577,21 +429,11 @@ export default function PerfilOrganizacionPublicoPage() {
                     <FiCalendar size={24} />
                   </div>
                   <h3 className="text-lg font-black text-[#0B1B3D] dark:text-white mb-1 uppercase">
-                    No hay eventos {activeTab !== 'todos' ? activeTab : 'registrados'}
+                    No hay eventos activos
                   </h3>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mb-6 font-medium">
-                    Esta organización actualmente no tiene eventos en la sección de{' '}
-                    <strong className="text-amber-800 dark:text-amber-400">{activeTab}</strong>.
+                    Esta organización actualmente no tiene eventos publicados y activos.
                   </p>
-                  {activeTab !== 'todos' && (
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('todos')}
-                      className="px-5 py-2.5 rounded-xl bg-amber-100 dark:bg-slate-800 hover:bg-amber-200 dark:hover:bg-slate-700 text-amber-950 dark:text-amber-300 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
-                    >
-                      Ver todos los eventos ({counts.todos})
-                    </button>
-                  )}
                 </div>
               )}
             </div>

@@ -42,7 +42,7 @@ export default function ModeradorResumenView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <FiShield className="w-5 h-5 text-brand" />
+            <FiShield className="w-5 h-5 text-amber-600" />
             <span>Panel de Control de Moderación</span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -52,7 +52,7 @@ export default function ModeradorResumenView({
         <button
           type="button"
           onClick={() => onNavigateTab('eventos')}
-          className="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-bold shadow-md shadow-brand/25 flex items-center gap-2 transition-all active:scale-95 shrink-0 cursor-pointer"
+          className="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-white text-xs font-bold shadow-md shadow-amber-500/20 flex items-center gap-2 transition-all active:scale-95 shrink-0 cursor-pointer"
         >
           <span>Ir a Eventos Pendientes</span>
           <FiArrowRight size={15} />
@@ -106,7 +106,7 @@ export default function ModeradorResumenView({
               <h3 className="font-display text-base font-bold text-slate-900">
                 Cola Prioritaria de Eventos
               </h3>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-brand-light text-brand">
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600">
                 {totalPendientes} pendientes
               </span>
             </div>
@@ -118,7 +118,7 @@ export default function ModeradorResumenView({
           <button
             type="button"
             onClick={() => onNavigateTab('eventos')}
-            className="text-xs font-bold text-brand hover:text-brand-dark flex items-center gap-1 self-start sm:self-auto transition-colors"
+            className="text-xs font-bold text-amber-600 hover:text-amber-600-dark flex items-center gap-1 self-start sm:self-auto transition-colors"
           >
             <span>Ver bandeja completa</span>
             <FiArrowRight size={14} />
@@ -179,7 +179,7 @@ export default function ModeradorResumenView({
                     {/* Información */}
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-brand/10 text-brand">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-500/15 text-amber-800 border border-amber-500/30">
                           {categoriaNombre}
                         </span>
                         <Badge tone="amber">Pendiente</Badge>
@@ -196,13 +196,13 @@ export default function ModeradorResumenView({
                       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-600">
                         {evento.fecha && (
                           <span className="flex items-center gap-1">
-                            <FiCalendar className="text-brand" size={13} />
+                            <FiCalendar className="text-amber-600" size={13} />
                             {evento.fecha ? formatFecha(evento.fecha) : ''} {evento.hora ? `· ${formatHora24(evento.hora)}` : ''}
                           </span>
                         )}
                         {evento.lugar && (
                           <span className="flex items-center gap-1 truncate max-w-xs">
-                            <FiMapPin className="text-brand" size={13} />
+                            <FiMapPin className="text-amber-600" size={13} />
                             <span className="truncate">{evento.lugar}</span>
                           </span>
                         )}
@@ -242,7 +242,7 @@ export default function ModeradorResumenView({
                     <button
                       type="button"
                       onClick={() => onAprobar(evento.id)}
-                      className="px-3.5 py-1.5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-bold shadow-xs transition-all active:scale-95 flex items-center gap-1"
+                      className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-white text-xs font-bold shadow-xs transition-all active:scale-95 flex items-center gap-1"
                     >
                       <FiCheck size={13} />
                       <span>Aprobar</span>

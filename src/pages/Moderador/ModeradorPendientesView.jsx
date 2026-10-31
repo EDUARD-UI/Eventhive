@@ -84,7 +84,7 @@ export default function ModeradorPendientesView({
             placeholder="Buscar por título, lugar u organización..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/10 transition-all"
+            className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
           />
         </div>
       </div>
@@ -146,7 +146,7 @@ export default function ModeradorPendientesView({
                       ) : (
                         <div className="w-full h-full bg-slate-200 dark:bg-slate-800" />
                       )}
-                      <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm text-brand font-bold text-[10px] px-2 py-0.5 rounded-md shadow-xs">
+                      <span className="absolute top-2 left-2 bg-amber-500 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded-lg shadow-xs">
                         {categoriaNombre}
                       </span>
                     </div>
@@ -169,7 +169,7 @@ export default function ModeradorPendientesView({
                       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
                         {evento.fecha && (
                           <div className="flex items-center gap-1.5">
-                            <FiCalendar className="text-brand shrink-0" size={13} />
+                            <FiCalendar className="text-amber-500 shrink-0" size={13} />
                             <span>
                               {evento.fecha ? formatFecha(evento.fecha) : ''} {evento.hora ? `· ${formatHora24(evento.hora)}` : ''}
                             </span>
@@ -177,7 +177,7 @@ export default function ModeradorPendientesView({
                         )}
                         {evento.lugar && (
                           <div className="flex items-center gap-1.5 truncate max-w-sm">
-                            <FiMapPin className="text-brand shrink-0" size={13} />
+                            <FiMapPin className="text-amber-500 shrink-0" size={13} />
                             <span className="truncate">{evento.lugar}</span>
                           </div>
                         )}
@@ -223,7 +223,7 @@ export default function ModeradorPendientesView({
                     <button
                       type="button"
                       onClick={() => onAprobar(evento.id)}
-                      className="px-4 py-2 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-bold shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
                     >
                       <FiCheck size={14} />
                       <span>Aprobar</span>

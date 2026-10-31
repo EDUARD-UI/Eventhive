@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiUsers, FiCompass, FiArrowRight, FiCheckCircle } from 'react-icons/fi';
+import { FiUsers, FiCompass, FiArrowRight } from 'react-icons/fi';
 import PerfilOrganizacionCard from '../../../components/perfilUsuario/PerfilOrganizacionCard.jsx';
 import { useLanguage } from '../../../context/LanguageContext.jsx';
+import Pagination from '../../../components/Shared/Pagination.jsx';
+
+const FOLLOWED_ORGANIZATIONS_PAGE_SIZE = 8;
 
 export default function OrganizacionesPartial({
   organizacionesSeguidas = [],
@@ -12,11 +15,18 @@ export default function OrganizacionesPartial({
   onUnfollow,
 }) {
   const { t } = useLanguage();
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Compatibilidad: si se pasó organizaciones directamente
   const followedList = organizacionesSeguidas.length > 0 ? organizacionesSeguidas : organizaciones;
   const hasFollowed = followedList.length > 0;
   const hasAvailable = organizacionesDisponibles.length > 0;
+  const totalPages = Math.max(1, Math.ceil(followedList.length / FOLLOWED_ORGANIZATIONS_PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const visibleFollowed = followedList.slice(
+    (safePage - 1) * FOLLOWED_ORGANIZATIONS_PAGE_SIZE,
+    safePage * FOLLOWED_ORGANIZATIONS_PAGE_SIZE
+  );
 
   // Si no hay ninguna en absoluto
   if (!hasFollowed && !hasAvailable) {
@@ -51,7 +61,7 @@ export default function OrganizacionesPartial({
           
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
-            {followedList.map((org) => (
+            {visibleFollowed.map((org) => (
               <PerfilOrganizacionCard
                 key={org.id}
                 organizacion={org}
@@ -61,6 +71,13 @@ export default function OrganizacionesPartial({
               />
             ))}
           </div>
+          <Pagination
+            currentPage={safePage}
+            totalItems={followedList.length}
+            pageSize={FOLLOWED_ORGANIZATIONS_PAGE_SIZE}
+            onPageChange={setCurrentPage}
+            minimal
+          />
         </div>
       ) : (
         /* Banner Descubrimiento cuando el usuario no sigue a nadie */

@@ -111,7 +111,7 @@ export default function AdminHistorialView({ auditLogs: initialLogs = [] }) {
         </span>
       );
     }
-    if (r === 'SUSPENDIDA' || r === 'RECHAZADO' || r === 'REVOCADO') {
+    if (['SUSPENDIDA', 'SUSPENDIDO', 'RECHAZADO', 'RECHAZADA', 'REVOCADO', 'CANCELADO', 'CANCELADA'].includes(r)) {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200">
           <span>{r}</span>

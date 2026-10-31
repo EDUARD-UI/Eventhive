@@ -103,15 +103,21 @@ export default function ModeradorHistorialView({
   }, [debouncedTitle, estadoFilter, categoriaFilter, page, size]);
 
   const getToneForEstado = (estado) => {
-    switch (estado) {
+    switch ((estado || '').toUpperCase()) {
       case 'PUBLICADO':
+      case 'APROBADO':
+      case 'APLICADO':
         return 'emerald';
       case 'PENDIENTE_REVISION':
         return 'amber';
       case 'EN_CORRECCION':
         return 'indigo';
       case 'RECHAZADO':
+      case 'RECHAZADA':
+      case 'CANCELADO':
+      case 'CANCELADA':
       case 'SUSPENDIDO':
+      case 'SUSPENDIDA':
         return 'rose';
       default:
         return 'slate';
@@ -143,7 +149,7 @@ export default function ModeradorHistorialView({
               placeholder="Buscar por título..."
               value={searchTitle}
               onChange={(e) => setSearchTitle(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-800 outline-none focus:bg-white focus:border-brand"
+              className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15"
             />
           </div>
 
@@ -155,7 +161,7 @@ export default function ModeradorHistorialView({
                 setEstadoFilter(e.target.value);
                 setPage(0);
               }}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700 outline-none focus:bg-white focus:border-brand cursor-pointer"
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 outline-none focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 cursor-pointer"
             >
               {ESTADOS_DISPONIBLES.map((est) => (
                 <option key={est.value} value={est.value}>
@@ -173,7 +179,7 @@ export default function ModeradorHistorialView({
                 setCategoriaFilter(e.target.value);
                 setPage(0);
               }}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700 outline-none focus:bg-white focus:border-brand cursor-pointer"
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 outline-none focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 cursor-pointer"
             >
               <option value="">Todas las categorías</option>
               {categorias.map((c) => (
@@ -270,7 +276,7 @@ export default function ModeradorHistorialView({
 
                       {/* Categoría */}
                       <td className="px-5 py-4">
-                        <span className="text-[11px] font-semibold text-brand bg-brand-light/60 px-2 py-0.5 rounded-md">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-800 border border-amber-500/30 shadow-2xs">
                           {categoriaNombre}
                         </span>
                       </td>

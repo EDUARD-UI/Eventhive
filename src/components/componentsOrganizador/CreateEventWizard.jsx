@@ -134,7 +134,7 @@ export default function CreateEventWizard({
   const [localidades, setLocalidades] = useState(
     initialEvent?.localidades && initialEvent.localidades.length > 0
       ? initialEvent.localidades
-      : [{ nombre: 'General', precio: 50000, capacidad: 100 }]
+      : []
   );
 
   const [dateTimeError, setDateTimeError] = useState(null);
@@ -244,9 +244,9 @@ export default function CreateEventWizard({
       form.hora ||
       form.lugar ||
       fotoFile ||
-      localidades.length > 1
+      localidades.length > (initialEvent?.localidades?.length || 0)
     );
-  }, [form, fotoFile, localidades]);
+  }, [form, fotoFile, localidades, initialEvent]);
 
   // Manejo de salida con advertencia si hay cambios sin guardar
   const handleSafeBack = async () => {
@@ -292,14 +292,6 @@ export default function CreateEventWizard({
   };
 
   const handleRemoveLocalidad = (index) => {
-    if (localidades.length === 1) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Localidad requerida',
-        text: 'Debes definir al menos una localidad o zona para el evento.',
-      });
-      return;
-    }
     setLocalidades((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -436,9 +428,12 @@ export default function CreateEventWizard({
       } else {
         resultEvent = await organizerService.crearEvento(formData);
         const eventoId = resultEvent?.id || resultEvent?.eventoId || resultEvent?.data?.id;
+        const failedLocalities = [];
 
         // Registrar localidades para el evento si hay ID
-        if (eventoId && localidades.length > 0) {
+        if (!eventoId && localidades.length > 0) {
+          failedLocalities.push(...localidades.map((localidad) => localidad.nombre));
+        } else if (localidades.length > 0) {
           for (const loc of localidades) {
             try {
               await organizerService.agregarLocalidad(eventoId, {
@@ -448,6 +443,7 @@ export default function CreateEventWizard({
               });
             } catch (e) {
               console.warn('Error registrando localidad:', loc.nombre, e);
+              failedLocalities.push(loc.nombre);
             }
           }
         }
@@ -462,7 +458,15 @@ export default function CreateEventWizard({
             title: 'Evento enviado a moderación',
             text: 'El evento ha sido enviado a moderación y será revisado antes de publicarse en cartelera.',
           });
-        } else {
+        }
+
+        if (failedLocalities.length > 0) {
+          await showErrorAlert({
+            title: 'Evento creado con localidades pendientes',
+            text: `El evento se creó, pero no se pudieron guardar estas localidades: ${failedLocalities.join(', ')}. Revisa el evento y vuelve a agregarlas.`,
+            badge: 'Localidades pendientes',
+          });
+        } else if (estadoEvento !== 'BORRADOR' && !resultEvent?.requiereRut && estadoEvento !== 'MODERACION') {
           await showSuccessAlert({
             title: '¡Evento Creado!',
             text: backendMsg || 'Tu evento ha sido creado y publicado exitosamente.',
@@ -729,6 +733,11 @@ export default function CreateEventWizard({
             </div>
 
             <div className="space-y-3">
+              {localidades.length === 0 && (
+                <p className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-xs font-medium text-slate-500">
+                  No hay localidades preconfiguradas. Agrega únicamente las zonas que quieras ofrecer.
+                </p>
+              )}
               {localidades.map((loc, idx) => (
                 <div
                   key={idx}
@@ -811,7 +820,7 @@ export default function CreateEventWizard({
                     onChange={handlePhotoSelect}
                     className="hidden"
                   />
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-brand flex items-center justify-center mb-3">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
                     <FiUpload size={22} />
                   </div>
                   <h4 className="font-bold text-xs text-slate-900 mb-1">
@@ -896,16 +905,20 @@ export default function CreateEventWizard({
                 <span className="font-bold text-slate-900 block mb-2">
                   Localidades Configuradas ({localidades.length}):
                 </span>
-                <div className="flex flex-wrap gap-2">
-                  {localidades.map((loc, idx) => (
-                    <span
-                      key={idx}
-                      className="px-3 py-1 bg-white border border-slate-200 rounded-lg font-medium text-slate-700"
-                    >
-                      {loc.nombre}: <strong>{formatPrice(loc.precio)}</strong> ({loc.capacidad} cupos)
-                    </span>
-                  ))}
-                </div>
+                {localidades.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {localidades.map((loc, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 bg-white border border-slate-200 rounded-lg font-medium text-slate-700"
+                      >
+                        {loc.nombre}: <strong>{formatPrice(loc.precio)}</strong> ({loc.capacidad} cupos)
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-500">Aún no se han agregado localidades.</p>
+                )}
               </div>
             </div>
           </div>

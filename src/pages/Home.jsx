@@ -160,6 +160,27 @@ export default function Home() {
 
   const isLoadingEvents = isLoadingUpcoming;
 
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedDistance, setSelectedDistance] = useState('all');
+  const [userLocation, setUserLocation] = useState(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [mapRevealed, setMapRevealed] = useState(false);
+  const [footerGroupRevealed, setFooterGroupRevealed] = useState(false);
+  const [carouselRevealed, setCarouselRevealed] = useState(false);
+  const mapSectionRef = useRef(null);
+  const footerGroupRef = useRef(null);
+  const carouselSectionRef = useRef(null);
+
+  const distanceOptions = useMemo(
+    () => [
+      { value: 'all', label: t('home.allDistances') },
+      { value: '5', label: t('home.upTo5km') },
+      { value: '10', label: t('home.upTo10km') },
+      { value: '15', label: t('home.upTo15km') },
+    ],
+    [t]
+  );
+
   const requestLocation = (targetDistance = null) => {
     if (!navigator.geolocation) {
       Swal.fire({

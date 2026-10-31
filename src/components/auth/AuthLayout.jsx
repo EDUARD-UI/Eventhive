@@ -202,7 +202,7 @@ export default function AuthLayout({
         </div>
 
         {/* Caja Central del Formulario */}
-        <div className="w-full max-w-sm sm:max-w-md mx-auto my-auto py-2 sm:py-3">
+        <div className="w-full max-w-md sm:max-w-lg lg:max-w-xl mx-auto my-auto py-4 sm:py-6">
           {title && (
             <div className="mb-3.5 text-left">
               <h2 className="font-display text-xl sm:text-2xl font-black text-[#0B132B] dark:text-white tracking-tight">

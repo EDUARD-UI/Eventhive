@@ -124,7 +124,7 @@ export default function ModalDetalleUsuarioAdmin({ usuario, onClose }) {
         <div className="p-5 space-y-3 overflow-y-auto text-xs flex-1">
           {/* Teléfono */}
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-blue-50 text-brand flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
               <Phone size={15} />
             </div>
             <div className="min-w-0 flex-1">
@@ -135,7 +135,7 @@ export default function ModalDetalleUsuarioAdmin({ usuario, onClose }) {
 
           {/* Organización */}
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
               <Building2 size={15} />
             </div>
             <div className="min-w-0 flex-1">

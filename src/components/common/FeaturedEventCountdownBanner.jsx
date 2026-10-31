@@ -133,32 +133,12 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
     return () => clearInterval(interval);
   }, [targetDate]);
 
-  if (isLoading && !activeEvent) {
-    return (
-      <div className="w-full my-2 sm:my-3 rounded-2xl bg-amber-500/20 border border-amber-400/30 p-3 sm:p-4 animate-pulse flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-amber-500/30 shrink-0" />
-          <div className="space-y-1.5">
-            <div className="w-40 sm:w-56 h-4 sm:h-5 bg-amber-500/30 rounded" />
-            <div className="w-28 sm:w-36 h-3 bg-amber-500/30 rounded" />
-          </div>
-        </div>
-        <div className="w-32 sm:w-40 h-8 sm:h-9 bg-amber-500/30 rounded-xl hidden sm:block" />
-      </div>
-    );
-  }
+  const isLive = Boolean(activeEvent) && timeLeft.totalMs <= 0;
 
-  // Si no hay evento ni está cargando, no se muestra nada
-  if (!activeEvent) {
-    return null;
-  }
-
-  const isLive = timeLeft.totalMs <= 0;
-
-  // Barra de progreso dinámica calculada desde la fecha de creación hasta la fecha de ejecución
+  // Mantener todos los hooks antes de las salidas condicionales.
   const progressRatio = useMemo(() => {
+    if (!activeEvent || !targetDate) return 0;
     if (isLive) return 100;
-    if (!targetDate) return 0;
 
     const createdDate = activeEvent.fechaCreacion || activeEvent.createdAt || activeEvent.creadoEn;
     if (createdDate) {
@@ -182,6 +162,26 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
     const elapsed = referenceWindowMs - remainingMs;
     return Math.max(10, Math.min(100, Math.round((elapsed / referenceWindowMs) * 100)));
   }, [isLive, targetDate, timeLeft.totalMs, activeEvent]);
+
+  if (isLoading && !activeEvent) {
+    return (
+      <div className="w-full my-2 sm:my-3 rounded-2xl bg-amber-500/20 border border-amber-400/30 p-3 sm:p-4 animate-pulse flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-amber-500/30 shrink-0" />
+          <div className="space-y-1.5">
+            <div className="w-40 sm:w-56 h-4 sm:h-5 bg-amber-500/30 rounded" />
+            <div className="w-28 sm:w-36 h-3 bg-amber-500/30 rounded" />
+          </div>
+        </div>
+        <div className="w-32 sm:w-40 h-8 sm:h-9 bg-amber-500/30 rounded-xl hidden sm:block" />
+      </div>
+    );
+  }
+
+  // Si no hay evento ni está cargando, no se muestra nada
+  if (!activeEvent) {
+    return null;
+  }
 
   const displayImage = activeEvent.photo;
   const formattedDate = formatDisplayDate(activeEvent.fecha, activeEvent.hora) || activeEvent.date;
