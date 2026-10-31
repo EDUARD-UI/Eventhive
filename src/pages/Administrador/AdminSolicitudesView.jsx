@@ -20,6 +20,7 @@ import {
   Eye,
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
+import { showInfoAlert, showWarningAlert } from '../../utils/alertUtils.js';
 
 export default function AdminSolicitudesView({
   solicitudes = [],
@@ -172,18 +173,29 @@ export default function AdminSolicitudesView({
                   <button
                     type="button"
                     onClick={async () => {
+                      const rutWindow = window.open('about:blank', '_blank');
+                      if (!rutWindow) {
+                        await showWarningAlert(
+                          'Ventana emergente bloqueada',
+                          'Permite las ventanas emergentes para consultar el documento RUT.'
+                        );
+                        return;
+                      }
+                      rutWindow.opener = null;
                       try {
                         const targetOrgId = sol.organizacionId || sol.id;
                         setViewingRutId(targetOrgId);
                         const res = await adminService.getRutUrl(targetOrgId);
                         const url = res?.rutUrl || res?.data?.rutUrl || res?.url;
                         if (url) {
-                          window.open(url, '_blank', 'noopener,noreferrer');
+                          rutWindow.location.href = url;
                         } else {
-                          alert('El documento RUT aún no tiene URL pública o activa.');
+                          rutWindow.close();
+                          await showInfoAlert('Documento no disponible', 'El documento RUT aún no tiene una URL activa.');
                         }
                       } catch (err) {
-                        alert(err?.message || 'No fue posible abrir el RUT.');
+                        rutWindow.close();
+                        await showInfoAlert('No fue posible abrir el RUT', err?.message || 'Ocurrió un error al consultar el documento.');
                       } finally {
                         setViewingRutId(null);
                       }

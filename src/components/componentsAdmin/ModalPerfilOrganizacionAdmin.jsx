@@ -5,7 +5,6 @@ import {
   Building2,
   UserCheck,
   Mail,
-  Phone,
   Calendar,
   Star,
   ShieldCheck,
@@ -32,13 +31,25 @@ export default function ModalPerfilOrganizacionAdmin({
 
   // Consulta segura del archivo RUT para administradores autorizados (Requerimiento 7.2)
   const handleVerRut = async () => {
+    const rutWindow = window.open('about:blank', '_blank');
+    if (!rutWindow) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Ventana emergente bloqueada',
+        text: 'Permite las ventanas emergentes para consultar el documento RUT.',
+        confirmButtonColor: '#0B1B3D',
+      });
+      return;
+    }
+    rutWindow.opener = null;
     setLoadingRut(true);
     try {
       const res = await adminService.getRutUrl(organizacion.id);
       const url = res?.rutUrl || res?.data?.rutUrl || res?.url;
       if (url) {
-        window.open(url, '_blank', 'noopener,noreferrer');
+        rutWindow.location.href = url;
       } else {
+        rutWindow.close();
         Swal.fire({
           icon: 'info',
           title: 'Documento no disponible',
@@ -47,6 +58,7 @@ export default function ModalPerfilOrganizacionAdmin({
         });
       }
     } catch (err) {
+      rutWindow.close();
       Swal.fire({
         icon: 'error',
         title: 'Error de consulta',
@@ -162,16 +174,12 @@ export default function ModalPerfilOrganizacionAdmin({
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-200/60">
                 <p className="flex items-center gap-1.5">
-                  <UserCheck className="w-3.5 h-3.5 text-purple-600 shrink-0" strokeWidth={1.75} />
+                  <UserCheck className="w-3.5 h-3.5 text-brand shrink-0" strokeWidth={1.75} />
                   <span>Representante: <strong className="text-slate-900">{organizacion.representanteLegal || organizacion.representanteNombre || organizacion.representante || '—'}</strong></span>
                 </p>
                 <p className="flex items-center gap-1.5">
                   <Mail className="w-3.5 h-3.5 text-brand shrink-0" strokeWidth={1.75} />
                   <span className="truncate">{organizacion.correoContacto || organizacion.email || organizacion.correo || '—'}</span>
-                </p>
-                <p className="flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" strokeWidth={1.75} />
-                  <span>{organizacion.telefono || 'Sin teléfono registrado'}</span>
                 </p>
                 <p className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" strokeWidth={1.75} />

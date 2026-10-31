@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import StandardLayout from '../../layouts/StandardLayout.jsx';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import DataTable from '../../components/Shared/DataTable.jsx';
@@ -37,6 +38,7 @@ import {
 import { organizerService } from '../../services/organizerService.js';
 import { session } from '../../services/session.js';
 import { formatPrice } from '../../utils/formatters.js';
+import { showInfoAlert } from '../../utils/alertUtils.js';
 
 const menuItems = [
   { id: 'resumen', label: 'Resumen', icon: FiGrid },
@@ -231,7 +233,10 @@ function OrgEventsCalendar({ events = [], onSelectEvent }) {
 }
 
 export default function OrganizadorIndex() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const user = session.getUser() || {};
+  const onboardingAlertShown = useRef(false);
   const isOperador = user.role === 'OPERADOR' || user.rol === 'OPERADOR';
   const userPermisos = user.permisos || user.authorities || [];
 
@@ -280,7 +285,18 @@ export default function OrganizadorIndex() {
     return items;
   }, [isOperador, userPermisos]);
 
-  const [activeItem, setActiveItem] = useState('resumen');
+  const [activeItem, setActiveItem] = useState(location.state?.activeItem || 'resumen');
+
+  useEffect(() => {
+    if (!location.state?.organizationOnboarding || onboardingAlertShown.current) return;
+
+    onboardingAlertShown.current = true;
+    showInfoAlert({
+      title: 'Completa tu perfil',
+      text: 'Completa los datos restantes de tu organización y carga el RUT para iniciar la verificación.',
+    });
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
     // Si la pestaña actual no está permitida para el operador, volver a resumen
@@ -532,25 +548,22 @@ export default function OrganizadorIndex() {
           <div className="space-y-6">
             {/* Grid Superior: Banner Amarillo + KPIs */}
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
-              {/* Banner Amarillo Cálido */}
-              <div className="rounded-3xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-200 p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[220px] border border-amber-300/80">
-                <div className="max-w-md relative z-10 space-y-2">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-amber-950/80 bg-white/60 px-3 py-1 rounded-full inline-block backdrop-blur-xs">
-                    Panel de Gestión
-                  </span>
-                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">
+              <div className="flex min-h-[220px] flex-col justify-between rounded-2xl border border-slate-200 border-l-4 border-l-brand bg-white p-6 shadow-sm sm:p-7">
+                <div className="max-w-xl space-y-2">
+                  <span className="text-xs font-semibold text-brand">Panel de organización</span>
+                  <h2 className="text-2xl font-black leading-tight text-slate-900 sm:text-3xl">
                     ¡Hola, {representativeName}!
                   </h2>
-                  <p className="text-slate-800 text-xs sm:text-sm font-medium leading-relaxed">
+                  <p className="text-xs font-medium leading-relaxed text-slate-600 sm:text-sm">
                     Gestiona los eventos culturales de {orgName}, supervisa las boletas emitidas y consulta los ingresos generados por tu organización.
                   </p>
                 </div>
 
-                <div className="mt-5 relative z-10 flex flex-wrap items-center gap-3">
+                <div className="mt-5 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setCreationView('wizard')}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#0B1B3D] hover:bg-slate-900 text-white font-bold text-xs shadow-md transition-all cursor-pointer active:scale-95"
+                    className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
                   >
                     <FiPlus size={15} />
                     <span>Crear nuevo evento</span>
@@ -558,7 +571,7 @@ export default function OrganizadorIndex() {
                   <button
                     type="button"
                     onClick={() => setActiveItem('eventos')}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-white/80 hover:bg-white text-slate-900 font-bold text-xs transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
                   >
                     <span>Ver mis eventos</span>
                     <FiArrowRight size={13} />

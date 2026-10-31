@@ -27,7 +27,7 @@ export default function AdminLayout({
     null;
 
   return (
-    <div className="admin-theme flex min-h-screen bg-[#f1f5f9] font-body text-slate-800">
+    <div className="admin-theme flex h-screen overflow-hidden bg-[#f1f5f9] font-body text-slate-800">
       <Sidebar
         role="Admin"
         items={menuItems}
@@ -38,7 +38,7 @@ export default function AdminLayout({
         onClose={() => setMobileMenuOpen(false)}
       />
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+      <div className="relative flex h-screen min-w-0 flex-1 flex-col overflow-hidden">
         {/* Cabecera compartida del Administrador (Estática) */}
         <div className="shrink-0 z-20">
           <Header
@@ -55,8 +55,7 @@ export default function AdminLayout({
           />
         </div>
 
-        {/* El contenido crece con la página y usa el scroll del navegador */}
-        <main className="px-4 sm:px-8 pb-10 flex-1 pt-6 max-w-[1400px] w-full mx-auto">
+        <main className="mx-auto w-full max-w-[1400px] min-h-0 flex-1 overflow-y-auto px-4 pb-10 pt-6 sm:px-8">
           {children}
         </main>
       </div>

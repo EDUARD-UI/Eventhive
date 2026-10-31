@@ -202,9 +202,16 @@ export default function Header({
 
         <div className="min-w-0">
           {title && (
-            <h1 className="font-display text-[16px] sm:text-[20px] font-bold text-[#172033] leading-tight truncate">
-              {title}
-            </h1>
+            <div className="min-w-0">
+              <h1 className="truncate font-display text-[16px] font-bold leading-tight text-[#172033] sm:text-[20px]">
+                {title}
+              </h1>
+              {subtitle && (
+                <p className="mt-0.5 hidden max-w-[min(60vw,36rem)] truncate text-[11px] leading-tight text-slate-500 sm:block">
+                  {subtitle}
+                </p>
+              )}
+            </div>
           )}
         </div>
       </div>

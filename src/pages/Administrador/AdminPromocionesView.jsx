@@ -15,6 +15,7 @@ import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import ModalPromocion from '../../components/componentsAdmin/ModalPromocion.jsx';
 import adminService from '../../features/admin/services/adminService.js';
+import { showConfirmAlert } from '../../utils/alertUtils.js';
 
 export default function AdminPromocionesView({
   promociones: initialPromociones = [],
@@ -123,7 +124,13 @@ export default function AdminPromocionesView({
   };
 
   const handleDelete = async (promoId) => {
-    if (!window.confirm('¿Confirma la eliminación definitiva de esta promoción?')) return;
+    const confirmed = await showConfirmAlert({
+      title: 'Eliminar promoción',
+      text: '¿Confirma la eliminación definitiva de esta promoción?',
+      confirmButtonText: 'Eliminar',
+      isDanger: true,
+    });
+    if (!confirmed) return;
     try {
       // Actualización optimista local
       setPromocionesList((prev) => prev.filter((p) => String(p.id) !== String(promoId)));

@@ -28,6 +28,7 @@ import AdminReportesView from './AdminReportesView.jsx';
 import AdminUsuariosView from './AdminUsuariosView.jsx';
 import AdminCategoriasView from './AdminCategoriasView.jsx';
 import Swal from 'sweetalert2';
+import { showConfirmAlert } from '../../utils/alertUtils.js';
 import AdminSolicitudesView from './AdminSolicitudesView.jsx';
 import AdminPerfilView from './AdminPerfilView.jsx';
 import AdminSugerenciasAscensoView from './AdminSugerenciasAscensoView.jsx';
@@ -221,7 +222,7 @@ export default function AdminPanel() {
       },
       {
         id: 'solicitudes',
-        label: 'Organizaciones por validación',
+        label: 'Validar RUT',
         icon: ClipboardList,
         count: solicitudesVerificacion.length > 0 ? solicitudesVerificacion.length : null,
       },
@@ -342,11 +343,12 @@ export default function AdminPanel() {
   };
 
   const handleReactivarOrg = async (org) => {
-    if (
-      !window.confirm(
-        `¿Confirma la reactivación administrativa de la organización "${org.nombre}"?`
-      )
-    ) {
+    const confirmed = await showConfirmAlert({
+      title: 'Reactivar organización',
+      text: `¿Confirma la reactivación administrativa de la organización "${org.nombre}"?`,
+      confirmButtonText: 'Reactivar',
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -427,11 +429,12 @@ export default function AdminPanel() {
   };
 
   const handleReactivarEvento = async (evento) => {
-    if (
-      !window.confirm(
-        `¿Confirma la reactivación administrativa del evento "${evento.titulo}"?`
-      )
-    ) {
+    const confirmed = await showConfirmAlert({
+      title: 'Reactivar evento',
+      text: `¿Confirma la reactivación administrativa del evento "${evento.titulo}"?`,
+      confirmButtonText: 'Reactivar',
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -750,7 +753,7 @@ export default function AdminPanel() {
       menuItems={menuItems}
       activeItem={currentTab}
       onSelect={handleSelectTab}
-      title="Administración Central"
+      title={menuItems.find((item) => item.id === currentTab)?.label || 'Resumen Global'}
     >
       {/* Toast de Notificaciones Flotante */}
       {toast && (

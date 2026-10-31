@@ -19,6 +19,7 @@ import {
 } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import { organizerService } from '../../services/organizerService.js';
+import { session } from '../../services/session.js';
 import { formatPrice } from '../../utils/formatters.js';
 
 // Chip EMV metálico dorado
@@ -55,6 +56,7 @@ export default function PasarelaPagoSimuladaModal({
   onSuccess,
 }) {
   const navigate = useNavigate();
+  const accountEmail = session.getUser()?.email || '';
   const [step, setStep] = useState(1);
   const [cantidad, setCantidad] = useState(1);
   const [procesando, setProcesando] = useState(false);
@@ -138,23 +140,20 @@ export default function PasarelaPagoSimuladaModal({
       await Swal.fire({
         icon: 'success',
         title: '¡Pago Exitoso con Tarjeta!',
-        text: `Transacción confirmada para ${event.title}. Tus pases digitales han sido emitidos.`,
+        text: `Transacción confirmada para ${event.title}. El comprobante se enviará al correo asociado a tu cuenta${accountEmail ? ` (${accountEmail})` : ''}.`,
         confirmButtonColor: '#2563EB',
       });
 
       if (onSuccess) onSuccess();
       onClose();
       navigate('/perfil?tab=entradas', { state: { activeTab: 'entradas' } });
-    } catch {
+    } catch (err) {
       await Swal.fire({
-        icon: 'success',
-        title: '¡Pago Exitoso!',
-        text: `Transacción confirmada con tarjeta para ${event.title}.`,
-        confirmButtonColor: '#2563EB',
+        icon: 'error',
+        title: 'No se pudo confirmar la compra',
+        text: err?.message || 'No se registró el pago. Verifica tu conexión e inténtalo nuevamente.',
+        confirmButtonColor: '#0B1B3D',
       });
-      if (onSuccess) onSuccess();
-      onClose();
-      navigate('/perfil?tab=entradas', { state: { activeTab: 'entradas' } });
     } finally {
       setProcesando(false);
     }

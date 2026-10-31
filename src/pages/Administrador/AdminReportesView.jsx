@@ -60,7 +60,14 @@ export default function AdminReportesView({
 
         if (orgsRes.status === 'fulfilled' && orgsRes.value?.data) {
           const list = orgsRes.value.data;
-          setTopOrganizaciones(Array.isArray(list) ? list.slice(0, 5) : []);
+          const organizations = Array.isArray(list)
+            ? list
+            : Array.isArray(list?.content)
+              ? list.content
+              : Array.isArray(list?.data)
+                ? list.data
+                : [];
+          setTopOrganizaciones(organizations.slice(0, 5));
         } else if (commercialMetrics?.topOrganizaciones) {
           setTopOrganizaciones(commercialMetrics.topOrganizaciones.slice(0, 5));
         }

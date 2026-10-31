@@ -145,7 +145,9 @@ export default function Registro() {
       });
 
       if (isOrganizer || userRole === 'REPRESENTANTE' || userRole === 'OPERADOR') {
-        navigate('/organizacion');
+        navigate('/organizacion', isOrganizer
+          ? { state: { activeItem: 'perfil', organizationOnboarding: true } }
+          : undefined);
       } else if (userRole === 'ADMINISTRADOR') {
         navigate('/admin');
       } else if (userRole === 'MODERADOR') {

@@ -25,6 +25,10 @@ import {
   Edit2,
 } from 'lucide-react';
 import Badge from '../../components/Shared/Badge.jsx';
+import {
+  ProfileCard,
+  ProfileMetric,
+} from '../../components/Shared/DashboardProfileComponents.jsx';
 import { session } from '../../services/session.js';
 import userService from '../../services/userService.js';
 
@@ -233,13 +237,10 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
   const displayPhoto = photoPreview || fotoUrl;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Banner Principal del Perfil - Sin fondo azul detrás del avatar */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs relative overflow-hidden">
-        {/* Cabecera neutra pizarra/oscura */}
-        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900" />
+    <div className="space-y-5 animate-in fade-in duration-300">
+      <ProfileCard className="relative overflow-hidden border-t-2 border-t-brand p-5 sm:p-7">
 
-        <div className="relative pt-10 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
+        <div className="flex flex-col gap-5 pt-1 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             {/* Input de archivo oculto para la fotografía */}
             <input
@@ -257,7 +258,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingPhoto}
                 title="Haga clic para cambiar su foto de perfil"
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 flex items-center justify-center font-display font-black text-2xl sm:text-3xl shadow-xl ring-4 ring-white border-2 border-slate-200 overflow-hidden shrink-0 cursor-pointer transition-all active:scale-95 group-hover:brightness-95 relative"
+                className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-100 font-display text-2xl font-bold text-slate-700 shadow-sm ring-4 ring-white transition-all group-hover:brightness-95 active:scale-95 sm:h-24 sm:w-24 sm:text-3xl"
               >
                 {displayPhoto ? (
                   <img
@@ -294,7 +295,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
               </button>
 
               <span
-                className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-emerald-500 text-white ring-2 ring-white shadow-sm"
+                className="absolute -bottom-1 -right-1 rounded-full bg-emerald-500 p-1.5 text-white ring-2 ring-white shadow-sm"
                 title="Sesión Verificada"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -302,285 +303,187 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
             </div>
 
             <div>
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h2 className="text-xl sm:text-2xl font-bold font-display text-slate-900 leading-tight">
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <h2 className="font-display text-xl font-bold leading-tight text-slate-900 sm:text-2xl">
                   {nombre}
                 </h2>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase bg-amber-500/15 border border-amber-400/30 text-amber-700">
+                <span className="inline-flex items-center gap-1 rounded-full border border-brand/15 bg-brand-light px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-dark">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   {perfil?.rolNombre || sessionUser?.role || 'ADMINISTRADOR'}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">{cargo}</p>
-              <p className="text-[11px] text-slate-400 mt-0.5 flex flex-wrap items-center gap-2">
-                <span>{email}</span>
-                {telefono && (
-                  <>
-                    <span>•</span>
-                    <span>{telefono}</span>
-                  </>
-                )}
-              </p>
+              <p className="text-xs font-medium text-slate-500">{cargo}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
+          <div className="flex flex-wrap items-center gap-2 self-stretch sm:self-auto">
             <button
               type="button"
               onClick={openEditDrawer}
-              className="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-black text-amber-300 text-xs font-bold transition-all flex items-center gap-2 active:scale-95 shadow-xs cursor-pointer uppercase tracking-wider"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
               <Edit2 className="w-3.5 h-3.5" />
-              <span>Editar Perfil</span>
+              <span>Editar perfil</span>
             </button>
 
             <button
               type="button"
               onClick={() => setShowPasswordModal(true)}
-              className="py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 transition-all flex items-center gap-2 active:scale-95 shadow-xs"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
               <Key className="w-4 h-4 text-slate-500" strokeWidth={1.75} />
-              <span>Cambiar Contraseña</span>
+              <span>Cambiar contraseña</span>
             </button>
           </div>
         </div>
 
         {/* Pestañas de Navegación del Perfil */}
-        <div className="mt-8 flex items-center gap-2 border-t border-slate-100 pt-4">
+        <div role="group" aria-label="Secciones del perfil" className="mt-6 flex flex-wrap gap-1 rounded-xl bg-slate-100/80 p-1">
           <button
             type="button"
+            aria-pressed={activeTab === 'perfil'}
             onClick={() => setActiveTab('perfil')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
               activeTab === 'perfil'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <User className="w-4 h-4" />
-            <span>Datos de la Cuenta</span>
+            <User className="h-4 w-4" />
+            <span>Datos de la cuenta</span>
           </button>
 
           <button
             type="button"
+            aria-pressed={activeTab === 'compras'}
             onClick={() => setActiveTab('compras')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
               activeTab === 'compras'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <ShoppingBag className="w-4 h-4" />
-            <span>Mi Actividad como Comprador</span>
+            <ShoppingBag className="h-4 w-4" />
+            <span>Actividad como comprador</span>
             {actividad?.comprasConfirmadas > 0 && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20 text-white font-mono">
+              <span className="rounded-full bg-brand-light px-2 py-0.5 font-mono text-[10px] text-brand-dark">
                 {actividad.comprasConfirmadas}
               </span>
             )}
           </button>
         </div>
-      </div>
+      </ProfileCard>
 
       {/* VISTA 1: RESUMEN DE DATOS DE LA CUENTA */}
       {activeTab === 'perfil' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div>
+          <ProfileCard className="space-y-5 p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
-                <h3 className="font-display font-bold text-base text-slate-900 flex items-center gap-2">
-                  <User className="w-5 h-5 text-primary" strokeWidth={1.75} />
-                  <span>Información Personal Registrada</span>
+                <h3 className="flex items-center gap-2 font-display text-base font-bold text-slate-900">
+                  <User className="h-5 w-5 text-brand" strokeWidth={1.75} />
+                  <span>Información personal</span>
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Información oficial sincronizada en tiempo real
-                </p>
               </div>
               <button
                 type="button"
                 onClick={openEditDrawer}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               >
                 <Edit2 size={13} />
-                <span>Modificar</span>
+                <span>Editar</span>
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider block">
-                  Nombre Completo
-                </span>
-                <p className="text-sm font-bold text-slate-800 mt-1">{nombre}</p>
+            <div className="grid grid-cols-1 divide-y divide-slate-100 sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4">
+              <div className="flex min-w-0 items-start gap-3 py-3 sm:px-4 sm:py-2 lg:border-r lg:border-slate-100 lg:first:pl-0">
+                <User className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
+                <div className="min-w-0">
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Nombre completo</span>
+                  <p className="mt-1 break-words text-sm font-semibold text-slate-800">{nombre}</p>
+                </div>
               </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider block">
-                  Correo Electrónico Institucional
-                </span>
-                <p className="text-sm font-bold text-slate-800 mt-1">{email}</p>
+              <div className="flex min-w-0 items-start gap-3 py-3 sm:px-4 sm:py-2 lg:border-r lg:border-slate-100">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
+                <div className="min-w-0">
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Correo electrónico</span>
+                  <p className="mt-1 break-words text-sm font-semibold text-slate-800">{email}</p>
+                </div>
               </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider block">
-                  Teléfono de Contacto
-                </span>
-                <p className="text-sm font-bold text-slate-800 mt-1">{telefono || 'No registrado'}</p>
+              <div className="flex min-w-0 items-start gap-3 py-3 sm:px-4 sm:py-2 lg:border-r lg:border-slate-100">
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
+                <div className="min-w-0">
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Teléfono de contacto</span>
+                  <p className="mt-1 break-words text-sm font-semibold text-slate-800">{telefono || 'No registrado'}</p>
+                </div>
               </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider block">
-                  Rol del Usuario
-                </span>
-                <div className="mt-1">
-                  <Badge variant="danger" size="xs">
+              <div className="flex min-w-0 items-start gap-3 py-3 sm:px-4 sm:py-2 lg:pr-0">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
+                <div className="min-w-0">
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Rol</span>
+                  <span className="mt-1 inline-flex rounded-full border border-brand/15 bg-brand-light px-2.5 py-1 text-[11px] font-semibold text-brand-dark">
                     {perfil?.rolNombre || 'ADMINISTRADOR'}
-                  </Badge>
+                  </span>
                 </div>
               </div>
             </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
-              <h3 className="font-display font-bold text-sm text-slate-900 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" strokeWidth={2} />
-                <span>Privilegios del Rol Administrador</span>
-              </h3>
-
-              <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200">
-                <span className="text-xs font-bold text-emerald-950 block">
-                  Acceso Total al Sistema
-                </span>
-                <p className="text-[11px] text-emerald-800 mt-0.5 leading-relaxed">
-                  Supervisión general, admisión y verificación de organizaciones por RUT, auditoría de métricas y comisiones de plataforma.
-                </p>
-              </div>
-
-              <ul className="space-y-2 text-xs text-slate-600 pt-1">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>Verificación y aprobación de RUT</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>Gestión de organizaciones y estados</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>Revocación de rol a moderadores y marketing</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>Categorías, promociones y métricas</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>Compra libre de entradas en cualquier evento</span>
-                </li>
-              </ul>
-            </div>
-          </div>
+          </ProfileCard>
         </div>
       )}
 
       {/* VISTA 2: ACTIVIDAD COMO COMPRADOR */}
       {activeTab === 'compras' && (
-        <div className="space-y-6">
-          <div className="p-6 rounded-3xl bg-slate-900 text-white border border-slate-800 shadow-sm">
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-2xl bg-white/10 text-amber-400 shrink-0 border border-white/10">
-                <Ticket className="w-6 h-6" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-bold text-white">
-                    Boletería y Compra de Entradas (Rol Comprador)
-                  </h3>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300">
-                    Acceso Universal
-                  </span>
-                </div>
-                <p className="text-xs text-slate-300 leading-relaxed mt-1 max-w-4xl">
-                  En EventHive, <strong>los roles de plataforma no restringen la compra de boleterías</strong>.
-                  Como Administrador puedes adquirir entradas de cualquier organización, guardar tus eventos favoritos
-                  y consultar tus compras con la misma experiencia y libertad que un cliente o representante.
-                </p>
-              </div>
+        <div className="space-y-5">
+          <div className="flex items-center gap-3 rounded-2xl border border-brand/15 bg-brand-light/50 px-4 py-3.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-brand shadow-sm">
+              <Ticket className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-slate-900">Actividad como comprador</h3>
+              <p className="text-xs text-slate-600">Compras, entradas y favoritos de esta cuenta.</p>
             </div>
+            <span className="ml-auto shrink-0 rounded-full border border-brand/15 bg-white px-2.5 py-1 text-[10px] font-semibold text-brand-dark">
+              Acceso habilitado
+            </span>
           </div>
 
           {/* Métricas de Actividad de Comprador */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-slate-500">Eventos Comprados</span>
-                <h4 className="text-2xl font-black font-display text-slate-900 mt-1">
-                  {actividad?.eventosComprados ?? 0}
-                </h4>
-                <span className="text-[11px] text-slate-500 font-medium">Asistencia personal</span>
-              </div>
-              <div className="p-3 rounded-2xl bg-blue-50 text-blue-600">
-                <Calendar className="w-6 h-6" />
-              </div>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-slate-500">Entradas Adquiridas</span>
-                <h4 className="text-2xl font-black font-display text-slate-900 mt-1">
-                  {actividad?.entradasCompradas ?? 0}
-                </h4>
-                <span className="text-[11px] text-slate-500 font-medium">Boletos emitidos</span>
-              </div>
-              <div className="p-3 rounded-2xl bg-blue-50 text-blue-600">
-                <Ticket className="w-6 h-6" />
-              </div>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-slate-500">Eventos Favoritos</span>
-                <h4 className="text-2xl font-black font-display text-slate-900 mt-1">
-                  {actividad?.favoritos ?? deseos.length ?? 0}
-                </h4>
-                <span className="text-[11px] text-slate-500 font-medium">En lista de deseos</span>
-              </div>
-              <div className="p-3 rounded-2xl bg-rose-50 text-rose-600">
-                <Heart className="w-6 h-6" />
-              </div>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-slate-500">Total Invertido</span>
-                <h4 className="text-2xl font-black font-display text-slate-900 mt-1">
-                  {formatCOP(actividad?.totalGastado ?? 0)}
-                </h4>
-                <span className="text-[11px] text-slate-400 font-medium">
-                  {actividad?.comprasConfirmadas ?? 0} compras exitosas
-                </span>
-              </div>
-              <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-600">
-                <DollarSign className="w-6 h-6" />
-              </div>
-            </div>
+            <ProfileMetric
+              icon={Calendar}
+              label="Eventos comprados"
+              value={actividad?.eventosComprados ?? 0}
+              detail="Asistencia personal"
+            />
+            <ProfileMetric
+              icon={Ticket}
+              label="Entradas adquiridas"
+              value={actividad?.entradasCompradas ?? 0}
+              detail="Boletos emitidos"
+            />
+            <ProfileMetric
+              icon={Heart}
+              label="Eventos favoritos"
+              value={actividad?.favoritos ?? deseos.length ?? 0}
+              detail="En lista de deseos"
+            />
+            <ProfileMetric
+              icon={DollarSign}
+              label="Total invertido"
+              value={formatCOP(actividad?.totalGastado ?? 0)}
+              detail={`${actividad?.comprasConfirmadas ?? 0} compras exitosas`}
+            />
           </div>
 
           {/* Listado de Compras Recientes del Administrador */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-7">
-            <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-slate-100 text-slate-800">
-                  <Receipt className="w-5 h-5" />
-                </div>
+          <ProfileCard className="p-5 sm:p-6">
+            <div className="mb-4 flex items-center gap-3 border-b border-slate-100 pb-4">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+                <Receipt className="h-5 w-5" />
+              </span>
                 <div>
-                  <h3 className="font-display font-bold text-base text-slate-900">
-                    Historial de Compras Personales
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Entradas y órdenes generadas por tu cuenta
-                  </p>
+                  <h3 className="font-display text-base font-bold text-slate-900">Historial de compras</h3>
                 </div>
-              </div>
             </div>
 
             {loadingActividad ? (
@@ -590,14 +493,11 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 ))}
               </div>
             ) : compras.length === 0 ? (
-              <div className="p-10 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 text-center">
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center">
                 <ShoppingBag className="mx-auto text-slate-400 mb-2" size={32} />
                 <h4 className="font-display text-sm font-bold text-slate-800">
                   Aún no has realizado compras
                 </h4>
-                <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                  Como administrador también puedes comprar boletos para los eventos disponibles en la cartelera general.
-                </p>
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
@@ -649,7 +549,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 })}
               </div>
             )}
-          </div>
+          </ProfileCard>
         </div>
       )}
 
@@ -666,24 +566,22 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
             onClick={(e) => e.stopPropagation()}
           >
             <div>
-              <div className="bg-[#131b2e] p-6 text-white flex items-center justify-between border-b border-white/10">
+              <div className="flex items-center justify-between border-b border-slate-100 bg-white p-5 sm:p-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-400">
-                    <Edit2 size={20} />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-light text-brand">
+                    <Edit2 size={18} />
                   </div>
                   <div>
-                    <h3 className="font-display text-base sm:text-lg font-bold text-white leading-tight">
-                      Editar Perfil de Administrador
+                    <h3 className="font-display text-base font-bold leading-tight text-slate-900">
+                      Editar perfil
                     </h3>
-                    <p className="text-xs text-slate-300 mt-0.5">
-                      Actualización de datos personales y credenciales
-                    </p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowEditDrawer(false)}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+                  aria-label="Cerrar edición de perfil"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
                 >
                   <X size={18} />
                 </button>
@@ -698,55 +596,55 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                    Nombre Completo *
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                    Nombre completo *
                   </label>
                   <input
                     type="text"
                     value={editNombre}
                     onChange={(e) => setEditNombre(e.target.value)}
                     required
-                    className="w-full text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition-all"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-800 outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/10"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                    Correo Institucional
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                    Correo electrónico
                   </label>
                   <input
                     type="email"
                     value={email}
                     disabled
-                    className="w-full text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed outline-none"
-                    title="El correo institucional está protegido por el sistema central."
+                    className="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-500 outline-none"
+                    title="El correo electrónico está protegido por el sistema central."
                   />
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    El correo institucional no puede modificarse de forma directa.
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    El correo electrónico no puede modificarse directamente.
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                    Teléfono de Contacto
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                    Teléfono de contacto
                   </label>
                   <input
                     type="text"
                     value={editTelefono}
                     onChange={(e) => setEditTelefono(e.target.value)}
                     placeholder="+57 300 123 4567"
-                    className="w-full text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition-all"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-800 outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/10"
                   />
                 </div>
               </form>
             </div>
 
-            <div className="p-6 border-t border-slate-100 bg-white flex items-center justify-end gap-3">
+            <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-white p-5 sm:p-6">
               <button
                 type="button"
                 onClick={() => setShowEditDrawer(false)}
                 disabled={saving}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition-colors"
+                className="rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100"
               >
                 Cancelar
               </button>
@@ -754,7 +652,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 form="edit-profile-drawer-form"
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-300 font-bold text-xs uppercase tracking-wider shadow-sm hover:shadow-md transition-all disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-brand-dark disabled:cursor-wait disabled:opacity-50"
               >
                 <Save size={14} />
                 <span>{saving ? 'Guardando...' : 'Guardar Cambios'}</span>
@@ -780,51 +678,50 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                   <Key className="w-5 h-5" strokeWidth={1.75} />
                 </div>
                 <div>
-                  <h3 className="font-display font-bold text-base text-slate-900">
-                    Cambiar Contraseña
+                  <h3 className="font-display text-base font-bold text-slate-900">
+                    Cambiar contraseña
                   </h3>
-                  <p className="text-xs text-slate-500">Credenciales del Administrador</p>
                 </div>
               </div>
             </div>
 
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Contraseña Actual *
+                <label className="mb-1 block text-xs font-semibold text-slate-700">
+                  Contraseña actual *
                 </label>
                 <input
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-slate-900"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Nueva Contraseña *
+                <label className="mb-1 block text-xs font-semibold text-slate-700">
+                  Nueva contraseña *
                 </label>
                 <input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-slate-900"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10"
                   required
                 />
-                <p className="text-[10px] text-slate-400 mt-1">Mínimo 8 caracteres alfanuméricos.</p>
+                <p className="mt-1 text-[11px] text-slate-500">Mínimo 8 caracteres alfanuméricos.</p>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Confirmar Nueva Contraseña *
+                <label className="mb-1 block text-xs font-semibold text-slate-700">
+                  Confirmar nueva contraseña *
                 </label>
                 <input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-slate-900"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10"
                   required
                 />
               </div>

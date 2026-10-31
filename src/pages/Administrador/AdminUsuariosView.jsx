@@ -83,7 +83,7 @@ export default function AdminUsuariosView({
       if (searchTerm.trim()) {
         const term = searchTerm.toLowerCase().trim();
         const nombre = (user.nombre || user.name || '').toLowerCase();
-        const correo = (user.correo || user.email || '').toLowerCase();
+        const correo = (user.correo || user.email || user.correoElectronico || user.correoUsuario || '').toLowerCase();
         const tel = (user.telefono || user.phone || '').toLowerCase();
         if (!nombre.includes(term) && !correo.includes(term) && !tel.includes(term)) {
           return false;
@@ -278,9 +278,9 @@ export default function AdminUsuariosView({
                             onClick={() =>
                               setMailModal({
                                 isOpen: true,
-                                email: user.correo || user.email || '',
-                                name: user.nombre || '',
-                                subject: `Comunicación para ${user.nombre}`,
+                                email: user.correo || user.email || user.correoElectronico || user.correoUsuario || '',
+                                name: user.nombre || user.name || user.nombreCompleto || '',
+                                subject: `Comunicación para ${user.nombre || user.name || user.nombreCompleto || 'el usuario'}`,
                               })
                             }
                             className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-white text-xs font-bold transition-all active:scale-95"

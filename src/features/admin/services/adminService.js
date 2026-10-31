@@ -55,7 +55,14 @@ export const adminService = {
   async getTopOrganizacionesVentas() {
     try {
       const data = await httpClient.get('/admin/estadisticas/top-organizaciones-ventas');
-      return { success: true, data: Array.isArray(data) ? data : [] };
+      const organizations = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.content)
+          ? data.content
+          : Array.isArray(data?.data)
+            ? data.data
+            : [];
+      return { success: true, data: organizations };
     } catch (err) {
       console.warn('Endpoint /admin/estadisticas/top-organizaciones-ventas fallback:', err);
       return { success: true, data: [] };
@@ -98,7 +105,14 @@ export const adminService = {
       const eventsEstadoData = eventsEstadoRes.status === 'fulfilled' && Array.isArray(eventsEstadoRes.value) ? eventsEstadoRes.value : [];
       const catsEventsData = catsEventsRes.status === 'fulfilled' && Array.isArray(catsEventsRes.value) ? catsEventsRes.value : [];
       const topEventsData = topEventsRes.status === 'fulfilled' && Array.isArray(topEventsRes.value) ? topEventsRes.value : [];
-      const topOrgsData = topOrgsRes.status === 'fulfilled' && Array.isArray(topOrgsRes.value) ? topOrgsRes.value : [];
+      const topOrgsValue = topOrgsRes.status === 'fulfilled' ? topOrgsRes.value : null;
+      const topOrgsData = Array.isArray(topOrgsValue)
+        ? topOrgsValue
+        : Array.isArray(topOrgsValue?.content)
+          ? topOrgsValue.content
+          : Array.isArray(topOrgsValue?.data)
+            ? topOrgsValue.data
+            : [];
       const ingresosData = ingresosPlatRes.status === 'fulfilled' ? ingresosPlatRes.value : null;
 
       const totalOrganizaciones =

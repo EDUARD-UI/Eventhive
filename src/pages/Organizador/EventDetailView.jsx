@@ -18,6 +18,7 @@ import {
 import Badge from '../../components/Shared/Badge.jsx';
 import { organizerService } from '../../services/organizerService.js';
 import Swal from 'sweetalert2';
+import { showConfirmAlert } from '../../utils/alertUtils.js';
 import { formatHora12, formatFecha, formatHora24, formatFechaHora } from '../../utils/formatters.js';
 
 const toneMap = {
@@ -410,9 +411,15 @@ export default function EventDetailView({ eventId, onBack, onEdit, isDrawer = tr
                 {canCancel && (
                   <button
                     type="button"
-                    onClick={() => {
-                      if (confirm('¿Estás seguro de que deseas suspender/cancelar este evento?')) {
-                        handleAction(() => organizerService.cancelarEvento(event.id));
+                    onClick={async () => {
+                      const confirmed = await showConfirmAlert({
+                        title: 'Suspender evento',
+                        text: '¿Estás seguro de que deseas suspender/cancelar este evento?',
+                        confirmButtonText: 'Suspender',
+                        isDanger: true,
+                      });
+                      if (confirmed) {
+                        await handleAction(() => organizerService.cancelarEvento(event.id));
                       }
                     }}
                     disabled={actionLoading}

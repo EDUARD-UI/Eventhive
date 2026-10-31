@@ -1,0 +1,834 @@
+---
+
+# Skill: Diseño de dashboards SaaS premium
+
+## 1. Propósito
+
+Construir interfaces frontend profesionales, modernas, consistentes y listas para producción, siguiendo los estándares de calidad de un producto SaaS premium.
+
+El diseño debe priorizar la claridad, facilidad de uso, jerarquía visual, consistencia y eficiencia de las tareas.
+
+El objetivo no es llenar la aplicación de efectos visuales, sino conseguir que cada pantalla se sienta parte de un producto profesional y bien diseñado.
+
+**Principio fundamental: mejorar la experiencia visual sin alterar la funcionalidad existente.**
+
+## 2. Reglas no negociables
+
+1. Respeta siempre la identidad visual existente de la aplicación.
+2. Conserva la paleta de colores original. No inventes una nueva paleta.
+3. Inspecciona los componentes existentes antes de crear o modificar otros.
+4. No elimines, agregues ni modifiques inputs sin autorización expresa.
+5. Conserva los datos, propiedades, validaciones, opciones y valores iniciales existentes.
+6. No modifiques endpoints, payloads, servicios ni lógica de negocio cuando la tarea sea exclusivamente visual.
+7. Cada elemento visual debe tener una finalidad funcional.
+8. Evita decoraciones innecesarias y elementos que parezcan generados automáticamente por IA.
+9. Prioriza la acción principal de cada pantalla.
+10. Mantén consistencia entre todos los módulos.
+11. Utiliza animaciones sutiles y profesionales.
+12. No introduzcas dependencias innecesarias.
+13. Conserva los patrones de interacción que los usuarios ya conocen.
+14. No reemplaces componentes funcionales por versiones visualmente atractivas pero menos útiles.
+
+## 3. Inspección antes de diseñar
+
+Antes de implementar cualquier cambio:
+
+- Identifica el framework y sistema de estilos utilizado.
+- Inspecciona las variables CSS y los tokens de diseño.
+- Revisa la configuración de Tailwind si existe.
+- Identifica la tipografía, colores, bordes, sombras y radios utilizados.
+- Inspecciona los componentes compartidos.
+- Revisa cómo se implementan los botones, formularios, tablas y modales.
+- Identifica los patrones de navegación existentes.
+- Comprueba los estados de carga, error, éxito y vacío.
+- Identifica los datos que realmente proporciona el backend.
+- Revisa las reglas de permisos y acciones por rol.
+
+No comiences creando una nueva interfaz desde cero cuando ya existe una estructura que puede mejorarse.
+
+## 4. Identidad visual y colores
+
+### 4.1 Uso de la paleta
+
+La paleta existente tiene prioridad sobre cualquier preferencia estética del agente.
+
+Los colores deben utilizarse según su significado:
+
+- Primario: acciones principales y elementos de identidad.
+- Secundarios: acciones complementarias.
+- Neutrales: fondos, superficies, bordes y textos.
+- Éxito: operaciones completadas correctamente.
+- Advertencia: situaciones que requieren atención.
+- Error: operaciones fallidas y acciones destructivas.
+- Información: mensajes informativos.
+
+No utilices el color primario indiscriminadamente.
+
+No conviertas todas las tarjetas, iconos, títulos y botones en elementos de colores intensos.
+
+### 4.2 Tokens
+
+Reutiliza los tokens existentes. Si necesitas incorporar uno nuevo, debe derivarse de la identidad visual actual.
+
+Ejemplos conceptuales:
+
+- color-primary
+- color-primary-hover
+- color-primary-subtle
+- color-background
+- color-surface
+- color-border
+- color-text
+- color-text-muted
+- color-success
+- color-warning
+- color-danger
+- color-info
+
+No dupliques variables ni introduzcas colores hexadecimales dispersos por los componentes.
+
+### 4.3 Contraste
+
+Sigue las recomendaciones WCAG 2.2 AA:
+
+- Texto normal: contraste mínimo 4.5:1.
+- Texto grande: contraste mínimo 3:1.
+- Indicadores visuales importantes: contraste mínimo 3:1.
+- Estados visibles mediante texto o iconografía, no exclusivamente mediante colores.
+- Foco de teclado claramente identificable.
+
+## 5. Botones y jerarquía de acciones
+
+Los botones deben comunicar claramente la importancia y naturaleza de cada acción.
+
+### 5.1 Variantes
+
+| Variante         | Uso                                                    |
+| ---------------- | ------------------------------------------------------ |
+| Primary          | Acción principal de la pantalla                        |
+| Secondary        | Acción alternativa                                     |
+| Ghost / Tertiary | Acción auxiliar o contextual                           |
+| Link             | Navegación o acción secundaria                         |
+| Destructive      | Eliminar, revocar o ejecutar acciones peligrosas       |
+| Success          | Confirmaciones positivas cuando el sistema lo requiera |
+
+### 5.2 Reglas
+
+- Cada sección debe tener una acción principal claramente identificable.
+- No utilices varios botones primary cuando compitan por la misma atención.
+- Guardar cambios debe tener mayor jerarquía que cancelar.
+- Eliminar debe distinguirse claramente de las acciones normales.
+- No utilices botones primary para acciones de navegación.
+- Agrupa acciones secundarias en menús contextuales cuando sea necesario.
+- Evita llenar las tablas de botones grandes.
+- Utiliza etiquetas precisas: "Crear evento", "Guardar cambios", "Aprobar solicitud", "Eliminar usuario".
+- No utilices textos ambiguos cuando puedas describir la acción real.
+- Mantén consistencia entre módulos.
+
+### 5.3 Estados
+
+Cada botón debe contemplar:
+
+- Default.
+- Hover.
+- Focus.
+- Active.
+- Disabled.
+- Loading.
+
+El estado loading debe evitar envíos duplicados.
+
+No simules estados de carga ni éxito cuando no existe una operación real.
+
+## 6. Estructura de dashboards
+
+### 6.1 Layout
+
+Mantén una estructura organizada:
+
+- Sidebar: navegación principal.
+- Header: contexto global, usuario y controles generales.
+- Breadcrumbs: cuando aporten contexto.
+- Contenido principal: título, acciones y datos.
+- Secciones secundarias: información complementaria.
+
+### 6.2 Jerarquía visual
+
+Orden recomendado:
+
+1. Título de la página.
+2. Descripción contextual cuando sea necesaria.
+3. Acción principal.
+4. Filtros y controles.
+5. Métricas importantes.
+6. Tablas, gráficas o listados.
+7. Información complementaria.
+
+No es necesario incluir todos los elementos en cada pantalla.
+
+### 6.3 Espaciado
+
+- Utiliza escalas consistentes de 4 u 8 px.
+- Mantén alineaciones entre secciones.
+- Evita tarjetas dentro de tarjetas sin necesidad.
+- Utiliza espacios en blanco para separar grupos.
+- Evita interfaces excesivamente comprimidas.
+- No agregues bordes y sombras a todos los elementos.
+
+## 7. Sidebar y navegación
+
+- La sección activa debe distinguirse claramente.
+- Utiliza iconos consistentes y reconocibles.
+- Mantén etiquetas comprensibles.
+- Agrupa opciones por funcionalidad.
+- No marques varias secciones como activas simultáneamente.
+- Evita colores intensos en todos los elementos.
+- Conserva el comportamiento de expansión y colapso existente.
+- Adapta la navegación a dispositivos móviles.
+
+## 8. Tarjetas KPI y métricas
+
+Las tarjetas KPI deben comunicar información útil.
+
+Pueden incluir:
+
+- Nombre de la métrica.
+- Valor actual.
+- Unidad.
+- Comparación temporal.
+- Tendencia.
+- Periodo analizado.
+
+Reglas:
+
+- El valor debe tener prioridad visual.
+- No inventes estadísticas.
+- No inventes porcentajes ni tendencias.
+- Una subida no siempre significa algo positivo.
+- No utilices iconos gigantes para llenar espacio.
+- Evita demasiadas tarjetas.
+- Mantén formatos numéricos consistentes.
+
+## 9. Tablas y listados
+
+Las tablas deben facilitar la lectura, comparación y administración de datos.
+
+### Estructura
+
+- Encabezados claros.
+- Columnas ordenadas por importancia.
+- Alineación consistente.
+- Altura adecuada de filas.
+- Estados visualmente identificables.
+- Acciones discretas y consistentes.
+
+### Funcionalidades
+
+Implementa las funcionalidades que realmente existan:
+
+- Búsqueda.
+- Filtros.
+- Ordenamiento.
+- Paginación.
+- Selección múltiple.
+- Acciones masivas.
+- Exportación.
+
+### Reglas
+
+- Los filtros activos deben ser visibles.
+- Permite limpiar filtros.
+- No simules funcionalidades inexistentes.
+- Evita columnas redundantes.
+- Prioriza nombres y datos comprensibles frente a identificadores técnicos.
+- Mantén consistencia entre las tablas del sistema.
+
+### Estados
+
+Diseña los siguientes estados:
+
+**Loading:** skeletons proporcionales al contenido o indicador discreto.
+
+**Empty:** explica que todavía no existen registros y qué puede hacer el usuario.
+
+**Sin resultados:** informa que los filtros no encontraron coincidencias y permite limpiarlos.
+
+**Error:** comunica el problema y permite reintentar cuando sea posible.
+
+**Éxito:** confirma las operaciones relevantes.
+
+No confundas una tabla sin registros con una búsqueda sin resultados.
+
+## 10. Formularios
+
+Los formularios deben ser claros, ordenados y fáciles de completar.
+
+- Agrupa campos relacionados.
+- Utiliza etiquetas visibles.
+- No dependas exclusivamente de placeholders.
+- Identifica campos obligatorios.
+- Explica formatos y restricciones.
+- Mantén los valores cuando ocurra un error.
+- Muestra errores cerca del campo correspondiente.
+- Respeta las validaciones del backend.
+- Evita formularios innecesariamente largos.
+- Mantén una jerarquía clara entre acciones.
+
+**Regla fundamental:** cuando rediseñes un formulario existente, conserva todos sus inputs, tipos de datos, opciones, validaciones, valores iniciales y comportamiento.
+
+Puedes mejorar la distribución, alineación, espaciado, etiquetas y presentación, pero no cambiar la información que captura.
+
+## 11. Modales, drawers y overlays
+
+La aplicación utiliza patrones específicos de ventanas emergentes. Deben conservarse y mejorarse, no reemplazarse por patrones genéricos.
+
+Existen dos patrones especialmente importantes:
+
+1. Modales que se despliegan desde el borde derecho.
+2. Compositores de correo que replican la pequeña ventana de redacción de Gmail.
+
+### 11.1 Modales laterales (Right-side Drawers)
+
+Los modales utilizados para detalles, creación, edición y administración deben conservar su comportamiento de despliegue desde el borde derecho.
+
+**Regla obligatoria: nunca reemplazar estos paneles por modales centrados por preferencia estética.**
+
+Características:
+
+- Apertura desde el borde derecho de la pantalla.
+- Fondo de la aplicación atenuado de manera sutil.
+- Encabezado claro con el título de la operación.
+- Botón de cierre visible.
+- Contenido organizado por secciones.
+- Área de desplazamiento independiente cuando sea necesario.
+- Acciones principales y secundarias claramente diferenciadas.
+- Footer consistente cuando el panel tenga operaciones de guardado.
+- Ancho apropiado para la información que contiene.
+- Adaptación a pantallas pequeñas.
+
+### Encabezado
+
+Debe contener:
+
+- Título descriptivo.
+- Información contextual cuando corresponda.
+- Controles de cierre existentes.
+
+No agregues subtítulos genéricos ni información que no aporte valor.
+
+### Contenido
+
+- Agrupa campos relacionados.
+- Mantén espaciado consistente.
+- Evita tarjetas anidadas innecesarias.
+- Utiliza separadores únicamente cuando ayuden a organizar.
+- Conserva todos los campos originales.
+- No elimines información para conseguir una apariencia más minimalista.
+
+### Footer
+
+- Acción principal claramente identificada.
+- Acción secundaria con menor énfasis.
+- Posición consistente entre paneles.
+- Estados loading y disabled cuando correspondan.
+
+Ejemplo de jerarquía:
+
+Guardar cambios: Primary.
+
+Cancelar: Secondary.
+
+Eliminar: Destructive.
+
+### Comportamiento
+
+Conserva:
+
+- Apertura desde la derecha.
+- Cierre mediante el control existente.
+- Comportamiento del overlay.
+- Scroll.
+- Persistencia de los datos.
+- Acciones.
+- Validaciones.
+- Eventos existentes.
+
+También garantiza accesibilidad mediante teclado, foco visible, cierre con Escape cuando corresponda y retorno del foco al elemento que abrió el panel.
+
+En dispositivos móviles, el drawer puede ocupar todo el ancho disponible.
+
+### 11.2 Compositor de correos estilo Gmail
+
+Los modales utilizados para redactar correos deben mantener el patrón visual del pequeño compositor de Gmail.
+
+Se trata de una ventana compacta de redacción que permite escribir y enviar correos sin abandonar la pantalla actual.
+
+**Regla obligatoria: no convertir el compositor de correos en un modal centrado ni en un drawer lateral.**
+
+Debe conservar su identidad como ventana flotante de composición.
+
+### Estructura visual
+
+**Barra superior**
+
+- Título de composición.
+- Minimizar.
+- Expandir.
+- Cerrar.
+
+Conserva los controles que ya existan.
+
+**Campos de correo**
+
+Mantén los campos existentes:
+
+- Destinatario.
+- CC, si existe.
+- CCO, si existe.
+- Asunto.
+- Cuerpo del mensaje.
+
+No inventes campos ni elimines los existentes.
+
+**Editor**
+
+- Debe ser el área visual dominante.
+- Debe disponer de espacio suficiente.
+- Conserva las herramientas de formato existentes.
+- Mantén una experiencia de escritura cómoda.
+- Evita decoraciones y elementos que distraigan.
+
+**Acciones inferiores**
+
+- Enviar como acción principal.
+- Adjuntar archivos si la funcionalidad existe.
+- Herramientas adicionales si ya están implementadas.
+
+Los controles secundarios deben ser discretos y no competir con Enviar.
+
+### Comportamiento
+
+Conserva:
+
+- Minimizar.
+- Expandir.
+- Cerrar.
+- Gestión de destinatarios.
+- Edición del asunto.
+- Edición del contenido.
+- Formato del mensaje.
+- Adjuntos existentes.
+- Envío real.
+- Estados de carga.
+- Manejo de errores.
+- Confirmaciones o gestión de borradores existentes.
+
+Nunca descartes silenciosamente un mensaje escrito.
+
+Si falla el envío, conserva el contenido y comunica el error.
+
+En móvil, adapta el compositor para que la escritura sea cómoda y todos los controles sigan siendo accesibles.
+
+### Apariencia
+
+El compositor debe sentirse compacto, familiar y profesional.
+
+Evita:
+
+- Encabezados gigantes.
+- Tarjetas dentro del compositor.
+- Sombras exageradas.
+- Gradientes innecesarios.
+- Bordes excesivos.
+- Campos con estilos inconsistentes.
+- Decoraciones que reduzcan el espacio de escritura.
+
+### 11.3 Regla absoluta de fidelidad funcional
+
+Antes de rediseñar cualquier drawer o compositor de correo:
+
+1. Inspecciona el componente actual.
+2. Identifica todos sus campos.
+3. Identifica los datos que muestra.
+4. Identifica los valores iniciales.
+5. Identifica las opciones disponibles.
+6. Identifica las validaciones.
+7. Identifica las acciones.
+8. Identifica los permisos.
+9. Identifica los servicios y eventos relacionados.
+10. Comprueba el payload que se envía al backend.
+
+Después del rediseño, todos estos elementos deben continuar funcionando.
+
+**Está permitido:**
+
+- Cambiar la distribución visual.
+- Mejorar los espacios.
+- Mejorar la jerarquía tipográfica.
+- Agrupar campos relacionados.
+- Mejorar la apariencia de los inputs.
+- Mejorar los botones.
+- Incorporar estados visuales.
+- Mejorar la experiencia responsive.
+- Incorporar animaciones sutiles.
+
+**No está permitido sin autorización:**
+
+- Eliminar inputs.
+- Agregar campos nuevos.
+- Cambiar tipos de entrada.
+- Modificar valores predeterminados.
+- Eliminar opciones.
+- Cambiar validaciones.
+- Cambiar nombres de propiedades.
+- Modificar payloads.
+- Alterar endpoints.
+- Modificar reglas de negocio.
+- Eliminar acciones existentes.
+
+El objetivo es mejorar cómo se presenta y utiliza la información, no cambiar qué información procesa la aplicación.
+
+## 12. Estados y feedback
+
+Toda operación debe comunicar su resultado.
+
+### Éxito
+
+Confirma que una operación se completó correctamente.
+
+### Error
+
+Explica qué falló y qué puede hacer el usuario.
+
+### Advertencia
+
+Comunica situaciones que requieren atención.
+
+### Información
+
+Proporciona contexto.
+
+### Loading
+
+Indica que el sistema está procesando una operación.
+
+### Empty state
+
+Explica por qué no existe contenido y qué acción tiene sentido.
+
+Utiliza:
+
+- Toasts para notificaciones breves.
+- Mensajes inline para errores relacionados con campos.
+- Diálogos para decisiones importantes.
+- Indicadores de carga para operaciones asíncronas.
+
+No expongas errores internos, stack traces ni información sensible.
+
+## 13. Gráficas y visualización
+
+Selecciona el tipo de gráfica según la información:
+
+- Línea: evolución temporal.
+- Barras: comparación.
+- Barras apiladas: composición.
+- Circular: proporciones con pocas categorías.
+- Tabla: comparación de valores exactos.
+
+Reglas:
+
+- Título descriptivo.
+- Unidades claras.
+- Periodos identificables.
+- Leyendas comprensibles.
+- Colores consistentes.
+- Sin gráficos 3D.
+- Sin efectos que distorsionen los datos.
+- Sin datos inventados.
+- Estados de carga, error y vacío.
+
+No utilices gráficas únicamente para llenar espacios.
+
+## 14. Iconografía y tipografía
+
+### Iconos
+
+- Reutiliza la librería instalada.
+- Mantén un estilo uniforme.
+- Utiliza iconos reconocibles.
+- No utilices emojis como iconografía del producto.
+- Evita iconos decorativos.
+- Los botones sin texto deben tener etiquetas accesibles.
+- Mantén tamaños consistentes.
+
+### Tipografía
+
+- Conserva la familia tipográfica del proyecto.
+- Utiliza una escala tipográfica consistente.
+- Prioriza legibilidad.
+- Evita títulos exageradamente grandes.
+- Mantén legible el contenido secundario.
+- Utiliza pesos tipográficos para establecer jerarquía.
+- Evita mayúsculas sostenidas en textos largos.
+
+## 15. Animaciones y microinteracciones
+
+Las animaciones deben mejorar la percepción de calidad y proporcionar feedback.
+
+No deben convertirse en elementos decorativos.
+
+### 15.1 Animaciones recomendadas
+
+- Hover de botones.
+- Cambios de estado.
+- Apertura y cierre de drawers.
+- Apertura de compositores de correo.
+- Expansión de secciones.
+- Dropdowns.
+- Popovers.
+- Modales.
+- Confirmaciones.
+- Transiciones discretas entre estados.
+
+### 15.2 Duraciones orientativas
+
+| Interacción      |   Duración |
+| ---------------- | ---------: |
+| Hover            | 100-160 ms |
+| Botones          | 100-160 ms |
+| Dropdown         | 140-200 ms |
+| Popover          | 140-200 ms |
+| Drawer           | 180-240 ms |
+| Compositor Gmail | 180-240 ms |
+| Modal            | 180-240 ms |
+
+### 15.3 Reglas
+
+- Utiliza transiciones naturales.
+- Prioriza opacity y transform.
+- Evita rebotes exagerados.
+- No utilices parallax innecesario.
+- No animes todos los elementos al cargar.
+- No retrases operaciones por animaciones.
+- No dificultes la lectura de información.
+- Mantén consistencia entre componentes.
+
+Respeta `prefers-reduced-motion`.
+
+Ejemplo:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+Adapta esta regla a la arquitectura existente.
+
+## 16. Responsive design
+
+La aplicación debe funcionar correctamente en escritorio, tablet y móvil.
+
+- Reorganiza el contenido según el espacio disponible.
+- Conserva las acciones importantes.
+- Adapta las tablas sin volverlas ilegibles.
+- Evita overflow horizontal accidental.
+- Mantén los formularios cómodos.
+- Adapta los drawers.
+- Adapta el compositor de correos.
+- No dependas exclusivamente de hover.
+- Comprueba menús, tooltips y controles táctiles.
+
+No basta con reducir el tamaño de los componentes. Es necesario adaptar la experiencia.
+
+## 17. Evitar el aspecto artificial de interfaces generadas por IA
+
+El objetivo es conseguir un producto que parezca diseñado por un equipo profesional de producto y frontend.
+
+Evita:
+
+- Gradientes morados y azules sin relación con la marca.
+- Glassmorphism innecesario.
+- Blobs y figuras abstractas.
+- Partículas y brillos.
+- Sombras exageradas.
+- Tarjetas repetidas con iconos gigantes.
+- Bordes redondeados excesivos.
+- Colores intensos en todos los componentes.
+- Animaciones en cada elemento.
+- Badges de colores para información ordinaria.
+- Títulos promocionales dentro de dashboards administrativos.
+- Elementos que no representan funcionalidades reales.
+- Espacios y composiciones sin intención.
+
+Prefiere:
+
+- Fondos limpios.
+- Jerarquía visual clara.
+- Colores de marca bien utilizados.
+- Superficies sobrias.
+- Bordes sutiles.
+- Sombras discretas.
+- Tipografía consistente.
+- Componentes reutilizables.
+- Información real.
+- Iconografía coherente.
+- Animaciones funcionales.
+- Estados bien diseñados.
+
+Una interfaz premium no necesita llamar constantemente la atención. Debe transmitir calidad a través de la precisión de sus detalles.
+
+## 18. Calidad de implementación
+
+- Reutiliza componentes existentes.
+- Respeta la arquitectura del proyecto.
+- Evita duplicar estilos.
+- Utiliza variables y tokens.
+- No agregues dependencias innecesarias.
+- Conserva los contratos del backend.
+- No modifiques la lógica de negocio por razones visuales.
+- Maneja errores y estados asíncronos.
+- Evita renders innecesarios.
+- Mantén los componentes organizados.
+- Elimina estilos obsoletos introducidos durante el cambio.
+
+## 19. Flujo de trabajo obligatorio
+
+### Paso 1. Entender
+
+Identifica el objetivo de la pantalla, las tareas del usuario y sus permisos.
+
+### Paso 2. Auditar
+
+Inspecciona la interfaz actual, la paleta, los componentes y los patrones existentes.
+
+En drawers y compositores de correo, inventaría todos los datos, inputs, opciones, validaciones y acciones antes de modificarlos.
+
+### Paso 3. Definir jerarquía
+
+Determina la acción principal, la información prioritaria y la distribución más adecuada.
+
+### Paso 4. Reutilizar
+
+Aprovecha componentes y estilos existentes.
+
+### Paso 5. Implementar
+
+Mejora la interfaz respetando la funcionalidad, identidad visual y arquitectura.
+
+### Paso 6. Revisar
+
+Comprueba visualmente la pantalla y sus interacciones.
+
+Si modificaste un drawer o compositor de correo, compara el resultado con el componente original y confirma que siguen presentes todos sus campos, datos, controles y acciones.
+
+### Paso 7. Validar
+
+Ejecuta las verificaciones disponibles:
+
+- Lint.
+- Build.
+- Pruebas.
+- Revisión responsive.
+- Revisión de interacciones.
+- Verificación de formularios.
+- Verificación de operaciones.
+
+No afirmes que algo fue probado si no se ejecutó.
+
+## 20. Checklist de aceptación
+
+### Identidad visual
+
+- [ ] Se conserva la paleta original.
+- [ ] Se reutilizan los componentes existentes.
+- [ ] Se mantiene la tipografía.
+- [ ] No existen decoraciones innecesarias.
+- [ ] Los colores semánticos son consistentes.
+
+### Botones
+
+- [ ] La acción principal es evidente.
+- [ ] Las acciones secundarias tienen menor jerarquía.
+- [ ] Las acciones destructivas se distinguen.
+- [ ] Todos los botones tienen estados.
+- [ ] No existen controles falsos.
+
+### Formularios
+
+- [ ] Se conservan todos los inputs originales.
+- [ ] Se mantienen las validaciones.
+- [ ] Se conservan los valores iniciales.
+- [ ] Se mantienen las opciones.
+- [ ] Los errores son comprensibles.
+
+### Drawers
+
+- [ ] Se despliegan desde el borde derecho.
+- [ ] Conservan su comportamiento original.
+- [ ] Se mantienen todos los campos.
+- [ ] El contenido está organizado.
+- [ ] Las acciones son accesibles.
+- [ ] Funcionan en móvil.
+
+### Compositor de correos
+
+- [ ] Conserva el patrón compacto de Gmail.
+- [ ] Mantiene la barra superior.
+- [ ] Conserva los campos originales.
+- [ ] Mantiene el editor.
+- [ ] Enviar es la acción principal.
+- [ ] Se conservan los controles existentes.
+- [ ] No se pierde contenido al fallar el envío.
+- [ ] Funciona correctamente en móvil.
+
+### Funcionalidad
+
+- [ ] No se alteran endpoints.
+- [ ] No se alteran payloads.
+- [ ] No se modifica la lógica de negocio.
+- [ ] Los datos siguen siendo reales.
+- [ ] Los permisos se respetan.
+- [ ] Las operaciones funcionan.
+
+### Accesibilidad y responsive
+
+- [ ] Contraste adecuado.
+- [ ] Navegación por teclado.
+- [ ] Foco visible.
+- [ ] Movimiento reducido respetado.
+- [ ] Funciona en escritorio.
+- [ ] Funciona en tablet.
+- [ ] Funciona en móvil.
+
+## 21. Instrucción final para el agente
+
+Cuando recibas una tarea de diseño frontend:
+
+1. Inspecciona primero el proyecto.
+2. Identifica la identidad visual existente.
+3. Comprende cómo funciona actualmente el componente.
+4. Determina qué información y acciones utiliza.
+5. Conserva todos los datos, inputs y funcionalidades.
+6. Define la jerarquía visual adecuada.
+7. Mejora el diseño siguiendo esta skill.
+8. Mantén los patrones de interacción existentes.
+9. Evita elementos decorativos innecesarios.
+10. Implementa animaciones sutiles.
+11. Comprueba responsive y accesibilidad.
+12. Valida que el comportamiento original siga funcionando.
+
+**Nunca sacrifiques funcionalidad por estética.**
+
+**Nunca elimines información o inputs para simplificar visualmente un componente.**
+
+**Nunca reemplaces el patrón de drawer lateral ni el compositor de correo estilo Gmail por modales genéricos.**
+
+El resultado debe sentirse como una evolución profesional del producto existente, no como una aplicación diferente.

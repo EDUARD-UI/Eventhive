@@ -16,7 +16,7 @@ import {
   FiMail,
   FiArrowLeft,
 } from 'react-icons/fi';
-import { showWarningAlert } from '../utils/alertUtils.js';
+import { showErrorAlert, showWarningAlert } from '../utils/alertUtils.js';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
@@ -72,7 +72,7 @@ export default function PasarelaPagoPage() {
   // Datos del comprador
   const [buyerForm, setBuyerForm] = useState({
     nombre: currentUser?.nombre || currentUser?.name || 'Jonathan Michael',
-    email: currentUser?.email || 'comprador@eventhive.co',
+    email: currentUser?.email || currentUser?.correo || '',
   });
 
   // Estados de proceso
@@ -180,14 +180,6 @@ export default function PasarelaPagoPage() {
       })),
     };
 
-    // Respaldo local inmediato para que siempre aparezcan en "Ver mis boletos"
-    try {
-      const existing = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
-      localStorage.setItem('eventhive_local_compras', JSON.stringify([localPurchaseItem, ...existing]));
-    } catch (err) {
-      console.warn('No se pudo guardar la compra en localStorage:', err);
-    }
-
     try {
       const idempotencyKey = `PAY-CARD-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       const payload = {
@@ -209,13 +201,22 @@ export default function PasarelaPagoPage() {
         cantidad: Number(cantidad),
       };
 
-      await organizerService.crearCompra(payload);
-      setOrderReference(generatedRef);
+      const purchase = await organizerService.crearCompra(payload);
+
+      try {
+        const existing = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
+        localStorage.setItem('eventhive_local_compras', JSON.stringify([localPurchaseItem, ...existing]));
+      } catch (storageError) {
+        console.warn('No se pudo guardar el respaldo local de la compra confirmada:', storageError);
+      }
+
+      setOrderReference(purchase?.id ? `EVH-${purchase.id}` : generatedRef);
       setIsSuccess(true);
     } catch (err) {
-      console.warn('Simulando confirmación local por respuesta de prueba:', err);
-      setOrderReference(generatedRef);
-      setIsSuccess(true);
+      await showErrorAlert({
+        title: 'No se pudo confirmar la compra',
+        text: err?.message || 'No se registró el pago. Verifica tu conexión e inténtalo nuevamente.',
+      });
     } finally {
       setProcesando(false);
     }
@@ -258,7 +259,7 @@ export default function PasarelaPagoPage() {
                 ¡Pago Confirmado con Éxito!
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
-                Tu transacción ha sido procesada mediante encriptación bancaria. Hemos emitido tus boletos con código QR dinámico.
+                Tu compra fue confirmada y el comprobante se envió al correo asociado a tu cuenta.
               </p>
             </div>
 
@@ -275,6 +276,10 @@ export default function PasarelaPagoPage() {
               <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-white/10">
                 <span className="text-slate-500 dark:text-slate-400 font-medium">Titular</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{buyerForm.nombre}</span>
+              </div>
+              <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-white/10">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Comprobante enviado a</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{buyerForm.email}</span>
               </div>
               <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-white/10">
                 <span className="text-slate-500 dark:text-slate-400 font-medium">Método</span>
@@ -395,10 +400,13 @@ export default function PasarelaPagoPage() {
                   <input
                     type="email"
                     value={buyerForm.email}
-                    onChange={(e) => setBuyerForm((prev) => ({ ...prev, email: e.target.value }))}
-                    placeholder="tucorreo@ejemplo.com"
-                    className="w-full px-4 py-3 text-xs sm:text-sm font-semibold rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-[#152238] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 transition-all"
+                    readOnly
+                    placeholder="Correo asociado a tu cuenta"
+                    className="w-full px-4 py-3 text-xs sm:text-sm font-semibold rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#152238] text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
+                  <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
+                    El backend enviará aquí la confirmación de compra.
+                  </p>
                 </div>
               </div>
             </div>
