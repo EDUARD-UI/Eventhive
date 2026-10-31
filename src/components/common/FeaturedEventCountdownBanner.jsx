@@ -9,9 +9,10 @@ import { useLanguage } from '../../context/LanguageContext.jsx';
  * FeaturedEventCountdownBanner
  * Banner cinemático panorámico en dorado ámbar con temporizador de alta visibilidad,
  * números en blanco, barra de progreso azul oscuro, e imagen a toda la altura con degradado integrador.
+ * Calcula el tiempo faltante desde la fecha de creación hasta la fecha de ejecución del evento.
  *
  * @param {Object} props
- * @param {Object} props.event - Evento destacado más próximo a la fecha actual.
+ * @param {Object} props.event - Primer evento destacado devuelto por GET /api/eventos/primer-destacado.
  * @param {boolean} [props.isLoading] - Estado de carga opcional.
  */
 export default function FeaturedEventCountdownBanner({ event, isLoading = false }) {
@@ -26,21 +27,28 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
     live: isEn ? 'Live Now!' : '¡En Vivo Ahora!',
   };
 
-  // Evento activo con respaldo en caso de retraso en la red
+  // Evento activo obtenido del backend
   const activeEvent = useMemo(() => {
-    if (event) return event;
+    if (!event) return null;
     return {
-      id: 2,
-      title: 'Vallenato Fest Cartagena',
-      fecha: '2026-12-12',
-      hora: '19:00',
-      date: 'Sáb · Dic 12',
-      description: 'Gran noche de vallenato en el corazón de Cartagena de Indias.',
-      photo: cartagenaHeroPoster,
+      ...event,
+      id: event.id,
+      title: event.nombre || event.titulo || event.title || 'Evento Destacado',
+      fechaCreacion: event.fechaCreacion || event.createdAt || event.creadoEn || null,
+      fecha: event.fecha || '',
+      hora: event.hora || '',
+      photo:
+        event.urlImagen ||
+        event.foto ||
+        event.photo ||
+        event.url_imagen_destacado ||
+        event.url_imagen_promocionado ||
+        event.imagenPromocional ||
+        cartagenaHeroPoster,
     };
   }, [event]);
 
-  // Función robusta para interpretar la fecha exacta del evento sin errores de parseo
+  // Interpretar la fecha y hora exacta de ejecución del evento
   const parseTargetDate = (ev) => {
     if (!ev) return null;
 
@@ -84,7 +92,7 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
     return null;
   };
 
-  // Calcular fecha destino del evento
+  // Calcular fecha destino de ejecución del evento
   const targetDate = useMemo(() => {
     return parseTargetDate(activeEvent);
   }, [activeEvent]);
@@ -125,7 +133,7 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
     return () => clearInterval(interval);
   }, [targetDate]);
 
-  if (isLoading && !event) {
+  if (isLoading && !activeEvent) {
     return (
       <div className="w-full my-2 sm:my-3 rounded-2xl bg-amber-500/20 border border-amber-400/30 p-3 sm:p-4 animate-pulse flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -140,27 +148,32 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
     );
   }
 
+  // Si no hay evento ni está cargando, no se muestra nada
+  if (!activeEvent) {
+    return null;
+  }
+
   const isLive = timeLeft.totalMs <= 0;
 
-  // Barra de progreso dinámica que compara la fecha del evento con la fecha actual
+  // Barra de progreso dinámica calculada desde la fecha de creación hasta la fecha de ejecución
   const progressRatio = useMemo(() => {
     if (isLive) return 100;
     if (!targetDate) return 0;
 
-    const remainingMs = timeLeft.totalMs;
-
-    // Si el evento tiene fecha de registro o creación oficial
-    const createdDate = activeEvent.createdAt || activeEvent.creadoEn || activeEvent.fechaCreacion;
+    const createdDate = activeEvent.fechaCreacion || activeEvent.createdAt || activeEvent.creadoEn;
     if (createdDate) {
       const startMs = new Date(createdDate).getTime();
-      if (!Number.isNaN(startMs) && startMs < targetDate.getTime()) {
-        const totalDuration = targetDate.getTime() - startMs;
+      const endMs = targetDate.getTime();
+      if (!Number.isNaN(startMs) && startMs < endMs) {
+        const totalDuration = endMs - startMs;
         const elapsed = Date.now() - startMs;
+        if (elapsed <= 0) return 0;
         return Math.max(5, Math.min(100, Math.round((elapsed / totalDuration) * 100)));
       }
     }
 
-    // Ventana de referencia proporcional de 30 días
+    // Ventana de referencia de 30 días si no se cuenta con fecha de creación
+    const remainingMs = timeLeft.totalMs;
     const referenceWindowMs = 30 * 24 * 60 * 60 * 1000;
     if (remainingMs > referenceWindowMs) {
       return Math.max(8, Math.min(25, Math.round((1 - remainingMs / (90 * 24 * 60 * 60 * 1000)) * 25)));
@@ -170,13 +183,7 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
     return Math.max(10, Math.min(100, Math.round((elapsed / referenceWindowMs) * 100)));
   }, [isLive, targetDate, timeLeft.totalMs, activeEvent]);
 
-  const displayImage =
-    activeEvent.photo ||
-    activeEvent.url_imagen_destacado ||
-    activeEvent.url_imagen_promocionado ||
-    activeEvent.imagenPromocional ||
-    cartagenaHeroPoster;
-
+  const displayImage = activeEvent.photo;
   const formattedDate = formatDisplayDate(activeEvent.fecha, activeEvent.hora) || activeEvent.date;
   const formattedTime = formatDisplayTime(activeEvent.hora, activeEvent.fecha);
 
@@ -194,6 +201,8 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
             <img
               src={displayImage}
               alt={activeEvent.title}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
             />
             {/* Degradado dorado ámbar desde la derecha (y desde abajo en mobile) para integrarse perfectamente */}
@@ -210,12 +219,17 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
 
           {/* CENTRO: Título del Evento y Fecha/Hora */}
           <div className="relative z-10 flex-1 flex flex-col justify-center text-left px-4 py-3 sm:px-5 sm:py-3.5 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-slate-950 text-amber-400 border border-amber-400/50">
+                {isEn ? 'Featured Event' : 'Evento Destacado'}
+              </span>
+            </div>
             <h2 className="text-sm sm:text-base lg:text-lg font-black text-slate-950 tracking-tight leading-snug line-clamp-1 sm:line-clamp-2 drop-shadow-xs group-hover:text-black transition-colors">
               {activeEvent.title}
             </h2>
 
             {formattedDate && (
-              <p className="text-[11px] sm:text-xs font-bold text-amber-950/90 truncate mt-0.5 flex items-center gap-1.5">
+              <p className="text-[11px] sm:text-xs font-bold text-amber-950/90 truncate mt-1 flex items-center gap-1.5">
                 <FiCalendar size={12} className="text-slate-950 shrink-0" />
                 <span>
                   {formattedDate} {formattedTime ? `• ${formattedTime}` : ''}

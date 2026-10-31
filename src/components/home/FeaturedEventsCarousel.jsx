@@ -160,7 +160,7 @@ export default function FeaturedEventsCarousel({ events = [] }) {
     >
       {/* Tira deslizante de slides */}
       <div
-        className="flex w-full transition-transform duration-500 ease-out"
+        className="flex w-full transition-transform duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
         {displayEvents.map((event, idx) => {

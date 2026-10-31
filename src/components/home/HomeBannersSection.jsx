@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { FiArrowUpRight } from 'react-icons/fi';
 import { getHomeBanners } from '../../services/bannerService.js';
 import ImageWithFallback from '../common/ImageWithFallback.jsx';
@@ -8,7 +9,7 @@ import ImageWithFallback from '../common/ImageWithFallback.jsx';
  * InteractiveBannerCard
  * Tarjeta 3D interactiva inspirada en Blendo con:
  * - Inclinación 3D en tiempo real al mover el cursor + parallax interno en la imagen.
- * - Desfase vertical y rotación suave sincronizada al scroll.
+ * - Desfase vertical y rotación suave sincronizada al scroll (animación fluida de 450ms).
  * - Botón de acción audaz con micro-interacción.
  */
 function InteractiveBannerCard({ banner, index, scrollProgress, isVisible }) {
@@ -47,10 +48,10 @@ function InteractiveBannerCard({ banner, index, scrollProgress, isVisible }) {
     const cx = rect.width / 2;
     const cy = rect.height / 2;
 
-    const rx = ((y - cy) / cy) * -5.5;
-    const ry = ((x - cx) / cx) * 5.5;
-    const imgX = ((x - cx) / cx) * -10;
-    const imgY = ((y - cy) / cy) * -10;
+    const rx = ((y - cy) / cy) * -4.5;
+    const ry = ((x - cx) / cx) * 4.5;
+    const imgX = ((x - cx) / cx) * -8;
+    const imgY = ((y - cy) / cy) * -8;
 
     setMouse({
       rx,
@@ -68,21 +69,21 @@ function InteractiveBannerCard({ banner, index, scrollProgress, isVisible }) {
   };
 
   const isLeft = index === 0;
-  const active = isVisible || scrollProgress > 0.1;
+  const active = isVisible || scrollProgress > 0.08;
 
-  // Movimiento contrapuesto al hacer scroll (el izquierdo sube suavemente mientras el derecho baja)
+  // Movimiento contrapuesto al hacer scroll fluido
   const scrollWaveY = active
-    ? (scrollProgress - 0.5) * (isLeft ? -22 : 22)
+    ? (scrollProgress - 0.5) * (isLeft ? -16 : 16)
     : isLeft
-    ? 50
-    : 75;
+    ? 35
+    : 50;
 
-  const entryRotateZ = isLeft ? -1.2 : 1.2;
+  const entryRotateZ = isLeft ? -1 : 1;
   const currentRotateZ = active
     ? mouse.hovered
       ? 0
-      : (scrollProgress - 0.5) * (isLeft ? 1.4 : -1.4)
-    : entryRotateZ * 2.5;
+      : (scrollProgress - 0.5) * (isLeft ? 1 : -1)
+    : entryRotateZ * 2;
 
   return (
     <div
@@ -92,11 +93,11 @@ function InteractiveBannerCard({ banner, index, scrollProgress, isVisible }) {
       style={{
         opacity: active ? 1 : 0,
         transform: active
-          ? `perspective(1300px) translate3d(0px, ${scrollWaveY.toFixed(1)}px, ${mouse.hovered ? '20px' : '0px'}) rotateX(${mouse.rx.toFixed(2)}deg) rotateY(${mouse.ry.toFixed(2)}deg) rotateZ(${currentRotateZ.toFixed(2)}deg) scale(${mouse.hovered ? 1.02 : 1})`
-          : `perspective(1300px) translate3d(${isLeft ? '-40px' : '40px'}, 60px, -50px) rotateX(12deg) rotateY(${isLeft ? '10deg' : '-10deg'}) rotateZ(${isLeft ? '-3deg' : '3deg'}) scale(0.92)`,
+          ? `perspective(1300px) translate3d(0px, ${scrollWaveY.toFixed(1)}px, ${mouse.hovered ? '16px' : '0px'}) rotateX(${mouse.rx.toFixed(2)}deg) rotateY(${mouse.ry.toFixed(2)}deg) rotateZ(${currentRotateZ.toFixed(2)}deg) scale(${mouse.hovered ? 1.02 : 1})`
+          : `perspective(1300px) translate3d(${isLeft ? '-30px' : '30px'}, 45px, -40px) rotateX(10deg) rotateY(${isLeft ? '8deg' : '-8deg'}) rotateZ(${isLeft ? '-2deg' : '2deg'}) scale(0.94)`,
         transitionProperty: mouse.hovered ? 'box-shadow' : 'transform, opacity',
-        transitionDuration: mouse.hovered ? '150ms' : '900ms',
-        transitionDelay: mouse.hovered ? '0ms' : `${index * 160}ms`,
+        transitionDuration: mouse.hovered ? '120ms' : '450ms',
+        transitionDelay: mouse.hovered ? '0ms' : `${index * 60}ms`,
         transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
         willChange: 'transform, opacity',
       }}
@@ -130,45 +131,42 @@ function InteractiveBannerCard({ banner, index, scrollProgress, isVisible }) {
                 alt={banner.titulo || 'Banner'}
                 className="w-full h-full"
                 imgClassName="w-full h-full object-cover object-center"
-                fallbackText={banner.titulo || 'Banner'}
-                iconSize={36}
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-[#132242] via-[#0D1527] to-slate-950 relative" />
+              <div className="w-full h-full bg-gradient-to-br from-[#0B132B] to-[#1C2541]" />
             )}
           </div>
 
-          {/* Degradado inferior nítido para elevar la legibilidad sin apagar la fotografía */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                'linear-gradient(180deg, rgba(7,13,27,0.12) 0%, transparent 38%, rgba(7,13,27,0.88) 100%)',
-            }}
-          />
+          {/* Degradado para garantizar legibilidad de los textos */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
 
+          {/* Contenido textual superior e inferior */}
+          <div className="absolute inset-0 p-5 sm:p-7 md:p-8 flex flex-col justify-between z-10 pointer-events-none">
+            {/* Tag o Indicador Superior */}
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-black uppercase tracking-widest bg-white/95 text-slate-900 border border-white shadow-sm backdrop-blur-md">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                {banner.titulo?.includes('Coachella') ? 'Edición Especial' : 'Destacado'}
+              </span>
 
-
-          {/* Dock inferior flotante con título audaz y botón interactivo estilo Blendo */}
-          <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7 lg:p-8 z-20 flex flex-col sm:flex-row sm:items-end justify-between gap-4 pointer-events-none">
-            <div className="max-w-md">
-              {banner.titulo && (
-                <h3 className="font-black text-white group-hover:text-amber-200 text-xl sm:text-2xl lg:text-[26px] leading-tight tracking-tight uppercase drop-shadow-[0_3px_12px_rgba(0,0,0,0.9)] transition-colors duration-300">
-                  {banner.titulo}
-                </h3>
-              )}
+              {/* Botón flotante estilo cápsula interactiva */}
+              <div className="w-10 h-10 rounded-full bg-amber-500 group-hover:bg-amber-400 text-slate-950 flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12 pointer-events-auto">
+                <FiArrowUpRight size={20} className="stroke-[2.5]" />
+              </div>
             </div>
 
-            {banner.textoBoton && (
-              <div className="shrink-0">
-                <span className="inline-flex items-center gap-2.5 pl-4 pr-2.5 py-2 sm:pl-5 sm:pr-3 sm:py-2.5 rounded-2xl bg-amber-400 group-hover:bg-amber-300 text-slate-950 text-xs sm:text-sm font-black uppercase tracking-wider border-2 border-slate-950 shadow-[0_5px_0_0_rgba(15,23,42,1)] group-hover:translate-y-[-2px] group-hover:shadow-[0_7px_0_0_rgba(15,23,42,1)] transition-all duration-200">
-                  <span>{banner.textoBoton}</span>
-                  <span className="w-7 h-7 rounded-xl bg-slate-950 text-amber-400 flex items-center justify-center transition-transform duration-300 group-hover:rotate-45">
-                    <FiArrowUpRight size={15} strokeWidth={2.5} />
-                  </span>
-                </span>
-              </div>
-            )}
+            {/* Texto Principal en la parte inferior */}
+            <div className="space-y-1.5 sm:space-y-2">
+              <h3 className="text-lg sm:text-2xl md:text-3xl font-black text-white uppercase tracking-tight leading-tight drop-shadow-md group-hover:text-amber-300 transition-colors duration-200 line-clamp-2">
+                {banner.titulo}
+              </h3>
+
+              {banner.descripcion && (
+                <p className="text-xs sm:text-sm text-slate-200/90 font-medium line-clamp-2 max-w-xl drop-shadow-sm">
+                  {banner.descripcion}
+                </p>
+              )}
+            </div>
           </div>
         </CardWrapper>
       </div>
@@ -177,34 +175,16 @@ function InteractiveBannerCard({ banner, index, scrollProgress, isVisible }) {
 }
 
 export default function HomeBannersSection() {
-  const [banners, setBanners] = useState([]);
-  const [loading, setLoading] = useState(true);
   const sectionRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  useEffect(() => {
-    let isMounted = true;
-    getHomeBanners()
-      .then((data) => {
-        if (!isMounted) return;
-        if (Array.isArray(data) && data.length > 0) {
-          setBanners(data);
-        } else {
-          setBanners([]);
-        }
-      })
-      .catch(() => {
-        if (isMounted) setBanners([]);
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  // Consulta de banners con TanStack Query (Stale-While-Revalidate)
+  const { data: banners = [], isLoading: loading } = useQuery({
+    queryKey: ['home-banners'],
+    queryFn: getHomeBanners,
+    staleTime: 1000 * 60 * 5,
+  });
 
   useEffect(() => {
     const node = sectionRef.current;
@@ -213,11 +193,14 @@ export default function HomeBannersSection() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) setIsVisible(true);
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
     );
+
     observer.observe(node);
 
     let rafId = null;
@@ -228,7 +211,7 @@ export default function HomeBannersSection() {
         if (!sectionRef.current) return;
         const rect = sectionRef.current.getBoundingClientRect();
         const vh = window.innerHeight || 800;
-        if (rect.top <= vh * 0.9) setIsVisible(true);
+        if (rect.top <= vh * 0.92) setIsVisible(true);
         const progress = Math.max(0, Math.min(1, (vh - rect.top) / (vh + rect.height)));
         setScrollProgress(progress);
       });

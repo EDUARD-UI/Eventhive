@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
 import { Link } from 'react-router-dom';
@@ -132,56 +133,32 @@ function MapViewController({ center, zoom }) {
 
 export default function Home() {
   const { t } = useLanguage();
-  const [carouselEvents, setCarouselEvents] = useState([]);
-  const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
-  const [mapEvents, setMapEvents] = useState([]);
-  const [categoryList, setCategoryList] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedDistance, setSelectedDistance] = useState('all');
-  const [userLocation, setUserLocation] = useState(null);
-  const [isLocating, setIsLocating] = useState(false);
-  const [mapRevealed, setMapRevealed] = useState(false);
-  const [footerGroupRevealed, setFooterGroupRevealed] = useState(false);
-  const [carouselRevealed, setCarouselRevealed] = useState(false);
-  const mapSectionRef = useRef(null);
-  const footerGroupRef = useRef(null);
-  const carouselSectionRef = useRef(null);
+    // Consultas optimizadas con TanStack Query (Stale-While-Revalidate para carga instantánea)
+  const { data: carouselEvents = [] } = useQuery({
+    queryKey: ['home-carousel-events'],
+    queryFn: getCarouselEvents,
+    staleTime: 1000 * 60 * 3,
+  });
 
-  const distanceOptions = useMemo(
-    () => [
-      { value: 'all', label: t('home.allDistances') },
-      { value: '5', label: t('home.upTo5km') },
-      { value: '10', label: t('home.upTo10km') },
-      { value: '15', label: t('home.upTo15km') },
-    ],
-    [t]
-  );
+  const { data: upcomingEvents = [], isLoading: isLoadingUpcoming } = useQuery({
+    queryKey: ['home-upcoming-events'],
+    queryFn: () => getUpcomingEvents({ page: 0, size: 8 }),
+    staleTime: 1000 * 60 * 3,
+  });
 
-  useEffect(() => {
-    setIsLoadingEvents(true);
+  const { data: mapEvents = [] } = useQuery({
+    queryKey: ['home-map-events'],
+    queryFn: () => getMapEvents(),
+    staleTime: 1000 * 60 * 5,
+  });
 
-    Promise.allSettled([
-      getCarouselEvents(),
-      getUpcomingEvents(),
-      getMapEvents(),
-      getCategoryNames(),
-    ]).then(([carouselRes, upcomingRes, mapRes, catNamesRes]) => {
-      if (carouselRes.status === 'fulfilled' && Array.isArray(carouselRes.value)) {
-        setCarouselEvents(carouselRes.value);
-      }
-      if (upcomingRes.status === 'fulfilled' && Array.isArray(upcomingRes.value)) {
-        setUpcomingEvents(upcomingRes.value);
-      }
-      if (mapRes.status === 'fulfilled' && Array.isArray(mapRes.value)) {
-        setMapEvents(mapRes.value);
-      }
-      if (catNamesRes.status === 'fulfilled' && Array.isArray(catNamesRes.value)) {
-        setCategoryList(catNamesRes.value);
-      }
-      setIsLoadingEvents(false);
-    });
-  }, []);
+  const { data: categoryList = [] } = useQuery({
+    queryKey: ['home-category-names'],
+    queryFn: getCategoryNames,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const isLoadingEvents = isLoadingUpcoming;
 
   const requestLocation = (targetDistance = null) => {
     if (!navigator.geolocation) {

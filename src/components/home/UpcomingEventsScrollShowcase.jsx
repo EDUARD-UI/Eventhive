@@ -8,7 +8,7 @@ import HiveEmptyState from './HiveEmptyState.jsx';
  * Showcase interactivo con animación sincronizada al scroll en 3D para la sección
  * de "Próximos Eventos" en el Home.
  *
- * - Abanico 3D progresivo (Fan-Out & Depth Parallax) conducido por el scroll real.
+ * - Abanico 3D progresivo conducido por el scroll real, fluido y rápido (450ms).
  * - Desfase de onda vertical entre columnas pares e impares al desplazarse.
  * - Inclinación 3D interactiva por tarjeta al pasar el cursor con brillo radial ámbar.
  * - Preserva íntegramente los datos, endpoints y redirecciones de EventListCard.
@@ -25,8 +25,8 @@ function AnimatedCardItem({ children, index, scrollProgress, isVisible }) {
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    const rotateX = ((y - centerY) / centerY) * -6;
-    const rotateY = ((x - centerX) / centerX) * 6;
+    const rotateX = ((y - centerY) / centerY) * -5;
+    const rotateY = ((x - centerX) / centerX) * 5;
     const glowX = (x / rect.width) * 100;
     const glowY = (y / rect.height) * 100;
 
@@ -37,26 +37,26 @@ function AnimatedCardItem({ children, index, scrollProgress, isVisible }) {
     setTilt({ rotateX: 0, rotateY: 0, glowX: 50, glowY: 50, isHovered: false });
   };
 
-  // Geometría de entrada por columna (efecto abanico 3D desde el centro)
+  // Geometría de entrada por columna (efecto abanico 3D sutil y dinámico)
   const spreadOffsets = [
-    { x: -38, y: 64, z: -55, ry: 12, rz: -2.5 },
-    { x: -14, y: 44, z: -25, ry: 5, rz: -0.8 },
-    { x: 14, y: 54, z: -25, ry: -5, rz: 0.8 },
-    { x: 38, y: 74, z: -55, ry: -12, rz: 2.5 },
+    { x: -28, y: 44, z: -40, ry: 9, rz: -2 },
+    { x: -10, y: 30, z: -20, ry: 4, rz: -0.6 },
+    { x: 10, y: 36, z: -20, ry: -4, rz: 0.6 },
+    { x: 28, y: 50, z: -40, ry: -9, rz: 2 },
   ];
 
   const cfg = spreadOffsets[index % 4];
-  const active = isVisible || scrollProgress > 0.12;
+  const active = isVisible || scrollProgress > 0.1;
 
   // Parallax vertical sutil continuo mientras el usuario sigue bajando
   const isOdd = index % 2 !== 0;
   const parallaxWave = active
-    ? (scrollProgress - 0.5) * (isOdd ? -14 : 14)
+    ? (scrollProgress - 0.5) * (isOdd ? -10 : 10)
     : 0;
 
   const transformString = active
-    ? `perspective(1200px) translate3d(0px, ${parallaxWave.toFixed(1)}px, ${tilt.isHovered ? '18px' : '0px'}) rotateX(${tilt.rotateX.toFixed(2)}deg) rotateY(${tilt.rotateY.toFixed(2)}deg) rotateZ(0deg) scale(${tilt.isHovered ? 1.025 : 1})`
-    : `perspective(1200px) translate3d(${cfg.x}px, ${cfg.y}px, ${cfg.z}px) rotateX(14deg) rotateY(${cfg.ry}deg) rotateZ(${cfg.rz}deg) scale(0.91)`;
+    ? `perspective(1200px) translate3d(0px, ${parallaxWave.toFixed(1)}px, ${tilt.isHovered ? '14px' : '0px'}) rotateX(${tilt.rotateX.toFixed(2)}deg) rotateY(${tilt.rotateY.toFixed(2)}deg) rotateZ(0deg) scale(${tilt.isHovered ? 1.02 : 1})`
+    : `perspective(1200px) translate3d(${cfg.x}px, ${cfg.y}px, ${cfg.z}px) rotateX(10deg) rotateY(${cfg.ry}deg) rotateZ(${cfg.rz}deg) scale(0.94)`;
 
   return (
     <div
@@ -66,10 +66,10 @@ function AnimatedCardItem({ children, index, scrollProgress, isVisible }) {
       style={{
         opacity: active ? 1 : 0,
         transform: transformString,
-        filter: active ? 'blur(0px)' : 'blur(4px)',
+        filter: active ? 'blur(0px)' : 'blur(3px)',
         transitionProperty: tilt.isHovered ? 'box-shadow' : 'transform, opacity, filter',
-        transitionDuration: tilt.isHovered ? '150ms' : '950ms',
-        transitionDelay: tilt.isHovered ? '0ms' : `${index * 115}ms`,
+        transitionDuration: tilt.isHovered ? '120ms' : '450ms',
+        transitionDelay: tilt.isHovered ? '0ms' : `${index * 50}ms`,
         transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
         willChange: 'transform, opacity',
       }}
@@ -111,7 +111,7 @@ export default function UpcomingEventsScrollShowcase({
           }
         });
       },
-      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+      { threshold: 0.08, rootMargin: '0px 0px -30px 0px' }
     );
 
     observer.observe(node);
@@ -125,7 +125,7 @@ export default function UpcomingEventsScrollShowcase({
         const rect = sectionRef.current.getBoundingClientRect();
         const vh = window.innerHeight || 800;
 
-        if (rect.top <= vh * 0.88) {
+        if (rect.top <= vh * 0.92) {
           setIsVisible(true);
         }
 
@@ -188,7 +188,7 @@ export default function UpcomingEventsScrollShowcase({
         }}
       />
 
-      {/* Grilla de tarjetas con efecto abanico 3D y desfase parallax */}
+      {/* Grilla de tarjetas con efecto abanico 3D y desfase parallax fluido */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7 items-start relative z-10">
         {displayedEvents.map((event, idx) => (
           <AnimatedCardItem
@@ -201,8 +201,6 @@ export default function UpcomingEventsScrollShowcase({
           </AnimatedCardItem>
         ))}
       </div>
-
-
     </div>
   );
 }

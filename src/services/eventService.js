@@ -199,6 +199,44 @@ export async function getCarouselEvents() {
  * Eventos destacados para cartelera (GET /api/eventos/destacados).
  * Devuelve eventos PUBLICADO con promoción pagada y confirmada (promocionado=true).
  */
+
+/**
+ * Primer evento destacado para el banner temporizador (GET /api/eventos/primer-destacado).
+ * Devuelve el primer evento destacado (promocionado: true y en estado PUBLICADO),
+ * priorizando el más próximo temporalmente (fecha ASC, hora ASC, id ASC).
+ * Estructura: id, nombre (alias titulo), urlImagen (alias foto), fechaCreacion, fecha, hora.
+ */
+export async function getPrimerEventoDestacado() {
+  try {
+    const res = await httpClient.get('/eventos/primer-destacado');
+    const data = res?.data || res;
+    if (!data || (!data.id && !data.nombre && !data.titulo)) return null;
+
+    const rawId = data.id || data.eventoId || null;
+    const title = data.titulo || data.nombre || '';
+    const imgUrl = data.urlImagen || data.foto || data.imagen || '';
+
+    return {
+      ...data,
+      id: rawId ? String(rawId) : null,
+      eventoId: rawId,
+      nombre: title,
+      titulo: title,
+      title,
+      urlImagen: imgUrl,
+      foto: imgUrl,
+      photo: imgUrl,
+      fechaCreacion: data.fechaCreacion || null,
+      createdAt: data.fechaCreacion || null,
+      fecha: data.fecha || '',
+      hora: data.hora || '',
+    };
+  } catch (err) {
+    console.warn('Error consultando /eventos/primer-destacado:', err?.message);
+    return null;
+  }
+}
+
 export async function getFeaturedEvents({ page = 0, size = 10, sort } = {}) {
   try {
     const params = { page, size };
@@ -410,6 +448,7 @@ export async function searchEvents({ titulo, nombre, categoriaId, fecha, page = 
 }
 
 export default {
+  getPrimerEventoDestacado,
   getFeaturedEvents,
   getUpcomingEvents,
   getEvents,

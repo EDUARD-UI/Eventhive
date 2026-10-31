@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { FiSearch, FiX, FiCalendar, FiGrid, FiArrowUpRight } from 'react-icons/fi';
+import { useQuery } from '@tanstack/react-query';
+import { FiSearch, FiX, FiCalendar, FiArrowUpRight } from 'react-icons/fi';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import HiveBeeLoader from '../components/common/HiveBeeLoader.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
@@ -8,57 +9,24 @@ import EventListCard from '../components/common/EventListCard.jsx';
 import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
 import Pagination from '../components/Shared/Pagination.jsx';
 import CustomSelect from '../components/common/CustomSelect.jsx';
-import { searchEvents, getEvents } from '../services/eventService.js';
+import { searchEvents, getEvents, getPrimerEventoDestacado } from '../services/eventService.js';
 import { getCategoryNames, getFeaturedCategories } from '../services/categoryService.js';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 import StyledDatePicker from '../components/common/StyledDatePicker.jsx';
 import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
-import { formatFecha } from '../utils/formatters.js';
+import FeaturedEventCountdownBanner from '../components/common/FeaturedEventCountdownBanner.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useLenisScroll } from '../hooks/useLenisScroll.js';
 
 const PAGE_SIZE = 12;
 
-// Caché en memoria para retorno instantáneo entre vistas
-let cachedEventsData = null;
-let cachedCategoriesData = null;
-
-const hasVisitedBuscar = () => {
-  try {
-    return sessionStorage.getItem('eh_visited_buscar') === 'true';
-  } catch {
-    return false;
-  }
-};
-
 export default function BuscarEventosPage() {
   useLenisScroll();
   const { isDark } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [ribbonTilt, setRibbonTilt] = useState(0);
 
-  useEffect(() => {
-    let frame = 0;
-    const updateTilt = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const scrollProgress = Math.min(window.scrollY / 900, 1);
-        setRibbonTilt(scrollProgress * 5);
-      });
-    };
-    updateTilt();
-    window.addEventListener('scroll', updateTilt, { passive: true });
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener('scroll', updateTilt);
-    };
-  }, []);
-
-  // Determinar si es la primera vez que se visita la página en esta sesión
-  const isFirstVisit = !hasVisitedBuscar();
-
-  // Columnas dinámicas para que las tarjetas encajen orgánicamente sin dejar huecos vacíos
+  // Columnas dinámicas para que las tarjetas encajen orgánicamente en estilo masonry
   const [colCount, setColCount] = useState(() => {
     if (typeof window === 'undefined') return 4;
     const w = window.innerWidth;
@@ -83,187 +51,136 @@ export default function BuscarEventosPage() {
   const categoriaIdParam = searchParams.get('categoriaId') || '';
   const pageParam = Math.max(0, parseInt(searchParams.get('page') || '0', 10));
 
-  // Inicializar con caché si existe para evitar mostrar pantalla de carga al reingresar
-  const [events, setEvents] = useState(() => (cachedEventsData ? cachedEventsData.events : []));
-  const [loading, setLoading] = useState(() => !cachedEventsData);
-  const [initialScreenLoading, setInitialScreenLoading] = useState(
-    () => isFirstVisit && !cachedEventsData
-  );
-  const [categoryList, setCategoryList] = useState(
-    () => (cachedCategoriesData ? cachedCategoriesData.names : [])
-  );
-  const [featuredCategories, setFeaturedCategories] = useState(
-    () => (cachedCategoriesData ? cachedCategoriesData.featured : [])
-  );
-  const [loadingCategories, setLoadingCategories] = useState(() => !cachedCategoriesData);
-  const [totalElements, setTotalElements] = useState(
-    () => (cachedEventsData ? cachedEventsData.totalElements : 0)
-  );
-  const [totalPages, setTotalPages] = useState(
-    () => (cachedEventsData ? cachedEventsData.totalPages : 1)
-  );
   const [searchInput, setSearchInput] = useState(tituloParam);
 
-  useEffect(() => {
-    if (!loading) {
-      try {
-        sessionStorage.setItem('eh_visited_buscar', 'true');
-      } catch {
-        // Safe fallback
-      }
-      const timer = setTimeout(() => {
-        setInitialScreenLoading(false);
-      }, 400);
-      return () => clearTimeout(timer);
-    }
-  }, [loading]);
-
-  // Cargar categorías disponibles y categorías destacadas desde el backend
-  useEffect(() => {
-    let isMounted = true;
-    if (!cachedCategoriesData) {
-      setLoadingCategories(true);
-    }
-    Promise.allSettled([
-      getCategoryNames(),
-      getFeaturedCategories(),
-    ]).then(([namesRes, featRes]) => {
-      if (!isMounted) return;
-      const names = namesRes.status === 'fulfilled' && Array.isArray(namesRes.value) ? namesRes.value : [];
-      const feat = featRes.status === 'fulfilled' && Array.isArray(featRes.value) ? featRes.value : [];
-      setCategoryList(names);
-      setFeaturedCategories(feat);
-      cachedCategoriesData = { names, featured: feat };
-      setLoadingCategories(false);
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // Sincronizar input con URL
+  // Sincronizar input local con el searchParam
   useEffect(() => {
     setSearchInput(tituloParam);
   }, [tituloParam]);
 
-  // Cargar eventos con exactamente 12 eventos por página (size=12)
-  useEffect(() => {
-    let isMounted = true;
-    if (!cachedEventsData || tituloParam || fechaParam || categoriaIdParam || pageParam > 0) {
-      setLoading(true);
-    }
+  // Consulta del primer evento destacado con TanStack Query (Stale-While-Revalidate)
+  const {
+    data: primerDestacado,
+    isLoading: loadingPrimerDestacado,
+  } = useQuery({
+    queryKey: ['primer-evento-destacado'],
+    queryFn: getPrimerEventoDestacado,
+    staleTime: 1000 * 60 * 3,
+  });
 
-    const loadData = async () => {
-      try {
-        const hasTitle = Boolean(tituloParam.trim());
-        const hasDate = Boolean(fechaParam.trim());
-        const hasCategory = Boolean(categoriaIdParam);
+  // Consulta de categorías con TanStack Query
+  const {
+    data: categoriesData,
+    isLoading: loadingCategories,
+  } = useQuery({
+    queryKey: ['categories-catalog'],
+    queryFn: async () => {
+      const [namesRes, featRes] = await Promise.allSettled([
+        getCategoryNames(),
+        getFeaturedCategories(),
+      ]);
+      const names = namesRes.status === 'fulfilled' && Array.isArray(namesRes.value) ? namesRes.value : [];
+      const feat = featRes.status === 'fulfilled' && Array.isArray(featRes.value) ? featRes.value : [];
+      return { names, featured: feat };
+    },
+    staleTime: 1000 * 60 * 10,
+  });
 
-        // Caso 1: Búsqueda por término textual
-        if (hasTitle) {
-          const fetchSize = (hasDate || hasCategory) ? 60 : PAGE_SIZE;
-          const result = await searchEvents({
-            titulo: tituloParam.trim(),
-            page: (hasDate || hasCategory) ? 0 : pageParam,
-            size: fetchSize,
+  const categoryList = categoriesData?.names || [];
+  const featuredCategories = categoriesData?.featured || [];
+
+  // Consulta de eventos con TanStack Query (Stale-While-Revalidate + placeholderData)
+  const {
+    data: eventsQueryData,
+    isLoading: loading,
+    isPlaceholderData,
+  } = useQuery({
+    queryKey: ['buscar-eventos', { titulo: tituloParam, fecha: fechaParam, categoriaId: categoriaIdParam, page: pageParam }],
+    queryFn: async () => {
+      const hasTitle = Boolean(tituloParam.trim());
+      const hasDate = Boolean(fechaParam.trim());
+      const hasCategory = Boolean(categoriaIdParam);
+
+      if (hasTitle) {
+        const fetchSize = (hasDate || hasCategory) ? 60 : PAGE_SIZE;
+        const result = await searchEvents({
+          titulo: tituloParam.trim(),
+          page: (hasDate || hasCategory) ? 0 : pageParam,
+          size: fetchSize,
+        });
+
+        let filtered = result.events || [];
+
+        if (hasDate) {
+          filtered = filtered.filter((ev) => {
+            const evDate = ev.fecha || (ev.startsAt ? String(ev.startsAt).slice(0, 10) : '');
+            return evDate === fechaParam.trim();
           });
-
-          let filtered = result.events || [];
-
-          if (hasDate) {
-            filtered = filtered.filter((ev) => {
-              const evDate = ev.fecha || (ev.startsAt ? String(ev.startsAt).slice(0, 10) : '');
-              return evDate === fechaParam.trim();
-            });
-          }
-
-          if (hasCategory) {
-            filtered = filtered.filter((ev) => {
-              const catId = ev.categoriaId ?? ev.categoria?.id;
-              return String(catId) === String(categoriaIdParam);
-            });
-          }
-
-          if (hasDate || hasCategory) {
-            const start = pageParam * PAGE_SIZE;
-            const paginated = filtered.slice(start, start + PAGE_SIZE);
-            return {
-              events: paginated,
-              total: filtered.length,
-              totalPages: Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)),
-              currentPage: pageParam,
-            };
-          }
-
-          return result;
         }
 
-        // Caso 2: Sin término textual -> consulta paginada al backend con size: 12
-        return await getEvents({
-          categoriaId: hasCategory ? Number(categoriaIdParam) : undefined,
-          fecha: hasDate ? fechaParam.trim() : undefined,
-          page: pageParam,
-          size: PAGE_SIZE,
-        });
-      } catch (err) {
-        console.warn('Error al cargar eventos:', err?.message);
-        return { events: [], total: 0, totalPages: 1, currentPage: 0 };
-      }
-    };
+        if (hasCategory) {
+          filtered = filtered.filter((ev) => {
+            const catId = ev.categoriaId ?? ev.categoria?.id;
+            return String(catId) === String(categoriaIdParam);
+          });
+        }
 
-    loadData()
-      .then(({ events: results, total, totalPages: pages }) => {
-        if (!isMounted) return;
-        const validEvents = results || [];
-        const validTotal = total || validEvents.length;
-        const validPages = pages || 1;
-        setEvents(validEvents);
-        setTotalElements(validTotal);
-        setTotalPages(validPages);
-
-        if (!tituloParam.trim() && !fechaParam.trim() && !categoriaIdParam && pageParam === 0) {
-          cachedEventsData = {
-            events: validEvents,
-            totalElements: validTotal,
-            totalPages: validPages,
+        if (hasDate || hasCategory) {
+          const start = pageParam * PAGE_SIZE;
+          const paginated = filtered.slice(start, start + PAGE_SIZE);
+          return {
+            events: paginated,
+            total: filtered.length,
+            totalPages: Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)),
+            currentPage: pageParam,
           };
         }
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
 
-    return () => {
-      isMounted = false;
-    };
-  }, [tituloParam, fechaParam, categoriaIdParam, pageParam]);
+        return result;
+      }
+
+      return await getEvents({
+        categoriaId: hasCategory ? Number(categoriaIdParam) : undefined,
+        fecha: hasDate ? fechaParam.trim() : undefined,
+        page: pageParam,
+        size: PAGE_SIZE,
+      });
+    },
+    staleTime: 1000 * 60 * 2,
+    placeholderData: (prev) => prev,
+  });
+
+  const events = eventsQueryData?.events || [];
+  const totalElements = eventsQueryData?.total || 0;
+  const totalPages = eventsQueryData?.totalPages || 1;
 
   const handlePageChange = (newPage) => {
     const next = new URLSearchParams(searchParams);
-    next.set('page', String(newPage));
+    if (newPage > 0) {
+      next.set('page', String(newPage));
+    } else {
+      next.delete('page');
+    }
     setSearchParams(next);
-    window.scrollTo({ top: 180, behavior: 'smooth' });
+    window.scrollTo({ top: 120, behavior: 'smooth' });
   };
 
-  const handleCategoryChange = (e) => {
-    const val = e.target.value;
+  const handleCategorySelect = (catId) => {
     const next = new URLSearchParams(searchParams);
     next.delete('page');
-    if (val) {
-      next.set('categoriaId', val);
+    if (catId) {
+      next.set('categoriaId', String(catId));
     } else {
       next.delete('categoriaId');
     }
     setSearchParams(next);
   };
 
-  const handleDateChange = (e) => {
-    const val = e.target.value;
+  const handleDateChange = (val) => {
     const next = new URLSearchParams(searchParams);
     next.delete('page');
-    if (val) {
-      next.set('fecha', val);
+    if (val && String(val).trim()) {
+      next.set('fecha', String(val).trim());
     } else {
       next.delete('fecha');
     }
@@ -295,7 +212,7 @@ export default function BuscarEventosPage() {
   const hasActiveFilters = Boolean(tituloParam || fechaParam || categoriaIdParam);
   const activeCategory = categoryList.find((c) => String(c.id) === String(categoriaIdParam));
 
-  // Distribución en columnas orgánicas: permite que la primera card sea alta y que las demás encajen perfectamente sin dejar huecos
+  // Distribución en columnas orgánicas: permite que las tarjetas encajen perfectamente
   const masonryColumns = useMemo(() => {
     const cols = Array.from({ length: colCount }, () => []);
     events.forEach((ev, idx) => {
@@ -312,16 +229,6 @@ export default function BuscarEventosPage() {
     return cols;
   }, [colCount]);
 
-  if (initialScreenLoading) {
-    return (
-      <HiveBeeLoader
-        text="Cargando..."
-        subtext="Cartelera de eventos en Cartagena"
-        fullScreen={true}
-      />
-    );
-  }
-
   return (
     <div className="w-full min-h-screen bg-slate-50 dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body relative transition-colors duration-200">
       {/* Fondo interactivo de puntitos */}
@@ -332,26 +239,22 @@ export default function BuscarEventosPage() {
 
       <main className="flex-1 max-w-[1550px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 relative z-10">
         {/* BARRA DE FILTROS FLOTANTE CON SEARCH ALARGADO Y Z-INDEX ELEVADO */}
-        {/* 1) Search (Alargado) -> 2) Categorías -> 3) Fecha (Cuándo) -> Botón "Buscar eventos" */}
-        <section aria-label="Buscador y filtros" className="w-full max-w-6xl mx-auto mb-10 sm:mb-12 relative z-50">
+        <section aria-label="Buscador y filtros" className="w-full max-w-6xl mx-auto mb-8 sm:mb-10 relative z-50">
           <form
             onSubmit={handleSearchSubmit}
             className="w-full relative z-50 rounded-2xl md:rounded-full bg-white dark:bg-[#111A2E]/95 border border-slate-200 dark:border-white/10 p-2 sm:p-2.5 shadow-lg dark:shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-center gap-2.5 md:gap-3 transition-colors"
           >
-            {/* 1. Buscador ALARGADO (Mayor ancho y expansión visual) */}
-            <div className="relative flex-1 w-full min-w-[280px] lg:min-w-[420px]">
-              <FiSearch
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
-                size={18}
-              />
+            {/* Input 1: Search por Nombre (Alargado) */}
+            <div className="relative flex-1 w-full min-w-0">
               <input
                 id="event-search"
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Buscar por evento, lugar o artista..."
-                className="h-11 sm:h-12 w-full rounded-xl md:rounded-full bg-transparent pl-11 pr-9 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                placeholder="Buscar eventos por nombre..."
+                className="h-12 w-full rounded-xl md:rounded-full border border-slate-200 dark:border-white/10 bg-white dark:bg-white pl-11 pr-10 text-sm text-slate-900 shadow-inner transition-all placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
               />
+              <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
               {searchInput && (
                 <button
                   type="button"
@@ -362,63 +265,48 @@ export default function BuscarEventosPage() {
                     next.delete('page');
                     setSearchParams(next);
                   }}
-                  aria-label="Limpiar término"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white cursor-pointer"
+                  aria-label="Limpiar búsqueda"
+                  className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 >
                   ✕
                 </button>
               )}
             </div>
-            {/* Botón Buscar eventos */}
-            <button
-              type="submit"
-              aria-label="Buscar eventos"
-              className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-amber-500 p-0 text-slate-950 shadow-md transition-all duration-200 hover:bg-amber-400 active:scale-95 sm:h-12 sm:w-12"
-            >
-              <FiSearch size={18} className="block shrink-0" />
-            </button>
 
-            {/* Divisor en desktop */}
-            <div className="hidden md:block h-7 w-[1px] bg-slate-200 dark:bg-white/10 shrink-0" />
-
-            {/* 2. Categorías */}
-            <div className="w-full md:w-auto md:min-w-[190px] relative z-50">
+            {/* Input 2: Categorías (Selector desplegable) */}
+            <div className="w-full md:w-56 shrink-0">
               <CustomSelect
                 value={categoriaIdParam}
-                onChange={handleCategoryChange}
+                onChange={handleCategorySelect}
                 options={categorySelectOptions}
                 placeholder="Todas las categorías"
-                variant={isDark ? 'dark' : 'light'}
-                inlineLabel="Categoría"
-                icon={FiGrid}
+                className="w-full"
               />
             </div>
 
-            {/* Divisor en desktop */}
-            <div className="hidden md:block h-7 w-[1px] bg-slate-200 dark:bg-white/10 shrink-0" />
-
-            {/* 3. Fecha (Cuándo) */}
-            <div className="w-full md:w-auto md:min-w-[180px] relative z-50">
+            {/* Input 3: Fecha (Cuándo) */}
+            <div className="w-full md:w-52 shrink-0">
               <StyledDatePicker
-                id="filtro-fecha"
-                name="filtro-fecha"
-                inlineLabel="Cuándo"
-                value={formatFecha(fechaParam)}
+                value={fechaParam}
                 onChange={handleDateChange}
-                variant={isDark ? 'dark' : 'light'}
                 placeholder="Cualquier fecha"
               />
             </div>
 
-
+            {/* Botón de Submit / Buscar */}
+            <button
+              type="submit"
+              className="w-full md:w-auto px-7 py-3 rounded-xl md:rounded-full bg-slate-950 dark:bg-amber-500 hover:bg-amber-500 hover:text-slate-950 text-white dark:text-slate-950 text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-md active:scale-95 shrink-0 flex items-center justify-center gap-2"
+            >
+              <FiSearch size={14} />
+              <span>Buscar eventos</span>
+            </button>
           </form>
 
-          {/* Chips de filtros activos si los hay */}
+          {/* Filtros Activos Chips */}
           {hasActiveFilters && (
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-3 px-2">
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                Filtros activos:
-              </span>
+            <div className="flex flex-wrap items-center gap-2 mt-3 px-2">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Filtros aplicados:</span>
               {activeCategory && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold">
                   {activeCategory.nombre}
@@ -483,6 +371,16 @@ export default function BuscarEventosPage() {
           )}
         </section>
 
+        {/* 1. BANNER TEMPORIZADOR DEL PRIMER EVENTO DESTACADO (Calculado desde fechaCreacion hasta fecha de ejecución) */}
+        {(primerDestacado || loadingPrimerDestacado) && (
+          <div className="w-full max-w-5xl xl:max-w-6xl mx-auto mb-8 sm:mb-10 relative z-10">
+            <FeaturedEventCountdownBanner
+              event={primerDestacado}
+              isLoading={loadingPrimerDestacado}
+            />
+          </div>
+        )}
+
         {/* TÍTULO DE SELECCIÓN EDITORIAL */}
         <section aria-label="Selección Editorial" className="w-full mb-6 sm:mb-8 relative z-0">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -494,14 +392,12 @@ export default function BuscarEventosPage() {
                 Lo que está pasando
               </h2>
             </div>
-
-
           </div>
         </section>
 
-        {/* GRID DE EVENTOS: Las cards encajan orgánicamente sin dejar huecos vacíos */}
+        {/* GRID DE EVENTOS: Las cards encajan orgánicamente en masonry sin dejar huecos vacíos */}
         <section aria-label="Cartelera de eventos" className="w-full relative z-0">
-          {loading ? (
+          {loading && !events.length ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6 items-start w-full">
               {skeletonColumns.map((colItems, colIdx) => (
                 <div key={colIdx} className="flex flex-col gap-5 sm:gap-6 w-full min-w-0">
@@ -519,14 +415,14 @@ export default function BuscarEventosPage() {
             </div>
           ) : events.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6 items-start w-full">
+              <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6 items-start w-full transition-opacity duration-200 ${isPlaceholderData ? 'opacity-80' : 'opacity-100'}`}>
                 {masonryColumns.map((colItems, colIdx) => (
                   <div key={colIdx} className="flex flex-col gap-5 sm:gap-6 w-full min-w-0">
                     {colItems.map(({ event, index }) => (
                       <div key={event.id || index} className="w-full">
                         <EventListCard
                           event={event}
-                          featured={index === 0}
+                          featured={index === 0 && !hasActiveFilters && pageParam === 0}
                           masonry={true}
                           notchBg="bg-[#F8FAFC] dark:bg-[#070D1B]"
                         />

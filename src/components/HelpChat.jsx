@@ -201,6 +201,8 @@ export default function HelpChat({
                 <img
                   src="/LOGO32x32.png"
                   alt="Isotipo EventHive"
+                  loading="lazy"
+                  decoding="async"
                   className="w-5 h-5 object-contain drop-shadow-xs"
                 />
                 <span
@@ -354,6 +356,8 @@ export default function HelpChat({
         <img
           src="/LOGO45x50.png"
           alt="EventHive Bot"
+          loading="lazy"
+          decoding="async"
           className="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-sm group-hover:rotate-6 transition-transform duration-200"
         />
       </button>

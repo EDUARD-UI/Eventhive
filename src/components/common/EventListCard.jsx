@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiMapPin, FiEye, FiCalendar, FiClock, FiStar } from 'react-icons/fi';
 import ImageWithFallback from './ImageWithFallback.jsx';
@@ -7,9 +8,9 @@ import { useLanguage } from '../../context/LanguageContext.jsx';
 /**
  * EventListCard
  * Card estilo Boleto/Ticket:
- * - Solo la primera card (featured={true}) es alta (aspect-[4/5]).
- * - Las demás cards quedan exactamente como estaban antes (aspect-[16/10], compactas y sin estirarse).
- * - En todas las cards la información queda abajo de la imagen.
+ * - Soporta imágenes verticales/altas adaptando la proporción suavemente con límite máximo (max-h) y fix-cover.
+ * - Primera tarjeta destacada (featured={true}) alta con aspect-[4/5].
+ * - En todas las cards la información queda abajo de la imagen de forma consistente.
  */
 export default function EventListCard({
   event,
@@ -19,6 +20,7 @@ export default function EventListCard({
   featured = false,
 }) {
   const { t } = useLanguage();
+  const [isTallImage, setIsTallImage] = useState(false);
 
   if (!event) return null;
 
@@ -38,18 +40,27 @@ export default function EventListCard({
   const displayDate = shortDate || date || t('eventCard.dateTbd');
   const displayTime = formattedTime ? formatHora12(formattedTime) : (event.hora ? formatHora12(event.hora) : null);
 
-  // Solo la primera card (featured) es alta. Las demás quedan exactamente en su proporción estándar como estaban antes.
-  const aspectClass = featured
-    ? 'aspect-[4/5]'
+  const handleImageLoad = (e) => {
+    const { naturalWidth, naturalHeight } = e?.target || {};
+    if (naturalWidth && naturalHeight && naturalHeight > naturalWidth * 1.12) {
+      setIsTallImage(true);
+    }
+  };
+
+  // Proporción adaptable si la imagen es alta, con límite para no desbordar
+  const baseAspect = featured
+    ? 'aspect-[4/5] max-h-[340px]'
+    : isTallImage
+    ? 'aspect-[3/4] sm:aspect-[4/5] max-h-[290px] sm:max-h-[310px]'
     : aspectVariant === 'portrait'
-    ? 'aspect-[4/5]'
+    ? 'aspect-[4/5] max-h-[320px]'
     : aspectVariant === 'tall'
-    ? 'aspect-[4/3]'
+    ? 'aspect-[4/3] max-h-[280px]'
     : aspectVariant === 'wide'
-    ? 'aspect-[16/9]'
+    ? 'aspect-[16/9] max-h-[240px]'
     : aspectVariant === 'compact'
-    ? 'aspect-[2/1]'
-    : 'aspect-[16/10]';
+    ? 'aspect-[2/1] max-h-[200px]'
+    : 'aspect-[16/10] max-h-[250px]';
 
   return (
     <article
@@ -59,11 +70,11 @@ export default function EventListCard({
           : 'border-slate-200/90 dark:border-white/[0.07]'
       } hover:border-slate-400/80 hover:dark:bg-slate-800 hover:dark:border-white/15 shadow-sm hover:shadow-md hover:-translate-y-1`}
     >
-      {/* SECCIÓN SUPERIOR: Portada (alta solo si es featured) + Título */}
+      {/* SECCIÓN SUPERIOR: Portada adaptable + Título */}
       <div className="relative z-10">
-        {/* Imagen del evento */}
+        {/* Imagen del evento adaptable con fix-cover */}
         <div
-          className={`relative ${aspectClass} overflow-hidden rounded-2xl m-3.5 mb-2.5 bg-slate-900 border border-slate-100 dark:border-white/10 shadow-xs`}
+          className={`relative ${baseAspect} overflow-hidden rounded-2xl m-3.5 mb-2.5 bg-slate-900 border border-slate-100 dark:border-white/10 shadow-xs transition-all duration-300`}
         >
           <Link to={`/eventos/${id}`} className="block w-full h-full relative">
             <ImageWithFallback
@@ -73,6 +84,7 @@ export default function EventListCard({
               imgClassName="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
               fallbackText={category || t('eventCard.defaultCategory')}
               iconSize={featured ? 28 : 24}
+              onLoad={handleImageLoad}
             />
 
             {/* Máscara suave para legibilidad */}
