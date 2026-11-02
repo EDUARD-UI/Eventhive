@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   FiArrowLeft,
   FiCalendar,
@@ -471,8 +471,6 @@ export default function CreateEventWizard({
         }
 
         const estadoEvento = (resultEvent?.estado || '').toUpperCase();
-        const backendMsg = resultEvent?._mensaje || resultEvent?.mensaje;
-
         if (estadoEvento === 'BORRADOR' || resultEvent?.requiereRut) {
           await showPendingRutAlert();
         } else if (estadoEvento === 'MODERACION') {
@@ -491,7 +489,7 @@ export default function CreateEventWizard({
         } else if (estadoEvento !== 'BORRADOR' && !resultEvent?.requiereRut && estadoEvento !== 'MODERACION') {
           await showSuccessAlert({
             title: '¡Evento Creado!',
-            text: backendMsg || 'Tu evento ha sido creado y publicado exitosamente.',
+            text: 'Tu evento ha sido creado exitosamente.',
           });
         }
       }

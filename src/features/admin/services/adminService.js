@@ -171,7 +171,7 @@ export const adminService = {
           totalUsuarios,
           totalOrganizaciones,
           solicitudesVerificacionPendientes: solicitudesPendientes,
-          organizacionesAprobadas: orgAprobadas || totalOrganizaciones,
+          organizacionesAprobadas: orgAprobadas,
           organizacionesPendientes: orgPendientes,
           organizacionesSuspendidas: orgSuspendidas,
           sinRut: orgsValData?.sinRut || 0,

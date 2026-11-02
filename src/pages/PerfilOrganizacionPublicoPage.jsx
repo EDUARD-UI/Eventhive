@@ -18,7 +18,7 @@ import FavoriteButton from '../components/FavoriteButton.jsx';
 import { organizationService } from '../services/organizerService.js';
 import { httpClient } from '../services/httpClient.js';
 import { session } from '../services/session.js';
-import { showLoginAlert } from '../utils/alertUtils.js';
+import { showErrorAlert, showLoginAlert } from '../utils/alertUtils.js';
 import Pagination from '../components/Shared/Pagination.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 
@@ -32,8 +32,22 @@ export default function PerfilOrganizacionPublicoPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowingBusy, setIsFollowingBusy] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
   const [eventsPage, setEventsPage] = useState(1);
+  const user = session.getUser();
+  const userId = user?.id ?? user?.usuarioId;
+  const userOrganizationId =
+    user?.organizacionId ?? user?.organizationId ?? user?.organizacion?.id ?? user?.organization?.id;
+  const representativeId =
+    organization?.representante?.id ??
+    organization?.representanteId ??
+    organization?.representanteLegalId;
+  const isOwnOrganization = Boolean(
+    user &&
+      ((userOrganizationId && String(userOrganizationId) === String(id)) ||
+        (userId && representativeId && String(userId) === String(representativeId)))
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -65,7 +79,6 @@ export default function PerfilOrganizacionPublicoPage() {
   }, [id]);
 
   const handleToggleFollow = async () => {
-    const user = session.getUser();
     if (!user) {
       showLoginAlert({
         title: 'Inicia sesión',
@@ -74,7 +87,9 @@ export default function PerfilOrganizacionPublicoPage() {
       });
       return;
     }
+    if (isOwnOrganization || isFollowingBusy) return;
 
+    setIsFollowingBusy(true);
     try {
       if (isFollowing) {
         await httpClient.delete(`/seguidores/${id}/seguir`);
@@ -85,9 +100,13 @@ export default function PerfilOrganizacionPublicoPage() {
         setIsFollowing(true);
         setFollowersCount((prev) => prev + 1);
       }
-    } catch {
-      setIsFollowing(!isFollowing);
-      setFollowersCount((prev) => (isFollowing ? Math.max(0, prev - 1) : prev + 1));
+    } catch (error) {
+      await showErrorAlert({
+        title: 'No se pudo actualizar el seguimiento',
+        text: error.message || 'Intenta de nuevo más tarde.',
+      });
+    } finally {
+      setIsFollowingBusy(false);
     }
   };
 
@@ -268,9 +287,10 @@ export default function PerfilOrganizacionPublicoPage() {
                 </p>
 
                 {/* Botón principal de acción destacado en amarillo/dorado corporativo: SEGUIR */}
-                <button
+                {!isOwnOrganization && <button
                   type="button"
                   onClick={handleToggleFollow}
+                  disabled={isFollowingBusy}
                   className={`w-full py-3 px-6 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-200 shadow-md active:scale-95 cursor-pointer ${
                     isFollowing
                       ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
@@ -278,7 +298,7 @@ export default function PerfilOrganizacionPublicoPage() {
                   }`}
                 >
                   {isFollowing ? 'SIGUIENDO' : 'SEGUIR'}
-                </button>
+                </button>}
 
                 {/* Icono de redes sociales en la parte inferior (solo Instagram) */}
                 <div className="mt-7 pt-1 flex items-center justify-center">

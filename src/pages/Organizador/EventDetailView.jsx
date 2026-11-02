@@ -63,7 +63,8 @@ export default function EventDetailView({
   onBack,
   onEdit,
   isDrawer = true,
-  orgApproved = true,
+  canSendEvents = true,
+  orgSuspended = false,
 }) {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -252,13 +253,17 @@ export default function EventDetailView({
       {/* 2. Contenido Scrolleable */}
       <div className="p-6 sm:p-7 overflow-y-auto space-y-6 flex-1 text-xs text-slate-700">
         {/* Advertencia si la organización no está aprobada */}
-        {!orgApproved && (
+        {!canSendEvents && (
           <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 flex items-start gap-3">
             <FiAlertCircle size={18} className="text-amber-600 shrink-0 mt-0.5" />
             <div className="text-xs">
-              <p className="font-bold">Organización pendiente de verificación</p>
+              <p className="font-bold">
+                {orgSuspended ? 'Organización suspendida' : 'Documento de verificación pendiente'}
+              </p>
               <p className="mt-0.5 text-amber-800">
-                Tu organización debe estar verificada y aprobada por la administración antes de enviar eventos a revisión. Sube tu RUT en el panel principal.
+                {orgSuspended
+                  ? 'La organización está suspendida y no puede enviar eventos a revisión.'
+                  : 'Carga el RUT de tu organización o espera su aprobación para enviar eventos a revisión.'}
               </p>
             </div>
           </div>
@@ -466,19 +471,27 @@ export default function EventDetailView({
             <button
               type="button"
               onClick={() => {
-                if (!orgApproved) {
+                if (!canSendEvents) {
                   Swal.fire({
                     icon: 'warning',
-                    title: 'Organización no verificada',
-                    text: 'Tu organización debe estar aprobada por un administrador antes de enviar eventos a moderación.',
+                    title: orgSuspended ? 'Organización suspendida' : 'Verificación pendiente',
+                    text: orgSuspended
+                      ? 'Tu organización está suspendida y no puede enviar eventos a revisión.'
+                      : 'Carga el RUT de tu organización o espera su aprobación para enviar eventos a revisión.',
                   });
                   return;
                 }
                 handleAction(() => organizerService.enviarRevision(event.id), 'Evento enviado a revisión');
               }}
-              disabled={actionLoading || !orgApproved}
+              disabled={actionLoading || !canSendEvents}
               className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition-colors disabled:opacity-50 cursor-pointer shadow-xs flex items-center gap-1.5"
-              title={!orgApproved ? 'Requiere aprobación de organización' : 'Enviar a moderación'}
+              title={
+                orgSuspended
+                  ? 'La organización está suspendida'
+                  : !canSendEvents
+                    ? 'Carga el RUT o espera la aprobación de la organización'
+                    : 'Enviar a moderación'
+              }
             >
               {actionLoading ? (
                 <>

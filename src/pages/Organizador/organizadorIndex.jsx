@@ -434,6 +434,30 @@ export default function OrganizadorIndex() {
   const isOrgApproved =
     (solicitudVerif?.estado || '').toUpperCase() === 'APROBADA' ||
     (orgData?.estado || '').toUpperCase() === 'APROBADA';
+  const organizationStatuses = [
+    String(orgData?.estado || '').toUpperCase(),
+    String(solicitudVerif?.estado || '').toUpperCase(),
+  ];
+  const organizationStatus = organizationStatuses.find(Boolean) || '';
+  const isOrgSuspended = organizationStatuses.includes('SUSPENDIDA');
+  const hasRutUploaded = Boolean(
+    orgData?.rutUrl ||
+      orgData?.urlRut ||
+      orgData?.urlDocumento ||
+      orgData?.urlDocumentoRut ||
+      orgData?.urlArchivo ||
+      orgData?.documentoRut ||
+      solicitudVerif?.rutUrl ||
+      solicitudVerif?.urlRut ||
+      solicitudVerif?.urlDocumento ||
+      solicitudVerif?.urlDocumentoRut ||
+      solicitudVerif?.urlArchivo ||
+      solicitudVerif?.url ||
+      organizationStatuses.some((status) =>
+        ['PENDIENTE', 'PENDIENTE_REVISION', 'APROBADA'].includes(status)
+      )
+  );
+  const canSendEvents = !isOrgSuspended && (isOrgApproved || hasRutUploaded);
 
   const activeMenu = menuItems.find((m) => m.id === activeItem);
 
@@ -793,7 +817,8 @@ export default function OrganizadorIndex() {
       {selectedEventId && (
         <EventDetailView
           eventId={selectedEventId}
-          orgApproved={isOrgApproved}
+          canSendEvents={canSendEvents}
+          orgSuspended={isOrgSuspended}
           onBack={() => setSelectedEventId(null)}
           onEdit={(eventToEdit) => {
             setSelectedEventId(null);

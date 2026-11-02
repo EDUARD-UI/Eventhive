@@ -13,7 +13,7 @@ import {
 import ImageWithFallback from './ImageWithFallback.jsx';
 import { session } from '../../services/session.js';
 import { organizationService } from '../../services/organizerService.js';
-import { showLoginAlert } from '../../utils/alertUtils.js';
+import { showErrorAlert, showLoginAlert } from '../../utils/alertUtils.js';
 
 /**
  * OrganizationListCard
@@ -61,6 +61,19 @@ export default function OrganizationListCard({ org }) {
   const imgUrl = urlLogo || imagenPerfil || avatar || logo || imagen || null;
   const displayRating = promedioRating ?? rating ?? null;
   const totalEvents = totalEventosCreados ?? eventsCount ?? 0;
+  const currentUser = session.getUser();
+  const currentUserOrganizationId =
+    currentUser?.organizacionId ??
+    currentUser?.organizationId ??
+    currentUser?.organizacion?.id ??
+    currentUser?.organization?.id;
+  const representativeId =
+    org.representante?.id ?? org.representanteId ?? org.representanteLegalId;
+  const isOwnOrganization = Boolean(
+    currentUser &&
+      ((currentUserOrganizationId && String(currentUserOrganizationId) === String(id)) ||
+        (currentUser.id && representativeId && String(currentUser.id) === String(representativeId)))
+  );
 
   const handleFollowToggle = async (e) => {
     e.preventDefault();
@@ -75,7 +88,7 @@ export default function OrganizationListCard({ org }) {
       return;
     }
 
-    if (isLoadingFollow) return;
+    if (isLoadingFollow || isOwnOrganization) return;
     setIsLoadingFollow(true);
 
     const nextState = !isFollowing;
@@ -92,6 +105,10 @@ export default function OrganizationListCard({ org }) {
       console.warn('Error al actualizar estado de seguimiento:', err);
       setIsFollowing(!nextState);
       setFollowersCount((prev) => (!nextState ? prev + 1 : Math.max(0, prev - 1)));
+      await showErrorAlert({
+        title: 'No se pudo actualizar el seguimiento',
+        text: err.message || 'Intenta de nuevo más tarde.',
+      });
     } finally {
       setIsLoadingFollow(false);
     }
@@ -134,7 +151,7 @@ export default function OrganizationListCard({ org }) {
             </Link>
 
             {/* Botón interactivo 'Seguir' estilo EventDetailPage dorado ámbar */}
-            <button
+            {!isOwnOrganization && <button
               type="button"
               disabled={isLoadingFollow}
               onClick={handleFollowToggle}
@@ -160,7 +177,7 @@ export default function OrganizationListCard({ org }) {
                   <span>Seguir</span>
                 </>
               )}
-            </button>
+            </button>}
           </div>
 
           {/* Nombre de la organización */}

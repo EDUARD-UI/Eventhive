@@ -537,11 +537,32 @@ export function usePerfilUsuario() {
     if (!org?.id) return;
     const orgId = String(org.id);
     const sessionUser = session.getUser() || {};
+    const ownOrganizationId =
+      sessionUser.organizacionId ??
+      sessionUser.organizationId ??
+      sessionUser.organizacion?.id ??
+      sessionUser.organization?.id;
+    const representativeId =
+      org.representante?.id ?? org.representanteId ?? org.representanteLegalId;
+    if (
+      (ownOrganizationId && String(ownOrganizationId) === orgId) ||
+      (sessionUser.id && representativeId && String(sessionUser.id) === String(representativeId))
+    ) {
+      await showWarningAlert(
+        'No puedes seguir tu organización',
+        'Los miembros de una organización no pueden seguir a su propia organización.'
+      );
+      return;
+    }
 
     try {
       await organizationService.followOrganization(orgId);
     } catch (err) {
-      console.warn('Backend followOrganization notice:', err);
+      await showErrorAlert({
+        title: 'No se pudo seguir la organización',
+        text: err.message || 'Intenta de nuevo más tarde.',
+      });
+      return;
     }
 
     const currentStored = new Set(getStoredFollowedIds(sessionUser.id));
@@ -570,7 +591,11 @@ export function usePerfilUsuario() {
     try {
       await organizationService.unfollowOrganization(orgId);
     } catch (err) {
-      console.warn('Backend unfollowOrganization notice:', err);
+      await showErrorAlert({
+        title: 'No se pudo dejar de seguir la organización',
+        text: err.message || 'Intenta de nuevo más tarde.',
+      });
+      return;
     }
 
     const currentStored = new Set(getStoredFollowedIds(sessionUser.id));

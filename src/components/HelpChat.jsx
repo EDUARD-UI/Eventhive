@@ -138,35 +138,28 @@ export default function HelpChat({
         throw new Error(`Chat error HTTP ${response.status}`);
       }
 
-      const data = await response.json();
-      setIsTyping(false);
-
+      const payload = await response.json();
+      const data = payload?.data?.data || payload?.data;
       pushBotMessage({
-        text: data.reply || data.response || "No pude entender tu solicitud, ¿puedes reformularla?",
-        events: Array.isArray(data.events) ? data.events : [],
+        text:
+          data?.respuesta ||
+          data?.response ||
+          data?.message ||
+          data?.mensaje ||
+          data?.texto ||
+          data?.reply ||
+          data?.content ||
+          payload?.mensaje ||
+          "No fue posible cargar la información en este momento.",
+        events: Array.isArray(data?.events) ? data.events : [],
       });
     } catch (err) {
-      console.warn("Fallo endpoint del chatbot, usando respuesta de contingencia:", err);
+      console.warn("No se pudo completar la consulta del asistente:", err);
+      pushBotMessage({
+        text: "Error de servidor. Por favor, intenta de nuevo más tarde.",
+      });
+    } finally {
       setIsTyping(false);
-
-      const lower = text.toLowerCase();
-      if (lower.includes("boleto") || lower.includes("compra") || lower.includes("entrada")) {
-        pushBotMessage({
-          text: "Para comprar boletos, explora el catálogo de eventos, selecciona tu evento favorito y haz clic en 'Comprar boletos'. Recibirás tus entradas con código QR digital.",
-        });
-      } else if (lower.includes("pago") || lower.includes("tarjeta") || lower.includes("nequi")) {
-        pushBotMessage({
-          text: "Aceptamos tarjetas de crédito/débito (Visa, Mastercard), transferencias PSE, Nequi y Daviplata con verificación 100% segura.",
-        });
-      } else if (lower.includes("organizar") || lower.includes("publicar") || lower.includes("crear")) {
-        pushBotMessage({
-          text: "¡Genial! Puedes registrarte o cambiar tu rol a Organización desde tu Perfil para publicar y gestionar eventos en EventHive.",
-        });
-      } else {
-        pushBotMessage({
-          text: "¡Hola! En EventHive estamos para ayudarte con tus eventos y boletos. ¿En qué podemos orientarte hoy?",
-        });
-      }
     }
   };
 

@@ -5,7 +5,7 @@ import { Sparkles } from 'lucide-react';
 import L from 'leaflet';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import Swal from 'sweetalert2';
-import { showLoginAlert } from '../utils/alertUtils.js';
+import { showErrorAlert, showLoginAlert } from '../utils/alertUtils.js';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import { getEventById, getUpcomingEvents } from '../services/eventService.js';
@@ -75,6 +75,7 @@ export default function EventDetailPage() {
   const [selectedLocalidad, setSelectedLocalidad] = useState(null);
   const [ticketQuantity, setTicketQuantity] = useState(1);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowingBusy, setIsFollowingBusy] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [similarEvents, setSimilarEvents] = useState([]);
 
@@ -229,6 +230,24 @@ export default function EventDetailPage() {
     return event?.organizacionId || null;
   }, [event]);
 
+  const currentUser = session.getUser();
+  const currentUserId = currentUser?.id ?? currentUser?.usuarioId;
+  const currentOrganizationId =
+    currentUser?.organizacionId ??
+    currentUser?.organizationId ??
+    currentUser?.organizacion?.id ??
+    currentUser?.organization?.id;
+  const eventRepresentativeId =
+    typeof event?.organization === 'object'
+      ? event.organization?.representante?.id ??
+        event.organization?.representanteId ??
+        event.organization?.representanteLegalId
+      : event?.representanteId;
+  const isOwnOrganization = Boolean(
+    currentUser &&
+      ((currentOrganizationId && String(currentOrganizationId) === String(orgId)) ||
+        (currentUserId && eventRepresentativeId && String(currentUserId) === String(eventRepresentativeId)))
+  );
 
   const mapCenter = useMemo(() => {
     const lat = Number(event?.lat);
@@ -240,7 +259,7 @@ export default function EventDetailPage() {
   }, [event]);
 
   const handleToggleFollow = async () => {
-    const user = session.getUser();
+    const user = currentUser;
     if (!user) {
       showLoginAlert({
         title: 'Inicia sesión',
@@ -249,33 +268,38 @@ export default function EventDetailPage() {
       });
       return;
     }
+    if (isOwnOrganization || isFollowingBusy) return;
 
-    const orgId = typeof event?.organization === 'object' ? event.organization.id : event?.organizacionId;
+    if (!orgId) return;
+    setIsFollowingBusy(true);
     try {
-      if (orgId) {
-        if (isFollowing) {
-          await httpClient.delete(`/seguidores/${orgId}/seguir`);
-          try {
-            const raw = localStorage.getItem(`eventhive_following_${user.id}`);
-            const list = raw ? JSON.parse(raw) : [];
-            localStorage.setItem(
-              `eventhive_following_${user.id}`,
-              JSON.stringify(list.filter((i) => String(i) !== String(orgId)))
-            );
-          } catch {}
-        } else {
-          await httpClient.post(`/seguidores/${orgId}/seguir`);
-          try {
-            const raw = localStorage.getItem(`eventhive_following_${user.id}`);
-            const list = raw ? JSON.parse(raw) : [];
-            if (!list.includes(String(orgId))) list.push(String(orgId));
-            localStorage.setItem(`eventhive_following_${user.id}`, JSON.stringify(list));
-          } catch {}
-        }
+      if (isFollowing) {
+        await httpClient.delete(`/seguidores/${orgId}/seguir`);
+        try {
+          const raw = localStorage.getItem(`eventhive_following_${user.id}`);
+          const list = raw ? JSON.parse(raw) : [];
+          localStorage.setItem(
+            `eventhive_following_${user.id}`,
+            JSON.stringify(list.filter((i) => String(i) !== String(orgId)))
+          );
+        } catch {}
+      } else {
+        await httpClient.post(`/seguidores/${orgId}/seguir`);
+        try {
+          const raw = localStorage.getItem(`eventhive_following_${user.id}`);
+          const list = raw ? JSON.parse(raw) : [];
+          if (!list.map(String).includes(String(orgId))) list.push(String(orgId));
+          localStorage.setItem(`eventhive_following_${user.id}`, JSON.stringify(list));
+        } catch {}
       }
       setIsFollowing(!isFollowing);
-    } catch {
-      setIsFollowing(!isFollowing);
+    } catch (error) {
+      await showErrorAlert({
+        title: 'No se pudo actualizar el seguimiento',
+        text: error.message || 'Intenta de nuevo más tarde.',
+      });
+    } finally {
+      setIsFollowingBusy(false);
     }
   };
 
@@ -475,9 +499,10 @@ export default function EventDetailPage() {
 
                 {/* Botón Seguir estilo Instagram */}
                 <div className="flex items-center gap-2">
-                  <button
+                  {!isOwnOrganization && <button
                     type="button"
                     onClick={handleToggleFollow}
+                    disabled={isFollowingBusy}
                     className={`px-4 sm:px-5 py-1.5 sm:py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer active:scale-95 shadow-xs ${
                       isFollowing
                         ? 'bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
@@ -485,7 +510,7 @@ export default function EventDetailPage() {
                     }`}
                   >
                     {isFollowing ? t('eventDetail.following') : t('eventDetail.followOrg')}
-                  </button>
+                  </button>}
                   <button
                     type="button"
                     onClick={handleShare}

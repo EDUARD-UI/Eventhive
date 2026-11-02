@@ -146,12 +146,6 @@ export default function Home() {
     staleTime: 1000 * 60 * 3,
   });
 
-  const { data: mapEvents = [] } = useQuery({
-    queryKey: ['home-map-events'],
-    queryFn: () => getMapEvents(),
-    staleTime: 1000 * 60 * 5,
-  });
-
   const { data: categoryList = [] } = useQuery({
     queryKey: ['home-category-names'],
     queryFn: getCategoryNames,
@@ -168,6 +162,17 @@ export default function Home() {
   const [carouselRevealed, setCarouselRevealed] = useState(false);
   const mapSectionRef = useRef(null);
   const carouselSectionRef = useRef(null);
+  const { data: mapEvents = [] } = useQuery({
+    queryKey: ['home-map-events', selectedCategory, selectedDistance, userLocation],
+    queryFn: () =>
+      getMapEvents({
+        categoriaId: selectedCategory === 'all' ? undefined : selectedCategory,
+        lat: userLocation?.lat,
+        lng: userLocation?.lng,
+        radioKm: selectedDistance === 'all' ? undefined : selectedDistance,
+      }),
+    staleTime: 1000 * 60 * 5,
+  });
 
   const distanceOptions = useMemo(
     () => [
@@ -268,35 +273,13 @@ export default function Home() {
   };
 
   const filteredMapEvents = useMemo(() => {
-    return mapEvents.filter((event) => {
-      const matchesCategory =
-        selectedCategory === 'all' ||
-        event.category?.toLowerCase() === selectedCategory.toLowerCase() ||
-        String(event.categoriaId) === String(selectedCategory);
-
-      if (!matchesCategory) return false;
-
-      if (selectedDistance === 'all') return true;
-
-      if (!userLocation || event.lat == null || event.lng == null) {
-        return false;
-      }
-
-      const distance = getDistanceKm(
-        userLocation.lat,
-        userLocation.lng,
-        Number(event.lat),
-        Number(event.lng)
-      );
-
-      return distance <= Number(selectedDistance);
-    });
-  }, [mapEvents, selectedCategory, selectedDistance, userLocation]);
+    return mapEvents;
+  }, [mapEvents]);
 
   const categoryOptions = useMemo(() => [
     { value: 'all', label: t('home.allCategories') },
     ...categoryList.map((category) => ({
-      value: category.nombre,
+      value: String(category.id),
       label: category.nombre,
     })),
   ], [categoryList, t]);

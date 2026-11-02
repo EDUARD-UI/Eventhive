@@ -56,6 +56,7 @@ export default function PasarelaPagoPage() {
     Math.min(5, Math.max(1, Number(location.state?.cantidad) || 1))
   );
   const [loading, setLoading] = useState(!location.state?.event && Boolean(id));
+  const [eventLoadError, setEventLoadError] = useState('');
 
   // Temporizador digital de seguridad (countdown)
   const [timeLeft, setTimeLeft] = useState(299); // 4 minutos 59 segundos
@@ -72,7 +73,7 @@ export default function PasarelaPagoPage() {
   // Datos del comprador
   const [buyerForm, setBuyerForm] = useState({
     nombre: currentUser?.nombre || currentUser?.name || 'Jonathan Michael',
-    email: currentUser?.email || currentUser?.correo || '',
+    email: currentUser?.email || currentUser?.correo || currentUser?.correoUsuario || '',
   });
 
   // Estados de proceso
@@ -108,6 +109,7 @@ export default function PasarelaPagoPage() {
         })
         .catch((err) => {
           console.warn('Error al cargar datos del evento para pago:', err);
+          setEventLoadError('No fue posible cargar el evento para completar la compra.');
         })
         .finally(() => {
           setLoading(false);
@@ -232,6 +234,28 @@ export default function PasarelaPagoPage() {
           <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
             Conectando con la pasarela de pago segura...
           </p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (eventLoadError || !event) {
+    return (
+      <div className="w-full min-h-screen bg-slate-50 dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body">
+        <Navbar />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <h1 className="text-xl font-black">No se pudo cargar el evento</h1>
+          <p className="mt-2 max-w-md text-sm text-slate-600 dark:text-slate-400">
+            {eventLoadError || 'Selecciona un evento disponible para continuar con la compra.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/buscar')}
+            className="mt-5 rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 hover:bg-amber-400"
+          >
+            Volver a eventos
+          </button>
         </main>
         <Footer />
       </div>
@@ -405,7 +429,7 @@ export default function PasarelaPagoPage() {
                     className="w-full px-4 py-3 text-xs sm:text-sm font-semibold rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#152238] text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                   <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
-                    El backend enviará aquí la confirmación de compra.
+                    Los boletos y el comprobante se enviarán al correo asociado a tu cuenta.
                   </p>
                 </div>
               </div>

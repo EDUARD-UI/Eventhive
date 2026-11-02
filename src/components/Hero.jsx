@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import videoPromocionalMobile from '../assets/video promocional.mp4';
 import videoPromocionalDesktop from '../assets/16x9.mp4';
-import cartagenaHeroPoster from '../assets/cartagena-hero.jpg';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useLanguage } from '../context/LanguageContext.jsx';
 
@@ -80,36 +79,19 @@ export default function Hero() {
           1. VIDEO BACKGROUND OPTIMIZADO PARA MÁXIMA NITIDEZ (GPU)
          ========================================================= */}
       <div className="absolute inset-0 z-0 overflow-hidden bg-slate-950 pointer-events-none">
-        {/* Imagen póster estática (se desvanece de inmediato al cargar el video) */}
-        <img
-          src={cartagenaHeroPoster}
-          alt="Cartagena Hero Poster"
-          className={`absolute inset-0 w-full h-full object-cover object-center transform-gpu [backface-visibility:hidden] transition-opacity duration-700 ${
-            isVideoReady ? 'opacity-0 scale-100 pointer-events-none' : 'opacity-100 scale-100'
-          }`}
-          loading="eager"
-        />
-
-        {/* 
-          Video en bucle optimizado por dispositivo:
-          - Pantallas mayores: promocional4X3.mp4
-          - Dispositivos móviles: video promocional.mp4
-          - object-cover + object-center: llena el 100% sin deformar la relación de aspecto
-          - transform-gpu + [backface-visibility:hidden]: aísla el video en una capa de composición GPU dedicada
-          - [image-rendering:-webkit-optimize-contrast]: prioriza contraste y bordes definidos
-          - opacity-100: sin pases intermedios de renderizado offscreen
-        */}
+        {/* El fondo permanece oscuro mientras el video se carga para evitar reemplazarlo por una imagen. */}
         <video
           key={isDesktop ? 'desktop-video' : 'mobile-video'}
           ref={videoRef}
           src={activeVideoSrc}
-          poster={cartagenaHeroPoster}
           autoPlay
           loop
           muted
           playsInline
           webkit-playsinline="true"
           preload="auto"
+          fetchpriority="high"
+          aria-hidden="true"
           disablePictureInPicture
           disableRemotePlayback
           onLoadedData={() => setIsVideoReady(true)}

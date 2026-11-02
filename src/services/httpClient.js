@@ -133,10 +133,11 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
   }
 
   let response;
+  let timeoutId;
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000);
+    timeoutId = setTimeout(() => controller.abort(), 45000);
 
     response = await fetch(buildUrl(path, params), {
       method,
@@ -144,12 +145,13 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
       body: isFormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
       signal: controller.signal,
     });
-    clearTimeout(timeoutId);
   } catch (err) {
     if (err.name === 'AbortError') {
       throw new Error('La solicitud tardó demasiado tiempo en responder. Verifica la conexión con el servidor.');
     }
-    throw new Error(`No fue posible conectar con el servidor backend (${API_BASE_URL}). Verifica la conexión de red o que el backend esté ejecutándose.`);
+    throw new Error('No fue posible conectar con el servidor. Verifica tu conexión e intenta de nuevo.');
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
 
   // 2. MANEJO REACTIVO DE 401 UNAUTHORIZED:
@@ -170,12 +172,17 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
   const payload = await response.json().catch(() => null);
 
   if (!response.ok || payload?.success === false) {
-    const errorMsg =
+    const responseMessage =
       payload?.mensaje ||
       payload?.message ||
       payload?.error ||
-      (typeof payload?.data === 'string' ? payload.data : null) ||
-      'Ocurrió un error al procesar la solicitud.';
+      (typeof payload?.data === 'string' ? payload.data : null);
+    const errorMsg =
+      response.status >= 500
+        ? 'Error de servidor. Por favor, intenta de nuevo más tarde.'
+        : typeof responseMessage === 'string'
+          ? responseMessage.replace(/\bbackend\b/gi, 'servidor')
+          : 'Ocurrió un error al procesar la solicitud.';
     const error = new Error(errorMsg);
     error.status = response.status;
     error.payload = payload;

@@ -56,7 +56,8 @@ export default function AdminResumenView({
     0;
   const enRevisionCount =
     orgsPorEstadoBackend.find((e) => e.estado === 'PENDIENTE_REVISION' || e.estado === 'PENDIENTE')?.cantidad ??
-    pendientesValidacionRut;
+    metrics?.organizacionesPendientes ??
+    0;
 
   // Estados de eventos desde endpoint /admin/estadisticas/eventos-por-estado o metrics
   const getEventCount = (estadoName) => {
