@@ -6,11 +6,15 @@ import {
 } from 'react-icons/fi';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
+import Pagination from '../../components/Shared/Pagination.jsx';
 import { organizerService } from '../../services/organizerService.js';
 import { formatPrice } from '../../utils/formatters.js';
 
+const PAGE_SIZE = 10;
+
 export default function EntradasView() {
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Estadísticas oficiales del endpoint (GET /api/organizaciones/mi-organizacion/estadisticas)
   const [estadisticas, setEstadisticas] = useState({
@@ -54,13 +58,22 @@ export default function EntradasView() {
       return activeEvs.map((ev, idx) => ({
         key: `ev-stat-${idx}`,
         titulo: ev.titulo || ev.nombre || ev.nombreEvento || 'Evento',
-        boletasVendidas: ev.boletasVendidas ?? ev.totalBoletasVendidas ?? 0,
-        ingresosGenerados: ev.ingresosNetos ?? ev.ingresosGenerados ?? ev.totalIngresos ?? ev.ingresos ?? 0,
+        boletasVendidas: Number(ev.boletasVendidas ?? ev.totalBoletasVendidas ?? 0),
+        ingresosGenerados: Number(ev.ingresosNetos ?? ev.ingresosGenerados ?? ev.totalIngresos ?? ev.ingresos ?? 0),
         estado: ev.estado || 'PUBLICADO',
       }));
     }
     return [];
   }, [estadisticas.eventos]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [eventosGanancias]);
+
+  const paginatedEventos = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return eventosGanancias.slice(start, start + PAGE_SIZE);
+  }, [eventosGanancias, currentPage]);
 
   const toneMap = {
     PUBLICADO: 'active',
@@ -143,7 +156,7 @@ export default function EntradasView() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {eventosGanancias.map((ev) => (
+                {paginatedEventos.map((ev) => (
                   <tr key={ev.key} className="hover:bg-slate-50/60 transition-colors">
                     <td className="py-3.5 px-4 font-bold text-slate-900">
                       {ev.titulo}
@@ -166,6 +179,15 @@ export default function EntradasView() {
               </tbody>
             </table>
           </div>
+        )}
+        {!loading && eventosGanancias.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalItems={eventosGanancias.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={setCurrentPage}
+            showPageSize={false}
+          />
         )}
       </div>
     </div>

@@ -93,8 +93,10 @@ export default function CreateEventWizard({
   const [currentStep, setCurrentStep] = useState(1);
   const [categories, setCategories] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const drawerPanelRef = useRef(null);
+  const stepperRef = useRef(null);
 
-  // Fecha y hora actual del cliente
+  // Fecha mínima con siete días de anticipación
   const now = new Date();
   const todayStr = (() => {
     const y = now.getFullYear();
@@ -103,16 +105,13 @@ export default function CreateEventWizard({
     return `${y}-${m}-${d}`;
   })();
 
-  const currentTimeStr = (() => {
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
-    return `${hh}:${mm}`;
+  const minimumEventDate = (() => {
+    const minDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7);
+    const y = minDate.getFullYear();
+    const m = String(minDate.getMonth() + 1).padStart(2, '0');
+    const d = String(minDate.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   })();
-
-  // Detectar si es un evento histórico pasado en modo edición
-  const isHistoricalEvent = Boolean(
-    initialEvent?.fecha && initialEvent.fecha < todayStr
-  );
 
   // Formulario con los datos requeridos por el backend
   const [form, setForm] = useState({
@@ -125,6 +124,27 @@ export default function CreateEventWizard({
     latitud: initialEvent?.latitud || 10.4236,
     longitud: initialEvent?.longitud || -75.5478,
   });
+  const [selectedHour, setSelectedHour] = useState(
+    initialEvent?.hora ? formatHora23(initialEvent.hora).slice(0, 2) : ''
+  );
+  const [selectedMinute, setSelectedMinute] = useState(
+    initialEvent?.hora ? formatHora23(initialEvent.hora).slice(3, 5) : ''
+  );
+
+  useEffect(() => {
+    if (!stepperRef.current) return undefined;
+    const frame = requestAnimationFrame(() => {
+      if (isDrawer && drawerPanelRef.current) {
+        drawerPanelRef.current.scrollTo({
+          top: Math.max(0, stepperRef.current.offsetTop - 16),
+          behavior: 'smooth',
+        });
+      } else {
+        stepperRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [currentStep, isDrawer]);
 
   const [fotoFile, setFotoFile] = useState(null);
   const [fotoPreview, setFotoPreview] = useState(
@@ -176,6 +196,8 @@ export default function CreateEventWizard({
       latitud: Number(initialEvent.latitud) || 10.4236,
       longitud: Number(initialEvent.longitud) || -75.5478,
     });
+    setSelectedHour(horaClean ? horaClean.slice(0, 2) : '');
+    setSelectedMinute(horaClean ? horaClean.slice(3, 5) : '');
 
     if (initialEvent.foto || initialEvent.imagenUrl || initialEvent.urlFoto) {
       setFotoPreview(initialEvent.foto || initialEvent.imagenUrl || initialEvent.urlFoto);
@@ -234,6 +256,14 @@ export default function CreateEventWizard({
 
   const updateForm = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const updateTimePart = (part, value) => {
+    const nextHour = part === 'hour' ? value : selectedHour;
+    const nextMinute = part === 'minute' ? value : selectedMinute;
+    if (part === 'hour') setSelectedHour(value);
+    else setSelectedMinute(value);
+    updateForm('hora', nextHour && nextMinute ? `${nextHour}:${nextMinute}` : '');
   };
 
   const isDirty = useMemo(() => {
@@ -320,24 +350,16 @@ export default function CreateEventWizard({
         showWarningAlert({ title: 'Fecha requerida', text: 'Indica la fecha en que se realizará el evento.', badge: 'Campo Obligatorio' });
         return false;
       }
-      if (!isHistoricalEvent && form.fecha < todayStr) {
+      if (form.fecha < minimumEventDate) {
         showWarningAlert({
           title: 'Fecha inválida',
-          text: 'No es posible seleccionar una fecha pasada para el inicio del evento.',
+          text: 'Selecciona una fecha con al menos 7 días de anticipación.',
           badge: 'Fecha no permitida',
         });
         return false;
       }
       if (!form.hora) {
         showWarningAlert({ title: 'Hora requerida', text: 'Indica la hora de inicio del evento.', badge: 'Campo Obligatorio' });
-        return false;
-      }
-      if (!isHistoricalEvent && form.fecha === todayStr && form.hora < currentTimeStr) {
-        showWarningAlert({
-          title: 'Hora inválida',
-          text: `La hora seleccionada (${form.hora}) ya ha transcurrido el día de hoy. Por favor selecciona una hora posterior a las ${currentTimeStr}.`,
-          badge: 'Hora no permitida',
-        });
         return false;
       }
     }
@@ -518,7 +540,7 @@ export default function CreateEventWizard({
       
 
       {/* 3. Stepper de Progreso */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
+      <div ref={stepperRef} className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs scroll-mt-4">
         <div className="flex items-center justify-between overflow-x-auto scrollbar-none gap-2">
           {STEPS.map((s) => {
             const isCompleted = s.id < currentStep;
@@ -604,13 +626,9 @@ export default function CreateEventWizard({
                     label="Fecha"
                     required
                     value={form.fecha}
-                    allowPast={isHistoricalEvent}
+                    minDate={minimumEventDate}
                     onChange={(e) => updateForm('fecha', e.target.value)}
-                    helperText={
-                      isHistoricalEvent
-                        ? 'Evento histórico en edición (fecha pasada permitida)'
-                        : 'Solo fechas desde hoy en adelante'
-                    }
+                    helperText="Selecciona una fecha con al menos 7 días de anticipación."
                   />
                 </div>
 
@@ -618,27 +636,34 @@ export default function CreateEventWizard({
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                     Hora de Inicio *
                   </label>
-                  <input
-                    type="time"
-                    value={form.hora}
-                    min={!isHistoricalEvent && form.fecha === todayStr ? currentTimeStr : undefined}
-                    onChange={(e) => updateForm('hora', e.target.value)}
-                    className={`w-full text-xs font-semibold px-4 py-2.5 rounded-xl border bg-white outline-none transition-all cursor-pointer ${
-                      !isHistoricalEvent && form.fecha === todayStr && form.hora && form.hora < currentTimeStr
-                        ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-200'
-                        : 'border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/20'
-                    }`}
-                    required
-                  />
-                  {!isHistoricalEvent && form.fecha === todayStr && (
-                    <p className={`text-[10px] mt-1 font-semibold ${
-                      form.hora && form.hora < currentTimeStr ? 'text-rose-600' : 'text-slate-400'
-                    }`}>
-                      {form.hora && form.hora < currentTimeStr
-                        ? `La hora debe ser posterior a las ${currentTimeStr}`
-                        : `Evento para hoy: hora mínima ${currentTimeStr}`}
-                    </p>
-                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      aria-label="Hora"
+                      value={selectedHour}
+                      onChange={(e) => updateTimePart('hour', e.target.value)}
+                      className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
+                      required
+                    >
+                      <option value="">Hora</option>
+                      {Array.from({ length: 24 }, (_, hour) => {
+                        const value = String(hour).padStart(2, '0');
+                        return <option key={value} value={value}>{value}</option>;
+                      })}
+                    </select>
+                    <select
+                      aria-label="Minutos"
+                      value={selectedMinute}
+                      onChange={(e) => updateTimePart('minute', e.target.value)}
+                      className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
+                      required
+                    >
+                      <option value="">Minutos</option>
+                      {Array.from({ length: 60 }, (_, minute) => {
+                        const value = String(minute).padStart(2, '0');
+                        return <option key={value} value={value}>{value}</option>;
+                      })}
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -971,7 +996,7 @@ export default function CreateEventWizard({
         />
 
         {/* Panel lateral que se despliega desde la derecha (Ref: Tiimi) */}
-        <div className="relative z-50 w-full sm:w-[620px] md:w-[680px] lg:w-[660px] xl:w-[720px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300">
+        <div ref={drawerPanelRef} className="relative z-50 w-full sm:w-[620px] md:w-[680px] lg:w-[660px] xl:w-[720px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300">
           {wizardContent}
         </div>
       </div>

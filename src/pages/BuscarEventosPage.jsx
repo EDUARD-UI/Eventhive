@@ -49,7 +49,8 @@ export default function BuscarEventosPage() {
   const tituloParam = searchParams.get('titulo') || '';
   const fechaParam = searchParams.get('fecha') || '';
   const categoriaIdParam = searchParams.get('categoriaId') || '';
-  const pageParam = Math.max(0, parseInt(searchParams.get('page') || '0', 10));
+  const parsedPageParam = Number.parseInt(searchParams.get('page') || '0', 10);
+  const pageParam = Number.isFinite(parsedPageParam) ? Math.max(0, parsedPageParam) : 0;
 
   const [searchInput, setSearchInput] = useState(tituloParam);
 
@@ -102,18 +103,31 @@ export default function BuscarEventosPage() {
       const hasCategory = Boolean(categoriaIdParam);
 
       if (hasTitle) {
-        const fetchSize = (hasDate || hasCategory) ? 60 : PAGE_SIZE;
         const result = await searchEvents({
           titulo: tituloParam.trim(),
-          page: (hasDate || hasCategory) ? 0 : pageParam,
-          size: fetchSize,
+          page: hasDate || hasCategory ? 0 : pageParam,
+          size: hasDate || hasCategory ? 60 : PAGE_SIZE,
         });
 
-        let filtered = result.events || [];
+        let allMatches = result.events || [];
+        if ((hasDate || hasCategory) && result.totalPages > 1) {
+          const remainingPages = await Promise.all(
+            Array.from({ length: result.totalPages - 1 }, (_, index) =>
+              searchEvents({
+                titulo: tituloParam.trim(),
+                page: index + 1,
+                size: 60,
+              })
+            )
+          );
+          allMatches = allMatches.concat(...remainingPages.map((page) => page.events || []));
+        }
+
+        let filtered = allMatches;
 
         if (hasDate) {
           filtered = filtered.filter((ev) => {
-            const evDate = ev.fecha || (ev.startsAt ? String(ev.startsAt).slice(0, 10) : '');
+            const evDate = String(ev.fecha || ev.startsAt || '').slice(0, 10);
             return evDate === fechaParam.trim();
           });
         }
@@ -166,10 +180,11 @@ export default function BuscarEventosPage() {
   };
 
   const handleCategorySelect = (catId) => {
+    const selectedCategoryId = catId?.target ? catId.target.value : catId;
     const next = new URLSearchParams(searchParams);
     next.delete('page');
-    if (catId) {
-      next.set('categoriaId', String(catId));
+    if (selectedCategoryId) {
+      next.set('categoriaId', String(selectedCategoryId));
     } else {
       next.delete('categoriaId');
     }
@@ -252,7 +267,7 @@ export default function BuscarEventosPage() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Buscar eventos por nombre..."
-                className="h-12 w-full rounded-xl md:rounded-full border border-slate-200 dark:border-white/10 bg-white dark:bg-white pl-11 pr-10 text-sm text-slate-900 shadow-inner transition-all placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                className="h-12 w-full rounded-xl md:rounded-full border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0B1428] pl-11 pr-10 text-sm text-slate-900 dark:text-slate-100 shadow-inner transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
               />
               <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
               {searchInput && (

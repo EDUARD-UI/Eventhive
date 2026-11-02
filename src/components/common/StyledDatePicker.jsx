@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiCalendar, FiChevronLeft, FiChevronRight, FiX } from 'react-icons/fi';
+import { useTheme } from '../../context/ThemeContext.jsx';
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -31,7 +32,7 @@ export default function StyledDatePicker({
   disabled = false,
   error = null,
   helperText = null,
-  variant = 'light', // 'light' | 'dark'
+  variant = null, // 'light' | 'dark' | null (use application theme)
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
@@ -74,7 +75,8 @@ export default function StyledDatePicker({
     };
   }, [isOpen]);
 
-  const isDark = variant === 'dark';
+  const { isDark: themeIsDark } = useTheme();
+  const isDark = variant ? variant === 'dark' : themeIsDark;
 
   // Navegar meses
   const handlePrevMonth = (e) => {
@@ -120,6 +122,7 @@ export default function StyledDatePicker({
 
   const handleSelectToday = (e) => {
     e.stopPropagation();
+    if (effectiveMin && todayStr < effectiveMin) return;
     if (onChange) {
       onChange({ target: { name, value: todayStr } });
     }
@@ -267,7 +270,7 @@ export default function StyledDatePicker({
               <FiChevronLeft size={16} />
             </button>
 
-            <span className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white">
+            <span className={`font-extrabold text-sm uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>
               {MONTH_NAMES[viewMonth]} <span className="text-amber-500">{viewYear}</span>
             </span>
 
@@ -319,10 +322,10 @@ export default function StyledDatePicker({
                   className={`h-8 w-8 mx-auto rounded-xl text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-amber-500 text-slate-950 font-black shadow-md scale-105'
-                      : isToday
-                      ? 'border-2 border-amber-500 text-amber-500 dark:text-amber-400 font-extrabold hover:bg-amber-50 dark:hover:bg-amber-950/40'
                       : isPast
                       ? 'opacity-30 cursor-not-allowed text-slate-400'
+                      : isToday
+                      ? 'border-2 border-amber-500 text-amber-500 dark:text-amber-400 font-extrabold hover:bg-amber-50 dark:hover:bg-amber-950/40'
                       : isDark
                       ? 'hover:bg-slate-800 text-slate-200'
                       : 'hover:bg-slate-100 text-slate-800'
@@ -339,7 +342,8 @@ export default function StyledDatePicker({
             <button
               type="button"
               onClick={handleSelectToday}
-              className="font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
+              disabled={Boolean(effectiveMin && todayStr < effectiveMin)}
+              className="font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer disabled:opacity-40 disabled:no-underline disabled:cursor-not-allowed"
             >
               Ir a hoy
             </button>

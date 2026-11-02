@@ -165,10 +165,8 @@ export default function Home() {
   const [userLocation, setUserLocation] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
   const [mapRevealed, setMapRevealed] = useState(false);
-  const [footerGroupRevealed, setFooterGroupRevealed] = useState(false);
   const [carouselRevealed, setCarouselRevealed] = useState(false);
   const mapSectionRef = useRef(null);
-  const footerGroupRef = useRef(null);
   const carouselSectionRef = useRef(null);
 
   const distanceOptions = useMemo(
@@ -328,12 +326,6 @@ export default function Home() {
         }
       }
 
-      if (footerGroupRef.current) {
-        const rect = footerGroupRef.current.getBoundingClientRect();
-        if (rect.top <= triggerThreshold) {
-          setFooterGroupRevealed(true);
-        }
-      }
     };
 
     window.addEventListener('scroll', checkReveals, { passive: true });
@@ -345,7 +337,6 @@ export default function Home() {
           if (entry.isIntersecting) {
             if (entry.target === carouselSectionRef.current) setCarouselRevealed(true);
             if (entry.target === mapSectionRef.current) setMapRevealed(true);
-            if (entry.target === footerGroupRef.current) setFooterGroupRevealed(true);
           }
         });
       },
@@ -354,8 +345,6 @@ export default function Home() {
 
     if (carouselSectionRef.current) observer.observe(carouselSectionRef.current);
     if (mapSectionRef.current) observer.observe(mapSectionRef.current);
-    if (footerGroupRef.current) observer.observe(footerGroupRef.current);
-
     return () => {
       window.removeEventListener('scroll', checkReveals);
       observer.disconnect();
@@ -668,21 +657,14 @@ export default function Home() {
         <HomeBannersSection />
       </section>
 
-      {/* 7. Bloque Unificado: Pre-Footer y Footer con Animación de Aparición Suave Conjunta */}
-      <div
-        id="footer-unified-group"
-        ref={footerGroupRef}
-      >
-        <Scroll3DReveal variant="fade-elevate" duration={950}>
-          <section id="prefooter-section" className="relative scroll-mt-16">
-            <CityRhythmPreFooter />
-          </section>
+      {/* 7. Pre-footer and footer */}
+      <section id="prefooter-section" className="relative scroll-mt-16">
+        <CityRhythmPreFooter />
+      </section>
 
-          <footer id="footer-section">
-            <Footer />
-          </footer>
-        </Scroll3DReveal>
-      </div>
+      <footer id="footer-section">
+        <Footer />
+      </footer>
     </div>
   );
 }
