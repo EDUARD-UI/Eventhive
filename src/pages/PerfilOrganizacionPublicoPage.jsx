@@ -16,7 +16,6 @@ import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import FavoriteButton from '../components/FavoriteButton.jsx';
 import { organizationService } from '../services/organizerService.js';
-import { httpClient } from '../services/httpClient.js';
 import { session } from '../services/session.js';
 import { showErrorAlert, showLoginAlert } from '../utils/alertUtils.js';
 import Pagination from '../components/Shared/Pagination.jsx';
@@ -78,6 +77,29 @@ export default function PerfilOrganizacionPublicoPage() {
     };
   }, [id]);
 
+  useEffect(() => {
+    let isMounted = true;
+    if (!user || !id || isOwnOrganization) {
+      setIsFollowing(false);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    organizationService
+      .isFollowingOrganization(id)
+      .then((following) => {
+        if (isMounted) setIsFollowing(following);
+      })
+      .catch((error) => {
+        console.warn('No se pudo consultar el seguimiento de la organización:', error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, isOwnOrganization, Boolean(userId)]);
+
   const handleToggleFollow = async () => {
     if (!user) {
       showLoginAlert({
@@ -92,11 +114,11 @@ export default function PerfilOrganizacionPublicoPage() {
     setIsFollowingBusy(true);
     try {
       if (isFollowing) {
-        await httpClient.delete(`/seguidores/${id}/seguir`);
+        await organizationService.unfollowOrganization(id);
         setIsFollowing(false);
         setFollowersCount((prev) => Math.max(0, prev - 1));
       } else {
-        await httpClient.post(`/seguidores/${id}/seguir`);
+        await organizationService.followOrganization(id);
         setIsFollowing(true);
         setFollowersCount((prev) => prev + 1);
       }

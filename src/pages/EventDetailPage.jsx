@@ -10,6 +10,7 @@ import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import { getEventById, getUpcomingEvents } from '../services/eventService.js';
 import { httpClient } from '../services/httpClient.js';
+import { organizationService } from '../services/organizerService.js';
 import { session } from '../services/session.js';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import HiveEventCard from '../components/home/HiveEventCard.jsx';
@@ -178,32 +179,29 @@ export default function EventDetailPage() {
 
   // Sincronizar estado de seguimiento de la organización
   useEffect(() => {
+    let isMounted = true;
     const user = session.getUser();
     const currentOrgId =
       typeof event?.organization === 'object' ? event.organization?.id : event?.organizacionId;
     if (!user || !currentOrgId) {
       setIsFollowing(false);
-      return;
+      return () => {
+        isMounted = false;
+      };
     }
 
-    try {
-      const raw = localStorage.getItem(`eventhive_following_${user.id}`);
-      const list = raw ? JSON.parse(raw) : [];
-      if (list.map(String).includes(String(currentOrgId))) {
-        setIsFollowing(true);
-        return;
-      }
-    } catch {}
-
-    httpClient
-      .get('/seguidores/mis-seguidos', { page: 0, size: 50 })
-      .then((res) => {
-        const items = Array.isArray(res) ? res : res?.content || [];
-        if (items.some((o) => String(o.id) === String(currentOrgId))) {
-          setIsFollowing(true);
-        }
+    organizationService
+      .isFollowingOrganization(currentOrgId)
+      .then((following) => {
+        if (isMounted) setIsFollowing(following);
       })
-      .catch(() => {});
+      .catch((error) => {
+        console.warn('No se pudo consultar el seguimiento de la organización:', error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [event]);
 
   const displayedPrice = selectedLocalidad?.precio ?? event?.price ?? 0;
@@ -274,7 +272,7 @@ export default function EventDetailPage() {
     setIsFollowingBusy(true);
     try {
       if (isFollowing) {
-        await httpClient.delete(`/seguidores/${orgId}/seguir`);
+        await organizationService.unfollowOrganization(orgId);
         try {
           const raw = localStorage.getItem(`eventhive_following_${user.id}`);
           const list = raw ? JSON.parse(raw) : [];
@@ -284,7 +282,7 @@ export default function EventDetailPage() {
           );
         } catch {}
       } else {
-        await httpClient.post(`/seguidores/${orgId}/seguir`);
+        await organizationService.followOrganization(orgId);
         try {
           const raw = localStorage.getItem(`eventhive_following_${user.id}`);
           const list = raw ? JSON.parse(raw) : [];

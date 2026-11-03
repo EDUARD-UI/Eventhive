@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FiCheck,
@@ -31,6 +31,29 @@ export default function OrganizationListCard({ org }) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(initialFollowers);
   const [isLoadingFollow, setIsLoadingFollow] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!org?.id || !session.getUser()) {
+      setIsFollowing(false);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    organizationService
+      .isFollowingOrganization(org.id)
+      .then((following) => {
+        if (isMounted) setIsFollowing(following);
+      })
+      .catch((error) => {
+        console.warn('No se pudo consultar el seguimiento de la organización:', error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [org?.id]);
 
   if (!org) return null;
 

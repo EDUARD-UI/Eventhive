@@ -1,6 +1,14 @@
 import { httpClient } from './httpClient.js';
 import { formatHora12 } from '../utils/formatters.js';
 
+const getEventPathId = (value) => {
+  const id = value && typeof value === 'object' ? value.id : value;
+  if ((typeof id !== 'string' && typeof id !== 'number') || String(id).trim() === '') {
+    throw new TypeError('Identificador de evento inválido.');
+  }
+  return encodeURIComponent(String(id));
+};
+
 const parseDateSafe = (dateString, timeString) => {
   if (!dateString) return null;
   // Si dateString es YYYY-MM-DD
@@ -316,9 +324,24 @@ export async function getEventsByCategory({ categoriaId, page = 0, size = 12, so
  * Eventos para renderizar en mapa (GET /api/eventos/mapa).
  * Enriquecido en paralelo con los detalles completos del evento (localidades, precios, foto y lugar).
  */
-export async function getMapEvents({ categoriaId, lat, lng, radioKm } = {}) {
+export async function getMapEvents({ categoriaId, lat, lng, limite = 10 } = {}) {
   try {
-    const data = await httpClient.get('/eventos/mapa', { categoriaId, lat, lng, radioKm });
+    const params = { categoriaId, limite };
+    const latitude = Number(lat);
+    const longitude = Number(lng);
+    if (
+      lat !== null &&
+      lat !== undefined &&
+      lng !== null &&
+      lng !== undefined &&
+      Number.isFinite(latitude) &&
+      Number.isFinite(longitude)
+    ) {
+      params.lat = latitude;
+      params.lng = longitude;
+    }
+
+    const data = await httpClient.get('/eventos/mapa', params);
     const rawEvents = Array.isArray(data) ? data : data?.content || [];
     if (!rawEvents.length) return [];
 
@@ -327,7 +350,7 @@ export async function getMapEvents({ categoriaId, lat, lng, radioKm } = {}) {
       rawEvents.map(async (ev) => {
         try {
           if (!ev?.id) return ev;
-          const detail = await httpClient.get(`/eventos/${ev.id}`);
+          const detail = await httpClient.get(`/eventos/${getEventPathId(ev.id)}`);
           if (detail && typeof detail === 'object') {
             return {
               ...ev,
@@ -409,7 +432,7 @@ export async function getEventById(eventId) {
   }
 
   try {
-    const data = await httpClient.get(`/eventos/${eventId}`);
+    const data = await httpClient.get(`/eventos/${getEventPathId(eventId)}`);
     return data ? normalizeEvent(data) : null;
   } catch (err) {
     if (String(eventId).toLowerCase() === 'coachella') {

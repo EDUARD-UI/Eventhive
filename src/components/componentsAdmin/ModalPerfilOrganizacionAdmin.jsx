@@ -45,7 +45,14 @@ export default function ModalPerfilOrganizacionAdmin({
     setLoadingRut(true);
     try {
       const res = await adminService.getRutUrl(organizacion.id);
-      const url = res?.rutUrl || res?.data?.rutUrl || res?.url;
+      const url =
+        res?.urlRutTemporal ||
+        res?.urlRut ||
+        res?.rutUrl ||
+        res?.url ||
+        res?.data?.urlRutTemporal ||
+        res?.data?.urlRut ||
+        res?.data?.rutUrl;
       if (url) {
         rutWindow.location.href = url;
       } else {

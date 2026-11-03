@@ -1,5 +1,13 @@
 import { httpClient } from './httpClient.js';
 
+const getPathId = (value, label) => {
+  const id = value && typeof value === 'object' ? value.id : value;
+  if ((typeof id !== 'string' && typeof id !== 'number') || String(id).trim() === '') {
+    throw new TypeError(`${label} inválido.`);
+  }
+  return encodeURIComponent(String(id));
+};
+
 export const moderationService = {
   /** GET /api/moderaciones/estadisticas - Estadísticas reales del moderador */
   getEstadisticas() {
@@ -13,17 +21,20 @@ export const moderationService = {
 
   /** GET /api/moderaciones/eventos/{eventoId}/moderaciones - Historial de moderación */
   getHistorialModeracion(eventoId, { page = 0, size = 10 } = {}) {
-    return httpClient.get(`/moderaciones/eventos/${eventoId}/moderaciones`, { page, size });
+    return httpClient.get(
+      `/moderaciones/eventos/${getPathId(eventoId, 'Evento')}/moderaciones`,
+      { page, size }
+    );
   },
 
   /** PATCH /api/moderaciones/eventos/{eventoId}/aprobar - Aprobar y publicar evento */
   aprobarEvento(eventoId) {
-    return httpClient.patch(`/moderaciones/eventos/${eventoId}/aprobar`);
+    return httpClient.patch(`/moderaciones/eventos/${getPathId(eventoId, 'Evento')}/aprobar`);
   },
 
   /** PATCH /api/moderaciones/eventos/{eventoId}/rechazar - Rechazar evento */
   rechazarEvento(eventoId, observacion, motivo) {
-    return httpClient.patch(`/moderaciones/eventos/${eventoId}/rechazar`, {
+    return httpClient.patch(`/moderaciones/eventos/${getPathId(eventoId, 'Evento')}/rechazar`, {
       observacion,
       motivo,
     });
@@ -32,14 +43,14 @@ export const moderationService = {
   /** PATCH /api/moderaciones/eventos/{eventoId}/solicitar-correccion - Solicitar corrección */
   solicitarCorreccion(eventoId, observacion, motivo) {
     return httpClient.patch(
-      `/moderaciones/eventos/${eventoId}/solicitar-correccion`,
+      `/moderaciones/eventos/${getPathId(eventoId, 'Evento')}/solicitar-correccion`,
       { observacion, motivo }
     );
   },
 
   /** PATCH /api/moderaciones/eventos/{eventoId}/suspender - Suspender evento (Admin) */
   suspenderEvento(eventoId, observacion, motivo) {
-    return httpClient.patch(`/moderaciones/eventos/${eventoId}/suspender`, {
+    return httpClient.patch(`/moderaciones/eventos/${getPathId(eventoId, 'Evento')}/suspender`, {
       observacion,
       motivo,
     });
@@ -47,7 +58,7 @@ export const moderationService = {
 
   /** PATCH /api/moderaciones/eventos/{eventoId}/reactivar - Reactivar evento (Admin) */
   reactivarEvento(eventoId) {
-    return httpClient.patch(`/moderaciones/eventos/${eventoId}/reactivar`);
+    return httpClient.patch(`/moderaciones/eventos/${getPathId(eventoId, 'Evento')}/reactivar`);
   },
 
   /** GET /api/moderaciones/moderadores - Lista de moderadores (Admin) */
@@ -57,12 +68,16 @@ export const moderationService = {
 
   /** PUT /api/moderaciones/moderadores/{moderadorId}/asignar - Asignar moderador (Admin) */
   asignarModerador(moderadorId) {
-    return httpClient.put(`/moderaciones/moderadores/${moderadorId}/asignar`);
+    return httpClient.put(
+      `/moderaciones/moderadores/${getPathId(moderadorId, 'Moderador')}/asignar`
+    );
   },
 
   /** PUT /api/moderaciones/moderadores/{moderadorId}/revocar - Revocar moderador (Admin) */
   revocarModerador(moderadorId) {
-    return httpClient.put(`/moderaciones/moderadores/${moderadorId}/revocar`);
+    return httpClient.put(
+      `/moderaciones/moderadores/${getPathId(moderadorId, 'Moderador')}/revocar`
+    );
   },
 
   /** GET /api/enums/motivos-rechazos - Motivos de rechazo/corrección del sistema */
@@ -81,16 +96,17 @@ export const moderationService = {
 
   /** GET /api/eventos/admin/{id} o /api/eventos/{id} - Detalle completo de evento */
   async getEventoDetalle(eventoId) {
+    const id = getPathId(eventoId, 'Evento');
     try {
-      return await httpClient.get(`/eventos/admin/${eventoId}`);
+      return await httpClient.get(`/eventos/admin/${id}`);
     } catch {
-      return await httpClient.get(`/eventos/${eventoId}`);
+      return await httpClient.get(`/eventos/${id}`);
     }
   },
 
   /** GET /api/eventos/{eventoId}/localidades - Localidades y aforo real del evento */
   getLocalidades(eventoId) {
-    return httpClient.get(`/eventos/${eventoId}/localidades`);
+    return httpClient.get(`/eventos/${getPathId(eventoId, 'Evento')}/localidades`);
   },
 
   /** GET /api/verificacion/pendientes - Solicitudes de verificación de organizaciones */
@@ -98,9 +114,11 @@ export const moderationService = {
     return httpClient.get('/verificacion/pendientes', { page, size });
   },
 
-  /** PUT /api/verificacion/{solicitudId}/aprobar - Aprobar verificación */
+  /** POST /api/solicitudes-verificacion/{solicitudId}/aprobar - Aprobar verificación */
   aprobarOrganizacion(solicitudId) {
-    return httpClient.put(`/verificacion/${solicitudId}/aprobar`);
+    return httpClient.post(
+      `/solicitudes-verificacion/${getPathId(solicitudId, 'Solicitud')}/aprobar`
+    );
   },
 
   /** PUT /api/verificacion/{solicitudId}/rechazar - Rechazar verificación */

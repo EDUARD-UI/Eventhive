@@ -183,10 +183,17 @@ export default function AdminSolicitudesView({
                       }
                       rutWindow.opener = null;
                       try {
-                        const targetOrgId = sol.organizacionId || sol.id;
-                        setViewingRutId(targetOrgId);
-                        const res = await adminService.getRutUrl(targetOrgId);
-                        const url = res?.rutUrl || res?.data?.rutUrl || res?.url;
+                        const targetSolicitudId = sol.id;
+                        setViewingRutId(targetSolicitudId);
+                        const res = await adminService.getSolicitudRut(targetSolicitudId);
+                        const url =
+                          res?.urlRutTemporal ||
+                          res?.urlRut ||
+                          res?.rutUrl ||
+                          res?.url ||
+                          res?.data?.urlRutTemporal ||
+                          res?.data?.urlRut ||
+                          res?.data?.rutUrl;
                         if (url) {
                           rutWindow.location.href = url;
                         } else {
@@ -200,12 +207,12 @@ export default function AdminSolicitudesView({
                         setViewingRutId(null);
                       }
                     }}
-                    disabled={viewingRutId === (sol.organizacionId || sol.id)}
+                    disabled={viewingRutId === sol.id}
                     className="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
                     title="Consultar archivo RUT oficial cargado"
                   >
                     <FileText size={14} className="text-amber-500" />
-                    <span>{viewingRutId === (sol.organizacionId || sol.id) ? 'Abriendo...' : 'Ver RUT'}</span>
+                    <span>{viewingRutId === sol.id ? 'Abriendo...' : 'Ver RUT'}</span>
                   </button>
 
                   {onVerDetalle && (

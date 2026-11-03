@@ -3,6 +3,10 @@ import { session, isTokenExpired } from './session.js';
 
 
 const buildUrl = (path, params) => {
+  if (typeof path !== 'string' || path.includes('[object Object]')) {
+    throw new TypeError('La ruta de la solicitud debe contener identificadores válidos.');
+  }
+
   const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   const cleanBase = (API_BASE_URL || '/api').replace(/\/+$/, '');
@@ -12,11 +16,28 @@ const buildUrl = (path, params) => {
     ? new URL(fullPath)
     : new URL(fullPath, origin);
 
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      url.searchParams.append(key, value);
+  const appendParam = (key, value) => {
+    if (value === undefined || value === null || value === '') return;
+    if (Array.isArray(value)) {
+      value.forEach((item) => appendParam(key, item));
+      return;
     }
-  });
+
+    const serializableValue =
+      typeof value === 'object'
+        ? value.id
+        : value;
+    if (
+      serializableValue === undefined ||
+      serializableValue === null ||
+      !['string', 'number', 'boolean'].includes(typeof serializableValue)
+    ) {
+      throw new TypeError(`El parámetro "${key}" debe ser un valor simple o un objeto con id.`);
+    }
+    url.searchParams.append(key, String(serializableValue));
+  };
+
+  Object.entries(params || {}).forEach(([key, value]) => appendParam(key, value));
 
   return url;
 };
@@ -147,9 +168,9 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
     });
   } catch (err) {
     if (err.name === 'AbortError') {
-      throw new Error('La solicitud tardó demasiado tiempo en responder. Verifica la conexión con el servidor.');
+      throw new Error('Error de servidor. Por favor, reintenta más tarde.');
     }
-    throw new Error('No fue posible conectar con el servidor. Verifica tu conexión e intenta de nuevo.');
+    throw new Error('Error de servidor. Por favor, reintenta más tarde.');
   } finally {
     if (timeoutId) clearTimeout(timeoutId);
   }
@@ -171,7 +192,7 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
 
   const payload = await response.json().catch(() => null);
 
-  if (!response.ok || payload?.success === false) {
+  if (!response.ok || payload?.success === false || payload?.exito === false) {
     const responseMessage =
       payload?.mensaje ||
       payload?.message ||
@@ -196,7 +217,13 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
     }
   }
 
-  return payload?.data;
+  if (payload && Object.prototype.hasOwnProperty.call(payload, 'data')) {
+    return payload.data;
+  }
+  if (payload && Object.prototype.hasOwnProperty.call(payload, 'datos')) {
+    return payload.datos;
+  }
+  return payload;
 }
 
 export const httpClient = {

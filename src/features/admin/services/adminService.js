@@ -2,6 +2,14 @@ import { httpClient } from '../../../services/httpClient.js';
 import { getCategoriesWithEvents } from '../../../services/categoryService.js';
 import { organizationService } from '../../../services/organizerService.js';
 
+const getPathId = (value, label) => {
+  const id = value && typeof value === 'object' ? value.id : value;
+  if ((typeof id !== 'string' && typeof id !== 'number') || String(id).trim() === '') {
+    throw new TypeError(`${label} inválido.`);
+  }
+  return encodeURIComponent(String(id));
+};
+
 export const adminService = {
   // 1. ESTADÍSTICAS Y DASHBOARD ADMINISTRATIVO (Sección 19 de Documentacion_Endpoints.md)
   async getOrganizacionesPorValidacion() {
@@ -119,6 +127,7 @@ export const adminService = {
         orgsValData?.total ?? (orgsRes.status === 'fulfilled' ? orgsRes.value?.total || 0 : 0);
 
       const solicitudesPendientes =
+        orgsValData?.solicitudesPendientes ??
         orgsValData?.pendientesValidacionRut ??
         (verifRes.status === 'fulfilled'
           ? verifRes.value?.totalElements ??
@@ -239,7 +248,9 @@ export const adminService = {
   },
 
   async aprobarSolicitudVerificacion(solicitudId) {
-    await httpClient.put(`/verificacion/${solicitudId}/aprobar`);
+    await httpClient.post(
+      `/solicitudes-verificacion/${getPathId(solicitudId, 'Solicitud')}/aprobar`
+    );
     return { success: true, mensaje: 'Organización verificada exitosamente.' };
   },
 
@@ -631,7 +642,13 @@ export const adminService = {
 
   // 14. CONSULTA PROTEGIDA DEL RUT (GET /api/organizaciones/{id}/rut-url)
   async getRutUrl(orgId) {
-    return httpClient.get(`/organizaciones/${orgId}/rut-url`);
+    return httpClient.get(`/organizaciones/${getPathId(orgId, 'Organización')}/rut`);
+  },
+
+  async getSolicitudRut(solicitudId) {
+    return httpClient.get(
+      `/solicitudes-verificacion/${getPathId(solicitudId, 'Solicitud')}/rut`
+    );
   },
 
   // 15. SUGERENCIAS DE ASCENSO DE ORGANIZACIÓN (GET /api/organizaciones/sugerencias-pendientes)

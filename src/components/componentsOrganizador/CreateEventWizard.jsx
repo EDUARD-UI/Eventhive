@@ -22,7 +22,6 @@ import {
   showErrorAlert,
   showWarningAlert,
   showInfoAlert,
-  showPendingRutAlert,
 } from '../../utils/alertUtils.js';
 import { organizerService } from '../../services/organizerService.js';
 import { formatPrice, formatHora23, formatFechaHora } from '../../utils/formatters.js';
@@ -89,6 +88,8 @@ export default function CreateEventWizard({
   onSave,
   isDrawer = false,
   initialEvent = null,
+  canSendEvents = false,
+  orgSuspended = false,
 }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [categories, setCategories] = useState([]);
@@ -438,18 +439,51 @@ export default function CreateEventWizard({
       }
 
       const isEditing = Boolean(initialEvent?.id || initialEvent?.eventoId);
-      const targetId = initialEvent?.id || initialEvent?.eventoId;
+      const rawTargetId = initialEvent?.id || initialEvent?.eventoId;
+      const targetId =
+        rawTargetId && typeof rawTargetId === 'object' ? rawTargetId.id : rawTargetId;
 
       let resultEvent;
       if (isEditing) {
         resultEvent = await organizerService.editarEvento(targetId, formData);
-        await showSuccessAlert({
-          title: '¡Evento Actualizado!',
-          text: 'Las modificaciones del evento han sido guardadas exitosamente.',
-        });
+        const currentStatus = String(initialEvent?.estado || initialEvent?.rawStatus || '').toUpperCase();
+        const canResubmit = ['BORRADOR', 'EN_CORRECCION'].includes(currentStatus);
+        if (canResubmit && canSendEvents && !orgSuspended) {
+          try {
+            const reviewResult = await organizerService.enviarRevision(targetId);
+            resultEvent = {
+              ...(resultEvent || {}),
+              ...(reviewResult && typeof reviewResult === 'object' ? reviewResult : {}),
+              estado: reviewResult?.estado || 'PENDIENTE_REVISION',
+            };
+            await showInfoAlert({
+              title: 'Evento enviado a revisión',
+              text: 'El evento se guardó y fue enviado a moderación.',
+            });
+          } catch (error) {
+            await showErrorAlert({
+              title: 'Cambios guardados como borrador',
+              text: `No se pudo enviar el evento a revisión. Puedes reintentarlo desde Mis eventos. ${error.message || ''}`.trim(),
+            });
+          }
+        } else {
+          await showSuccessAlert({
+            title: '¡Evento actualizado!',
+            text: canResubmit
+              ? orgSuspended
+                ? 'Los cambios se guardaron como borrador. La organización está suspendida y no puede enviar eventos a revisión.'
+                : 'Los cambios se guardaron como borrador. Carga el RUT de la organización para enviarlo a revisión.'
+              : 'Las modificaciones del evento han sido guardadas exitosamente.',
+          });
+        }
       } else {
         resultEvent = await organizerService.crearEvento(formData);
-        const eventoId = resultEvent?.id || resultEvent?.eventoId || resultEvent?.data?.id;
+        const rawEventId =
+          resultEvent?.id ||
+          resultEvent?.eventoId ||
+          resultEvent?.data?.id ||
+          resultEvent?.data?.eventoId;
+        const eventoId = rawEventId && typeof rawEventId === 'object' ? rawEventId.id : rawEventId;
         const failedLocalities = [];
 
         // Registrar localidades para el evento si hay ID
@@ -470,26 +504,41 @@ export default function CreateEventWizard({
           }
         }
 
-        const estadoEvento = (resultEvent?.estado || '').toUpperCase();
-        if (estadoEvento === 'BORRADOR' || resultEvent?.requiereRut) {
-          await showPendingRutAlert();
-        } else if (estadoEvento === 'MODERACION') {
-          await showInfoAlert({
-            title: 'Evento enviado a moderación',
-            text: 'El evento ha sido enviado a moderación y será revisado antes de publicarse en cartelera.',
-          });
-        }
-
         if (failedLocalities.length > 0) {
           await showErrorAlert({
             title: 'Evento creado con localidades pendientes',
             text: `El evento se creó, pero no se pudieron guardar estas localidades: ${failedLocalities.join(', ')}. Revisa el evento y vuelve a agregarlas.`,
             badge: 'Localidades pendientes',
           });
-        } else if (estadoEvento !== 'BORRADOR' && !resultEvent?.requiereRut && estadoEvento !== 'MODERACION') {
-          await showSuccessAlert({
-            title: '¡Evento Creado!',
-            text: 'Tu evento ha sido creado exitosamente.',
+        } else if (orgSuspended) {
+          await showInfoAlert({
+            title: 'Borrador guardado',
+            text: 'El evento se guardó como borrador. La organización está suspendida y no puede enviarlo a revisión.',
+          });
+        } else if (!canSendEvents) {
+          await showPendingRutAlert();
+        } else if (eventoId) {
+          try {
+            const reviewResult = await organizerService.enviarRevision(eventoId);
+            resultEvent = {
+              ...(resultEvent || {}),
+              ...(reviewResult && typeof reviewResult === 'object' ? reviewResult : {}),
+              estado: reviewResult?.estado || 'PENDIENTE_REVISION',
+            };
+            await showInfoAlert({
+              title: 'Evento enviado a revisión',
+              text: 'El evento fue creado como borrador y enviado a moderación para su revisión.',
+            });
+          } catch (error) {
+            await showErrorAlert({
+              title: 'Borrador guardado',
+              text: `El evento se creó, pero no se pudo enviar a revisión. Puedes reintentarlo desde Mis eventos. ${error.message || ''}`.trim(),
+            });
+          }
+        } else {
+          await showErrorAlert({
+            title: 'Evento creado como borrador',
+            text: 'No se recibió el identificador del evento, por lo que no fue posible enviarlo a revisión. Actualiza Mis eventos para continuar.',
           });
         }
       }
@@ -975,7 +1024,15 @@ export default function CreateEventWizard({
               {isSubmitting && (
                 <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
               )}
-              <span>Crear y Publicar Evento</span>
+              <span>
+                {initialEvent
+                  ? canSendEvents && !orgSuspended
+                    ? 'Guardar cambios y enviar a revisión'
+                    : 'Guardar cambios'
+                  : canSendEvents && !orgSuspended
+                    ? 'Crear y enviar a revisión'
+                    : 'Crear borrador'}
+              </span>
             </button>
           )}
         </div>

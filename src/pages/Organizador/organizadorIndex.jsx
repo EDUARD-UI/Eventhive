@@ -431,33 +431,29 @@ export default function OrganizadorIndex() {
   const representativeName =
     orgData?.representante || session.getUser()?.name || 'Representante';
 
-  const isOrgApproved =
-    (solicitudVerif?.estado || '').toUpperCase() === 'APROBADA' ||
-    (orgData?.estado || '').toUpperCase() === 'APROBADA';
   const organizationStatuses = [
     String(orgData?.estado || '').toUpperCase(),
     String(solicitudVerif?.estado || '').toUpperCase(),
   ];
-  const organizationStatus = organizationStatuses.find(Boolean) || '';
   const isOrgSuspended = organizationStatuses.includes('SUSPENDIDA');
   const hasRutUploaded = Boolean(
     orgData?.rutUrl ||
       orgData?.urlRut ||
+      orgData?.urlRutTemporal ||
       orgData?.urlDocumento ||
       orgData?.urlDocumentoRut ||
       orgData?.urlArchivo ||
       orgData?.documentoRut ||
       solicitudVerif?.rutUrl ||
       solicitudVerif?.urlRut ||
+      solicitudVerif?.urlRutTemporal ||
       solicitudVerif?.urlDocumento ||
       solicitudVerif?.urlDocumentoRut ||
       solicitudVerif?.urlArchivo ||
       solicitudVerif?.url ||
-      organizationStatuses.some((status) =>
-        ['PENDIENTE', 'PENDIENTE_REVISION', 'APROBADA'].includes(status)
-      )
+      String(solicitudVerif?.estado || '').toUpperCase() === 'PENDIENTE'
   );
-  const canSendEvents = !isOrgSuspended && (isOrgApproved || hasRutUploaded);
+  const canSendEvents = !isOrgSuspended && hasRutUploaded;
 
   const activeMenu = menuItems.find((m) => m.id === activeItem);
 
@@ -739,6 +735,8 @@ export default function OrganizadorIndex() {
             <CreateEventWizard
               initialEvent={editingEvent}
               isDrawer={false}
+              canSendEvents={canSendEvents}
+              orgSuspended={isOrgSuspended}
               onBack={() => {
                 setEditingEvent(null);
                 returnToEvents();
@@ -835,6 +833,8 @@ export default function OrganizadorIndex() {
           <CreateEventWizard
             initialEvent={editingEvent}
             isDrawer={true}
+            canSendEvents={canSendEvents}
+            orgSuspended={isOrgSuspended}
             onBack={() => {
               setEditingEvent(null);
               returnToEvents();

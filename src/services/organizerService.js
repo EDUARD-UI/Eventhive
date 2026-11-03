@@ -1,6 +1,14 @@
 import { httpClient } from './httpClient.js';
 import { normalizeEvent } from './eventService.js';
 
+const getPathId = (value, label = 'Identificador') => {
+  const id = value && typeof value === 'object' ? value.id : value;
+  if ((typeof id !== 'string' && typeof id !== 'number') || String(id).trim() === '') {
+    throw new TypeError(`${label} inválido.`);
+  }
+  return encodeURIComponent(String(id));
+};
+
 const normalizeOrganization = (organization) => ({
   ...organization,
   id: String(organization.id),
@@ -76,7 +84,9 @@ export const organizationService = {
 
   async getOrganizationById(organizationId) {
     try {
-      const data = await httpClient.get(`/organizaciones/${organizationId}`);
+      const data = await httpClient.get(
+        `/organizaciones/${getPathId(organizationId, 'Organización')}`
+      );
       if (data) return normalizeOrganization(data);
     } catch {
       // Ignorar para buscar en listas
@@ -95,11 +105,39 @@ export const organizationService = {
   },
 
   async followOrganization(organizationId) {
-    return httpClient.post(`/seguidores/${organizationId}/seguir`);
+    const id = getPathId(organizationId, 'Organización');
+    try {
+      return await httpClient.post(`/seguidores/${id}/seguir`);
+    } catch (error) {
+      if (error.status === 400) {
+        const ownOrgError = new Error('No puedes seguir a tu propia organización.');
+        ownOrgError.status = error.status;
+        throw ownOrgError;
+      }
+      throw error;
+    }
   },
 
   async unfollowOrganization(organizationId) {
-    return httpClient.delete(`/seguidores/${organizationId}/seguir`);
+    const id = getPathId(organizationId, 'Organización');
+    try {
+      return await httpClient.delete(`/seguidores/${id}/seguir`);
+    } catch (error) {
+      if (error.status === 404) return null;
+      throw error;
+    }
+  },
+
+  async isFollowingOrganization(organizationId) {
+    const id = getPathId(organizationId, 'Organización');
+    try {
+      const data = await httpClient.get(`/seguidores/${id}/siguiendo`);
+      if (typeof data === 'boolean') return data;
+      return Boolean(data?.siguiendo ?? data?.isFollowing ?? data?.estaSiguiendo);
+    } catch (error) {
+      if (error.status === 404) return false;
+      throw error;
+    }
   },
 
   async getOrganizacionesSeguidas({ page = 0, size = 50 } = {}) {
@@ -127,7 +165,10 @@ export const organizationService = {
   async getOrganizationEvents(organizationId, { page = 0, size = 50 } = {}) {
     // 1. Intentar endpoint directo GET /api/organizaciones/{id}/eventos
     try {
-      const data = await httpClient.get(`/organizaciones/${organizationId}/eventos`, { page, size });
+      const data = await httpClient.get(
+        `/organizaciones/${getPathId(organizationId, 'Organización')}/eventos`,
+        { page, size }
+      );
       const events = Array.isArray(data) ? data : data?.content || [];
       if (events.length > 0) return events.map(normalizeEvent);
     } catch {
@@ -255,42 +296,45 @@ export const organizerService = {
 
   /** PUT /api/eventos/{id} — multipart/form-data */
   editarEvento(id, formData) {
-    return httpClient.put(`/eventos/${id}`, formData, { isFormData: true });
+    return httpClient.put(`/eventos/${getPathId(id, 'Evento')}`, formData, { isFormData: true });
   },
 
   /** PATCH /api/eventos/{id}/cancelar */
   cancelarEvento(id) {
-    return httpClient.patch(`/eventos/${id}/cancelar`);
+    return httpClient.patch(`/eventos/${getPathId(id, 'Evento')}/cancelar`);
   },
 
   /** PATCH /api/eventos/{id}/enviar-revision */
   enviarRevision(id) {
-    return httpClient.patch(`/eventos/${id}/enviar-revision`);
+    return httpClient.patch(`/eventos/${getPathId(id, 'Evento')}/enviar-revision`);
   },
 
   /** PATCH /api/eventos/{id}/retirar */
   retirarEvento(id) {
-    return httpClient.patch(`/eventos/${id}/retirar`);
+    return httpClient.patch(`/eventos/${getPathId(id, 'Evento')}/retirar`);
   },
 
   /** PATCH /api/eventos/{id}/reabrir */
   reabrirEvento(id) {
-    return httpClient.patch(`/eventos/${id}/reabrir`);
+    return httpClient.patch(`/eventos/${getPathId(id, 'Evento')}/reabrir`);
   },
 
   /** DELETE /api/eventos/{id} */
   eliminarEvento(id) {
-    return httpClient.delete(`/eventos/${id}`);
+    return httpClient.delete(`/eventos/${getPathId(id, 'Evento')}`);
   },
 
   /** GET /api/eventos/organizador/{id} */
   getEventoDetalle(id) {
-    return httpClient.get(`/eventos/organizador/${id}`);
+    return httpClient.get(`/eventos/organizador/${getPathId(id, 'Evento')}`);
   },
 
   /** POST /api/eventos/{eventoId}/localidades */
   agregarLocalidad(eventoId, localidadData) {
-    return httpClient.post(`/eventos/${eventoId}/localidades`, localidadData);
+    return httpClient.post(
+      `/eventos/${getPathId(eventoId, 'Evento')}/localidades`,
+      localidadData
+    );
   },
 
   /** GET /api/organizaciones/mi-organizacion/estadisticas */
@@ -320,39 +364,51 @@ export const organizerService = {
 
   /** DELETE /api/organizaciones/expulsar-operador/{operadorId} */
   expulsarOperador(operadorId) {
-    return httpClient.delete(`/organizaciones/expulsar-operador/${operadorId}`);
+    return httpClient.delete(
+      `/organizaciones/expulsar-operador/${getPathId(operadorId, 'Operador')}`
+    );
   },
 
   /** PATCH /api/organizaciones/operadores/{operadorId}/actualizar-permisos */
   actualizarPermisosOperador(operadorId, permisos) {
-    return httpClient.patch(`/organizaciones/operadores/${operadorId}/actualizar-permisos`, {
-      permisos: Array.isArray(permisos) ? permisos : Array.from(permisos || []),
-    });
+    return httpClient.patch(
+      `/organizaciones/operadores/${getPathId(operadorId, 'Operador')}/actualizar-permisos`,
+      { permisos: Array.isArray(permisos) ? permisos : Array.from(permisos || []) }
+    );
   },
 
   /** POST /api/compras/eventos/{eventoId}/posicionamiento/pagos */
   iniciarPagoPosicionamiento(eventoId) {
-    return httpClient.post(`/compras/eventos/${eventoId}/posicionamiento/pagos`);
+    return httpClient.post(
+      `/compras/eventos/${getPathId(eventoId, 'Evento')}/posicionamiento/pagos`
+    );
   },
 
   /** GET /api/compras/posicionamiento/pagos/{pagoId} */
   getPagoPosicionamiento(pagoId) {
-    return httpClient.get(`/compras/posicionamiento/pagos/${pagoId}`);
+    return httpClient.get(`/compras/posicionamiento/pagos/${getPathId(pagoId, 'Pago')}`);
   },
 
   /** PATCH /api/compras/posicionamiento/pagos/{pagoId}/confirmar-simulado */
   confirmarPagoSimulado(pagoId) {
-    return httpClient.patch(`/compras/posicionamiento/pagos/${pagoId}/confirmar-simulado`);
+    return httpClient.patch(
+      `/compras/posicionamiento/pagos/${getPathId(pagoId, 'Pago')}/confirmar-simulado`
+    );
   },
 
   /** POST /api/promociones/eventos/{eventoId}/posicionar */
   posicionarEvento(eventoId, urlImagenDestacado) {
-    return httpClient.post(`/promociones/eventos/${eventoId}/posicionar`, { urlImagenDestacado });
+    return httpClient.post(
+      `/promociones/eventos/${getPathId(eventoId, 'Evento')}/posicionar`,
+      { urlImagenDestacado }
+    );
   },
 
   /** DELETE /api/promociones/eventos/{eventoId}/posicionar */
   quitarPosicionamiento(eventoId) {
-    return httpClient.delete(`/promociones/eventos/${eventoId}/posicionar`);
+    return httpClient.delete(
+      `/promociones/eventos/${getPathId(eventoId, 'Evento')}/posicionar`
+    );
   },
 
   /** POST /api/compras — crear compra con idempotencyKey e items */
@@ -367,7 +423,7 @@ export const organizerService = {
 
   /** GET /api/boletos/{compraId} */
   getBoletos(compraId) {
-    return httpClient.get(`/boletos/${compraId}`);
+    return httpClient.get(`/boletos/${getPathId(compraId, 'Compra')}`);
   },
 
   /** GET /api/deseos — lista de deseos paginada */
@@ -377,18 +433,18 @@ export const organizerService = {
 
   /** POST /api/deseos/{eventoId} */
   agregarDeseo(eventoId) {
-    return httpClient.post(`/deseos/${eventoId}`);
+    return httpClient.post(`/deseos/${getPathId(eventoId, 'Evento')}`);
   },
 
   /** DELETE /api/deseos/{eventoId} */
   eliminarDeseo(eventoId) {
-    return httpClient.delete(`/deseos/${eventoId}`);
+    return httpClient.delete(`/deseos/${getPathId(eventoId, 'Evento')}`);
   },
 
   /** GET /api/verificacion/mis-solicitudes o /api/verificacion/mi-solicitud */
   async getMiSolicitudVerificacion() {
     try {
-      return await httpClient.get('/verificacion/mis-solicitudes');
+      return await httpClient.get('/solicitudes-verificacion/mi-solicitud');
     } catch {
       return await httpClient.get('/verificacion/mi-solicitud');
     }
@@ -401,17 +457,27 @@ export const organizerService = {
 
   /** POST /api/verificacion/solicitar (multipart con archivo 'rut') */
   solicitarVerificacion(formData) {
-    return httpClient.post('/verificacion/solicitar', formData, { isFormData: true });
+    return httpClient.post('/solicitudes-verificacion/mi-solicitud/rut', formData, {
+      isFormData: true,
+    });
   },
 
-  /** PATCH /api/verificacion/{solicitudId}/subir-rut (multipart con archivo 'rut') */
+  /** POST /api/solicitudes-verificacion/mi-solicitud/rut (multipart con archivo 'rut') */
   subirRut(solicitudId, formData) {
-    return httpClient.patch(`/verificacion/${solicitudId}/subir-rut`, formData, { isFormData: true });
+    return httpClient.post('/solicitudes-verificacion/mi-solicitud/rut', formData, {
+      isFormData: true,
+    });
   },
 
   /** GET /api/organizaciones/{orgId}/rut-url - Consulta segura de URL temporal del RUT */
   getRutUrl(orgId) {
-    return httpClient.get(`/organizaciones/${orgId}/rut-url`);
+    return httpClient.get(`/organizaciones/${getPathId(orgId, 'Organización')}/rut`);
+  },
+
+  getSolicitudRut(solicitudId) {
+    return httpClient.get(
+      `/solicitudes-verificacion/${getPathId(solicitudId, 'Solicitud')}/rut`
+    );
   },
 };
 

@@ -5,7 +5,7 @@ import {
   FiCalendar,
   FiChevronRight,
 } from "react-icons/fi";
-import { API_BASE_URL } from "../config/api.js";
+import { httpClient } from "../services/httpClient.js";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { useLanguage } from "../context/LanguageContext.jsx";
@@ -125,38 +125,24 @@ export default function HelpChat({
   const sendMessageToBackend = async (text) => {
     setIsTyping(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          language: language || "es",
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Chat error HTTP ${response.status}`);
-      }
-
-      const payload = await response.json();
-      const data = payload?.data?.data || payload?.data;
+      const data = await httpClient.post(
+        "/chatbot/mensaje",
+        { mensaje: text },
+        { skipAuth: true }
+      );
+      const responseData = data?.datos || data?.data || data;
       pushBotMessage({
         text:
-          data?.respuesta ||
-          data?.response ||
-          data?.message ||
+          responseData?.respuesta ||
+          responseData?.mensaje ||
           data?.mensaje ||
-          data?.texto ||
-          data?.reply ||
-          data?.content ||
-          payload?.mensaje ||
           "No fue posible cargar la información en este momento.",
-        events: Array.isArray(data?.events) ? data.events : [],
+        events: Array.isArray(responseData?.events) ? responseData.events : [],
       });
     } catch (err) {
       console.warn("No se pudo completar la consulta del asistente:", err);
       pushBotMessage({
-        text: "Error de servidor. Por favor, intenta de nuevo más tarde.",
+        text: "Servicio temporalmente no disponible. Por favor, intenta de nuevo en unos momentos.",
       });
     } finally {
       setIsTyping(false);

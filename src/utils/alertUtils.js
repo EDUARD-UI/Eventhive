@@ -129,7 +129,7 @@ export const showPendingRutAlert = () => {
   return Swal.fire({
     icon: 'info',
     title: 'Validación de RUT requerida',
-    text: 'Su evento ha sido creado como borrador, por favor adjunte su RUT para verificación de su organización.',
+    text: 'El evento se guardó como borrador. Carga el RUT de tu organización para enviarlo a revisión.',
     confirmButtonText: 'Entendido',
     confirmButtonColor: '#0B1B3D',
   });

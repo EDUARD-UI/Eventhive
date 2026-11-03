@@ -121,6 +121,26 @@ const userLocationPinIcon = () =>
     popupAnchor: [0, -15],
   });
 
+function MapEventViewport({ events, userLocation }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const locations = (events || [])
+      .map((event) => [Number(event.lat), Number(event.lng)])
+      .filter(([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng));
+
+    if (locations.length > 1) {
+      map.fitBounds(locations, { padding: [40, 40], maxZoom: 14 });
+    } else if (locations.length === 1) {
+      map.setView(locations[0], 14);
+    } else if (userLocation) {
+      map.setView([userLocation.lat, userLocation.lng], 13);
+    }
+  }, [events, map, userLocation]);
+
+  return null;
+}
+
 function MapViewController({ center, zoom }) {
   const map = useMap();
   useEffect(() => {
@@ -163,13 +183,13 @@ export default function Home() {
   const mapSectionRef = useRef(null);
   const carouselSectionRef = useRef(null);
   const { data: mapEvents = [] } = useQuery({
-    queryKey: ['home-map-events', selectedCategory, selectedDistance, userLocation],
+    queryKey: ['home-map-events', selectedCategory, userLocation],
     queryFn: () =>
       getMapEvents({
         categoriaId: selectedCategory === 'all' ? undefined : selectedCategory,
         lat: userLocation?.lat,
         lng: userLocation?.lng,
-        radioKm: selectedDistance === 'all' ? undefined : selectedDistance,
+        limite: 10,
       }),
     staleTime: 1000 * 60 * 5,
   });
@@ -273,8 +293,17 @@ export default function Home() {
   };
 
   const filteredMapEvents = useMemo(() => {
-    return mapEvents;
-  }, [mapEvents]);
+    if (selectedDistance === 'all' || !userLocation) return mapEvents;
+    return mapEvents.filter((event) => {
+      if (event.lat == null || event.lng == null) return false;
+      return getDistanceKm(
+        userLocation.lat,
+        userLocation.lng,
+        Number(event.lat),
+        Number(event.lng)
+      ) <= Number(selectedDistance);
+    });
+  }, [mapEvents, selectedDistance, userLocation]);
 
   const categoryOptions = useMemo(() => [
     { value: 'all', label: t('home.allCategories') },
@@ -501,6 +530,7 @@ export default function Home() {
               zoomControl={true}
               className="h-full w-full relative z-0 overflow-hidden rounded-3xl"
             >
+              <MapEventViewport events={filteredMapEvents} userLocation={userLocation} />
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
