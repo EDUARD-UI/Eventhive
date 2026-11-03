@@ -562,7 +562,8 @@ export default function OperadoresView() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* COMPOSITOR DE CORREO DIRECTO */}

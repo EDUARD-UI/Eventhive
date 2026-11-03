@@ -114,10 +114,10 @@ export const moderationService = {
     return httpClient.get('/verificacion/pendientes', { page, size });
   },
 
-  /** POST /api/solicitudes-verificacion/{solicitudId}/aprobar - Aprobar verificación */
+  /** PUT /api/verificacion/{solicitudId}/aprobar - Aprobar verificación */
   aprobarOrganizacion(solicitudId) {
-    return httpClient.post(
-      `/solicitudes-verificacion/${getPathId(solicitudId, 'Solicitud')}/aprobar`
+    return httpClient.put(
+      `/verificacion/${getPathId(solicitudId, 'Solicitud')}/aprobar`
     );
   },
 

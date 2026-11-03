@@ -248,8 +248,8 @@ export const adminService = {
   },
 
   async aprobarSolicitudVerificacion(solicitudId) {
-    await httpClient.post(
-      `/solicitudes-verificacion/${getPathId(solicitudId, 'Solicitud')}/aprobar`
+    await httpClient.put(
+      `/verificacion/${getPathId(solicitudId, 'Solicitud')}/aprobar`
     );
     return { success: true, mensaje: 'Organización verificada exitosamente.' };
   },
@@ -642,12 +642,12 @@ export const adminService = {
 
   // 14. CONSULTA PROTEGIDA DEL RUT (GET /api/organizaciones/{id}/rut-url)
   async getRutUrl(orgId) {
-    return httpClient.get(`/organizaciones/${getPathId(orgId, 'Organización')}/rut`);
+    return httpClient.get(`/organizaciones/${getPathId(orgId, 'Organización')}/rut-url`);
   },
 
   async getSolicitudRut(solicitudId) {
     return httpClient.get(
-      `/solicitudes-verificacion/${getPathId(solicitudId, 'Solicitud')}/rut`
+      `/verificacion/${getPathId(solicitudId, 'Solicitud')}/rut-url`
     );
   },
 

@@ -1036,7 +1036,8 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* DRAWER MODAL LATERAL DERECHO: ASIGNAR FOTO PARA BANNER (SECCIÓN 13) */}

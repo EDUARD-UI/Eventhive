@@ -441,42 +441,43 @@ export const organizerService = {
     return httpClient.delete(`/deseos/${getPathId(eventoId, 'Evento')}`);
   },
 
-  /** GET /api/verificacion/mis-solicitudes o /api/verificacion/mi-solicitud */
+  /** GET /api/verificacion/mis-solicitudes */
   async getMiSolicitudVerificacion() {
-    try {
-      return await httpClient.get('/solicitudes-verificacion/mi-solicitud');
-    } catch {
-      return await httpClient.get('/verificacion/mi-solicitud');
-    }
+    const res = await httpClient.get('/verificacion/mis-solicitudes');
+    return Array.isArray(res) ? (res[0] || null) : (res || null);
   },
 
   /** PATCH /api/verificacion/{solicitudId}/reenviar (multipart con 'datos' JSON y 'rut' opcional) */
   reenviarSolicitudVerificacion(solicitudId, formData) {
-    return httpClient.patch(`/verificacion/${solicitudId}/reenviar`, formData, { isFormData: true });
+    return httpClient.patch(`/verificacion/${getPathId(solicitudId, 'Solicitud')}/reenviar`, formData, { isFormData: true });
   },
 
-  /** POST /api/verificacion/solicitar (multipart con archivo 'rut') */
-  solicitarVerificacion(formData) {
-    return httpClient.post('/solicitudes-verificacion/mi-solicitud/rut', formData, {
-      isFormData: true,
-    });
+  /** Subir RUT asociándolo a la solicitud activa del organizador */
+  async solicitarVerificacion(formData) {
+    const solicitud = await this.getMiSolicitudVerificacion();
+    const solId = solicitud?.id || (Array.isArray(solicitud) ? solicitud[0]?.id : null);
+    if (solId) {
+      return this.subirRut(solId, formData);
+    }
+    throw new Error('No se encontró una solicitud de verificación activa para asociar el RUT.');
   },
 
-  /** POST /api/solicitudes-verificacion/mi-solicitud/rut (multipart con archivo 'rut') */
+  /** PATCH /api/verificacion/{solicitudId}/subir-rut (multipart con archivo 'rut') */
   subirRut(solicitudId, formData) {
-    return httpClient.post('/solicitudes-verificacion/mi-solicitud/rut', formData, {
+    return httpClient.patch(`/verificacion/${getPathId(solicitudId, 'Solicitud')}/subir-rut`, formData, {
       isFormData: true,
     });
   },
 
   /** GET /api/organizaciones/{orgId}/rut-url - Consulta segura de URL temporal del RUT */
   getRutUrl(orgId) {
-    return httpClient.get(`/organizaciones/${getPathId(orgId, 'Organización')}/rut`);
+    return httpClient.get(`/organizaciones/${getPathId(orgId, 'Organización')}/rut-url`);
   },
 
+  /** GET /api/verificacion/{solicitudId}/rut-url - Consulta segura de URL temporal del RUT */
   getSolicitudRut(solicitudId) {
     return httpClient.get(
-      `/solicitudes-verificacion/${getPathId(solicitudId, 'Solicitud')}/rut`
+      `/verificacion/${getPathId(solicitudId, 'Solicitud')}/rut-url`
     );
   },
 };
