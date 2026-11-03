@@ -126,13 +126,6 @@ export default function CreateEventWizard({
     latitud: initialEvent?.latitud || 10.4236,
     longitud: initialEvent?.longitud || -75.5478,
   });
-  const [selectedHour, setSelectedHour] = useState(
-    initialEvent?.hora ? formatHora23(initialEvent.hora).slice(0, 2) : ''
-  );
-  const [selectedMinute, setSelectedMinute] = useState(
-    initialEvent?.hora ? formatHora23(initialEvent.hora).slice(3, 5) : ''
-  );
-
   useEffect(() => {
     if (!stepperRef.current) return undefined;
     const frame = requestAnimationFrame(() => {
@@ -198,9 +191,6 @@ export default function CreateEventWizard({
       latitud: Number(initialEvent.latitud) || 10.4236,
       longitud: Number(initialEvent.longitud) || -75.5478,
     });
-    setSelectedHour(horaClean ? horaClean.slice(0, 2) : '');
-    setSelectedMinute(horaClean ? horaClean.slice(3, 5) : '');
-
     if (initialEvent.foto || initialEvent.imagenUrl || initialEvent.urlFoto) {
       setFotoPreview(initialEvent.foto || initialEvent.imagenUrl || initialEvent.urlFoto);
     }
@@ -258,14 +248,6 @@ export default function CreateEventWizard({
 
   const updateForm = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const updateTimePart = (part, value) => {
-    const nextHour = part === 'hour' ? value : selectedHour;
-    const nextMinute = part === 'minute' ? value : selectedMinute;
-    if (part === 'hour') setSelectedHour(value);
-    else setSelectedMinute(value);
-    updateForm('hora', nextHour && nextMinute ? `${nextHour}:${nextMinute}` : '');
   };
 
   const isDirty = useMemo(() => {
@@ -675,6 +657,7 @@ export default function CreateEventWizard({
                     required
                     value={form.fecha}
                     minDate={minimumEventDate}
+                    variant="light"
                     onChange={(e) => updateForm('fecha', e.target.value)}
                     helperText="Selecciona una fecha con al menos 7 días de anticipación."
                   />
@@ -684,34 +667,16 @@ export default function CreateEventWizard({
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                     Hora de Inicio *
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <select
-                      aria-label="Hora"
-                      value={selectedHour}
-                      onChange={(e) => updateTimePart('hour', e.target.value)}
-                      className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
-                      required
-                    >
-                      <option value="">Hora</option>
-                      {Array.from({ length: 24 }, (_, hour) => {
-                        const value = String(hour).padStart(2, '0');
-                        return <option key={value} value={value}>{value}</option>;
-                      })}
-                    </select>
-                    <select
-                      aria-label="Minutos"
-                      value={selectedMinute}
-                      onChange={(e) => updateTimePart('minute', e.target.value)}
-                      className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
-                      required
-                    >
-                      <option value="">Minutos</option>
-                      {Array.from({ length: 60 }, (_, minute) => {
-                        const value = String(minute).padStart(2, '0');
-                        return <option key={value} value={value}>{value}</option>;
-                      })}
-                    </select>
-                  </div>
+                  <input
+                    type="time"
+                    aria-label="Hora de inicio"
+                    value={form.hora}
+                    onChange={(e) => updateForm('hora', e.target.value)}
+                    step="60"
+                    className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
+                    style={{ colorScheme: 'light' }}
+                    required
+                  />
                 </div>
               </div>
 

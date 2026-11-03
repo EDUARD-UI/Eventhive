@@ -243,7 +243,9 @@ export default function StyledDatePicker({
             <button
               type="button"
               onClick={handleClear}
-              className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+              className={`p-1 rounded-full text-slate-400 transition-colors ${
+                isDark ? 'hover:text-white' : 'hover:text-slate-600'
+              }`}
               title="Limpiar fecha"
             >
               <FiX size={14} />
@@ -264,11 +266,17 @@ export default function StyledDatePicker({
           }`}
         >
           {/* Cabecera del Mes / Año */}
-          <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className={`flex items-center justify-between pb-3 mb-3 border-b ${
+            isDark ? 'border-slate-800' : 'border-slate-100'
+          }`}>
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
+              className={`p-1.5 rounded-lg transition-colors ${
+                isDark
+                  ? 'hover:bg-slate-800 text-slate-300'
+                  : 'hover:bg-slate-100 text-slate-600'
+              }`}
               title="Mes anterior"
             >
               <FiChevronLeft size={16} />
@@ -281,7 +289,11 @@ export default function StyledDatePicker({
             <button
               type="button"
               onClick={handleNextMonth}
-              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
+              className={`p-1.5 rounded-lg transition-colors ${
+                isDark
+                  ? 'hover:bg-slate-800 text-slate-300'
+                  : 'hover:bg-slate-100 text-slate-600'
+              }`}
               title="Mes siguiente"
             >
               <FiChevronRight size={16} />
@@ -291,7 +303,9 @@ export default function StyledDatePicker({
           {/* Días de la semana */}
           <div className="grid grid-cols-7 gap-1 text-center mb-2">
             {(isEnglish ? EN_WEEKDAYS : WEEKDAYS).map((w) => (
-              <span key={w} className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase">
+              <span key={w} className={`text-[11px] font-bold uppercase ${
+                isDark ? 'text-slate-500' : 'text-slate-400'
+              }`}>
                 {w}
               </span>
             ))}
@@ -303,7 +317,9 @@ export default function StyledDatePicker({
             {Array.from({ length: firstDayIndex }).map((_, i) => (
               <div
                 key={`prev-${i}`}
-                className="h-8 flex items-center justify-center text-xs text-slate-300 dark:text-slate-700 select-none pointer-events-none"
+                className={`h-8 flex items-center justify-center text-xs select-none pointer-events-none ${
+                  isDark ? 'text-slate-700' : 'text-slate-300'
+                }`}
               >
                 {prevMonthDays - firstDayIndex + i + 1}
               </div>
@@ -329,7 +345,11 @@ export default function StyledDatePicker({
                       : isPast
                       ? 'opacity-30 cursor-not-allowed text-slate-400'
                       : isToday
-                      ? 'border-2 border-amber-500 text-amber-500 dark:text-amber-400 font-extrabold hover:bg-amber-50 dark:hover:bg-amber-950/40'
+                      ? `border-2 border-amber-500 font-extrabold ${
+                          isDark
+                            ? 'text-amber-400 hover:bg-amber-950/40'
+                            : 'text-amber-500 hover:bg-amber-50'
+                        }`
                       : isDark
                       ? 'hover:bg-slate-800 text-slate-200'
                       : 'hover:bg-slate-100 text-slate-800'
@@ -342,12 +362,16 @@ export default function StyledDatePicker({
           </div>
 
           {/* Acciones de pie: "Hoy" y "Limpiar" */}
-          <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+          <div className={`flex items-center justify-between pt-3 mt-3 border-t text-xs ${
+            isDark ? 'border-slate-800' : 'border-slate-100'
+          }`}>
             <button
               type="button"
               onClick={handleSelectToday}
               disabled={Boolean(effectiveMin && todayStr < effectiveMin)}
-              className="font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer disabled:opacity-40 disabled:no-underline disabled:cursor-not-allowed"
+              className={`font-bold hover:underline cursor-pointer disabled:opacity-40 disabled:no-underline disabled:cursor-not-allowed ${
+                isDark ? 'text-amber-400' : 'text-amber-600'
+              }`}
             >
               Ir a hoy
             </button>
@@ -356,7 +380,11 @@ export default function StyledDatePicker({
               <button
                 type="button"
                 onClick={handleClear}
-                className="font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer"
+                className={`font-semibold cursor-pointer ${
+                  isDark
+                    ? 'text-slate-400 hover:text-white'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
               >
                 Limpiar filtro
               </button>

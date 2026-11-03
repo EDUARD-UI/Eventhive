@@ -194,10 +194,16 @@ export default function BuscarEventosPage() {
   };
 
   const handleDateChange = (val) => {
+    const selectedDate =
+      typeof val === 'string'
+        ? val
+        : typeof val?.target?.value === 'string'
+        ? val.target.value
+        : '';
     const next = new URLSearchParams(searchParams);
     next.delete('page');
-    if (val && String(val).trim()) {
-      next.set('fecha', String(val).trim());
+    if (selectedDate.trim()) {
+      next.set('fecha', selectedDate.trim());
     } else {
       next.delete('fecha');
     }
