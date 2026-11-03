@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FiCheck,
@@ -13,7 +13,9 @@ import {
 import ImageWithFallback from './ImageWithFallback.jsx';
 import { session } from '../../services/session.js';
 import { organizationService } from '../../services/organizerService.js';
+import followService from '../../services/followService.js';
 import { showErrorAlert, showLoginAlert } from '../../utils/alertUtils.js';
+import { useLanguage } from '../../context/LanguageContext.jsx';
 
 /**
  * OrganizationListCard
@@ -26,9 +28,11 @@ import { showErrorAlert, showLoginAlert } from '../../utils/alertUtils.js';
  * - Barra inferior con métricas (seguidores, eventos) y enlace de exploración sutil.
  */
 export default function OrganizationListCard({ org }) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
+  const currentUser = session.getUser();
   const initialFollowers = org?.totalSeguidores ?? org?.followers ?? 0;
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(() => followService.isFollowing(org?.id, currentUser?.id));
   const [followersCount, setFollowersCount] = useState(initialFollowers);
   const [isLoadingFollow, setIsLoadingFollow] = useState(false);
 
@@ -84,7 +88,6 @@ export default function OrganizationListCard({ org }) {
   const imgUrl = urlLogo || imagenPerfil || avatar || logo || imagen || null;
   const displayRating = promedioRating ?? rating ?? null;
   const totalEvents = totalEventosCreados ?? eventsCount ?? 0;
-  const currentUser = session.getUser();
   const currentUserOrganizationId =
     currentUser?.organizacionId ??
     currentUser?.organizationId ??
@@ -97,6 +100,19 @@ export default function OrganizationListCard({ org }) {
       ((currentUserOrganizationId && String(currentUserOrganizationId) === String(id)) ||
         (currentUser.id && representativeId && String(currentUser.id) === String(representativeId)))
   );
+
+  useEffect(() => {
+    setIsFollowing(followService.isFollowing(id, currentUser?.id));
+
+    const onFollowChange = (e) => {
+      if (e.detail?.orgId && String(e.detail.orgId) === String(id)) {
+        setIsFollowing(Boolean(e.detail.isFollowing));
+        setFollowersCount((prev) => (e.detail.isFollowing ? prev + 1 : Math.max(0, prev - 1)));
+      }
+    };
+    window.addEventListener('eventhive:follow_changed', onFollowChange);
+    return () => window.removeEventListener('eventhive:follow_changed', onFollowChange);
+  }, [id, currentUser?.id]);
 
   const handleFollowToggle = async (e) => {
     e.preventDefault();
@@ -120,9 +136,9 @@ export default function OrganizationListCard({ org }) {
 
     try {
       if (nextState) {
-        await organizationService.followOrganization(id);
+        await followService.follow(id, currentUser?.id);
       } else {
-        await organizationService.unfollowOrganization(id);
+        await followService.unfollow(id, currentUser?.id);
       }
     } catch (err) {
       console.warn('Error al actualizar estado de seguimiento:', err);
@@ -187,17 +203,17 @@ export default function OrganizationListCard({ org }) {
               {isLoadingFollow ? (
                 <>
                   <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  <span>{isFollowing ? 'Dejando...' : 'Siguiendo...'}</span>
+                  <span>{isFollowing ? t('Dejando...') : t('Siguiendo...')}</span>
                 </>
               ) : isFollowing ? (
                 <>
                   <FiCheck size={13} strokeWidth={2.5} />
-                  <span>Siguiendo</span>
+                  <span>{t("organizations.following", "Siguiendo")}</span>
                 </>
               ) : (
                 <>
                   <FiUserPlus size={13} />
-                  <span>Seguir</span>
+                  <span>{t("organizations.follow", "Seguir")}</span>
                 </>
               )}
             </button>}
@@ -215,7 +231,7 @@ export default function OrganizationListCard({ org }) {
             <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
               <FiUserCheck size={12} className="text-amber-500 shrink-0" />
               <span className="truncate">
-                Por <strong className="font-semibold text-slate-700 dark:text-slate-300">{repName}</strong>
+                {t("Por")} <strong className="font-semibold text-slate-700 dark:text-slate-300">{repName}</strong>
               </span>
             </div>
           )}
@@ -248,7 +264,7 @@ export default function OrganizationListCard({ org }) {
             to={`/organizaciones/${id}`}
             className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 hover:text-amber-600 dark:hover:text-amber-400 group/link transition-colors cursor-pointer"
           >
-            <span>Ver perfil</span>
+            <span>{t("organizations.view", "Ver perfil")}</span>
             <FiArrowRight size={13} className="transition-transform duration-200 group-hover/link:translate-x-1" />
           </Link>
         </div>

@@ -130,10 +130,10 @@ export default function EventDetailView({
 
   const renderContainer = (content) => {
     if (isDrawer) {
-      return (
-        <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
+      const drawerNode = (
+        <div className="fixed inset-0 z-[9999] flex justify-end animate-in fade-in duration-200">
           <div
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity cursor-pointer"
+            className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity cursor-pointer"
             onClick={onBack}
             aria-hidden="true"
           />
@@ -142,6 +142,7 @@ export default function EventDetailView({
           </div>
         </div>
       );
+      return typeof document !== 'undefined' ? createPortal(drawerNode, document.body) : drawerNode;
     }
     return <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">{content}</div>;
   };

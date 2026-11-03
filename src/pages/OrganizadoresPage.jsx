@@ -24,6 +24,7 @@ import Pagination from '../components/Shared/Pagination.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 import { useLenisScroll } from '../hooks/useLenisScroll.js';
+import { useLanguage } from '../context/LanguageContext.jsx';
 
 const PAGE_SIZE = 6;
 
@@ -39,6 +40,7 @@ const hasVisitedOrganizaciones = () => {
 };
 
 export default function OrganizadoresPage() {
+  const { t } = useLanguage();
   useLenisScroll();
   const isFirstVisit = !hasVisitedOrganizaciones();
 
@@ -159,10 +161,10 @@ export default function OrganizadoresPage() {
           <div className="relative flex w-full flex-col items-stretch">
 
             <h1 className="w-full font-display text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-950 dark:text-white text-left leading-tight">
-              Organizaciones y Productores
+              {t('organizations.heroTitle', 'Organizaciones y Productores')}
             </h1>
             <p className="mt-2.5 w-full text-left text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-              Conecta con los productores, colectivos y promotores independientes que impulsan la cartelera cultural y de entretenimiento en Cartagena.
+              {t('Conecta con los productores, colectivos y promotores independientes que impulsan la cartelera cultural y de entretenimiento en Cartagena.')}
             </p>
 
             {/* Input de Búsqueda Sutil y Ergonómico */}
@@ -175,7 +177,7 @@ export default function OrganizadoresPage() {
                 type="text"
                 value={searchTerm}
                 onChange={handleSearchChange}
-                placeholder="Buscar por nombre de organización..."
+                placeholder={t("organizations.searchPlaceholder", "Buscar por nombre de organización...")}
                 className="h-12 w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#070D1B] pl-11 pr-11 text-xs sm:text-sm text-slate-900 dark:text-white shadow-2xs transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-amber-500 dark:focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/15"
               />
               <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={17} />
@@ -206,7 +208,7 @@ export default function OrganizadoresPage() {
               }`}
             >
               <FiGrid size={14} className={activeTab === 'directorio' ? 'text-amber-500' : ''} />
-              <span>Directorio</span>
+              <span>{t("organizations.tabDirectory", "Directorio")}</span>
             </button>
             <button
               type="button"
@@ -218,7 +220,7 @@ export default function OrganizadoresPage() {
               }`}
             >
               <FiInfo size={14} className={activeTab === 'informacion' ? 'text-amber-500' : ''} />
-              <span>Información</span>
+              <span>{t("organizations.tabInfo", "Información")}</span>
             </button>
           </div>
 
@@ -264,12 +266,12 @@ export default function OrganizadoresPage() {
                   <FiUsers size={24} />
                 </div>
                 <h2 className="text-lg sm:text-xl font-black text-slate-950 dark:text-white tracking-tight uppercase mb-2">
-                  No se encontraron organizaciones
+                  {t('organizations.noOrgsTitle', 'No se encontraron organizaciones')}
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto mb-6 leading-relaxed">
                   {searchTerm.trim()
                     ? `No hay coincidencias para el término “${searchTerm}”. Intenta con otra palabra clave.`
-                    : 'Aún no hay organizaciones activas registradas en el catálogo.'}
+                    : t('organizations.noOrgsEmpty', 'Aún no hay organizaciones activas registradas en el catálogo.')}
                 </p>
                 {searchTerm.trim() && (
                   <button
@@ -277,7 +279,7 @@ export default function OrganizadoresPage() {
                     onClick={() => setSearchTerm('')}
                     className="px-6 py-2.5 rounded-xl bg-slate-900 dark:bg-amber-500 hover:bg-amber-500 hover:text-slate-950 text-white dark:text-slate-950 text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
                   >
-                    Limpiar búsqueda
+                    {t("organizations.clearSearch", "Limpiar búsqueda")}
                   </button>
                 )}
               </div>
@@ -294,10 +296,10 @@ export default function OrganizadoresPage() {
                   <FiCalendar size={22} />
                 </div>
                 <h3 className="font-display font-black text-slate-900 dark:text-white text-base sm:text-lg mb-2">
-                  Publicación Inmediata
+                  {t('organizations.infoCard1Title', 'Publicación Inmediata')}
                 </h3>
                 <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
-                  Crea eventos en minutos, añade galerías fotográficas, fechas, múltiples localidades de boletería y geolocalización en el mapa interactivo de Cartagena.
+                  {t('organizations.infoCard1Desc', 'Crea eventos en minutos, añade galerías fotográficas, fechas, múltiples localidades de boletería y geolocalización en el mapa interactivo de Cartagena.')}
                 </p>
               </div>
 
@@ -306,10 +308,10 @@ export default function OrganizadoresPage() {
                   <FiSmartphone size={22} />
                 </div>
                 <h3 className="font-display font-black text-slate-900 dark:text-white text-base sm:text-lg mb-2">
-                  Pases Digitales con QR Seguro
+                  {t('organizations.infoCard2Title', 'Pases Digitales con QR Seguro')}
                 </h3>
                 <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
-                  Valida entradas en el acceso a tu evento en segundos con nuestro lector QR seguro en tiempo real, erradicando pases duplicados o falsificados.
+                  {t('organizations.infoCard2Desc', 'Valida entradas en el acceso a tu evento en segundos con nuestro lector QR seguro en tiempo real, erradicando pases duplicados o falsificados.')}
                 </p>
               </div>
 
@@ -318,10 +320,10 @@ export default function OrganizadoresPage() {
                   <FiTrendingUp size={22} />
                 </div>
                 <h3 className="font-display font-black text-slate-900 dark:text-white text-base sm:text-lg mb-2">
-                  Métricas y Analíticas en Vivo
+                  {t('organizations.infoCard3Title', 'Métricas y Analíticas en Vivo')}
                 </h3>
                 <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
-                  Supervisa la velocidad de venta de entradas, volumen de recaudación y el nivel de interacción de los asistentes en un panel analítico completo.
+                  {t('organizations.infoCard3Desc', 'Supervisa la velocidad de venta de entradas, volumen de recaudación y el nivel de interacción de los asistentes en un panel analítico completo.')}
                 </p>
               </div>
             </div>
@@ -333,13 +335,13 @@ export default function OrganizadoresPage() {
               <div className="max-w-xl space-y-2 relative z-10">
                 <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-bold uppercase tracking-widest">
                   <FiZap size={11} className="text-amber-400" />
-                  Al ritmo de la ciudad
+                  {t('Al ritmo de la ciudad')}
                 </span>
                 <h2 className="font-display text-xl sm:text-2xl font-black text-white">
-                  Lleva tu cartelera de eventos al siguiente nivel
+                  {t('organizations.bannerTitle', 'Lleva tu cartelera de eventos al siguiente nivel')}
                 </h2>
                 <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                  Únete hoy a la mayor red de productores culturales en Cartagena de Indias y aprovecha nuestras herramientas de venta y difusión.
+                  {t('organizations.bannerDesc', 'Únete hoy a la mayor red de productores culturales en Cartagena de Indias y aprovecha nuestras herramientas de venta y difusión.')}
                 </p>
               </div>
 
@@ -347,7 +349,7 @@ export default function OrganizadoresPage() {
                 to="/registro"
                 className="relative z-10 inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-sm transition-all duration-200 ease-out active:scale-95 shrink-0 cursor-pointer"
               >
-                <span>Registrar mi Organización</span>
+                <span>{t("organizations.bannerCta", "Registrar mi Organización")}</span>
                 <FiArrowRight size={14} />
               </Link>
             </div>

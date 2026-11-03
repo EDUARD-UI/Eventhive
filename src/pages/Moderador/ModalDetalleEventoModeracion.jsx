@@ -150,11 +150,11 @@ export default function ModalDetalleEventoModeracion({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex justify-end">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
+        className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm cursor-pointer transition-opacity"
         onClick={onClose}
       />
 
@@ -543,4 +543,8 @@ export default function ModalDetalleEventoModeracion({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined'
+    ? createPortal(modalContent, document.body)
+    : modalContent;
 }

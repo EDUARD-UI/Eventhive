@@ -18,24 +18,28 @@ import FavoriteButton from '../components/FavoriteButton.jsx';
 import { organizationService } from '../services/organizerService.js';
 import { session } from '../services/session.js';
 import { showErrorAlert, showLoginAlert } from '../utils/alertUtils.js';
+import followService from '../services/followService.js';
 import Pagination from '../components/Shared/Pagination.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
+import { useLanguage } from '../context/LanguageContext.jsx';
 
 const EVENTS_PAGE_SIZE = 6;
 
 export default function PerfilOrganizacionPublicoPage() {
+  const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const user = session.getUser();
+  const userId = user?.id ?? user?.usuarioId;
 
   const [organization, setOrganization] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(() => followService.isFollowing(id, userId));
   const [isFollowingBusy, setIsFollowingBusy] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
   const [eventsPage, setEventsPage] = useState(1);
-  const user = session.getUser();
-  const userId = user?.id ?? user?.usuarioId;
   const userOrganizationId =
     user?.organizacionId ?? user?.organizationId ?? user?.organizacion?.id ?? user?.organization?.id;
   const representativeId =
@@ -47,6 +51,26 @@ export default function PerfilOrganizacionPublicoPage() {
       ((userOrganizationId && String(userOrganizationId) === String(id)) ||
         (userId && representativeId && String(userId) === String(representativeId)))
   );
+
+  // Sincronizar estado de seguimiento en tiempo real y con backend
+  useEffect(() => {
+    setIsFollowing(followService.isFollowing(id, userId));
+
+    if (user && userId) {
+      followService.syncWithBackend(userId).then(() => {
+        setIsFollowing(followService.isFollowing(id, userId));
+      });
+    }
+
+    const onFollowChange = (e) => {
+      if (e.detail?.orgId && String(e.detail.orgId) === String(id)) {
+        setIsFollowing(Boolean(e.detail.isFollowing));
+        setFollowersCount((prev) => (e.detail.isFollowing ? prev + 1 : Math.max(0, prev - 1)));
+      }
+    };
+    window.addEventListener('eventhive:follow_changed', onFollowChange);
+    return () => window.removeEventListener('eventhive:follow_changed', onFollowChange);
+  }, [id, user, userId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -114,11 +138,11 @@ export default function PerfilOrganizacionPublicoPage() {
     setIsFollowingBusy(true);
     try {
       if (isFollowing) {
-        await organizationService.unfollowOrganization(id);
+        await followService.unfollow(id, userId);
         setIsFollowing(false);
         setFollowersCount((prev) => Math.max(0, prev - 1));
       } else {
-        await organizationService.followOrganization(id);
+        await followService.follow(id, userId);
         setIsFollowing(true);
         setFollowersCount((prev) => prev + 1);
       }
@@ -164,7 +188,7 @@ export default function PerfilOrganizacionPublicoPage() {
           <div className="w-16 h-16 rounded-3xl bg-amber-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 text-2xl shadow-inner">
             <FiUsers size={28} />
           </div>
-          <h2 className="text-2xl font-black text-[#0B1B3D] dark:text-white mb-2">Organización no encontrada</h2>
+          <h2 className="text-2xl font-black text-[#0B1B3D] dark:text-white mb-2">{t("Organización no encontrada")}</h2>
           <p className="text-slate-600 dark:text-slate-400 text-sm max-w-md mb-6 font-medium">
             La organización solicitada no está disponible o no tiene un perfil público registrado.
           </p>
@@ -173,7 +197,7 @@ export default function PerfilOrganizacionPublicoPage() {
             className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95"
           >
             <FiArrowLeft size={16} />
-            Volver a Organizaciones
+            {t("Volver a Organizaciones")}
           </Link>
         </div>
 
@@ -213,13 +237,13 @@ export default function PerfilOrganizacionPublicoPage() {
                 className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-white/90 hover:text-white transition-colors group"
               >
                 <FiArrowLeft size={15} className="transition-transform duration-200 group-hover:-translate-x-1" />
-                <span>Volver</span>
+                <span>{t("Volver")}</span>
               </Link>
             </div>
 
             <div className="py-8 sm:py-12 text-center">
               <p className="text-xs sm:text-sm font-extrabold uppercase tracking-[0.2em] text-amber-300 mb-3">
-                Perfil de organización
+                organización
               </p>
               <h1 className="text-2xl sm:text-4xl lg:text-[42px] font-black text-white uppercase tracking-tight leading-tight">
                 {organization.name}
@@ -261,7 +285,7 @@ export default function PerfilOrganizacionPublicoPage() {
                   <div className="mt-3 flex justify-center">
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 px-3.5 py-1 rounded-full border border-emerald-500/35">
                       <FiCheckCircle size={11} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
-                      <span>VERIFICADA EN EVENTHIVE</span>
+                      <span>{t("VERIFICADA EN EVENTHIVE")}</span>
                     </span>
                   </div>
                 )}
@@ -319,7 +343,7 @@ export default function PerfilOrganizacionPublicoPage() {
                       : 'bg-[#F5A60B] hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
                   }`}
                 >
-                  {isFollowing ? 'SIGUIENDO' : 'SEGUIR'}
+                  {isFollowing ? t('SIGUIENDO') : t('SEGUIR')}
                 </button>}
 
                 {/* Icono de redes sociales en la parte inferior (solo Instagram) */}
@@ -350,7 +374,7 @@ export default function PerfilOrganizacionPublicoPage() {
             <div className="min-w-0 w-full">
               {/* Encabezado Principal */}
               <h2 className="text-xl sm:text-2xl lg:text-[26px] font-black text-slate-900 dark:text-white uppercase tracking-tight mb-4">
-                NUESTRAS EXPERIENCIAS CULTURALES
+                {t("NUESTRAS EXPERIENCIAS CULTURALES")}
               </h2>
 
               {/* Grid de tarjetas de eventos (3 columnas como en la maqueta) */}
@@ -400,7 +424,7 @@ export default function PerfilOrganizacionPublicoPage() {
                               {event.promocionado && (
                                 <span className="px-2.5 py-0.5 rounded-md bg-[#F5B82E] text-slate-950 font-black text-[10px] uppercase tracking-wider shadow-sm flex items-center gap-1">
                                   <span>★</span>
-                                  <span>PROMOCIONADO</span>
+                                  <span>{t("PROMOCIONADO")}</span>
                                 </span>
                               )}
                             </div>
@@ -471,10 +495,10 @@ export default function PerfilOrganizacionPublicoPage() {
                     <FiCalendar size={24} />
                   </div>
                   <h3 className="text-lg font-black text-[#0B1B3D] dark:text-white mb-1 uppercase">
-                    No hay eventos activos
+                    {t("No hay eventos activos")}
                   </h3>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mb-6 font-medium">
-                    Esta organización actualmente no tiene eventos publicados y activos.
+                    {t("Esta organización actualmente no tiene eventos publicados y activos.")}
                   </p>
                 </div>
               )}

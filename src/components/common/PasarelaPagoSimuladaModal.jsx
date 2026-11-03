@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   FiX,
@@ -35,6 +36,8 @@ function EmvGoldChip() {
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : modalNode;
 }
 
 // Logo oficial Mastercard
@@ -159,8 +162,8 @@ export default function PasarelaPagoSimuladaModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-3 sm:p-5 overflow-y-auto animate-fade-in">
+  const modalNode = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-3 sm:p-5 overflow-y-auto animate-fade-in">
       <div className="bg-white rounded-[28px] sm:rounded-[36px] max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-6">
         
         {/* Cabecera con Logo, Eslogan y Temporizador Digital */}

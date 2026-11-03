@@ -39,6 +39,7 @@ import { organizerService } from '../../services/organizerService.js';
 import { session } from '../../services/session.js';
 import { formatPrice } from '../../utils/formatters.js';
 import { showInfoAlert } from '../../utils/alertUtils.js';
+import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
 
 const menuItems = [
   { id: 'resumen', label: 'Resumen', icon: FiGrid },
@@ -109,6 +110,8 @@ function OrgEventsCalendar({ events = [], onSelectEvent }) {
 
   const selectedDayEvents = eventsByDate[selectedDayKey] || [];
 
+
+
   return (
     <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-6 space-y-5">
       {/* Encabezado Calendario */}
@@ -176,13 +179,12 @@ function OrgEventsCalendar({ events = [], onSelectEvent }) {
               key={dateKey}
               type="button"
               onClick={() => setSelectedDayKey(dateKey)}
-              className={`h-8 w-full rounded-xl text-xs font-semibold flex items-center justify-center relative transition-all cursor-pointer ${
-                isSelected
+              className={`h-8 w-full rounded-xl text-xs font-semibold flex items-center justify-center relative transition-all cursor-pointer ${isSelected
                   ? 'bg-[#0B1B3D] text-amber-300 font-bold shadow-xs'
                   : hasEvents
-                  ? 'bg-amber-100/70 text-amber-950 font-bold hover:bg-amber-200'
-                  : 'text-slate-700 hover:bg-slate-100'
-              }`}
+                    ? 'bg-amber-100/70 text-amber-950 font-bold hover:bg-amber-200'
+                    : 'text-slate-700 hover:bg-slate-100'
+                }`}
             >
               <span>{dayNum}</span>
               {hasEvents && !isSelected && (
@@ -238,6 +240,7 @@ export default function OrganizadorIndex() {
   const user = session.getUser() || {};
   const onboardingAlertShown = useRef(false);
   const isOperador = user.role === 'OPERADOR' || user.rol === 'OPERADOR';
+  const [pageLoading, setPageLoading] = useState(true);
   const userPermisos = user.permisos || user.authorities || [];
 
   const dynamicMenuItems = useMemo(() => {
@@ -355,22 +358,22 @@ export default function OrganizadorIndex() {
 
   const loadData = useCallback(() => {
     // 1. Datos de la organización y verificación oficial
-    organizerService
+    const pOrg = organizerService
       .getMiOrganizacion()
       .then((data) => {
         if (data) setOrgData(data);
       })
-      .catch(() => {});
+      .catch(() => { });
 
-    organizerService
+    const pSol = organizerService
       .getMiSolicitudVerificacion()
       .then((data) => {
         if (data) setSolicitudVerif(data);
       })
-      .catch(() => {});
+      .catch(() => { });
 
     // 2. Estadísticas oficiales de la organización (GET /api/organizaciones/mi-organizacion/estadisticas)
-    organizerService
+    const pEst = organizerService
       .getEstadisticasMiOrganizacion()
       .then((res) => {
         if (res) {
@@ -389,7 +392,7 @@ export default function OrganizadorIndex() {
       });
 
     // 3. Eventos de la organización
-    organizerService
+    const pEvs = organizerService
       .getEventosOrganizador({ page: 0, size: 200 })
       .then((events) => {
         const list = (events || []).filter((e) => (e.estado || '').toUpperCase() !== 'FINALIZADO' && (e.rawStatus || '').toUpperCase() !== 'FINALIZADO');
@@ -416,10 +419,16 @@ export default function OrganizadorIndex() {
           totalRecaudo: recaudo,
         });
       })
-      .catch(() => {});
+      .catch(() => { });
 
     // 4. Cartelera inicial
-    fetchCarteleraPage(0);
+    const pCartelera = fetchCarteleraPage(0);
+
+    Promise.allSettled([pOrg, pSol, pEst, pEvs, pCartelera]).finally(() => {
+      setTimeout(() => {
+        setPageLoading(false);
+      }, 450);
+    });
   }, [fetchCarteleraPage]);
 
   useEffect(() => {
@@ -451,7 +460,10 @@ export default function OrganizadorIndex() {
       solicitudVerif?.urlDocumentoRut ||
       solicitudVerif?.urlArchivo ||
       solicitudVerif?.url ||
-      String(solicitudVerif?.estado || '').toUpperCase() === 'PENDIENTE'
+      String(solicitudVerif?.estado || '').toUpperCase() === 'PENDIENTE' ||
+      organizationStatuses.some((status) =>
+        ['PENDIENTE', 'PENDIENTE_REVISION', 'APROBADA'].includes(status)
+      )
   );
   const canSendEvents = !isOrgSuspended && hasRutUploaded;
 
@@ -757,6 +769,17 @@ export default function OrganizadorIndex() {
     return renderDashboardTab();
   };
 
+  // Pantalla de carga con abejas oficial (HiveBeeLoader) para Organización y Operador
+  if (pageLoading) {
+    return (
+      <HiveBeeLoader
+        text="Cargando..."
+        subtext={isOperador ? "Panel del Operador" : "Panel de Organización"}
+        fullScreen={true}
+      />
+    );
+  }
+
   return (
     <StandardLayout
       role={isOperador ? "Operador" : "Organización"}
@@ -807,7 +830,7 @@ export default function OrganizadorIndex() {
         </div>
       )}
 
-      
+
 
       {renderContent()}
 

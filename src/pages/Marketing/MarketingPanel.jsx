@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Sidebar from '../../components/Shared/Sidebar.jsx';
 import Header from '../../components/Shared/Header.jsx';
@@ -8,6 +8,7 @@ import MarketingBannersView from './MarketingBannersView.jsx';
 import AdminPerfilView from '../Administrador/AdminPerfilView.jsx';
 import { session } from '../../services/session.js';
 import { useDashboardTheme } from '../../hooks/useDashboardTheme.js';
+import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
 
 const menuItems = [
   { id: 'eventos', label: 'Eventos Promocionados', icon: Sparkles },
@@ -21,17 +22,25 @@ export default function MarketingPanel() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'eventos';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+    }, 450);
+    return () => clearTimeout(timer);
+  }, []);
 
   const sessionUser = session.getUser();
   const userName = sessionUser?.name || 'Especialista Marketing';
   const userInitials = userName
     ? userName
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((w) => w[0])
-        .join('')
-        .toUpperCase()
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join('')
+      .toUpperCase()
     : 'MK';
 
   const userPhoto =
@@ -55,7 +64,7 @@ export default function MarketingPanel() {
         return (
           <AdminPerfilView
             onNavigateTab={handleSelectTab}
-            showToast={() => {}}
+            showToast={() => { }}
           />
         );
 
@@ -74,7 +83,7 @@ export default function MarketingPanel() {
       case 'banners':
         return 'Espacios Publicitarios y Banners';
       case 'perfil':
-        return 'Perfil Profesional';
+        return 'Mi Perfil';
       case 'planes':
         return 'Planes de Promoción';
       case 'eventos':
@@ -83,6 +92,16 @@ export default function MarketingPanel() {
         return 'Eventos Promocionados';
     }
   };
+
+  if (pageLoading) {
+    return (
+      <HiveBeeLoader
+        text="Cargando..."
+        subtext="Panel de Marketing"
+        fullScreen={true}
+      />
+    );
+  }
 
   return (
     <div className="admin-theme flex h-screen overflow-hidden bg-[#f1f5f9] font-body text-slate-800">

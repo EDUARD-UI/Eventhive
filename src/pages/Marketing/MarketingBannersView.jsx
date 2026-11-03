@@ -319,11 +319,11 @@ export default function MarketingBannersView() {
       )}
 
       {/* DRAWER MODAL A LA DERECHA: MODIFICAR BANNER */}
-      {drawerOpen && editingBanner && (
+      {drawerOpen && editingBanner && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[9999] flex justify-end">
           {/* Backdrop con desenfoque */}
           <div
-            className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs cursor-pointer transition-opacity"
+            className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm cursor-pointer transition-opacity"
             onClick={() => setDrawerOpen(false)}
           />
 
@@ -560,7 +560,8 @@ export default function MarketingBannersView() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

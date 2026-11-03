@@ -16,6 +16,7 @@ import BoletosPartial from './partial/BoletosPartial.jsx';
 import AjustesPartial from './partial/AjustesPartial.jsx';
 import { usePerfilUsuario } from './usePerfilUsuario.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
+import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
 
 export default function PerfilUsuario() {
   const navigate = useNavigate();
@@ -57,6 +58,16 @@ export default function PerfilUsuario() {
   } = usePerfilUsuario();
 
   const totalEventosConfirmados = eventosProximos.length + eventosHistorial.length;
+
+  if (loading) {
+    return (
+      <HiveBeeLoader
+        text="Cargando..."
+        subtext="Panel de Usuario"
+        fullScreen={true}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 selection:bg-amber-400 selection:text-slate-950 font-body transition-colors duration-200">

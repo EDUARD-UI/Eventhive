@@ -88,6 +88,8 @@ export default function AppRouter() {
             </RutaProtegida>
           }
         />
+        <Route path="/Moderador" element={<Navigate to="/moderador" replace />} />
+        <Route path="/moderador/dashboard" element={<Navigate to="/moderador" replace />} />
 
         <Route
           path="/organizacion"

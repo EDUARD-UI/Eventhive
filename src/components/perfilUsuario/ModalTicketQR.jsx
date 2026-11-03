@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FiX, FiDownload } from 'react-icons/fi';
 import { showInfoAlert } from '../../utils/alertUtils.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 
-export default function ModalTicketQR({ ticket, onClose }) {
+export default function ModalTicketQR({ ticket: initialTicket, tickets = [], onClose }) {
   const { t } = useLanguage();
+  const allTickets = tickets && tickets.length > 0 ? tickets : (initialTicket ? [initialTicket] : []);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const ticket = allTickets[currentIndex] || initialTicket;
 
   if (!ticket) return null;
 
@@ -16,12 +21,12 @@ export default function ModalTicketQR({ ticket, onClose }) {
     });
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4 animate-fade-in">
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4 overflow-y-auto animate-fade-in">
       {/* Backdrop para cerrar */}
       <div className="fixed inset-0" onClick={onClose} />
 
-      <div className="bg-white dark:bg-[#0E1626] rounded-2xl sm:rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-200 dark:border-slate-800 relative overflow-hidden z-10">
+      <div className="bg-white dark:bg-[#0E1626] rounded-2xl sm:rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-200 dark:border-slate-800 relative overflow-hidden z-10 my-auto max-h-[92vh] overflow-y-auto">
         <button
           type="button"
           onClick={onClose}
@@ -31,9 +36,16 @@ export default function ModalTicketQR({ ticket, onClose }) {
           <FiX size={18} />
         </button>
 
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-0.5 rounded-full inline-block">
-          {t('Pase Digital Oficial')}
-        </span>
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-0.5 rounded-full inline-block">
+            {t('Pase Digital Oficial')}
+          </span>
+          {allTickets.length > 1 && (
+            <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+              {currentIndex + 1} de {allTickets.length}
+            </span>
+          )}
+        </div>
 
         <h3 className="font-extrabold text-base sm:text-lg text-slate-950 dark:text-white mt-2.5 leading-snug">
           {ticket.evento}
@@ -68,6 +80,30 @@ export default function ModalTicketQR({ ticket, onClose }) {
           </p>
         </div>
 
+        {allTickets.length > 1 && (
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <button
+              type="button"
+              disabled={currentIndex === 0}
+              onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 cursor-pointer"
+            >
+              ← Anterior
+            </button>
+            <span className="text-[11px] font-medium text-slate-400">
+              Entrada {currentIndex + 1} / {allTickets.length}
+            </span>
+            <button
+              type="button"
+              disabled={currentIndex === allTickets.length - 1}
+              onClick={() => setCurrentIndex((prev) => Math.min(allTickets.length - 1, prev + 1))}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 cursor-pointer"
+            >
+              Siguiente →
+            </button>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={handleConfirmPass}
@@ -79,4 +115,8 @@ export default function ModalTicketQR({ ticket, onClose }) {
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined'
+    ? createPortal(modalContent, document.body)
+    : modalContent;
 }

@@ -1041,11 +1041,11 @@ export default function CreateEventWizard({
   );
 
   if (isDrawer) {
-    return (
-      <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
+    const drawerNode = (
+      <div className="fixed inset-0 z-[9999] flex justify-end animate-in fade-in duration-200">
         {/* Backdrop oscurecido al hacer clic afuera */}
         <div
-          className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs transition-opacity cursor-pointer"
+          className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity cursor-pointer"
           onClick={handleSafeBack}
           aria-hidden="true"
         />
@@ -1056,6 +1056,7 @@ export default function CreateEventWizard({
         </div>
       </div>
     );
+    return typeof document !== 'undefined' ? createPortal(drawerNode, document.body) : drawerNode;
   }
 
   return wizardContent;

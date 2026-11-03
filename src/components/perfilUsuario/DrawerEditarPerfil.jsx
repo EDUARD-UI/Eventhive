@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { FiX, FiEdit2, FiCamera } from 'react-icons/fi';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 
@@ -25,11 +26,11 @@ export default function DrawerEditarPerfil({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
+  const drawerNode = (
+    <div className="fixed inset-0 z-[9999] flex justify-end animate-in fade-in duration-200">
       {/* Backdrop con blur */}
       <div
-        className="fixed inset-0 bg-slate-950/50 backdrop-blur-2xs cursor-pointer transition-opacity"
+        className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm cursor-pointer transition-opacity"
         onClick={onClose}
       />
 
@@ -184,4 +185,6 @@ export default function DrawerEditarPerfil({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(drawerNode, document.body) : drawerNode;
 }

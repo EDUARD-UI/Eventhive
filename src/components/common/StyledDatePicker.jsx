@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiCalendar, FiChevronLeft, FiChevronRight, FiX } from 'react-icons/fi';
 import { useTheme } from '../../context/ThemeContext.jsx';
+import { useLanguage } from '../../context/LanguageContext.jsx';
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -17,6 +18,8 @@ const WEEKDAYS = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'];
  * - Totalmente adaptado a modo claro y modo oscuro.
  * - Soporte para scroll aislado nativo sin interferir con el scroll general de la página.
  */
+const EN_WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+
 export default function StyledDatePicker({
   id,
   name,
@@ -34,6 +37,7 @@ export default function StyledDatePicker({
   helperText = null,
   variant = null, // 'light' | 'dark' | null (use application theme)
 }) {
+  const { t, isEnglish } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
 
@@ -191,7 +195,7 @@ export default function StyledDatePicker({
                     : 'font-semibold text-slate-500 dark:text-slate-400'
                 }`}
               >
-                {formattedDisplay || placeholder}
+                {formattedDisplay || (t(placeholder) || placeholder)}
               </span>
             </div>
           </div>
@@ -271,7 +275,7 @@ export default function StyledDatePicker({
             </button>
 
             <span className={`font-extrabold text-sm uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {MONTH_NAMES[viewMonth]} <span className="text-amber-500">{viewYear}</span>
+              {t(MONTH_NAMES[viewMonth])} <span className="text-amber-500">{viewYear}</span>
             </span>
 
             <button
@@ -286,7 +290,7 @@ export default function StyledDatePicker({
 
           {/* Días de la semana */}
           <div className="grid grid-cols-7 gap-1 text-center mb-2">
-            {WEEKDAYS.map((w) => (
+            {(isEnglish ? EN_WEEKDAYS : WEEKDAYS).map((w) => (
               <span key={w} className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase">
                 {w}
               </span>

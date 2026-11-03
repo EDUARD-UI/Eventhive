@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { userService } from '../../services/userService.js';
 import { organizerService, organizationService } from '../../services/organizerService.js';
+import followService from '../../services/followService.js';
 import { normalizeEvent } from '../../services/eventService.js';
 import { session } from '../../services/session.js';
 import { formatPrice, formatHora12 } from '../../utils/formatters.js';
@@ -568,6 +569,7 @@ export function usePerfilUsuario() {
     const currentStored = new Set(getStoredFollowedIds(sessionUser.id));
     currentStored.add(orgId);
     saveStoredFollowedIds(sessionUser.id, Array.from(currentStored));
+    followService.notifyChange(orgId, true);
 
     const updatedOrg = { ...org, followers: (Number(org.followers) || 0) + 1 };
     setOrganizacionesSeguidas((prev) => [...prev.filter((o) => String(o.id) !== orgId), updatedOrg]);
@@ -601,6 +603,7 @@ export function usePerfilUsuario() {
     const currentStored = new Set(getStoredFollowedIds(sessionUser.id));
     currentStored.delete(orgId);
     saveStoredFollowedIds(sessionUser.id, Array.from(currentStored));
+    followService.notifyChange(orgId, false);
 
     const updatedOrg = { ...org, followers: Math.max(0, (Number(org.followers) || 1) - 1) };
     setOrganizacionesSeguidas((prev) => prev.filter((o) => String(o.id) !== orgId));

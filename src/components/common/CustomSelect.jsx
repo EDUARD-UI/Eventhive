@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { FiChevronDown, FiCheck } from 'react-icons/fi';
+import { useLanguage } from '../../context/LanguageContext.jsx';
 
 /**
  * CustomSelect
@@ -19,6 +20,7 @@ export default function CustomSelect({
   inlineLabel = null,
   icon: Icon = null,
 }) {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
 
@@ -34,7 +36,8 @@ export default function CustomSelect({
   }, []);
 
   const selectedOption = options.find((opt) => String(opt.value) === String(value));
-  const displayText = selectedOption ? selectedOption.label : placeholder;
+  const rawText = selectedOption ? selectedOption.label : placeholder;
+  const displayText = t(rawText) || rawText;
 
   const handleSelect = (optValue) => {
     onChange({ target: { value: optValue } });
@@ -77,7 +80,7 @@ export default function CustomSelect({
             <div className="min-w-0 flex-1">
               {inlineLabel && (
                 <span className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 leading-none mb-1">
-                  {inlineLabel}
+                  {t(inlineLabel) || inlineLabel}
                 </span>
               )}
               <span className="block truncate text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white leading-tight">
@@ -145,7 +148,7 @@ export default function CustomSelect({
                     : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-950 dark:hover:text-white'
                 }`}
               >
-                <span className="truncate">{opt.label}</span>
+                <span className="truncate">{t(opt.label) || opt.label}</span>
                 {isSelected && <FiCheck className="shrink-0 text-amber-500 ml-2" size={14} />}
               </li>
             );

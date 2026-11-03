@@ -19,7 +19,7 @@ export default function ModeradorLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const currentUser = session.getUser();
 
-  const userName = currentUser?.name || 'Moderador';
+  const userName = currentUser?.name || currentUser?.nombre || 'Moderador';
   const userInitials = userName
     .split(' ')
     .filter(Boolean)
@@ -28,21 +28,28 @@ export default function ModeradorLayout({
     .join('')
     .toUpperCase() || 'MD';
 
+  const userPhoto =
+    currentUser?.urlImagenPerfil ||
+    currentUser?.imagenPerfil ||
+    currentUser?.fotoUrl ||
+    currentUser?.foto ||
+    currentUser?.imagenUrl ||
+    null;
+
   return (
-    <div className="moderador-theme flex h-screen overflow-hidden bg-[#f1f5f9] font-body text-slate-800">
+    <div className="panel-theme flex h-screen overflow-hidden bg-[#f4f6fa] font-body text-[#172033]">
       <Sidebar
         role="Moderador"
         items={menuItems}
         activeItem={activeItem}
         onSelect={onSelect}
-        variant="moderator"
-        pageBg="#f1f5f9"
+        variant="standard"
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Cabecera compartida del Moderador (Estática) */}
+      <div className="relative flex min-w-0 flex-1 flex-col h-screen overflow-hidden">
+        {/* Cabecera compartida del Moderador (Estática con acceso a perfil) */}
         <div className="shrink-0 z-20">
           <Header
             title={title}
@@ -53,21 +60,15 @@ export default function ModeradorLayout({
             searchPlaceholder={searchPlaceholder}
             userName={userName}
             userInitials={userInitials}
-            userEmail={currentUser?.email}
-            userPhoto={
-              currentUser?.urlImagenPerfil ||
-              currentUser?.imagenPerfil ||
-              currentUser?.fotoUrl ||
-              currentUser?.foto ||
-              currentUser?.imagenUrl ||
-              null
-            }
+            userEmail={currentUser?.email || currentUser?.correo}
+            userPhoto={userPhoto}
+            onProfileClick={() => onSelect && onSelect('perfil')}
             onMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
           />
         </div>
 
         {/* Contenedor principal: única sección que realiza scroll */}
-        <main className="px-4 sm:px-8 pb-12 flex-1 pt-6 max-w-[1400px] w-full mx-auto overflow-y-auto min-h-0 animate-in fade-in duration-200">
+        <main className="mx-auto w-full max-w-[1400px] flex-1 overflow-y-auto min-h-0 px-4 sm:px-8 pb-10 pt-6 sm:pt-8">
           {children}
         </main>
       </div>

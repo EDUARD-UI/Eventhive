@@ -18,10 +18,12 @@ import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 import FeaturedEventCountdownBanner from '../components/common/FeaturedEventCountdownBanner.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useLenisScroll } from '../hooks/useLenisScroll.js';
+import { useLanguage } from '../context/LanguageContext.jsx';
 
 const PAGE_SIZE = 12;
 
 export default function BuscarEventosPage() {
+  const { t } = useLanguage();
   useLenisScroll();
   const { isDark } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -220,8 +222,8 @@ export default function BuscarEventosPage() {
   };
 
   const categorySelectOptions = useMemo(() => [
-    { label: 'Todas las categorías', value: '' },
-    ...categoryList.map((cat) => ({ label: cat.nombre, value: String(cat.id) })),
+    { label: t('search.allCategoriesOption', 'Todas las categorías'), value: '' },
+    ...categoryList.map((cat) => ({ label: t(cat.nombre) || cat.nombre, value: String(cat.id) })),
   ], [categoryList]);
 
   const hasActiveFilters = Boolean(tituloParam || fechaParam || categoriaIdParam);
@@ -266,7 +268,7 @@ export default function BuscarEventosPage() {
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Buscar eventos por nombre..."
+                placeholder={t("search.searchPlaceholder", "Buscar eventos por nombre...")}
                 className="h-12 w-full rounded-xl md:rounded-full border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0B1428] pl-11 pr-10 text-sm text-slate-900 dark:text-slate-100 shadow-inner transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
               />
               <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
@@ -294,7 +296,7 @@ export default function BuscarEventosPage() {
                 value={categoriaIdParam}
                 onChange={handleCategorySelect}
                 options={categorySelectOptions}
-                placeholder="Todas las categorías"
+                placeholder={t("search.allCategoriesOption", "Todas las categorías")}
                 className="w-full"
               />
             </div>
@@ -304,7 +306,7 @@ export default function BuscarEventosPage() {
               <StyledDatePicker
                 value={fechaParam}
                 onChange={handleDateChange}
-                placeholder="Cualquier fecha"
+                placeholder={t("calendar.selectDate", "Cualquier fecha")}
               />
             </div>
 
@@ -314,17 +316,17 @@ export default function BuscarEventosPage() {
               className="w-full md:w-auto px-7 py-3 rounded-xl md:rounded-full bg-slate-950 dark:bg-amber-500 hover:bg-amber-500 hover:text-slate-950 text-white dark:text-slate-950 text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-md active:scale-95 shrink-0 flex items-center justify-center gap-2"
             >
               <FiSearch size={14} />
-              <span>Buscar eventos</span>
+              <span>{t("navbar.searchEvents", "Buscar eventos")}</span>
             </button>
           </form>
 
           {/* Filtros Activos Chips */}
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-2 mt-3 px-2">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Filtros aplicados:</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t("search.appliedFilters", "Filtros aplicados:")}</span>
               {activeCategory && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold">
-                  {activeCategory.nombre}
+                  {t(activeCategory.nombre) || activeCategory.nombre}
                   <button
                     type="button"
                     onClick={() => {
@@ -380,7 +382,7 @@ export default function BuscarEventosPage() {
                 className="text-xs text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 font-bold ml-1 cursor-pointer flex items-center gap-1"
               >
                 <FiX size={13} />
-                <span>Limpiar filtros</span>
+                <span>{t("search.clearAll", "Limpiar filtros")}</span>
               </button>
             </div>
           )}
@@ -396,7 +398,7 @@ export default function BuscarEventosPage() {
           </div>
         )}
 
-        {/* TÍTULO DE SELECCIÓN EDITORIAL */}
+        {/* TÍTULO DE {t("SELECCIÓN EDITORIAL")} */}
         <section aria-label="Selección Editorial" className="w-full mb-6 sm:mb-8 relative z-0">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
@@ -404,7 +406,7 @@ export default function BuscarEventosPage() {
                 SELECCIÓN EDITORIAL
               </span>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-slate-950 dark:text-white">
-                Lo que está pasando
+                {t("Lo que está pasando")}
               </h2>
             </div>
           </div>
@@ -466,17 +468,17 @@ export default function BuscarEventosPage() {
                 <FiCalendar size={24} />
               </div>
               <h3 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-2">
-                No encontramos eventos con estos criterios
+                {t("search.noResultsTitle", "No encontramos eventos con estos criterios")}
               </h3>
               <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto mb-6 leading-relaxed">
-                Prueba ajustando la fecha, cambiando de categoría o restableciendo los filtros para ver toda la cartelera cultural.
+                {t("search.noResultsSubtitle", "Prueba ajustando la fecha, cambiando de categoría o restableciendo los filtros para ver toda la cartelera cultural.")}
               </p>
               <button
                 type="button"
                 onClick={handleClearFilters}
                 className="px-6 py-2.5 rounded-xl bg-slate-950 dark:bg-amber-500 hover:bg-amber-500 hover:text-slate-950 text-white dark:text-slate-950 text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
               >
-                Ver todos los eventos
+                {t("search.viewAllEvents", "Ver todos los eventos")}
               </button>
             </div>
           )}
@@ -501,11 +503,11 @@ export default function BuscarEventosPage() {
 
             <div className="relative z-10 mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:mb-8">
               <div>
-                <span className="text-amber-500 dark:text-amber-400 font-black text-xs uppercase tracking-widest block mb-1">EXPLORA POR INTERÉS</span>
-                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-950 dark:text-white">Tu ciudad, a tu manera</h2>
+                <span className="text-amber-500 dark:text-amber-400 font-black text-xs uppercase tracking-widest block mb-1">{t("EXPLORA POR INTERÉS")}</span>
+                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-950 dark:text-white">{t("Tu ciudad, a tu manera")}</h2>
               </div>
               <Link to="/categorias" className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-amber-500 hover:text-amber-400 uppercase tracking-wider transition-colors">
-                <span>Ver todas</span><FiArrowUpRight size={16} />
+                <span>{t("Ver todas")}</span><FiArrowUpRight size={16} />
               </Link>
             </div>
 
@@ -541,8 +543,8 @@ export default function BuscarEventosPage() {
                       </span>
                       <span aria-hidden="true" className="absolute right-3 bottom-14 z-10 flex h-9 w-9 translate-y-2 items-center justify-center rounded-full bg-amber-400 text-slate-950 opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100"><FiArrowUpRight size={18} /></span>
                       <div className="relative z-10 w-full min-w-0">
-                        <h4 className="text-sm sm:text-base font-extrabold uppercase text-white truncate tracking-tight transition-colors group-hover:text-amber-300 drop-shadow-sm">{cat.nombre}</h4>
-                        <span className="mt-1 block text-xs font-semibold text-slate-200 drop-shadow-xs">Descubre experiencias</span>
+                        <h4 className="text-sm sm:text-base font-extrabold uppercase text-white truncate tracking-tight transition-colors group-hover:text-amber-300 drop-shadow-sm">{(t(cat.nombre) || cat.nombre)}</h4>
+                        <span className="mt-1 block text-xs font-semibold text-slate-200 drop-shadow-xs">{t("Descubre experiencias")}</span>
                       </div>
                       <span aria-hidden="true" className="absolute bottom-0 left-0 h-1 w-full origin-left scale-x-0 bg-gradient-to-r from-amber-400 via-pink-500 to-violet-500 transition-transform duration-500 group-hover:scale-x-100" />
                       <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 skew-x-[-20deg] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 category-motion" style={{ animation: 'categoryShimmer 1.1s ease-out' }} />

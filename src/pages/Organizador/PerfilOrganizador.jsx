@@ -744,11 +744,11 @@ export default function PerfilOrganizador() {
       )}
 
       {/* ===== MODAL LATERAL DERECHO DE EDICIÓN (Requerimiento 2.5) ===== */}
-      {isEditDrawerOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+      {isEditDrawerOpen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] overflow-hidden flex justify-end">
           {/* Backdrop con blur */}
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity cursor-pointer"
             onClick={() => setIsEditDrawerOpen(false)}
           />
 
@@ -994,7 +994,8 @@ export default function PerfilOrganizador() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

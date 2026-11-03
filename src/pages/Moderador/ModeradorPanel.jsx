@@ -5,6 +5,8 @@ import ModeradorLayout from '../../layouts/ModeradorLayout.jsx';
 import ModeradorResumenView from './ModeradorResumenView.jsx';
 import ModeradorPendientesView from './ModeradorPendientesView.jsx';
 import ModeradorHistorialView from './ModeradorHistorialView.jsx';
+import ModeradorPerfilView from './ModeradorPerfilView.jsx';
+import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
 
 import ModalDetalleEventoModeracion from './ModalDetalleEventoModeracion.jsx';
 import ModalAccionModeracion from './ModalAccionModeracion.jsx';
@@ -13,17 +15,17 @@ import {
   FiTrendingUp,
   FiClipboard,
   FiLayers,
-  FiList,
-  FiCheckCircle,
-  FiAlertCircle,
-  FiX,
+  FiUser,
 } from 'react-icons/fi';
 
 export default function ModeradorPanel() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'resumen';
 
-  // Estados de datos reales (Requisito 5.4: publicados, pendientesRevision, enCorreccion, rechazados)
+  // Loader de bienvenida inicial del dashboard (igual al panel del operador)
+  const [pageLoading, setPageLoading] = useState(true);
+
+  // Estados de datos reales (publicados, pendientesRevision, enCorreccion, rechazados)
   const [stats, setStats] = useState({
     publicados: 0,
     pendientesRevision: 0,
@@ -43,8 +45,7 @@ export default function ModeradorPanel() {
   const [motivos, setMotivos] = useState([]);
   const [motivosLoading, setMotivosLoading] = useState(false);
 
-  // Feedback y Modales
-  const [toast, setToast] = useState(null); // { message, type: 'success' | 'error' }
+  // Modales
   const [eventoModalDetalle, setEventoModalDetalle] = useState(null);
   const [accionModal, setAccionModal] = useState(null); // { evento, tipo: 'correccion'|'rechazo' }
   const [actionLoading, setActionLoading] = useState(false);
@@ -55,7 +56,7 @@ export default function ModeradorPanel() {
       title: type === 'error' ? 'Error' : 'Operación exitosa',
       text: typeof message === 'string' ? message : String(message),
       confirmButtonText: 'Aceptar',
-      confirmButtonColor: '#0B1B3D',
+      confirmButtonColor: '#087fea',
       timer: 3000,
     });
   }, []);
@@ -106,18 +107,25 @@ export default function ModeradorPanel() {
       }
     } catch (err) {
       console.error('Error cargando motivos de rechazo:', err);
-      // Si el endpoint aún no retorna datos, dejar vacío y no usar datos falsos
       setMotivos([]);
     } finally {
       setMotivosLoading(false);
     }
   }, []);
 
-  // Efecto inicial
+  // Efecto inicial con loader suave
   useEffect(() => {
-    fetchEstadisticas();
-    fetchMotivos();
-  }, [fetchEstadisticas, fetchMotivos]);
+    const p1 = fetchEstadisticas();
+    const p2 = fetchMotivos();
+    const p3 = fetchPendientes(0, size);
+
+    Promise.allSettled([p1, p2, p3]).finally(() => {
+      const timer = setTimeout(() => {
+        setPageLoading(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    });
+  }, [fetchEstadisticas, fetchMotivos, fetchPendientes, size]);
 
   // Efecto de paginación de pendientes
   useEffect(() => {
@@ -177,7 +185,7 @@ export default function ModeradorPanel() {
 
   const totalPendientesCount = pagedData?.totalElements ?? pendientes.length;
 
-  // Menú del Sidebar del Moderador con badge dinámico
+  // Menú del Sidebar del Moderador con badge dinámico y módulo 'Mi perfil'
   const menuItems = useMemo(
     () => [
       { id: 'resumen', label: 'Resumen', icon: FiTrendingUp, count: null },
@@ -188,6 +196,7 @@ export default function ModeradorPanel() {
         count: totalPendientesCount > 0 ? String(totalPendientesCount) : null,
       },
       { id: 'historial', label: 'Explorar Eventos', icon: FiLayers, count: null },
+      { id: 'perfil', label: 'Mi perfil', icon: FiUser, count: null },
     ],
     [totalPendientesCount]
   );
@@ -205,9 +214,24 @@ export default function ModeradorPanel() {
       title: 'Explorar Eventos del Sistema',
       subtitle: 'Búsqueda por estado, historial de moderación y auditoría',
     },
+    perfil: {
+      title: 'Mi Perfil de Moderador',
+      subtitle: 'Administra tus datos personales, credenciales y estado operativo',
+    },
   };
 
   const activeHeaderInfo = titlesByTab[currentTab] || titlesByTab.resumen;
+
+  // Pantalla de carga con abejas oficial (HiveBeeLoader)
+  if (pageLoading) {
+    return (
+      <HiveBeeLoader
+        text="Cargando..."
+        subtext="Panel de Moderación"
+        fullScreen={true}
+      />
+    );
+  }
 
   return (
     <ModeradorLayout
@@ -217,8 +241,6 @@ export default function ModeradorPanel() {
       title={activeHeaderInfo.title}
       subtitle={activeHeaderInfo.subtitle}
     >
-
-
       {/* Vistas según la pestaña activa */}
       {currentTab === 'resumen' && (
         <ModeradorResumenView
@@ -269,7 +291,11 @@ export default function ModeradorPanel() {
         />
       )}
 
-
+      {currentTab === 'perfil' && (
+        <ModeradorPerfilView
+          onNavigateTab={(tab) => setSearchParams({ tab })}
+        />
+      )}
 
       {/* Modal de Detalle e Inspección Exhaustiva */}
       {eventoModalDetalle && (

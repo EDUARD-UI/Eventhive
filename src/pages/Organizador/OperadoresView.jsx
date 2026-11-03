@@ -504,8 +504,8 @@ export default function OperadoresView() {
       </div>
 
       {/* MODAL INVITAR OPERADOR */}
-      {showInviteModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 backdrop-blur-2xs p-4 animate-in fade-in duration-200">
+      {showInviteModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
           <div
             className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}

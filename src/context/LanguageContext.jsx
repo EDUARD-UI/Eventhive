@@ -10,7 +10,7 @@ const DICTIONARIES = {
 };
 
 // Construir mapa normalizado de frases Español -> Inglés desde es.json
-const PHRASE_MAP = esData.phrases || {};
+const PHRASE_MAP = { ...(esData.phrases || {}), ...(enData.phrases || {}) };
 const NORMALIZED_PHRASE_MAP = new Map();
 
 Object.entries(PHRASE_MAP).forEach(([esText, enText]) => {

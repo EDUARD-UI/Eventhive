@@ -12,6 +12,7 @@ import { getEventById, getUpcomingEvents } from '../services/eventService.js';
 import { httpClient } from '../services/httpClient.js';
 import { organizationService } from '../services/organizerService.js';
 import { session } from '../services/session.js';
+import followService from '../services/followService.js';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import HiveEventCard from '../components/home/HiveEventCard.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
@@ -190,17 +191,21 @@ export default function EventDetailPage() {
       };
     }
 
-    organizationService
-      .isFollowingOrganization(currentOrgId)
-      .then((following) => {
-        if (isMounted) setIsFollowing(following);
-      })
-      .catch((error) => {
-        console.warn('No se pudo consultar el seguimiento de la organización:', error);
-      });
+    setIsFollowing(followService.isFollowing(currentOrgId, user.id));
 
+    followService.syncWithBackend(user.id).then(() => {
+      if (isMounted) setIsFollowing(followService.isFollowing(currentOrgId, user.id));
+    });
+
+    const onFollowChange = (e) => {
+      if (e.detail?.orgId && String(e.detail.orgId) === String(currentOrgId)) {
+        setIsFollowing(Boolean(e.detail.isFollowing));
+      }
+    };
+    window.addEventListener('eventhive:follow_changed', onFollowChange);
     return () => {
       isMounted = false;
+      window.removeEventListener('eventhive:follow_changed', onFollowChange);
     };
   }, [event]);
 

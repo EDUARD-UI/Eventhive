@@ -309,7 +309,7 @@ export default function Home() {
     { value: 'all', label: t('home.allCategories') },
     ...categoryList.map((category) => ({
       value: String(category.id),
-      label: category.nombre,
+      label: t(category.nombre) || category.nombre,
     })),
   ], [categoryList, t]);
 
