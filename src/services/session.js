@@ -256,6 +256,26 @@ export const session = {
       avatar: fotoUrl,
     };
 
+    // Si la sesión cambia a otro usuario, limpiar cachés locales de compras/boletos anteriores
+    try {
+      const prevUser = safeExisting;
+      const newId = usuarioObj.id || data.id || null;
+      const newEmail = email || null;
+      const isDifferentUser =
+        (prevUser?.id && newId && String(prevUser.id) !== String(newId)) ||
+        (prevUser?.email && newEmail && prevUser.email.toLowerCase() !== newEmail.toLowerCase());
+
+      if (isDifferentUser) {
+        localStorage.removeItem('eventhive_local_compras');
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('eventhive_local_compras')) {
+            localStorage.removeItem(key);
+          }
+        }
+      }
+    } catch {}
+
     localStorage.setItem(USER_KEY, JSON.stringify(userData));
     try {
       window.dispatchEvent(new CustomEvent('eventhive_session_updated', { detail: userData }));
@@ -314,6 +334,16 @@ export const session = {
   isDevSession: () => localStorage.getItem(DEV_SESSION_KEY) === 'true',
 
   clear: () => {
+    try {
+      // Limpiar cachés locales de compras y boletos para evitar filtraciones entre cuentas
+      localStorage.removeItem('eventhive_local_compras');
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('eventhive_local_compras')) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch {}
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);

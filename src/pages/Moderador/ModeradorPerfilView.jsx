@@ -146,6 +146,27 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
       })
       .catch(() => {});
 
+    const sessionUser = session.getUser() || {};
+    const userStorageKey = sessionUser?.id ? `eventhive_local_compras_${sessionUser.id}` : null;
+    let localCompras = [];
+    try {
+      if (userStorageKey) {
+        localCompras = JSON.parse(localStorage.getItem(userStorageKey) || '[]');
+      }
+      if (localCompras.length === 0) {
+        const legacyCompras = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
+        localCompras = legacyCompras.filter((item) => {
+          if (item?.userId && sessionUser?.id) return String(item.userId) === String(sessionUser.id);
+          if (item?.userEmail && sessionUser?.email) {
+            return String(item.userEmail).toLowerCase() === String(sessionUser.email).toLowerCase();
+          }
+          return false;
+        });
+      }
+    } catch {
+      localCompras = [];
+    }
+
     organizerService
       .getMisCompras({ page: 0, size: 50 })
       .then((comprasRes) => {
@@ -153,19 +174,10 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
         const itemsCompras = Array.isArray(comprasRes)
           ? comprasRes
           : comprasRes?.content || comprasRes?.data || [];
-
-        let localCompras = [];
-        try {
-          localCompras = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
-        } catch {}
         setCompras([...localCompras, ...itemsCompras]);
       })
       .catch((err) => {
         console.warn('No se pudo cargar compras en perfil moderador:', err);
-        let localCompras = [];
-        try {
-          localCompras = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
-        } catch {}
         if (isMounted) setCompras(localCompras);
       });
 

@@ -111,114 +111,113 @@ export function usePerfilUsuario() {
       const sessionUser = session.getUser() || {};
 
       try {
-        // 1. Obtener perfil del usuario
-        try {
-          const perfilData = await userService.getPerfil();
-          if (isMounted && perfilData) {
-            setUsuario((prev) => ({
-              ...prev,
-              id: perfilData.id || sessionUser.id,
-              nombreCompleto: perfilData.nombre || sessionUser.name || 'Usuario',
-              correo: perfilData.correo || sessionUser.email || '',
-              telefono: perfilData.telefono ? sanitizePhone(perfilData.telefono) : '',
-              rol: perfilData.rol || sessionUser.role || 'CLIENTE',
-              urlImagenPerfil:
-                perfilData.urlImagenPerfil ||
-                perfilData.imagen ||
-                perfilData.foto ||
-                sessionUser.urlImagenPerfil ||
-                sessionUser.avatar ||
-                null,
-            }));
-          }
-        } catch (err) {
-          console.warn('No se pudo cargar /usuarios/perfil, usando datos de sesión:', err);
-          if (isMounted) {
-            setUsuario((prev) => ({
-              ...prev,
-              nombreCompleto: sessionUser.name || 'Usuario',
-              correo: sessionUser.email || '',
-              urlImagenPerfil: sessionUser.urlImagenPerfil || sessionUser.avatar || null,
-            }));
-          }
+        // Ejecución concurrente y optimizada de todas las peticiones iniciales del perfil
+        const [perfilRes, deseosRes, comprasRes, orgsRes, seguidasRes] = await Promise.allSettled([
+          userService.getPerfil(),
+          organizerService.getDeseos({ page: 0, size: 50 }),
+          organizerService.getMisCompras({ page: 0, size: 50 }),
+          organizationService.listOrganizations({ page: 0, size: 50, skipAuth: true }),
+          organizationService.getOrganizacionesSeguidas({ page: 0, size: 50 }),
+        ]);
+
+        if (!isMounted) return;
+
+        // 1. Procesar perfil del usuario
+        if (perfilRes.status === 'fulfilled' && perfilRes.value) {
+          const perfilData = perfilRes.value;
+          setUsuario((prev) => ({
+            ...prev,
+            id: perfilData.id || sessionUser.id,
+            nombreCompleto: perfilData.nombre || sessionUser.name || 'Usuario',
+            correo: perfilData.correo || sessionUser.email || '',
+            telefono: perfilData.telefono ? sanitizePhone(perfilData.telefono) : '',
+            rol: perfilData.rol || sessionUser.role || 'CLIENTE',
+            urlImagenPerfil:
+              perfilData.urlImagenPerfil ||
+              perfilData.imagen ||
+              perfilData.foto ||
+              sessionUser.urlImagenPerfil ||
+              sessionUser.avatar ||
+              null,
+          }));
+        } else {
+          setUsuario((prev) => ({
+            ...prev,
+            nombreCompleto: sessionUser.name || 'Usuario',
+            correo: sessionUser.email || '',
+            urlImagenPerfil: sessionUser.urlImagenPerfil || sessionUser.avatar || null,
+          }));
         }
 
-        // 2. Obtener eventos guardados (Deseos)
-        try {
-          const deseosRes = await organizerService.getDeseos({ page: 0, size: 50 });
-          const items = Array.isArray(deseosRes)
-            ? deseosRes
-            : deseosRes?.content || deseosRes?.data || [];
-          if (isMounted) {
-            const normalized = items.map((item) => normalizeEvent(item.evento || item));
-            setGuardados(normalized);
-          }
-        } catch (err) {
-          console.warn('No se pudo cargar /deseos:', err);
-          if (isMounted) setGuardados([]);
+        // 2. Procesar eventos guardados (Deseos)
+        if (deseosRes.status === 'fulfilled' && deseosRes.value) {
+          const items = Array.isArray(deseosRes.value)
+            ? deseosRes.value
+            : deseosRes.value?.content || deseosRes.value?.data || [];
+          const normalized = items.map((item) => normalizeEvent(item.evento || item));
+          setGuardados(normalized);
+        } else {
+          setGuardados([]);
         }
 
-        // 3. Obtener mis compras (para Boletos / Historial)
+        // 3. Procesar mis compras y boletos (con aislamiento por usuario en localStorage)
+        const userStorageKey = sessionUser?.id ? `eventhive_local_compras_${sessionUser.id}` : null;
+        let localCompras = [];
         try {
-          const comprasRes = await organizerService.getMisCompras({ page: 0, size: 50 });
-          const itemsCompras = Array.isArray(comprasRes)
-            ? comprasRes
-            : comprasRes?.content || comprasRes?.data || [];
-
-          let localCompras = [];
-          try {
-            localCompras = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
-          } catch {}
-
-          if (isMounted) {
-            setCompras([...localCompras, ...itemsCompras]);
+          if (userStorageKey) {
+            localCompras = JSON.parse(localStorage.getItem(userStorageKey) || '[]');
           }
-        } catch (err) {
-          console.warn('No se pudo cargar /compras, usando respaldo local:', err);
-          let localCompras = [];
-          try {
-            localCompras = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
-          } catch {}
-          if (isMounted) setCompras(localCompras);
+          if (localCompras.length === 0) {
+            const legacyCompras = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
+            localCompras = legacyCompras.filter((item) => {
+              if (item?.userId && sessionUser?.id) return String(item.userId) === String(sessionUser.id);
+              if (item?.userEmail && sessionUser?.email) {
+                return String(item.userEmail).toLowerCase() === String(sessionUser.email).toLowerCase();
+              }
+              return false;
+            });
+          }
+        } catch {
+          localCompras = [];
         }
 
-        // 4. Obtener organizaciones reales y calcular seguidas vs disponibles
-        try {
-          const allOrgsRes = await organizationService.listOrganizations({ page: 0, size: 50, skipAuth: true });
-          const allOrgs = allOrgsRes.organizations || [];
+        if (comprasRes.status === 'fulfilled' && comprasRes.value) {
+          const itemsCompras = Array.isArray(comprasRes.value)
+            ? comprasRes.value
+            : comprasRes.value?.content || comprasRes.value?.data || [];
+          setCompras([...localCompras, ...itemsCompras]);
+        } else {
+          setCompras(localCompras);
+        }
 
-          let seguidasBackend = [];
-          try {
-            seguidasBackend = await organizationService.getOrganizacionesSeguidas({ page: 0, size: 50 });
-          } catch {
-            seguidasBackend = [];
-          }
+        // 4. Procesar organizaciones y seguidas
+        if (orgsRes.status === 'fulfilled' && orgsRes.value) {
+          const allOrgs = orgsRes.value.organizations || [];
+          const seguidasBackend =
+            seguidasRes.status === 'fulfilled' && Array.isArray(seguidasRes.value)
+              ? seguidasRes.value
+              : [];
 
           const storedFollowed = new Set(getStoredFollowedIds(sessionUser.id));
           seguidasBackend.forEach((o) => storedFollowed.add(String(o.id)));
           saveStoredFollowedIds(sessionUser.id, Array.from(storedFollowed));
 
-          if (isMounted) {
-            const seguidasList = allOrgs.filter((org) => storedFollowed.has(String(org.id)));
-            // Si la API devolvió alguna organización que no estuviese en la lista paginada
-            seguidasBackend.forEach((bOrg) => {
-              if (!seguidasList.some((s) => String(s.id) === String(bOrg.id))) {
-                seguidasList.push(bOrg);
-              }
-            });
+          const seguidasList = allOrgs.filter((org) => storedFollowed.has(String(org.id)));
+          seguidasBackend.forEach((bOrg) => {
+            if (!seguidasList.some((s) => String(s.id) === String(bOrg.id))) {
+              seguidasList.push(bOrg);
+            }
+          });
 
-            const disponiblesList = allOrgs.filter((org) => !storedFollowed.has(String(org.id)));
-
-            setOrganizacionesSeguidas(seguidasList);
-            setOrganizacionesDisponibles(disponiblesList);
-          }
-        } catch (err) {
-          console.warn('No se pudo cargar organizaciones reales:', err);
-          if (isMounted) {
-            setOrganizacionesSeguidas([]);
-            setOrganizacionesDisponibles([]);
-          }
+          const disponiblesList = allOrgs.filter((org) => !storedFollowed.has(String(org.id)));
+          setOrganizacionesSeguidas(seguidasList);
+          setOrganizacionesDisponibles(disponiblesList);
+        } else {
+          setOrganizacionesSeguidas([]);
+          setOrganizacionesDisponibles([]);
         }
+      } catch (err) {
+        console.warn('Error en carga concurrente de perfil:', err);
       } finally {
         if (isMounted) setLoading(false);
       }

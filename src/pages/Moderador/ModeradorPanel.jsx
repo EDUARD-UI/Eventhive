@@ -1,11 +1,12 @@
 import Swal from 'sweetalert2';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ModeradorLayout from '../../layouts/ModeradorLayout.jsx';
 import ModeradorResumenView from './ModeradorResumenView.jsx';
 import ModeradorPendientesView from './ModeradorPendientesView.jsx';
 import ModeradorHistorialView from './ModeradorHistorialView.jsx';
 import ModeradorPerfilView from './ModeradorPerfilView.jsx';
+import ModeradorPalabrasProhibidasView from './ModeradorPalabrasProhibidasView.jsx';
 import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
 
 import ModalDetalleEventoModeracion from './ModalDetalleEventoModeracion.jsx';
@@ -16,16 +17,17 @@ import {
   FiClipboard,
   FiLayers,
   FiUser,
+  FiShield,
 } from 'react-icons/fi';
 
 export default function ModeradorPanel() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'resumen';
 
-  // Loader de bienvenida inicial del dashboard (igual al panel del operador)
+  // Loader de bienvenida inicial del dashboard
   const [pageLoading, setPageLoading] = useState(true);
 
-  // Estados de datos reales (publicados, pendientesRevision, enCorreccion, rechazados)
+  // Estados de datos reales
   const [stats, setStats] = useState({
     publicados: 0,
     pendientesRevision: 0,
@@ -41,13 +43,13 @@ export default function ModeradorPanel() {
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
 
-  // Motivos reales del backend (/api/enums/motivos-rechazos)
+  // Motivos reales del backend
   const [motivos, setMotivos] = useState([]);
   const [motivosLoading, setMotivosLoading] = useState(false);
 
   // Modales
   const [eventoModalDetalle, setEventoModalDetalle] = useState(null);
-  const [accionModal, setAccionModal] = useState(null); // { evento, tipo: 'correccion'|'rechazo' }
+  const [accionModal, setAccionModal] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   const showToast = useCallback((message, type = 'success') => {
@@ -56,7 +58,7 @@ export default function ModeradorPanel() {
       title: type === 'error' ? 'Error' : 'Operación exitosa',
       text: typeof message === 'string' ? message : String(message),
       confirmButtonText: 'Aceptar',
-      confirmButtonColor: '#087fea',
+      confirmButtonColor: '#0B1B3D',
       timer: 3000,
     });
   }, []);
@@ -113,23 +115,25 @@ export default function ModeradorPanel() {
     }
   }, []);
 
-  // Efecto inicial con loader suave
+  const isMountedRef = useRef(false);
+
+  // Efecto inicial concurrente sin demoras artificiales
   useEffect(() => {
     const p1 = fetchEstadisticas();
     const p2 = fetchMotivos();
-    const p3 = fetchPendientes(0, size);
+    const p3 = fetchPendientes(page, size);
 
     Promise.allSettled([p1, p2, p3]).finally(() => {
-      const timer = setTimeout(() => {
-        setPageLoading(false);
-      }, 500);
-      return () => clearTimeout(timer);
+      setPageLoading(false);
+      isMountedRef.current = true;
     });
-  }, [fetchEstadisticas, fetchMotivos, fetchPendientes, size]);
+  }, [fetchEstadisticas, fetchMotivos]);
 
-  // Efecto de paginación de pendientes
+  // Efecto de paginación de pendientes (solo ante cambios posteriores de página/tamaño)
   useEffect(() => {
-    fetchPendientes(page, size);
+    if (isMountedRef.current) {
+      fetchPendientes(page, size);
+    }
   }, [page, size, fetchPendientes]);
 
   // Acciones de Moderación
@@ -139,7 +143,6 @@ export default function ModeradorPanel() {
       await moderationService.aprobarEvento(eventoId);
       showToast('¡Evento aprobado y publicado exitosamente en la cartelera!', 'success');
       setEventoModalDetalle(null);
-      // Refrescar datos
       fetchPendientes(page, size);
       fetchEstadisticas();
     } catch (err) {
@@ -156,7 +159,6 @@ export default function ModeradorPanel() {
       showToast('Se solicitaron las correcciones a la organización.', 'success');
       setEventoModalDetalle(null);
       setAccionModal(null);
-      // Refrescar datos
       fetchPendientes(page, size);
       fetchEstadisticas();
     } catch (err) {
@@ -173,7 +175,6 @@ export default function ModeradorPanel() {
       showToast('Evento rechazado conforme a las políticas comunitarias.', 'success');
       setEventoModalDetalle(null);
       setAccionModal(null);
-      // Refrescar datos
       fetchPendientes(page, size);
       fetchEstadisticas();
     } catch (err) {
@@ -185,7 +186,7 @@ export default function ModeradorPanel() {
 
   const totalPendientesCount = pagedData?.totalElements ?? pendientes.length;
 
-  // Menú del Sidebar del Moderador con badge dinámico y módulo 'Mi perfil'
+  // Menú del Sidebar del Moderador con badge dinámico y nuevo apartado de palabras prohibidas
   const menuItems = useMemo(
     () => [
       { id: 'resumen', label: 'Resumen', icon: FiTrendingUp, count: null },
@@ -196,6 +197,7 @@ export default function ModeradorPanel() {
         count: totalPendientesCount > 0 ? String(totalPendientesCount) : null,
       },
       { id: 'historial', label: 'Explorar Eventos', icon: FiLayers, count: null },
+      { id: 'palabras-prohibidas', label: 'Palabras Prohibidas', icon: FiShield, count: null },
       { id: 'perfil', label: 'Mi perfil', icon: FiUser, count: null },
     ],
     [totalPendientesCount]
@@ -213,6 +215,10 @@ export default function ModeradorPanel() {
     historial: {
       title: 'Explorar Eventos del Sistema',
       subtitle: 'Búsqueda por estado, historial de moderación y auditoría',
+    },
+    'palabras-prohibidas': {
+      title: 'Palabras Prohibidas',
+      subtitle: 'Diccionario de términos restringidos y reglas de filtro de contenido',
     },
     perfil: {
       title: 'Mi Perfil de Moderador',
@@ -249,6 +255,7 @@ export default function ModeradorPanel() {
           pendientes={pendientes}
           pendientesLoading={pendientesLoading}
           totalPendientes={totalPendientesCount}
+          actionLoading={actionLoading}
           onNavigateTab={(tab) => setSearchParams({ tab })}
           onInspect={setEventoModalDetalle}
           onAprobar={handleAprobarEvento}
@@ -264,6 +271,7 @@ export default function ModeradorPanel() {
           pendientes={pendientes}
           pagedData={pagedData}
           loading={pendientesLoading}
+          actionLoading={actionLoading}
           page={page}
           size={size}
           onPageChange={setPage}
@@ -289,6 +297,10 @@ export default function ModeradorPanel() {
           }
           onRechazar={(evento) => setAccionModal({ evento, tipo: 'rechazo' })}
         />
+      )}
+
+      {currentTab === 'palabras-prohibidas' && (
+        <ModeradorPalabrasProhibidasView />
       )}
 
       {currentTab === 'perfil' && (

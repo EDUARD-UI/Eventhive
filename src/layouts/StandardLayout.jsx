@@ -6,10 +6,12 @@ import { useDashboardTheme } from '../hooks/useDashboardTheme.js';
 /**
  * StandardLayout
  * Layout principal del Centro de Operaciones de EventHive (Event Management Experience).
- * Tema claro exclusivo, paleta equilibrada, estructura fluida y responsive.
+ * - Tema claro exclusivo, fondo neutro con alto contraste (#EEF2F6).
+ * - Barra de scroll vertical pegada al borde derecho de la pantalla en todo momento.
  */
 export default function StandardLayout({
   role = 'Organización',
+  items = [],
   menuItems = [],
   activeItem,
   onSelect,
@@ -20,20 +22,21 @@ export default function StandardLayout({
 }) {
   useDashboardTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const actualItems = items.length > 0 ? items : menuItems;
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#EEF2F6] font-body text-slate-800 antialiased">
       {/* Barra lateral especializada para la organización */}
       <OrganizationSidebar
         role={role}
-        items={menuItems}
+        items={actualItems}
         activeItem={activeItem}
         onSelect={onSelect}
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
       />
 
-      {/* Contenedor principal con scroll vertical suave */}
+      {/* Contenedor principal */}
       <div className="relative flex min-w-0 flex-1 flex-col h-screen overflow-hidden">
         {/* Barra superior de navegación */}
         <div className="shrink-0 z-20">
@@ -47,12 +50,14 @@ export default function StandardLayout({
           )}
         </div>
 
-        {/* Lienzo de contenido scrolleable */}
-        <main
-          className={`mx-auto w-full ${maxWidthClass} flex-1 overflow-y-auto min-h-0 px-4 sm:px-8 pb-12 pt-5 sm:pt-7`}
-        >
-          {children}
-        </main>
+        {/* Contenedor con scroll vertical pegado al borde derecho de la pantalla */}
+        <div className="w-full flex-1 min-h-0 overflow-y-auto">
+          <main
+            className={`mx-auto w-full ${maxWidthClass} px-4 sm:px-8 pb-12 pt-5 sm:pt-7`}
+          >
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );

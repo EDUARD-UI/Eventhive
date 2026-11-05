@@ -34,15 +34,8 @@ export default function MarketingPanel() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'eventos';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [pageLoading, setPageLoading] = useState(true);
+  const [pageLoading, setPageLoading] = useState(false);
   const [sessionUser, setSessionUser] = useState(() => session.getUser());
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPageLoading(false);
-    }, 450);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     const handleSessionUpdated = (e) => {
@@ -145,7 +138,6 @@ export default function MarketingPanel() {
       {/* Sidebar estandarizado azul oscuro (#0B1B3D) con favicon logo */}
       <StandardDashboardSidebar
         role="Marketing"
-        roleSubtitle="Crecimiento & Difusión"
         items={menuItems}
         activeItem={currentTab}
         onSelect={handleSelectTab}
@@ -168,10 +160,12 @@ export default function MarketingPanel() {
           />
         </div>
 
-        {/* Sección scrolleable con margen suave y ancho contenido */}
-        <main className="px-4 sm:px-8 pb-10 flex-1 pt-5 sm:pt-7 max-w-[1400px] w-full mx-auto overflow-y-auto min-h-0">
-          {renderCurrentView()}
-        </main>
+        {/* Contenedor con scroll vertical pegado al borde derecho de la pantalla */}
+        <div className="w-full flex-1 min-h-0 overflow-y-auto">
+          <main className="px-4 sm:px-8 pb-10 pt-5 sm:pt-7 max-w-[1400px] w-full mx-auto">
+            {renderCurrentView()}
+          </main>
+        </div>
       </div>
     </div>
   );

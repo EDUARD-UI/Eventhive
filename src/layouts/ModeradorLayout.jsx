@@ -52,8 +52,8 @@ export default function ModeradorLayout({
 
   const moderadorGroups = [
     {
-      label: 'Moderación',
-      itemIds: ['resumen', 'eventos', 'historial'],
+      label: 'Moderación & Auditoría',
+      itemIds: ['resumen', 'eventos', 'historial', 'palabras-prohibidas'],
     },
     {
       label: 'Cuenta',
@@ -66,7 +66,6 @@ export default function ModeradorLayout({
       {/* Sidebar estandarizado azul oscuro (#0B1B3D) con favicon logo */}
       <StandardDashboardSidebar
         role="Moderador"
-        roleSubtitle="Control y Calidad"
         items={menuItems}
         activeItem={activeItem}
         onSelect={onSelect}
@@ -94,10 +93,12 @@ export default function ModeradorLayout({
           />
         </div>
 
-        {/* Contenedor principal con scroll */}
-        <main className="mx-auto w-full max-w-[1400px] flex-1 overflow-y-auto min-h-0 px-4 sm:px-8 pb-10 pt-5 sm:pt-7">
-          {children}
-        </main>
+        {/* Contenedor con scroll vertical pegado al borde derecho de la pantalla */}
+        <div className="w-full flex-1 min-h-0 overflow-y-auto">
+          <main className="mx-auto w-full max-w-[1400px] px-4 sm:px-8 pb-10 pt-5 sm:pt-7">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );

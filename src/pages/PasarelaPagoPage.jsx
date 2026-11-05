@@ -161,8 +161,13 @@ export default function PasarelaPagoPage() {
     setProcesando(true);
     const generatedRef = `EVH-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
 
+    const currentUserId = currentUser?.id || currentUser?.sub || null;
+    const currentUserEmail = currentUser?.email || buyerForm?.correo || null;
+
     const localPurchaseItem = {
       id: Date.now(),
+      userId: currentUserId,
+      userEmail: currentUserEmail,
       evento: event || { id: Number(event?.id || id), titulo: 'Entrada Oficial EventHive' },
       localidad: selectedLocalidad || { nombre: 'General', precio: precioBaseUnitario },
       total,
@@ -206,8 +211,11 @@ export default function PasarelaPagoPage() {
       const purchase = await organizerService.crearCompra(payload);
 
       try {
-        const existing = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
-        localStorage.setItem('eventhive_local_compras', JSON.stringify([localPurchaseItem, ...existing]));
+        const userStorageKey = currentUserId
+          ? `eventhive_local_compras_${currentUserId}`
+          : 'eventhive_local_compras';
+        const existing = JSON.parse(localStorage.getItem(userStorageKey) || '[]');
+        localStorage.setItem(userStorageKey, JSON.stringify([localPurchaseItem, ...existing]));
       } catch (storageError) {
         console.warn('No se pudo guardar el respaldo local de la compra confirmada:', storageError);
       }

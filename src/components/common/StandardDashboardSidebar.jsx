@@ -10,17 +10,18 @@ import {
 
 /**
  * StandardDashboardSidebar
- * Barra lateral estandarizada para los centros de control de EventHive:
- * Organización, Moderador y Marketing.
+ * Barra lateral estandarizada para todos los centros de control de EventHive:
+ * Organización, Moderador, Marketing y Administración.
  * 
  * - Fondo azul oscuro de la app (#0B1B3D).
  * - Logo favicon oficial de EventHive (/LOGO45x50.png).
- * - Sin recuadro "PRO" (eliminado según directriz).
- * - Alto contraste, estado activo en ámbar vibrante de la marca, soporte colapsable y drawer móvil.
+ * - Nombre de marca limpio "EventHive" sin etiquetas redundantes como "Ops Center".
+ * - Altura de cabecera fija (h-[72px]) para evitar brincos o desplazamientos verticales al expandir/colapsar.
+ * - Sin recuadro "PRO".
+ * - Alto contraste, estado activo en ámbar vibrante, soporte colapsable y drawer móvil.
  */
 export default function StandardDashboardSidebar({
-  role = 'Organización',
-  roleSubtitle = 'Control Center',
+  role = 'Panel',
   items = [],
   activeItem = 'resumen',
   onSelect = () => {},
@@ -59,70 +60,82 @@ export default function StandardDashboardSidebar({
 
     return (
       <div className="flex h-full flex-col justify-between bg-[#0B1B3D] text-slate-100 select-none border-r border-slate-800/80 transition-all duration-300">
-        {/* Cabecera Superior del Sidebar */}
+        {/* Cabecera Superior del Sidebar con altura fija continua h-[72px] */}
         <div className="flex flex-col flex-1 min-h-0 overflow-y-auto no-scrollbar">
           <div
-            className={`border-b border-white/10 flex items-center transition-all ${
+            className={`h-[72px] shrink-0 border-b border-white/10 flex items-center transition-all ${
               collapsed
-                ? 'flex-col gap-3 py-4 px-2'
-                : 'justify-between py-4.5 px-4.5 sm:px-5'
+                ? 'justify-center px-2'
+                : 'justify-between px-4 sm:px-5'
             }`}
           >
-            <Link
-              to="/"
-              className="group flex items-center gap-3 focus:outline-none min-w-0"
-              title="Ir al inicio de EventHive"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/15 p-1 transition-transform group-hover:scale-105 shadow-xs">
-                <img
-                  src="/LOGO45x50.png"
-                  alt="EventHive Favicon Logo"
-                  className="h-7 w-auto object-contain"
-                  onError={(e) => {
-                    // Fallback a LOGO32x32 si fuera necesario
-                    e.currentTarget.src = '/LOGO32x32.png';
-                  }}
-                />
-              </div>
-
-              {!collapsed && (
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-1 font-display text-sm font-black tracking-tight text-white leading-none">
-                    <span>Event</span>
-                    <span className="text-amber-400">Hive</span>
-                  </div>
-                  <span className="mt-1 inline-flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-widest text-slate-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>{roleSubtitle || role}</span>
-                  </span>
-                </div>
-              )}
-            </Link>
-
-            {isDrawer ? (
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Cerrar navegación"
-                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-              >
-                <FiX size={18} />
-              </button>
-            ) : (
+            {collapsed ? (
               <button
                 type="button"
                 onClick={toggleCollapse}
-                aria-label={collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
-                title={collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
-                className="hidden md:flex p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                aria-label="Expandir barra lateral"
+                title="Expandir barra lateral"
+                className="group flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/15 p-1 transition-transform hover:scale-105 hover:bg-white/15 cursor-pointer shadow-xs"
               >
-                {collapsed ? <FiChevronRight size={16} /> : <FiChevronLeft size={16} />}
+                <img
+                  src="/LOGO45x50.png"
+                  alt="EventHive"
+                  className="h-7 w-auto object-contain"
+                  onError={(e) => {
+                    e.currentTarget.src = '/LOGO32x32.png';
+                  }}
+                />
               </button>
+            ) : (
+              <>
+                <Link
+                  to="/"
+                  className="group flex items-center gap-3 focus:outline-none min-w-0"
+                  title="Ir al inicio de EventHive"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/15 p-1 transition-transform group-hover:scale-105 shadow-xs">
+                    <img
+                      src="/LOGO45x50.png"
+                      alt="EventHive Favicon Logo"
+                      className="h-7 w-auto object-contain"
+                      onError={(e) => {
+                        e.currentTarget.src = '/LOGO32x32.png';
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1 font-display text-base font-black tracking-tight text-white leading-none">
+                    <span>Event</span>
+                    <span className="text-amber-400">Hive</span>
+                  </div>
+                </Link>
+
+                {isDrawer ? (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    aria-label="Cerrar navegación"
+                    className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <FiX size={18} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={toggleCollapse}
+                    aria-label="Colapsar barra lateral"
+                    title="Colapsar barra lateral"
+                    className="hidden md:flex p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  >
+                    <FiChevronLeft size={16} />
+                  </button>
+                )}
+              </>
             )}
           </div>
 
           {/* Menú de Navegación */}
-          <nav className="flex-1 px-3 py-4 space-y-4">
+          <nav className="flex-1 px-3 py-3 space-y-4">
             {defaultGroups.map((group, groupIdx) => {
               const groupItems = items.filter((it) => group.itemIds.includes(it.id));
               if (groupItems.length === 0) return null;
@@ -278,4 +291,3 @@ export default function StandardDashboardSidebar({
     </>
   );
 }
-

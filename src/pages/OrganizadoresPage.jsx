@@ -121,10 +121,7 @@ export default function OrganizadoresPage() {
       } catch {
         // Safe fallback
       }
-      const timer = setTimeout(() => {
-        setInitialScreenLoading(false);
-      }, 400);
-      return () => clearTimeout(timer);
+      setInitialScreenLoading(false);
     }
   }, [loading]);
 

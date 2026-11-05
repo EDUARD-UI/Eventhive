@@ -434,9 +434,7 @@ export default function OrganizadorIndex() {
     const pCartelera = fetchCarteleraPage(0);
 
     Promise.allSettled([pOrg, pSol, pEst, pEvs, pCartelera]).finally(() => {
-      setTimeout(() => {
-        setPageLoading(false);
-      }, 350);
+      setPageLoading(false);
     });
   }, [fetchCarteleraPage]);
 

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiBell, FiMenu, FiSearch, FiUser, FiLogOut, FiChevronDown, FiCheck, FiTrash2, FiClock } from 'react-icons/fi';
+import { FiMenu, FiSearch, FiUser, FiLogOut, FiChevronDown } from 'react-icons/fi';
 import { session } from '../../services/session.js';
 import userService from '../../services/userService.js';
-import notificationService from '../../services/notificationService.js';
+import DashboardNotifications from '../common/DashboardNotifications.jsx';
 
 export default function Header({
   title,
@@ -30,13 +30,6 @@ export default function Header({
   const [sessionUser, setSessionUser] = useState(() => session.getUser());
   const [photoError, setPhotoError] = useState(false);
 
-  // Estados de Notificaciones (Requisito 11)
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notificationsLoading, setNotificationsLoading] = useState(false);
-  const notificationsRef = useRef(null);
-
   // Escuchar actualizaciones de sesión en tiempo real (foto de perfil, nombre, rol)
   useEffect(() => {
     const handleSessionUpdated = (e) => {
@@ -59,95 +52,6 @@ export default function Header({
     if (!token || session.isDevSession()) return;
     userService.getPerfil().catch(() => {});
   }, []);
-
-  // Cargar notificaciones al montar y periódicamente
-  useEffect(() => {
-    let isMounted = true;
-    async function fetchNotifs() {
-      try {
-        const [list, count] = await Promise.allSettled([
-          notificationService.getNotificaciones(),
-          notificationService.getNoLeidasCount(),
-        ]);
-        if (!isMounted) return;
-        if (list.status === 'fulfilled') {
-          setNotifications(list.value);
-        }
-        if (count.status === 'fulfilled') {
-          setUnreadCount(count.value);
-        }
-      } catch (e) {
-        console.warn('Error cargando notificaciones:', e);
-      }
-    }
-
-    if (showNotifications) {
-      fetchNotifs();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [showNotifications]);
-
-  // Manejar clics fuera de notificaciones
-  useEffect(() => {
-    if (!notificationsOpen) return;
-
-    function handleClickOutside(event) {
-      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
-        setNotificationsOpen(false);
-      }
-    }
-
-    function handleKeyDown(event) {
-      if (event.key === 'Escape') {
-        setNotificationsOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [notificationsOpen]);
-
-  const handleToggleNotifications = async () => {
-    const nextState = !notificationsOpen;
-    setNotificationsOpen(nextState);
-    if (nextState) {
-      setDropdownOpen(false);
-      try {
-        setNotificationsLoading(true);
-        const [list, count] = await Promise.allSettled([
-          notificationService.getNotificaciones(),
-          notificationService.getNoLeidasCount(),
-        ]);
-        if (list.status === 'fulfilled') setNotifications(list.value);
-        if (count.status === 'fulfilled') setUnreadCount(count.value);
-      } finally {
-        setNotificationsLoading(false);
-      }
-    }
-  };
-
-  const handleMarkAsRead = async (id) => {
-    await notificationService.marcarComoLeida(id);
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, leida: true } : n))
-    );
-    setUnreadCount((prev) => Math.max(0, prev - 1));
-  };
-
-  const handleClearRead = async () => {
-    await notificationService.limpiarLeidas();
-    setNotifications((prev) => prev.filter((n) => !n.leida));
-  };
 
   // Obtener datos de sesión para complementar email/nombre/foto si existen
   const displayName = sessionUser?.name || sessionUser?.nombre || userName || 'Usuario';
@@ -230,14 +134,14 @@ export default function Header({
   const showValidPhoto = Boolean(displayPhoto && !photoError);
 
   return (
-    <header className={`flex h-[72px] shrink-0 items-center justify-between border-b border-[#e2e8f0] bg-white px-4 sm:px-8 ${className}`}>
+    <header className={`flex h-[72px] shrink-0 items-center justify-between border-b border-slate-200/90 bg-white px-4 sm:px-8 ${className}`}>
       <div className="flex items-center gap-3 min-w-0">
         {onMenuToggle && (
           <button
             type="button"
             onClick={onMenuToggle}
             aria-label="Abrir menú de navegación"
-            className="md:hidden flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 shrink-0 active:scale-95 transition-all"
+            className="md:hidden flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 shrink-0 active:scale-95 transition-all cursor-pointer"
           >
             <FiMenu size={20} />
           </button>
@@ -246,11 +150,11 @@ export default function Header({
         <div className="min-w-0">
           {title && (
             <div className="min-w-0">
-              <h1 className="truncate font-display text-[16px] font-bold leading-tight text-[#172033] sm:text-[20px]">
+              <h1 className="truncate font-display text-[16px] font-black leading-tight text-slate-900 sm:text-[20px]">
                 {title}
               </h1>
               {subtitle && (
-                <p className="mt-0.5 hidden max-w-[min(60vw,36rem)] truncate text-[11px] leading-tight text-slate-500 sm:block">
+                <p className="mt-0.5 hidden max-w-[min(60vw,36rem)] truncate text-[11px] font-medium leading-tight text-slate-500 sm:block">
                   {subtitle}
                 </p>
               )}
@@ -259,146 +163,27 @@ export default function Header({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+      <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
         {showSearch && (
-          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/80 shadow-sm rounded-full px-3 py-1.5 text-sm text-[#64748b] focus-within:bg-white focus-within:border-[#087fea] focus-within:ring-2 focus-within:ring-[#087fea]/10 transition-all">
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/90 shadow-2xs rounded-xl px-3 py-2 text-sm text-slate-500 focus-within:bg-white focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all">
             <FiSearch size={15} className="text-slate-400 shrink-0" />
             <input
               type="text"
               placeholder={searchPlaceholder}
               value={searchTerm || ''}
               onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-              className="bg-transparent border-none outline-none text-[#172033] placeholder-slate-400 text-xs sm:text-sm w-28 sm:w-44 md:w-56"
+              className="bg-transparent border-none outline-none text-slate-900 placeholder-slate-400 text-xs sm:text-sm w-28 sm:w-44 md:w-56"
             />
           </div>
         )}
 
-
+        {/* Notificaciones Asíncronas Estandarizadas */}
         {showNotifications && (
-          <div ref={notificationsRef} className="relative flex items-center">
-            <button
-              type="button"
-              onClick={handleToggleNotifications}
-              aria-label="Notificaciones"
-              aria-expanded={notificationsOpen}
-              className={`relative flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition-all ${
-                notificationsOpen
-                  ? 'border-[#087fea] bg-blue-50/50 text-[#087fea]'
-                  : 'border-slate-200/80 bg-white text-[#222936] hover:text-[#087fea] hover:border-[#087fea]'
-              }`}
-            >
-              <FiBell size={16} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-[#087fea] text-[10px] font-bold text-white shadow-xs">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </button>
-
-            {/* Panel de Notificaciones Desplegable (Requisito 11) */}
-            {notificationsOpen && (
-              <div
-                className="absolute right-0 top-full mt-2.5 w-80 sm:w-96 max-w-[calc(100vw-2rem)] rounded-2xl bg-white p-3 shadow-2xl border border-slate-200/90 z-50 animate-in fade-in zoom-in-95 duration-150"
-                role="region"
-                aria-label="Panel de notificaciones"
-              >
-                <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-slate-100 px-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-display font-bold text-xs text-slate-900">
-                      Notificaciones
-                    </span>
-                    {unreadCount > 0 && (
-                      <span className="px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-800 text-[10px] font-bold">
-                        {unreadCount} nuevas
-                      </span>
-                    )}
-                  </div>
-
-                  {notifications.some((n) => n.leida) && (
-                    <button
-                      type="button"
-                      onClick={handleClearRead}
-                      className="text-[11px] font-semibold text-slate-400 hover:text-slate-700 flex items-center gap-1 transition-colors"
-                      title="Eliminar notificaciones leídas"
-                    >
-                      <FiTrash2 size={12} />
-                      <span>Limpiar leídas</span>
-                    </button>
-                  )}
-                </div>
-
-                <div className="max-h-72 overflow-y-auto space-y-1.5 pr-1">
-                  {notificationsLoading ? (
-                    <div className="py-8 text-center text-xs text-slate-400">
-                      Cargando notificaciones...
-                    </div>
-                  ) : notifications.length === 0 ? (
-                    <div className="py-8 text-center text-xs text-slate-400">
-                      No tienes notificaciones recibidas.
-                    </div>
-                  ) : (
-                    notifications.map((notif) => {
-                      const isUnread = !notif.leida;
-                      return (
-                        <div
-                          key={notif.id}
-                          onClick={() => isUnread && handleMarkAsRead(notif.id)}
-                          className={`p-2.5 rounded-xl transition-all cursor-pointer ${
-                            isUnread
-                              ? 'bg-blue-50/70 hover:bg-blue-50 border border-blue-100'
-                              : 'hover:bg-slate-50 border border-transparent'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5 mb-0.5">
-                                {isUnread && (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-[#087fea] shrink-0" />
-                                )}
-                                <p className={`text-xs font-bold truncate ${isUnread ? 'text-slate-900' : 'text-slate-700'}`}>
-                                  {notif.titulo}
-                                </p>
-                              </div>
-                              <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
-                                {notif.mensaje}
-                              </p>
-                              {notif.nombreEvento && (
-                                <span className="inline-block mt-1 text-[10px] font-semibold text-blue-700 bg-blue-100/60 px-1.5 py-0.5 rounded">
-                                  {notif.nombreEvento}
-                                </span>
-                              )}
-                            </div>
-
-                            {isUnread && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleMarkAsRead(notif.id);
-                                }}
-                                className="p-1 rounded-lg hover:bg-white text-slate-400 hover:text-emerald-600 transition-colors shrink-0"
-                                title="Marcar como leída"
-                              >
-                                <FiCheck size={13} />
-                              </button>
-                            )}
-                          </div>
-
-                          <div className="mt-1 flex items-center justify-between text-[10px] text-slate-400">
-                            <span className="flex items-center gap-1">
-                              <FiClock size={10} />
-                              <span>{notif.fechaCreacion ? notif.fechaCreacion.replace('T', ' ').slice(0, 16) : 'Reciente'}</span>
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          <DashboardNotifications />
         )}
+
+        {/* Separador */}
+        <div className="h-6 w-px bg-slate-200" />
 
         {/* Dropdown del Avatar del Usuario */}
         <div ref={dropdownRef} className="relative flex items-center">
@@ -408,9 +193,9 @@ export default function Header({
             aria-label="Menú de usuario"
             aria-expanded={dropdownOpen}
             aria-haspopup="true"
-            className="flex items-center gap-2 rounded-full p-0.5 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#087fea]/30 transition-all"
+            className="flex items-center gap-2 rounded-xl p-1 pl-1.5 border border-slate-200/90 hover:border-slate-300 bg-white hover:bg-slate-50 shadow-2xs transition-all cursor-pointer group"
           >
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#087fea] text-xs font-bold text-white shadow-sm ring-2 ring-white hover:bg-[#076ecb] transition-colors shrink-0 overflow-hidden">
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-[#0B1B3D] text-xs font-black text-amber-300 shadow-2xs shrink-0 overflow-hidden">
               {showValidPhoto ? (
                 <img
                   key={displayPhoto}
@@ -420,18 +205,18 @@ export default function Header({
                   onError={() => setPhotoError(true)}
                 />
               ) : (
-                <span className="w-full h-full flex items-center justify-center">
+                <span className="w-full h-full flex items-center justify-center font-display font-black text-xs">
                   {displayInitials}
                 </span>
               )}
             </div>
             {displayName && (
-              <span className="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-[#172033] max-w-[140px] truncate text-left">
+              <span className="hidden lg:flex items-center gap-1.5 text-xs font-bold text-slate-800 max-w-[140px] truncate text-left">
                 <span className="truncate">{displayName}</span>
                 <FiChevronDown
                   size={14}
-                  className={`text-slate-400 transition-transform duration-200 ${
-                    dropdownOpen ? 'rotate-180 text-[#087fea]' : ''
+                  className={`text-slate-400 group-hover:text-slate-700 transition-transform duration-200 ${
+                    dropdownOpen ? 'rotate-180' : ''
                   }`}
                 />
               </span>
@@ -441,13 +226,13 @@ export default function Header({
           {/* Menú emergente (Dropdown) */}
           {dropdownOpen && (
             <div
-              className="absolute right-0 top-full mt-2.5 w-60 max-w-[calc(100vw-2rem)] rounded-2xl bg-white p-2 shadow-lg shadow-slate-200/80 border border-slate-200/80 z-50 animate-in fade-in zoom-in-95 duration-150"
+              className="absolute right-0 top-full mt-2 w-60 max-w-[calc(100vw-2rem)] rounded-2xl bg-white p-2 shadow-xl border border-slate-200/90 z-50 animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100"
               role="menu"
               aria-orientation="vertical"
             >
               {/* Información rápida del usuario */}
-              <div className="px-3 py-2.5 border-b border-slate-100 mb-1 flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#087fea] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden ring-1 ring-slate-200">
+              <div className="px-3 py-2.5 mb-1 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#0B1B3D] text-amber-300 flex items-center justify-center font-black text-xs shrink-0 overflow-hidden">
                   {showValidPhoto ? (
                     <img
                       key={displayPhoto}
@@ -461,7 +246,7 @@ export default function Header({
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-slate-800 truncate">
+                  <p className="text-xs font-extrabold text-slate-900 truncate">
                     {displayName}
                   </p>
                   <p className="text-[11px] text-slate-500 truncate mt-0.5">
@@ -471,32 +256,30 @@ export default function Header({
               </div>
 
               {/* Opción: Ver perfil */}
-              <button
-                type="button"
-                role="menuitem"
-                onClick={handleProfile}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-slate-700 hover:text-[#087fea] hover:bg-[#087fea]/10 rounded-xl transition-all text-left group cursor-pointer"
-              >
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 group-hover:bg-[#087fea]/15 text-slate-500 group-hover:text-[#087fea] transition-colors shrink-0">
-                  <FiUser size={15} />
-                </div>
-                <span className="font-semibold leading-tight">Ver perfil</span>
-              </button>
-
-              <div className="h-px bg-slate-100 my-1" />
+              <div className="py-1">
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={handleProfile}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-slate-50 rounded-xl transition-all text-left cursor-pointer"
+                >
+                  <FiUser size={14} className="text-slate-400" />
+                  <span>Ver mi perfil</span>
+                </button>
+              </div>
 
               {/* Opción: Cerrar sesión */}
-              <button
-                type="button"
-                role="menuitem"
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-all text-left group cursor-pointer"
-              >
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50 group-hover:bg-rose-100 text-rose-600 transition-colors shrink-0">
-                  <FiLogOut size={15} />
-                </div>
-                <span className="font-semibold leading-tight">Cerrar sesión</span>
-              </button>
+              <div className="py-1">
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-all text-left cursor-pointer"
+                >
+                  <FiLogOut size={14} />
+                  <span>Cerrar sesión</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
