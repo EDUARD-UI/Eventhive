@@ -22,7 +22,7 @@ export default function StandardLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F8FAFC] font-body text-slate-800 antialiased">
+    <div className="flex h-screen overflow-hidden bg-[#EEF2F6] font-body text-slate-800 antialiased">
       {/* Barra lateral especializada para la organización */}
       <OrganizationSidebar
         role={role}

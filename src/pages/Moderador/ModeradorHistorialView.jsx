@@ -25,10 +25,10 @@ const ESTADOS_DISPONIBLES = [
 ];
 
 export default function ModeradorHistorialView({
-  onInspect,
-  onAprobar,
-  onSolicitarCorreccion,
-  onRechazar,
+  onInspect = () => {},
+  onAprobar = () => {},
+  onSolicitarCorreccion = () => {},
+  onRechazar = () => {},
 }) {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -127,12 +127,12 @@ export default function ModeradorHistorialView({
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Encabezado y Barra de Filtros */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
+      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-5 sm:p-6 space-y-4">
         <div>
-          <h2 className="font-display text-base sm:text-lg font-bold text-slate-900">
+          <h2 className="font-display text-base sm:text-lg font-black text-slate-900">
             Explorador de Eventos y Moderación
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 font-medium mt-0.5">
             Consulta el estado de todos los eventos del sistema, revisa su trazabilidad y accede a su historial
           </p>
         </div>
@@ -149,7 +149,7 @@ export default function ModeradorHistorialView({
               placeholder="Buscar por título..."
               value={searchTitle}
               onChange={(e) => setSearchTitle(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15"
+              className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 font-medium"
             />
           </div>
 
@@ -193,11 +193,11 @@ export default function ModeradorHistorialView({
       </div>
 
       {/* Resultados en Tabla estilizada */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[750px] border-collapse text-left">
             <thead>
-              <tr className="border-b border-slate-200 bg-white text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <tr className="border-b border-slate-200 bg-slate-50/70 text-[11px] font-black uppercase tracking-wider text-slate-500">
                 <th className="px-5 py-3.5">Evento</th>
                 <th className="px-5 py-3.5">Organización</th>
                 <th className="px-5 py-3.5">Categoría</th>
@@ -207,12 +207,12 @@ export default function ModeradorHistorialView({
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+            <tbody className="divide-y divide-slate-100 text-xs text-slate-700 font-medium">
               {loading ? (
                 Array.from({ length: 4 }).map((_, idx) => (
                   <tr key={idx} className="animate-pulse">
                     <td colSpan={6} className="px-5 py-4">
-                      <div className="h-4 bg-slate-200/70 rounded-md w-3/4" />
+                      <div className="h-4 bg-slate-100 rounded-md w-3/4" />
                     </td>
                   </tr>
                 ))
@@ -245,7 +245,7 @@ export default function ModeradorHistorialView({
                   return (
                     <tr
                       key={evento.id}
-                      className="hover:bg-white transition-colors"
+                      className="hover:bg-slate-50/70 transition-colors"
                     >
                       {/* Evento */}
                       <td className="px-5 py-4">
@@ -258,7 +258,9 @@ export default function ModeradorHistorialView({
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full bg-slate-200 dark:bg-slate-800" />
+                              <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-xs">
+                                EH
+                              </div>
                             )}
                           </div>
                           <div>
@@ -270,13 +272,13 @@ export default function ModeradorHistorialView({
                       </td>
 
                       {/* Organización */}
-                      <td className="px-5 py-4 font-medium text-slate-800">
+                      <td className="px-5 py-4 font-bold text-slate-800">
                         {organizacionNombre}
                       </td>
 
                       {/* Categoría */}
                       <td className="px-5 py-4">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-800 border border-amber-500/30 shadow-2xs">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">
                           {categoriaNombre}
                         </span>
                       </td>
@@ -299,7 +301,7 @@ export default function ModeradorHistorialView({
                         <button
                           type="button"
                           onClick={() => onInspect(evento)}
-                          className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5"
+                          className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                         >
                           <FiEye size={13} />
                           <span>Inspeccionar</span>
@@ -315,17 +317,19 @@ export default function ModeradorHistorialView({
 
         {/* Paginación */}
         {totalElements > 0 && (
-          <Pagination
-            currentPage={page + 1}
-            totalItems={totalElements}
-            pageSize={size}
-            onPageChange={(newPage) => setPage(newPage - 1)}
-            onPageSizeChange={(newSize) => {
-              setSize(newSize);
-              setPage(0);
-            }}
-            pageSizeOptions={[5, 10, 20]}
-          />
+          <div className="border-t border-slate-100">
+            <Pagination
+              currentPage={page + 1}
+              totalItems={totalElements}
+              pageSize={size}
+              onPageChange={(newPage) => setPage(newPage - 1)}
+              onPageSizeChange={(newSize) => {
+                setSize(newSize);
+                setPage(0);
+              }}
+              pageSizeOptions={[5, 10, 20]}
+            />
+          </div>
         )}
       </div>
     </div>

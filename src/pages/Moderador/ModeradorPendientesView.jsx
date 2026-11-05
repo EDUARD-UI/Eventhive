@@ -11,6 +11,7 @@ import {
   FiClock,
   FiFilter,
   FiInbox,
+  FiLoader,
 } from 'react-icons/fi';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
@@ -20,14 +21,15 @@ export default function ModeradorPendientesView({
   pendientes = [],
   pagedData = {},
   loading = false,
+  actionLoading = false,
   page = 0,
   size = 10,
-  onPageChange,
-  onPageSizeChange,
-  onInspect,
-  onAprobar,
-  onSolicitarCorreccion,
-  onRechazar,
+  onPageChange = () => {},
+  onPageSizeChange = () => {},
+  onInspect = () => {},
+  onAprobar = () => {},
+  onSolicitarCorreccion = () => {},
+  onRechazar = () => {},
 }) {
   const [localSearch, setLocalSearch] = useState('');
 
@@ -37,12 +39,14 @@ export default function ModeradorPendientesView({
     const term = localSearch.toLowerCase();
     return pendientes.filter((e) => {
       const titulo = (e.titulo || '').toLowerCase();
-      const org = typeof e.organizacion === 'object'
-        ? (e.organizacion?.nombre || '').toLowerCase()
-        : String(e.organizacion || '').toLowerCase();
-      const cat = typeof e.categoria === 'object'
-        ? (e.categoria?.nombre || '').toLowerCase()
-        : String(e.categoria || '').toLowerCase();
+      const org =
+        typeof e.organizacion === 'object'
+          ? (e.organizacion?.nombre || '').toLowerCase()
+          : String(e.organizacion || '').toLowerCase();
+      const cat =
+        typeof e.categoria === 'object'
+          ? (e.categoria?.nombre || '').toLowerCase()
+          : String(e.categoria || '').toLowerCase();
       const lugar = (e.lugar || '').toLowerCase();
       return (
         titulo.includes(term) ||
@@ -58,17 +62,17 @@ export default function ModeradorPendientesView({
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Barra de control y búsqueda */}
-      <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="font-display text-base sm:text-lg font-bold text-slate-900">
+            <h2 className="font-display text-base sm:text-lg font-black text-slate-900">
               Bandeja de Eventos Pendientes
             </h2>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900">
+            <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900">
               {totalElements} en cola
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 font-medium mt-0.5">
             Eventos esperando revisión y validación de políticas comunitarias
           </p>
         </div>
@@ -84,7 +88,7 @@ export default function ModeradorPendientesView({
             placeholder="Buscar por título, lugar u organización..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+            className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all font-medium"
           />
         </div>
       </div>
@@ -95,12 +99,12 @@ export default function ModeradorPendientesView({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-36 rounded-3xl bg-white border border-slate-200/60 p-6 animate-pulse"
+              className="h-36 rounded-3xl bg-white border border-slate-200/80 p-6 animate-pulse"
             />
           ))}
         </div>
       ) : filtrados.length === 0 ? (
-        <div className="p-12 rounded-3xl bg-white border border-dashed border-slate-200 text-center">
+        <div className="p-12 rounded-3xl bg-white border border-dashed border-slate-200 text-center shadow-xs">
           <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
             <FiInbox size={26} />
           </div>
@@ -131,12 +135,12 @@ export default function ModeradorPendientesView({
             return (
               <div
                 key={evento.id}
-                className="bg-white rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 hover:shadow-sm transition-all p-5 sm:p-6"
+                className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:border-slate-300 hover:shadow-sm transition-all p-5 sm:p-6"
               >
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
                   {/* Foto y Datos del Evento */}
                   <div className="flex flex-col sm:flex-row items-start gap-4 flex-1 min-w-0">
-                    <div className="w-full sm:w-44 h-32 rounded-2xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200/70 relative">
+                    <div className="w-full sm:w-44 h-32 rounded-2xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200 relative">
                       {evento.foto ? (
                         <img
                           src={evento.foto}
@@ -144,21 +148,23 @@ export default function ModeradorPendientesView({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-slate-200 dark:bg-slate-800" />
+                        <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-xs">
+                          EH
+                        </div>
                       )}
-                      <span className="absolute top-2 left-2 bg-amber-500 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded-lg shadow-xs">
+                      <span className="absolute top-2 left-2 bg-amber-400 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded-lg shadow-xs">
                         {categoriaNombre}
                       </span>
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <Badge tone="amber">
+                        <Badge tone="warning">
                           {evento.estado || 'PENDIENTE_REVISION'}
                         </Badge>
                       </div>
 
-                      <h3 className="font-display text-base font-bold text-slate-900 leading-snug">
+                      <h3 className="font-display text-base font-black text-slate-900 leading-snug">
                         {evento.titulo}
                       </h3>
 
@@ -171,7 +177,8 @@ export default function ModeradorPendientesView({
                           <div className="flex items-center gap-1.5">
                             <FiCalendar className="text-amber-500 shrink-0" size={13} />
                             <span>
-                              {evento.fecha ? formatFecha(evento.fecha) : ''} {evento.hora ? `· ${formatHora24(evento.hora)}` : ''}
+                              {evento.fecha ? formatFecha(evento.fecha) : ''}{' '}
+                              {evento.hora ? `· ${formatHora24(evento.hora)}` : ''}
                             </span>
                           </div>
                         )}
@@ -191,12 +198,13 @@ export default function ModeradorPendientesView({
                     </div>
                   </div>
 
-                  {/* Botonera de Moderación */}
+                  {/* Botonera de Moderación con protección anti-doble clic */}
                   <div className="flex flex-wrap items-center gap-2 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100 shrink-0 self-stretch lg:self-center justify-end">
                     <button
                       type="button"
+                      disabled={actionLoading}
                       onClick={() => onInspect(evento)}
-                      className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors flex items-center gap-1.5"
+                      className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                     >
                       <FiEye size={14} />
                       <span>Revisar Detalle</span>
@@ -204,8 +212,9 @@ export default function ModeradorPendientesView({
 
                     <button
                       type="button"
+                      disabled={actionLoading}
                       onClick={() => onSolicitarCorreccion(evento)}
-                      className="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition-colors flex items-center gap-1.5"
+                      className="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                     >
                       <FiEdit3 size={14} />
                       <span>Corrección</span>
@@ -213,8 +222,9 @@ export default function ModeradorPendientesView({
 
                     <button
                       type="button"
+                      disabled={actionLoading}
                       onClick={() => onRechazar(evento)}
-                      className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-colors flex items-center gap-1.5"
+                      className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                     >
                       <FiX size={14} />
                       <span>Rechazar</span>
@@ -222,10 +232,15 @@ export default function ModeradorPendientesView({
 
                     <button
                       type="button"
+                      disabled={actionLoading}
                       onClick={() => onAprobar(evento.id)}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                     >
-                      <FiCheck size={14} />
+                      {actionLoading ? (
+                        <FiLoader size={14} className="animate-spin" />
+                      ) : (
+                        <FiCheck size={14} />
+                      )}
                       <span>Aprobar</span>
                     </button>
                   </div>
@@ -238,7 +253,7 @@ export default function ModeradorPendientesView({
 
       {/* Paginación Real del Servidor */}
       {totalElements > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs">
+        <div className="bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-xs">
           <Pagination
             currentPage={page + 1}
             totalItems={totalElements}

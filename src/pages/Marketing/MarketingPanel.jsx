@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Sidebar from '../../components/Shared/Sidebar.jsx';
+import StandardDashboardSidebar from '../../components/common/StandardDashboardSidebar.jsx';
 import Header from '../../components/Shared/Header.jsx';
 import { Sparkles, Award, Image, User } from 'lucide-react';
 import MarketingPromocionesView from './MarketingPromocionesView.jsx';
@@ -13,8 +13,19 @@ import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
 const menuItems = [
   { id: 'eventos', label: 'Eventos Promocionados', icon: Sparkles },
   { id: 'planes', label: 'Planes de Promoción', icon: Award },
-  { id: 'banners', label: 'Banners', icon: Image },
+  { id: 'banners', label: 'Banners Publicitarios', icon: Image },
   { id: 'perfil', label: 'Mi Perfil', icon: User },
+];
+
+const marketingGroups = [
+  {
+    label: 'Campañas & Difusión',
+    itemIds: ['eventos', 'planes', 'banners'],
+  },
+  {
+    label: 'Cuenta',
+    itemIds: ['perfil'],
+  },
 ];
 
 export default function MarketingPanel() {
@@ -35,12 +46,12 @@ export default function MarketingPanel() {
   const userName = sessionUser?.name || 'Especialista Marketing';
   const userInitials = userName
     ? userName
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w) => w[0])
-      .join('')
-      .toUpperCase()
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase()
     : 'MK';
 
   const userPhoto =
@@ -64,7 +75,7 @@ export default function MarketingPanel() {
         return (
           <AdminPerfilView
             onNavigateTab={handleSelectTab}
-            showToast={() => { }}
+            showToast={() => {}}
           />
         );
 
@@ -104,16 +115,17 @@ export default function MarketingPanel() {
   }
 
   return (
-    <div className="admin-theme flex h-screen overflow-hidden bg-[#f1f5f9] font-body text-slate-800">
-      {/* Sidebar de Navegación */}
-      <Sidebar
+    <div className="flex h-screen overflow-hidden bg-[#EEF2F6] font-body text-slate-800 antialiased">
+      {/* Sidebar estandarizado azul oscuro (#0B1B3D) con favicon logo */}
+      <StandardDashboardSidebar
         role="Marketing"
+        roleSubtitle="Crecimiento & Difusión"
         items={menuItems}
         activeItem={currentTab}
         onSelect={handleSelectTab}
-        variant="admin"
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
+        groups={marketingGroups}
       />
 
       {/* Contenido Principal */}
@@ -130,8 +142,8 @@ export default function MarketingPanel() {
           />
         </div>
 
-        {/* Sección de datos: única que realiza scroll */}
-        <main className="px-4 sm:px-8 pb-10 flex-1 pt-6 max-w-[1400px] w-full mx-auto overflow-y-auto min-h-0">
+        {/* Sección scrolleable con margen suave y ancho contenido */}
+        <main className="px-4 sm:px-8 pb-10 flex-1 pt-5 sm:pt-7 max-w-[1400px] w-full mx-auto overflow-y-auto min-h-0">
           {renderCurrentView()}
         </main>
       </div>
