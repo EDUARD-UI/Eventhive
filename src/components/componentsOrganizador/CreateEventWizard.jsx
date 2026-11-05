@@ -976,7 +976,7 @@ export default function CreateEventWizard({
             <button
               type="button"
               onClick={handleNext}
-              className="px-6 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-black uppercase tracking-wider shadow-sm transition-all cursor-pointer active:scale-95"
+              className="px-6 py-2.5 rounded-xl bg-[#0B1B3D] hover:bg-slate-900 text-amber-300 text-xs font-bold uppercase tracking-wider shadow-xs transition-all cursor-pointer active:scale-95"
             >
               Siguiente Paso →
             </button>
@@ -985,10 +985,10 @@ export default function CreateEventWizard({
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="px-7 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md shadow-amber-500/20 transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
+              className="px-7 py-3 rounded-xl bg-[#0B1B3D] hover:bg-slate-900 text-amber-300 text-xs font-bold uppercase tracking-wider shadow-xs transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
             >
               {isSubmitting && (
-                <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                <span className="w-3.5 h-3.5 border-2 border-amber-300 border-t-transparent rounded-full animate-spin" />
               )}
               <span>
                 {initialEvent
