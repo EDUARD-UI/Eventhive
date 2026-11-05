@@ -27,7 +27,7 @@ export const normalizeRole = (rawRole) => {
     role = role.replace('ROLE_', '');
   }
 
-    // Corregir nombres: ADMINISTRADOR (no ADMIN), REPRESENTANTE (quien entra a la organización, no ORGANIZADOR)
+  // Corregir nombres: ADMINISTRADOR (no ADMIN), REPRESENTANTE (quien entra a la organización, no ORGANIZADOR)
   if (role === 'ADMIN' || role === 'ADMINISTRADOR') return 'ADMINISTRADOR';
   if (role === 'REPRESENTANTE' || role === 'ORGANIZADOR' || role === 'REPRESENTANTE_ORGANIZACION' || role === 'ORGANIZATION') return 'REPRESENTANTE';
   if (role === 'OPERADOR') return 'OPERADOR';
@@ -89,6 +89,34 @@ export const isTokenExpired = (token, thresholdSeconds = 15) => {
   return payload.exp <= now + thresholdSeconds;
 };
 
+export const extractPhotoUrl = (obj) => {
+  if (!obj) return null;
+  if (typeof obj === 'string') {
+    const trimmed = obj.trim();
+    return trimmed.startsWith('http') || trimmed.startsWith('data:image/') || trimmed.startsWith('/')
+      ? trimmed
+      : null;
+  }
+  if (typeof obj !== 'object') return null;
+  const candidate =
+    obj.urlImagenPerfil ||
+    obj.imagenPerfil ||
+    obj.fotoUrl ||
+    obj.foto ||
+    obj.imagenUrl ||
+    obj.imagen ||
+    obj.avatarUrl ||
+    obj.avatar ||
+    obj.urlLogo ||
+    obj.logo ||
+    obj.url ||
+    (obj.data ? extractPhotoUrl(obj.data) : null) ||
+    (obj.usuario ? extractPhotoUrl(obj.usuario) : null) ||
+    null;
+
+  return typeof candidate === 'string' && candidate.trim() ? candidate.trim() : null;
+};
+
 export const session = {
   getToken: () => {
     const raw = localStorage.getItem(TOKEN_KEY);
@@ -117,6 +145,14 @@ export const session = {
       if (parsed) {
         parsed.role = normalizeRole(parsed.role || parsed.rol);
         parsed.rol = parsed.role;
+        const photo = extractPhotoUrl(parsed);
+        if (photo) {
+          parsed.urlImagenPerfil = photo;
+          parsed.imagenPerfil = photo;
+          parsed.fotoUrl = photo;
+          parsed.foto = photo;
+          parsed.avatar = photo;
+        }
       }
       return parsed;
     } catch {
@@ -148,20 +184,28 @@ export const session = {
     const existing = session.getUser() || {};
     const usuarioObj = data.usuario || data.user || (data.id ? data : {});
 
-    const email =
+    const incomingEmail =
       data.correo ||
       usuarioObj.correo ||
       data.email ||
       usuarioObj.email ||
-      existing.email ||
       '';
+
+    const isSameUser =
+      !incomingEmail ||
+      !existing.email ||
+      incomingEmail.toLowerCase().trim() === existing.email.toLowerCase().trim();
+
+    const safeExisting = isSameUser ? existing : {};
+
+    const email = incomingEmail || safeExisting.email || '';
 
     const name =
       data.nombre ||
       usuarioObj.nombre ||
       data.name ||
       usuarioObj.name ||
-      existing.name ||
+      safeExisting.name ||
       (email ? email.split('@')[0] : 'Usuario');
 
     const rawRole =
@@ -175,7 +219,7 @@ export const session = {
       usuarioObj.roles ||
       data.authorities ||
       usuarioObj.authorities ||
-      existing.role ||
+      safeExisting.role ||
       'CLIENTE';
 
     const normalizedRole = normalizeRole(rawRole);
@@ -191,33 +235,24 @@ export const session = {
     }
 
     const fotoUrl =
-      data.urlImagenPerfil ||
-      usuarioObj.urlImagenPerfil ||
-      data.fotoUrl ||
-      usuarioObj.fotoUrl ||
-      data.foto ||
-      usuarioObj.foto ||
-      data.imagenUrl ||
-      usuarioObj.imagenUrl ||
-      data.imagen ||
-      usuarioObj.imagen ||
-      data.avatar ||
-      usuarioObj.avatar ||
-      existing.urlImagenPerfil ||
-      existing.fotoUrl ||
-      existing.foto ||
+      extractPhotoUrl(data) ||
+      extractPhotoUrl(usuarioObj) ||
+      extractPhotoUrl(safeExisting) ||
       null;
 
     const userData = {
-      id: usuarioObj.id || data.id || existing.id || null,
+      ...safeExisting,
+      id: usuarioObj.id || data.id || safeExisting.id || null,
       email,
       name,
+      nombre: name,
       role: normalizedRole,
       rol: normalizedRole,
       rolNombre: normalizedRole,
       fotoUrl,
       foto: fotoUrl,
       urlImagenPerfil: fotoUrl,
+      imagenPerfil: fotoUrl,
       avatar: fotoUrl,
     };
 
@@ -232,25 +267,21 @@ export const session = {
     const existing = session.getUser() || {};
     const roleToNormalize = fields.role || fields.rol || fields.rolNombre;
     const normalizedRole = roleToNormalize ? normalizeRole(roleToNormalize) : existing.role;
-    const fotoUrl =
-      fields.urlImagenPerfil ||
-      fields.fotoUrl ||
-      fields.foto ||
-      fields.avatar ||
-      existing.urlImagenPerfil ||
-      existing.fotoUrl ||
-      existing.foto ||
-      null;
+    const fotoUrl = extractPhotoUrl(fields) || extractPhotoUrl(existing) || null;
+    const resolvedName = fields.name || fields.nombre || existing.name || existing.nombre || 'Usuario';
 
     const updated = {
       ...existing,
       ...fields,
+      name: resolvedName,
+      nombre: resolvedName,
       role: normalizedRole,
       rol: normalizedRole,
       rolNombre: normalizedRole,
       fotoUrl,
       foto: fotoUrl,
       urlImagenPerfil: fotoUrl,
+      imagenPerfil: fotoUrl,
       avatar: fotoUrl,
     };
     localStorage.setItem(USER_KEY, JSON.stringify(updated));

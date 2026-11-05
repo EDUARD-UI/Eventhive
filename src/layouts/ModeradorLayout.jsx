@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import StandardDashboardSidebar from '../components/common/StandardDashboardSidebar.jsx';
 import Header from '../components/Shared/Header.jsx';
 import { session } from '../services/session.js';
@@ -17,7 +17,20 @@ export default function ModeradorLayout({
 }) {
   useDashboardTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const currentUser = session.getUser();
+  const [currentUser, setCurrentUser] = useState(() => session.getUser());
+
+  useEffect(() => {
+    const handleSessionUpdated = (e) => {
+      const updated = e?.detail || session.getUser();
+      setCurrentUser(updated ? { ...updated } : null);
+    };
+    window.addEventListener('eventhive_session_updated', handleSessionUpdated);
+    window.addEventListener('storage', handleSessionUpdated);
+    return () => {
+      window.removeEventListener('eventhive_session_updated', handleSessionUpdated);
+      window.removeEventListener('storage', handleSessionUpdated);
+    };
+  }, []);
 
   const userName = currentUser?.name || currentUser?.nombre || 'Moderador';
   const userInitials = userName
@@ -34,6 +47,7 @@ export default function ModeradorLayout({
     currentUser?.fotoUrl ||
     currentUser?.foto ||
     currentUser?.imagenUrl ||
+    currentUser?.avatar ||
     null;
 
   const moderadorGroups = [

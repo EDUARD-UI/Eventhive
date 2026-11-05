@@ -178,22 +178,20 @@ export default function Registro() {
           <button
             type="button"
             onClick={() => setFieldValue('role', 'usuario')}
-            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
-              !isOrganizer
+            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${!isOrganizer
                 ? 'bg-[#0B132B] dark:bg-amber-500 text-white dark:text-slate-950 shadow-sm font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-[#0B132B] dark:hover:text-white font-medium'
-            }`}
+              }`}
           >
             {t('auth.roleAttendee')}
           </button>
           <button
             type="button"
             onClick={() => setFieldValue('role', 'organizador')}
-            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
-              isOrganizer
+            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${isOrganizer
                 ? 'bg-[#0B132B] dark:bg-amber-500 text-white dark:text-slate-950 shadow-sm font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-[#0B132B] dark:hover:text-white font-medium'
-            }`}
+              }`}
           >
             {t('auth.roleOrganizer')}
           </button>
@@ -385,7 +383,7 @@ export default function Registro() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-2.5 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 hover:shadow-amber-500/35 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full mt-2.5 py-2 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 hover:shadow-amber-500/35 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
           >
             {isSubmitting ? (
               <>
@@ -399,7 +397,7 @@ export default function Registro() {
             )}
           </button>
         </form>
-        <div className="flex justify-end items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 pt-0.5">
+        <div className="flex justify-end items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-400 pt-0.5">
           <span>{t('auth.alreadyHaveAccount')}</span>
           <Link
             to="/iniciosesion"

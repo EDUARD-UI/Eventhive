@@ -530,3 +530,32 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
   transform: scale(1.1);
 }
+
+
+/* ==========================================================================
+   ANIMACIÓN LETRA POR LETRA PARA LA MARCA EVENTHIVE EN AUTHLAYOUT
+   ========================================================================== */
+@keyframes authLetterReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-auth-letter {
+  opacity: 0;
+  animation: authLetterReveal 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-auth-letter {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}

@@ -19,7 +19,8 @@ import {
   FiLayers,
 } from 'react-icons/fi';
 import { organizerService } from '../../services/organizerService.js';
-import { userService } from '../../services/userService.js';
+import { userService, readFileAsDataUrl } from '../../services/userService.js';
+import { session, extractPhotoUrl } from '../../services/session.js';
 import { httpClient } from '../../services/httpClient.js';
 import { showSuccessAlert, showErrorAlert, showWarningAlert } from '../../utils/alertUtils.js';
 import { sanitizeText, sanitizePhone } from '../../utils/sanitizer.js';
@@ -60,19 +61,24 @@ export default function PerfilOrganizador() {
   const orgImageRef = useRef(null);
 
   // Representative profile state
+  const cachedUser = session.getUser();
+  const initialRepPhoto = extractPhotoUrl(cachedUser);
+
   const [repProfile, setRepProfile] = useState({
-    id: '',
-    nombre: '',
-    correo: '',
-    telefono: '',
-    imagenPerfil: null,
-    urlImagenPerfil: null,
-    rolNombre: '',
+    id: cachedUser?.id || '',
+    nombre: cachedUser?.nombre || '',
+    correo: cachedUser?.correo || '',
+    telefono: cachedUser?.telefono || '',
+    imagenPerfil: initialRepPhoto,
+    urlImagenPerfil: initialRepPhoto,
+    rolNombre: cachedUser?.rolNombre || '',
   });
 
   const [repImageFile, setRepImageFile] = useState(null);
   const [repImagePreview, setRepImagePreview] = useState(null);
+  const [uploadingRepPhoto, setUploadingRepPhoto] = useState(false);
   const repImageRef = useRef(null);
+  const directRepImageRef = useRef(null);
 
   // Representative activity/purchases
   const [activity, setActivity] = useState(null);
@@ -126,12 +132,13 @@ export default function PerfilOrganizador() {
     try {
       const org = await organizerService.getMiOrganizacion();
       if (org) {
+        const logoUrl = org.urlLogo || org.logo || null;
         setOrgProfile({
           id: org.id || '',
           razonSocial: org.razonSocial || org.nombre || '',
           correoContacto: org.correoContacto || org.correo || '',
           descripcion: org.descripcion || '',
-          urlLogo: org.urlLogo || org.logo || null,
+          urlLogo: logoUrl,
           promedioRating: org.promedioRating ?? org.valoracion ?? null,
           totalValoraciones: org.totalValoraciones || 0,
           totalSeguidores: org.totalSeguidores || 0,
@@ -139,6 +146,9 @@ export default function PerfilOrganizador() {
           estado: org.estado || '',
           nit: org.nit || '',
         });
+        if (logoUrl && !extractPhotoUrl(session.getUser())) {
+          session.updateUser({ urlLogo: logoUrl });
+        }
       }
     } catch (e) {
       console.warn('Error cargando datos de organización:', e);
@@ -150,14 +160,19 @@ export default function PerfilOrganizador() {
     try {
       const user = await userService.getPerfil();
       if (user) {
+        const photo = extractPhotoUrl(user) || extractPhotoUrl(session.getUser());
         setRepProfile({
           id: user.id || '',
           nombre: user.nombre || '',
           correo: user.correo || '',
           telefono: user.telefono || '',
-          imagenPerfil: user.imagenPerfil || null,
-          urlImagenPerfil: user.urlImagenPerfil || null,
+          imagenPerfil: photo,
+          urlImagenPerfil: photo,
           rolNombre: user.rolNombre || '',
+        });
+        session.updateUser({
+          nombre: user.nombre || '',
+          ...(photo ? { urlImagenPerfil: photo, imagenPerfil: photo, fotoUrl: photo } : {}),
         });
       }
     } catch (e) {
@@ -194,6 +209,55 @@ export default function PerfilOrganizador() {
       .then((data) => { setFavorites(data?.content || []); })
       .catch(() => {});
   }, []);
+
+  // Subida directa de foto del representante desde el avatar de la tarjeta
+  const handleDirectRepPhotoChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      showWarningAlert('Formato no permitido', 'La imagen debe ser PNG o JPG.');
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      showWarningAlert('Archivo muy pesado', 'La imagen no puede exceder los 5 MB.');
+      event.target.value = '';
+      return;
+    }
+
+    setUploadingRepPhoto(true);
+    let dataUrl = null;
+    try {
+      dataUrl = await readFileAsDataUrl(file);
+      if (dataUrl) {
+        setRepProfile((prev) => ({
+          ...prev,
+          imagenPerfil: dataUrl,
+          urlImagenPerfil: dataUrl,
+        }));
+        session.updateUser({ urlImagenPerfil: dataUrl, imagenPerfil: dataUrl, fotoUrl: dataUrl });
+      }
+
+      const res = await userService.uploadFotoPerfil(file);
+      const finalPhoto = extractPhotoUrl(res) || dataUrl;
+      if (finalPhoto) {
+        setRepProfile((prev) => ({
+          ...prev,
+          imagenPerfil: finalPhoto,
+          urlImagenPerfil: finalPhoto,
+        }));
+        session.updateUser({ urlImagenPerfil: finalPhoto, imagenPerfil: finalPhoto, fotoUrl: finalPhoto });
+      }
+      showSuccessAlert('Foto actualizada', 'Tu foto de perfil se actualizó correctamente.');
+    } catch (err) {
+      showErrorAlert('Error al subir foto', err?.message || 'No se pudo actualizar la foto de perfil.');
+    } finally {
+      setUploadingRepPhoto(false);
+      event.target.value = '';
+    }
+  };
 
   // Abrir modal lateral sincronizado con los datos actuales
   const openEditDrawer = (tab = 'organizacion') => {
@@ -282,18 +346,24 @@ export default function PerfilOrganizador() {
         };
         const fd = new FormData();
         fd.append('datos', new Blob([JSON.stringify(datos)], { type: 'application/json' }));
+        let orgDataUrl = null;
         if (orgImageFile) {
           fd.append('imagen', orgImageFile);
+          orgDataUrl = await readFileAsDataUrl(orgImageFile);
         }
 
         const res = await organizerService.updateMiOrganizacion(fd);
+        const newLogo = res?.urlLogo || res?.logo || orgDataUrl || orgProfile.urlLogo;
         setOrgProfile((prev) => ({
           ...prev,
           razonSocial: datos.razonSocial,
           correoContacto: datos.correoContacto,
           descripcion: datos.descripcion,
-          urlLogo: res?.urlLogo || prev.urlLogo,
+          urlLogo: newLogo,
         }));
+        if (newLogo) {
+          session.updateUser({ urlLogo: newLogo });
+        }
         setOrgImageFile(null);
         setOrgImagePreview(null);
         await showSuccessAlert('Organización actualizada', 'Los datos de tu organización fueron guardados exitosamente.');
@@ -317,16 +387,23 @@ export default function PerfilOrganizador() {
           nombre: cleanNombre,
           telefono: cleanTelefono,
         }));
+        session.updateUser({ nombre: cleanNombre });
 
         if (repImageFile) {
-          const fd = new FormData();
-          fd.append('imagen', repImageFile);
-          const imgRes = await httpClient.put('/usuarios/perfil/imagen', fd, { isFormData: true });
+          const dataUrl = await readFileAsDataUrl(repImageFile);
+          if (dataUrl) {
+            session.updateUser({ urlImagenPerfil: dataUrl, imagenPerfil: dataUrl, fotoUrl: dataUrl });
+          }
+          const imgRes = await userService.uploadFotoPerfil(repImageFile);
+          const finalPhoto = extractPhotoUrl(imgRes) || dataUrl || repProfile.urlImagenPerfil;
           setRepProfile((prev) => ({
             ...prev,
-            imagenPerfil: imgRes?.imagenPerfil || prev.imagenPerfil,
-            urlImagenPerfil: imgRes?.urlImagenPerfil || prev.urlImagenPerfil,
+            imagenPerfil: finalPhoto,
+            urlImagenPerfil: finalPhoto,
           }));
+          if (finalPhoto) {
+            session.updateUser({ urlImagenPerfil: finalPhoto, imagenPerfil: finalPhoto, fotoUrl: finalPhoto });
+          }
           setRepImageFile(null);
           setRepImagePreview(null);
         }
@@ -695,12 +772,36 @@ export default function PerfilOrganizador() {
             <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-7 space-y-6">
               <div className="flex flex-col gap-4 border-b border-slate-100 pb-6 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex min-w-0 items-center gap-4">
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-amber-200 bg-amber-50 font-display text-2xl font-black text-amber-800 shadow-2xs">
-                    {repDisplayImage ? (
-                      <img src={repDisplayImage} alt={repProfile.nombre} className="w-full h-full object-cover" />
-                    ) : (
-                      (repProfile.nombre || 'U').slice(0, 2).toUpperCase()
-                    )}
+                  <div className="relative shrink-0">
+                    <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-amber-200 bg-amber-50 font-display text-2xl font-black text-amber-800 shadow-2xs">
+                      {repDisplayImage ? (
+                        <img src={repDisplayImage} alt={repProfile.nombre} className="w-full h-full object-cover" />
+                      ) : (
+                        (repProfile.nombre || 'U').slice(0, 2).toUpperCase()
+                      )}
+                      {uploadingRepPhoto && (
+                        <div className="absolute inset-0 rounded-full bg-slate-900/50 flex items-center justify-center">
+                          <span className="h-5 w-5 animate-spin rounded-full border-2 border-amber-300 border-t-transparent" />
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      ref={directRepImageRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg"
+                      onChange={handleDirectRepPhotoChange}
+                      className="hidden"
+                      disabled={uploadingRepPhoto}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => directRepImageRef.current?.click()}
+                      disabled={uploadingRepPhoto}
+                      title="Cambiar foto de perfil"
+                      className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-xl bg-[#0B1B3D] text-amber-300 shadow-md ring-2 ring-white transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                    >
+                      <FiCamera size={14} />
+                    </button>
                   </div>
                   <div className="min-w-0">
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full inline-block mb-1">

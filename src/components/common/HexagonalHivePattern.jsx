@@ -108,9 +108,10 @@ export default function HexagonalHivePattern({ variant = 'hero', className = '' 
 
         <g>
           {hexagons.map((hex, idx) => {
-            const points = getHexPoints(hex.cx, hex.cy, hex.r);
+            const radius = isAuth ? hex.r * 0.648 : hex.r;
+            const points = getHexPoints(hex.cx, hex.cy, radius);
             const innerPoints = hex.concentric
-              ? getHexPoints(hex.cx, hex.cy, hex.r * 0.58)
+              ? getHexPoints(hex.cx, hex.cy, radius * 0.58)
               : null;
 
             const strokeColor = isDark
@@ -118,16 +119,16 @@ export default function HexagonalHivePattern({ variant = 'hero', className = '' 
                 ? '#F59E0B'
                 : 'rgba(255, 255, 255, 0.08)'
               : hex.filled
-              ? '#F59E0B'
-              : '#CBD5E1';
+                ? '#F59E0B'
+                : '#CBD5E1';
 
             const strokeOpacity = isDark
               ? hex.filled
                 ? 0.22
                 : 0.1
               : hex.filled
-              ? 0.18
-              : 0.55;
+                ? 0.18
+                : 0.55;
 
             const fillColor = hex.filled
               ? isDark

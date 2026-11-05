@@ -9,9 +9,9 @@ import {
   FiMenu,
   FiTrash2,
   FiUser,
-  FiZap,
 } from 'react-icons/fi';
-import { session } from '../../services/session.js';
+import { session, extractPhotoUrl } from '../../services/session.js';
+import userService from '../../services/userService.js';
 import notificationService from '../../services/notificationService.js';
 
 /**
@@ -31,6 +31,8 @@ export default function OrganizationHeader({
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [sessionUser, setSessionUser] = useState(() => session.getUser());
+  const [photoError, setPhotoError] = useState(false);
 
   // Estados de Notificaciones
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -38,6 +40,32 @@ export default function OrganizationHeader({
   const [unreadCount, setUnreadCount] = useState(0);
   const [loadingNotifs, setLoadingNotifs] = useState(false);
   const notificationsRef = useRef(null);
+
+  useEffect(() => {
+    const handleSessionUpdated = (e) => {
+      const updated = e?.detail || session.getUser();
+      setSessionUser(updated ? { ...updated } : null);
+      setPhotoError(false);
+    };
+    window.addEventListener('eventhive_session_updated', handleSessionUpdated);
+    window.addEventListener('storage', handleSessionUpdated);
+    return () => {
+      window.removeEventListener('eventhive_session_updated', handleSessionUpdated);
+      window.removeEventListener('storage', handleSessionUpdated);
+    };
+  }, []);
+
+  useEffect(() => {
+    const token = session.getToken();
+    if (!token || session.isDevSession()) return;
+    userService.getPerfil().catch(() => {});
+  }, []);
+
+  const displayPhoto = extractPhotoUrl(sessionUser) || userPhoto || null;
+
+  useEffect(() => {
+    setPhotoError(false);
+  }, [displayPhoto]);
 
   const fetchNotifs = async () => {
     try {
@@ -114,6 +142,8 @@ export default function OrganizationHeader({
     session.clear();
     navigate('/iniciosesion');
   };
+
+  const showValidPhoto = Boolean(displayPhoto && !photoError);
 
   return (
     <header className="sticky top-0 z-30 h-16 w-full border-b border-slate-200/90 bg-white/95 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between gap-4">
@@ -248,11 +278,13 @@ export default function OrganizationHeader({
             aria-expanded={dropdownOpen}
             className="flex items-center gap-2 p-1 pl-1.5 rounded-xl border border-slate-200/90 hover:border-slate-300 bg-white hover:bg-slate-50 transition-all cursor-pointer shadow-2xs group"
           >
-            {userPhoto ? (
+            {showValidPhoto ? (
               <img
-                src={userPhoto}
+                key={displayPhoto}
+                src={displayPhoto}
                 alt={userName}
                 className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0"
+                onError={() => setPhotoError(true)}
               />
             ) : (
               <div className="w-7 h-7 rounded-lg bg-[#0B1B3D] text-amber-300 font-display font-black text-xs flex items-center justify-center shrink-0">
@@ -280,11 +312,26 @@ export default function OrganizationHeader({
           {/* Menú Desplegable */}
           {dropdownOpen && (
             <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-slate-200 shadow-xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150 p-1.5">
-              <div className="px-3 py-2 border-b border-slate-100 mb-1">
-                <p className="text-xs font-bold text-slate-900 truncate">{userName}</p>
-                <p className="text-[10px] font-medium text-slate-400 truncate">
-                  Organización en EventHive
-                </p>
+              <div className="px-3 py-2 border-b border-slate-100 mb-1 flex items-center gap-2.5">
+                {showValidPhoto ? (
+                  <img
+                    key={displayPhoto}
+                    src={displayPhoto}
+                    alt={userName}
+                    className="w-8 h-8 rounded-lg object-cover border border-slate-200 shrink-0"
+                    onError={() => setPhotoError(true)}
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-lg bg-[#0B1B3D] text-amber-300 font-display font-black text-xs flex items-center justify-center shrink-0">
+                    {userInitials}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-900 truncate">{userName}</p>
+                  <p className="text-[10px] font-medium text-slate-400 truncate">
+                    Organización en EventHive
+                  </p>
+                </div>
               </div>
 
               <button
@@ -314,4 +361,3 @@ export default function OrganizationHeader({
     </header>
   );
 }
-

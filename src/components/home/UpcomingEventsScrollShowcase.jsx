@@ -5,15 +5,13 @@ import HiveEmptyState from './HiveEmptyState.jsx';
 
 /**
  * UpcomingEventsScrollShowcase
- * Showcase interactivo con animación sincronizada al scroll en 3D para la sección
- * de "Próximos Eventos" en el Home.
+ * Showcase de "Próximos Eventos" con revelación 3D al entrar en el viewport.
  *
- * - Abanico 3D progresivo conducido por el scroll real, fluido y rápido (450ms).
- * - Desfase de onda vertical entre columnas pares e impares al desplazarse.
+ * - Animación de entrada escalonada, activada una sola vez por IntersectionObserver.
  * - Inclinación 3D interactiva por tarjeta al pasar el cursor con brillo radial ámbar.
  * - Preserva íntegramente los datos, endpoints y redirecciones de EventListCard.
  */
-function AnimatedCardItem({ children, index, scrollProgress, isVisible }) {
+function AnimatedCardItem({ children, index, isVisible }) {
   const cardRef = useRef(null);
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0, glowX: 50, glowY: 50, isHovered: false });
 
@@ -46,16 +44,10 @@ function AnimatedCardItem({ children, index, scrollProgress, isVisible }) {
   ];
 
   const cfg = spreadOffsets[index % 4];
-  const active = isVisible || scrollProgress > 0.1;
-
-  // Parallax vertical sutil continuo mientras el usuario sigue bajando
-  const isOdd = index % 2 !== 0;
-  const parallaxWave = active
-    ? (scrollProgress - 0.5) * (isOdd ? -10 : 10)
-    : 0;
+  const active = isVisible;
 
   const transformString = active
-    ? `perspective(1200px) translate3d(0px, ${parallaxWave.toFixed(1)}px, ${tilt.isHovered ? '14px' : '0px'}) rotateX(${tilt.rotateX.toFixed(2)}deg) rotateY(${tilt.rotateY.toFixed(2)}deg) rotateZ(0deg) scale(${tilt.isHovered ? 1.02 : 1})`
+    ? `perspective(1200px) translate3d(0px, 0px, ${tilt.isHovered ? '14px' : '0px'}) rotateX(${tilt.rotateX.toFixed(2)}deg) rotateY(${tilt.rotateY.toFixed(2)}deg) rotateZ(0deg) scale(${tilt.isHovered ? 1.02 : 1})`
     : `perspective(1200px) translate3d(${cfg.x}px, ${cfg.y}px, ${cfg.z}px) rotateX(10deg) rotateY(${cfg.ry}deg) rotateZ(${cfg.rz}deg) scale(0.94)`;
 
   return (
@@ -97,7 +89,6 @@ export default function UpcomingEventsScrollShowcase({
 }) {
   const sectionRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     const node = sectionRef.current;
@@ -105,44 +96,18 @@ export default function UpcomingEventsScrollShowcase({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-          }
-        });
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
       },
       { threshold: 0.08, rootMargin: '0px 0px -30px 0px' }
     );
 
     observer.observe(node);
 
-    let rafId = null;
-    const updateScroll = () => {
-      if (rafId) return;
-      rafId = requestAnimationFrame(() => {
-        rafId = null;
-        if (!sectionRef.current) return;
-        const rect = sectionRef.current.getBoundingClientRect();
-        const vh = window.innerHeight || 800;
-
-        if (rect.top <= vh * 0.92) {
-          setIsVisible(true);
-        }
-
-        const totalTravel = vh + rect.height;
-        const currentTravel = vh - rect.top;
-        const progress = Math.max(0, Math.min(1, currentTravel / totalTravel));
-        setScrollProgress(progress);
-      });
-    };
-
-    window.addEventListener('scroll', updateScroll, { passive: true });
-    updateScroll();
-
     return () => {
       observer.disconnect();
-      window.removeEventListener('scroll', updateScroll);
-      if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
 
@@ -153,7 +118,6 @@ export default function UpcomingEventsScrollShowcase({
           <AnimatedCardItem
             key={idx}
             index={idx}
-            scrollProgress={scrollProgress}
             isVisible={isVisible}
           >
             <EventCardSkeleton aspectVariant="standard" />
@@ -179,22 +143,18 @@ export default function UpcomingEventsScrollShowcase({
 
   return (
     <div ref={sectionRef} className="relative pt-2 pb-4">
-      {/* Halo ambiental de fondo que se desplaza horizontalmente con el scroll */}
+      {/* Halo ambiental estático detrás de las tarjetas */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-1/2 -translate-y-1/2 w-2/3 h-44 rounded-full bg-amber-500/10 dark:bg-amber-400/10 blur-3xl transition-transform duration-300"
-        style={{
-          transform: `translate3d(${(scrollProgress - 0.5) * 120 - 50}%, -50%, 0)`,
-        }}
+        className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-44 rounded-full bg-amber-500/10 dark:bg-amber-400/10 blur-3xl"
       />
 
-      {/* Grilla de tarjetas con efecto abanico 3D y desfase parallax fluido */}
+      {/* Grilla de tarjetas con efecto abanico 3D de entrada */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7 items-stretch relative z-10">
         {displayedEvents.map((event, idx) => (
           <AnimatedCardItem
             key={event.id || idx}
             index={idx}
-            scrollProgress={scrollProgress}
             isVisible={isVisible}
           >
             <EventListCard event={event} aspectVariant="standard" equalHeight />

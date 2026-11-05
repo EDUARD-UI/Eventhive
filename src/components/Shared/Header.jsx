@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiBell, FiMenu, FiSearch, FiUser, FiLogOut, FiChevronDown, FiCheck, FiTrash2, FiClock } from 'react-icons/fi';
 import { session } from '../../services/session.js';
+import userService from '../../services/userService.js';
 import notificationService from '../../services/notificationService.js';
 
 export default function Header({
@@ -26,6 +27,8 @@ export default function Header({
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [sessionUser, setSessionUser] = useState(() => session.getUser());
+  const [photoError, setPhotoError] = useState(false);
 
   // Estados de Notificaciones (Requisito 11)
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -33,6 +36,29 @@ export default function Header({
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const notificationsRef = useRef(null);
+
+  // Escuchar actualizaciones de sesión en tiempo real (foto de perfil, nombre, rol)
+  useEffect(() => {
+    const handleSessionUpdated = (e) => {
+      const updated = e?.detail || session.getUser();
+      setSessionUser(updated ? { ...updated } : null);
+      setPhotoError(false);
+    };
+
+    window.addEventListener('eventhive_session_updated', handleSessionUpdated);
+    window.addEventListener('storage', handleSessionUpdated);
+    return () => {
+      window.removeEventListener('eventhive_session_updated', handleSessionUpdated);
+      window.removeEventListener('storage', handleSessionUpdated);
+    };
+  }, []);
+
+  // Sincronizar foto y nombre del perfil desde el backend al montar el Header si hay sesión activa
+  useEffect(() => {
+    const token = session.getToken();
+    if (!token || session.isDevSession()) return;
+    userService.getPerfil().catch(() => {});
+  }, []);
 
   // Cargar notificaciones al montar y periódicamente
   useEffect(() => {
@@ -124,19 +150,34 @@ export default function Header({
   };
 
   // Obtener datos de sesión para complementar email/nombre/foto si existen
-  const sessionUser = session.getUser();
+  const displayName = sessionUser?.name || sessionUser?.nombre || userName || 'Usuario';
+  const displayInitials =
+    displayName
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join('')
+      .toUpperCase() ||
+    userInitials ||
+    'EH';
   const displayEmail = userEmail || sessionUser?.email || 'Sesión activa';
   const displayPhoto =
-    userPhoto ||
     sessionUser?.urlImagenPerfil ||
     sessionUser?.imagenPerfil ||
-    sessionUser?.urlLogo ||
-    sessionUser?.logo ||
     sessionUser?.fotoUrl ||
     sessionUser?.foto ||
+    sessionUser?.avatar ||
+    userPhoto ||
+    sessionUser?.urlLogo ||
+    sessionUser?.logo ||
     sessionUser?.imagenUrl ||
     sessionUser?.imagen ||
     null;
+
+  useEffect(() => {
+    setPhotoError(false);
+  }, [displayPhoto]);
 
   // Manejador de clics fuera del dropdown y tecla Escape
   useEffect(() => {
@@ -185,6 +226,8 @@ export default function Header({
       navigate('/iniciosesion');
     }
   };
+
+  const showValidPhoto = Boolean(displayPhoto && !photoError);
 
   return (
     <header className={`flex h-[72px] shrink-0 items-center justify-between border-b border-[#e2e8f0] bg-white px-4 sm:px-8 ${className}`}>
@@ -368,29 +411,23 @@ export default function Header({
             className="flex items-center gap-2 rounded-full p-0.5 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#087fea]/30 transition-all"
           >
             <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#087fea] text-xs font-bold text-white shadow-sm ring-2 ring-white hover:bg-[#076ecb] transition-colors shrink-0 overflow-hidden">
-              {displayPhoto ? (
+              {showValidPhoto ? (
                 <img
+                  key={displayPhoto}
                   src={displayPhoto}
-                  alt={userName}
+                  alt={displayName}
                   className="w-full h-full object-cover object-center"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    if (e.currentTarget.nextSibling) {
-                      e.currentTarget.nextSibling.style.display = 'flex';
-                    }
-                  }}
+                  onError={() => setPhotoError(true)}
                 />
-              ) : null}
-              <span
-                style={{ display: displayPhoto ? 'none' : 'flex' }}
-                className="w-full h-full items-center justify-center"
-              >
-                {userInitials}
-              </span>
+              ) : (
+                <span className="w-full h-full flex items-center justify-center">
+                  {displayInitials}
+                </span>
+              )}
             </div>
-            {userName && (
+            {displayName && (
               <span className="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-[#172033] max-w-[140px] truncate text-left">
-                <span className="truncate">{userName}</span>
+                <span className="truncate">{displayName}</span>
                 <FiChevronDown
                   size={14}
                   className={`text-slate-400 transition-transform duration-200 ${
@@ -411,15 +448,21 @@ export default function Header({
               {/* Información rápida del usuario */}
               <div className="px-3 py-2.5 border-b border-slate-100 mb-1 flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-full bg-[#087fea] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden ring-1 ring-slate-200">
-                  {displayPhoto ? (
-                    <img src={displayPhoto} alt={userName} className="w-full h-full object-cover" />
+                  {showValidPhoto ? (
+                    <img
+                      key={displayPhoto}
+                      src={displayPhoto}
+                      alt={displayName}
+                      className="w-full h-full object-cover"
+                      onError={() => setPhotoError(true)}
+                    />
                   ) : (
-                    userInitials
+                    displayInitials
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-slate-800 truncate">
-                    {userName}
+                    {displayName}
                   </p>
                   <p className="text-[11px] text-slate-500 truncate mt-0.5">
                     {displayEmail}

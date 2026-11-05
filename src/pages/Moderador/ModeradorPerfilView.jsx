@@ -34,8 +34,8 @@ import {
   ProfileMetric,
 } from '../../components/Shared/DashboardProfileComponents.jsx';
 import ModalTicketQR from '../../components/perfilUsuario/ModalTicketQR.jsx';
-import { session } from '../../services/session.js';
-import userService from '../../services/userService.js';
+import { session, extractPhotoUrl } from '../../services/session.js';
+import userService, { readFileAsDataUrl } from '../../services/userService.js';
 import moderationService from '../../services/moderationService.js';
 import { organizerService } from '../../services/organizerService.js';
 import { formatPrice, formatHora12 } from '../../utils/formatters.js';
@@ -69,16 +69,10 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
   // Estados de datos de perfil
   const [perfil, setPerfil] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [nombre, setNombre] = useState(sessionUser?.name || 'Moderador');
+  const [nombre, setNombre] = useState(sessionUser?.name || sessionUser?.nombre || 'Moderador');
   const [email, setEmail] = useState(sessionUser?.email || 'moderador@eventhive.local');
-  const [telefono, setTelefono] = useState('');
-  const [fotoUrl, setFotoUrl] = useState(
-    sessionUser?.fotoUrl ||
-    sessionUser?.foto ||
-    sessionUser?.imagenPerfil ||
-    sessionUser?.urlImagenPerfil ||
-    ''
-  );
+  const [telefono, setTelefono] = useState(sessionUser?.telefono || '');
+  const [fotoUrl, setFotoUrl] = useState(extractPhotoUrl(sessionUser) || '');
   const [photoPreview, setPhotoPreview] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
@@ -113,78 +107,68 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
   const [ticketModal, setTicketModal] = useState(null);
   const [selectedCompraTickets, setSelectedCompraTickets] = useState([]);
 
-  // Cargar perfil y estadísticas de moderación
+  // Cargar perfil inmediatamente sin bloquear por estadísticas ni compras
   useEffect(() => {
     let isMounted = true;
-    async function loadData() {
-      try {
-        setLoading(true);
-        const [perfilRes, statsRes] = await Promise.allSettled([
-          userService.getPerfil(),
-          moderationService.getEstadisticas(),
-        ]);
 
-        if (!isMounted) return;
-
-        if (perfilRes.status === 'fulfilled' && perfilRes.value) {
-          const p = perfilRes.value;
-          setPerfil(p);
-          if (p.nombre) {
-            setNombre(p.nombre);
-            setEditNombre(p.nombre);
-          }
-          if (p.correo || p.email) {
-            setEmail(p.correo || p.email);
-          }
-          if (p.telefono) {
-            setTelefono(p.telefono);
-            setEditTelefono(p.telefono);
-          }
-          const photo =
-            p.fotoUrl ||
-            p.foto ||
-            p.imagenPerfil ||
-            p.urlImagenPerfil ||
-            p.avatarUrl ||
-            '';
-          if (photo) setFotoUrl(photo);
+    userService
+      .getPerfil()
+      .then((p) => {
+        if (!isMounted || !p) return;
+        setPerfil(p);
+        if (p.nombre) {
+          setNombre(p.nombre);
+          setEditNombre(p.nombre);
         }
-
-        if (statsRes.status === 'fulfilled' && statsRes.value) {
-          setStats(statsRes.value);
+        if (p.correo || p.email) {
+          setEmail(p.correo || p.email);
         }
-
-        // Cargar compras y boletos del moderador
-        try {
-          const comprasRes = await organizerService.getMisCompras({ page: 0, size: 50 });
-          const itemsCompras = Array.isArray(comprasRes)
-            ? comprasRes
-            : comprasRes?.content || comprasRes?.data || [];
-
-          let localCompras = [];
-          try {
-            localCompras = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
-          } catch { }
-
-          if (isMounted) {
-            setCompras([...localCompras, ...itemsCompras]);
-          }
-        } catch (err) {
-          console.warn('No se pudo cargar compras en perfil moderador:', err);
-          let localCompras = [];
-          try {
-            localCompras = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
-          } catch { }
-          if (isMounted) setCompras(localCompras);
+        if (p.telefono) {
+          setTelefono(p.telefono);
+          setEditTelefono(p.telefono);
         }
-      } catch (err) {
+        const photo = extractPhotoUrl(p);
+        if (photo) {
+          setFotoUrl(photo);
+        }
+      })
+      .catch((err) => {
         console.warn('Error cargando perfil del moderador:', err);
-      } finally {
+      })
+      .finally(() => {
         if (isMounted) setLoading(false);
-      }
-    }
+      });
 
-    loadData();
+    moderationService
+      .getEstadisticas()
+      .then((res) => {
+        if (isMounted && res) setStats(res);
+      })
+      .catch(() => {});
+
+    organizerService
+      .getMisCompras({ page: 0, size: 50 })
+      .then((comprasRes) => {
+        if (!isMounted) return;
+        const itemsCompras = Array.isArray(comprasRes)
+          ? comprasRes
+          : comprasRes?.content || comprasRes?.data || [];
+
+        let localCompras = [];
+        try {
+          localCompras = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
+        } catch {}
+        setCompras([...localCompras, ...itemsCompras]);
+      })
+      .catch((err) => {
+        console.warn('No se pudo cargar compras en perfil moderador:', err);
+        let localCompras = [];
+        try {
+          localCompras = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
+        } catch {}
+        if (isMounted) setCompras(localCompras);
+      });
+
     return () => {
       isMounted = false;
     };
@@ -215,24 +199,33 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
       return;
     }
 
-    const previewUrl = URL.createObjectURL(file);
-    setPhotoPreview(previewUrl);
+    const previousPhoto = fotoUrl;
+    const dataUrlPreview = await readFileAsDataUrl(file);
+    if (dataUrlPreview) {
+      setPhotoPreview(dataUrlPreview);
+      // Actualización optimista inmediata para que el icono del navegador cambie al instante
+      session.updateUser({
+        fotoUrl: dataUrlPreview,
+        imagenPerfil: dataUrlPreview,
+        urlImagenPerfil: dataUrlPreview,
+        avatar: dataUrlPreview,
+      });
+    }
 
     try {
       setUploadingPhoto(true);
       const res = await userService.uploadFotoPerfil(file);
-      const newUrl =
-        res?.fotoUrl ||
-        res?.url ||
-        res?.imagenUrl ||
-        res?.urlImagenPerfil ||
-        previewUrl;
-      setFotoUrl(newUrl);
-      session.updateUser({
-        fotoUrl: newUrl,
-        imagenPerfil: newUrl,
-        urlImagenPerfil: newUrl,
-      });
+      const newUrl = extractPhotoUrl(res) || dataUrlPreview;
+      if (newUrl) {
+        setFotoUrl(newUrl);
+        setPhotoPreview(null);
+        session.updateUser({
+          fotoUrl: newUrl,
+          imagenPerfil: newUrl,
+          urlImagenPerfil: newUrl,
+          avatar: newUrl,
+        });
+      }
 
       Swal.fire({
         icon: 'success',
@@ -243,6 +236,13 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
       });
     } catch (err) {
       setPhotoPreview(null);
+      setFotoUrl(previousPhoto);
+      session.updateUser({
+        fotoUrl: previousPhoto || null,
+        imagenPerfil: previousPhoto || null,
+        urlImagenPerfil: previousPhoto || null,
+        avatar: previousPhoto || null,
+      });
       Swal.fire({
         icon: 'error',
         title: 'Error al subir imagen',
@@ -254,6 +254,7 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
       });
     } finally {
       setUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -468,6 +469,7 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-900 border-2 border-brand/40 overflow-hidden shadow-md flex items-center justify-center relative">
                 {displayPhoto ? (
                   <img
+                    key={displayPhoto}
                     src={displayPhoto}
                     alt={nombre}
                     className="w-full h-full object-cover"
@@ -554,8 +556,6 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
         </div>
       </ProfileCard>
 
-
-
       {/* 2. Barra de Navegación de Pestañas de Perfil */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto scrollbar-none">
         <button
@@ -569,8 +569,6 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
           <FiShield size={14} />
           <span>Atribuciones y Seguridad</span>
         </button>
-
-
 
         <button
           type="button"
@@ -965,6 +963,36 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
             )}
 
             <form onSubmit={handleSaveProfile} className="space-y-4">
+              {/* Sección de fotografía también disponible desde el modal de edición */}
+              <div className="flex items-center gap-4 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
+                  {displayPhoto ? (
+                    <img
+                      key={displayPhoto}
+                      src={displayPhoto}
+                      alt={nombre}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white font-extrabold text-lg">{userInitials}</span>
+                  )}
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingPhoto}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-xs font-bold text-slate-700 shadow-2xs cursor-pointer transition-colors"
+                  >
+                    <FiCamera size={13} className="text-brand" />
+                    <span>{uploadingPhoto ? 'Subiendo...' : 'Cambiar foto de perfil'}</span>
+                  </button>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    JPG, PNG o WebP (máx. 5 MB)
+                  </p>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Nombre Completo *
@@ -1141,8 +1169,7 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
           </div>
         </div>,
         document.body
-       )}
+      )}
     </div>
   );
 }
-

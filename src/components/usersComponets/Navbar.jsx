@@ -8,6 +8,7 @@ import { useDisclosure } from "../../hooks/useDisclosure.js";
 import AppLogo from "../common/AppLogo.jsx";
 import LanguageSwitcher from "../common/LanguageSwitcher.jsx";
 import { session, normalizeRole, getDashboardPathForRole } from "../../services/session.js";
+import userService from "../../services/userService.js";
 import { useTheme } from "../../context/ThemeContext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 
@@ -20,7 +21,8 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
   const { isOpen: isHelpOpen, open: openHelp, close: closeHelp } = useDisclosure(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => session.getUser());
+  const [avatarError, setAvatarError] = useState(false);
   const progressBarRef = useRef(null);
   const { theme, toggleTheme, isDark } = useTheme();
   const { t } = useLanguage();
@@ -50,11 +52,19 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
     close();
   }, [location.pathname, location.search]);
 
+  // Sincronizar foto de perfil y nombre desde el backend si hay sesión activa
+  useEffect(() => {
+    const token = session.getToken();
+    if (!token || session.isDevSession()) return;
+    userService.getPerfil().catch(() => {});
+  }, []);
+
   // Escuchar actualizaciones de usuario en tiempo real (ej: cambio de foto de perfil)
   useEffect(() => {
     const handleUserUpdate = (e) => {
       const updatedUser = e?.detail || session.getUser();
-      setCurrentUser(updatedUser);
+      setCurrentUser(updatedUser ? { ...updatedUser } : null);
+      setAvatarError(false);
     };
     window.addEventListener('eventhive_session_updated', handleUserUpdate);
     window.addEventListener('storage', handleUserUpdate);
@@ -63,6 +73,20 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
       window.removeEventListener('storage', handleUserUpdate);
     };
   }, []);
+
+  const userPhoto =
+    currentUser?.urlImagenPerfil ||
+    currentUser?.imagenPerfil ||
+    currentUser?.fotoUrl ||
+    currentUser?.foto ||
+    currentUser?.avatar ||
+    currentUser?.urlLogo ||
+    currentUser?.logo ||
+    null;
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [userPhoto]);
 
   const handleLogout = () => {
     session.clear();
@@ -73,6 +97,8 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
 
   const role = normalizeRole(currentUser?.role || currentUser?.rol);
   const panelPath = getDashboardPathForRole(role);
+  const displayName = currentUser?.name || currentUser?.nombre || t('navbar.myAccount');
+  const userInitial = displayName ? displayName.charAt(0).toUpperCase() : 'U';
 
   return (
     <>
@@ -203,27 +229,22 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
                       : 'border border-slate-200 bg-slate-50/90 text-[#0B132B] hover:border-amber-500 hover:text-amber-800'
                     }`}
                 >
-                  {currentUser.urlImagenPerfil || currentUser.fotoUrl || currentUser.foto || currentUser.avatar ? (
+                  {userPhoto && !avatarError ? (
                     <span className="w-6 h-6 rounded-full overflow-hidden border border-amber-400/60 bg-slate-800 flex items-center justify-center shrink-0">
                       <img
-                        src={currentUser.urlImagenPerfil || currentUser.fotoUrl || currentUser.foto || currentUser.avatar}
-                        alt={currentUser.name || 'Usuario'}
+                        key={userPhoto}
+                        src={userPhoto}
+                        alt={displayName}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
-                        }}
+                        onError={() => setAvatarError(true)}
                       />
-                      <span className="w-full h-full bg-amber-500 text-[#0B132B] items-center justify-center text-[10px] font-black hidden">
-                        {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
-                      </span>
                     </span>
                   ) : (
                     <span className="w-6 h-6 rounded-full bg-amber-500 text-[#0B132B] flex items-center justify-center text-[10px] font-black shrink-0">
-                      {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+                      {userInitial}
                     </span>
                   )}
-                  <span className="truncate">{currentUser.name || t('navbar.myAccount')}</span>
+                  <span className="truncate">{displayName}</span>
                   {role && role !== 'CLIENTE' && (
                     <span className={`ml-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${isDark
                         ? 'bg-amber-400/20 text-amber-300 border-amber-400/40'

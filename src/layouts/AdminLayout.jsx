@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Shared/Sidebar.jsx';
 import Header from '../components/Shared/Header.jsx';
 import { session } from '../services/session.js';
@@ -15,15 +15,38 @@ export default function AdminLayout({
 }) {
   useDashboardTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const sessionUser = session.getUser();
-  const userName = sessionUser?.name || 'Administrador';
-  const userInitials = userName ? userName.substring(0, 2).toUpperCase() : 'AD';
+  const [sessionUser, setSessionUser] = useState(() => session.getUser());
+
+  useEffect(() => {
+    const handleSessionUpdated = (e) => {
+      const updated = e?.detail || session.getUser();
+      setSessionUser(updated ? { ...updated } : null);
+    };
+    window.addEventListener('eventhive_session_updated', handleSessionUpdated);
+    window.addEventListener('storage', handleSessionUpdated);
+    return () => {
+      window.removeEventListener('eventhive_session_updated', handleSessionUpdated);
+      window.removeEventListener('storage', handleSessionUpdated);
+    };
+  }, []);
+
+  const userName = sessionUser?.name || sessionUser?.nombre || 'Administrador';
+  const userInitials = userName
+    ? userName
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase()
+    : 'AD';
   const userPhoto =
     sessionUser?.urlImagenPerfil ||
     sessionUser?.imagenPerfil ||
     sessionUser?.fotoUrl ||
     sessionUser?.foto ||
     sessionUser?.imagenUrl ||
+    sessionUser?.avatar ||
     null;
 
   return (

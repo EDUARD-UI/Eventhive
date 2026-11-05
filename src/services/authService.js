@@ -1,5 +1,6 @@
 import { httpClient } from './httpClient.js';
 import { session } from './session.js';
+import { userService } from './userService.js';
 
 const parseJwtPayload = (token) => {
   try {
@@ -48,16 +49,6 @@ export const authService = {
             ...meData,
             role: detectedRole,
           });
-          return {
-            ...data,
-            usuario: {
-              ...(data?.usuario || {}),
-              ...meData,
-            },
-            rol: detectedRole,
-            role: detectedRole,
-            rolNombre: detectedRole,
-          };
         }
       } catch {
         // Fallback: intentar inspeccionar claims del accessToken
@@ -79,11 +70,24 @@ export const authService = {
       session.updateUser({ role: detectedRole });
     }
 
+    // 3. Sincronizar perfil completo (nombre y foto de perfil) inmediatamente al iniciar sesión
+    try {
+      await userService.getPerfil();
+    } catch {
+      // No bloquear el login si el endpoint de perfil tarda o falla
+    }
+
+    const updatedUser = session.getUser() || {};
+
     return {
       ...data,
-      rol: detectedRole,
-      role: detectedRole,
-      rolNombre: detectedRole,
+      usuario: {
+        ...(data?.usuario || {}),
+        ...updatedUser,
+      },
+      rol: detectedRole || updatedUser.role,
+      role: detectedRole || updatedUser.role,
+      rolNombre: detectedRole || updatedUser.role,
     };
   },
 

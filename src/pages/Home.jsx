@@ -153,7 +153,7 @@ function MapViewController({ center, zoom }) {
 
 export default function Home() {
   const { t } = useLanguage();
-    // Consultas optimizadas con TanStack Query (Stale-While-Revalidate para carga instantánea)
+  // Consultas optimizadas con TanStack Query (Stale-While-Revalidate para carga instantánea)
   const { data: carouselEvents = [] } = useQuery({
     queryKey: ['home-carousel-events'],
     queryFn: getCarouselEvents,
@@ -398,7 +398,7 @@ export default function Home() {
         <CrossedRibbonsBanner badgeText={t('home.ribbonText')} />
       </Scroll3DReveal>
 
-      {/* 3. Próximos Eventos: Showcase Animado Sincronizado al Scroll en 3D */}
+      {/* 3. Próximos Eventos: Tarjetas con revelación 3D al entrar en pantalla */}
       <section id="proximos" className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 bg-white/60 dark:bg-slate-900/40 transition-colors duration-200 overflow-hidden">
         <div className="max-w-6xl xl:max-w-7xl mx-auto">
           <Scroll3DReveal variant="fade-elevate" duration={800}>
@@ -517,138 +517,138 @@ export default function Home() {
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/80 to-transparent z-20"
               />
-            <MapContainer
-              center={userLocation ? [userLocation.lat, userLocation.lng] : [10.415, -75.54]}
-              zoom={13}
-              minZoom={9}
-              maxZoom={17}
-              scrollWheelZoom={false}
-              dragging={true}
-              doubleClickZoom={false}
-              boxZoom={false}
-              keyboard={false}
-              zoomControl={true}
-              className="h-full w-full relative z-0 overflow-hidden rounded-3xl"
-            >
-              <MapEventViewport events={filteredMapEvents} userLocation={userLocation} />
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-
-              <MapViewController
+              <MapContainer
                 center={userLocation ? [userLocation.lat, userLocation.lng] : [10.415, -75.54]}
                 zoom={13}
-              />
+                minZoom={9}
+                maxZoom={17}
+                scrollWheelZoom={false}
+                dragging={true}
+                doubleClickZoom={false}
+                boxZoom={false}
+                keyboard={false}
+                zoomControl={true}
+                className="h-full w-full relative z-0 overflow-hidden rounded-3xl"
+              >
+                <MapEventViewport events={filteredMapEvents} userLocation={userLocation} />
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
 
-              {userLocation && (
-                <Marker
-                  position={[userLocation.lat, userLocation.lng]}
-                  icon={userLocationPinIcon()}
-                >
-                  <Popup>
-                    <div className="p-3.5 text-center min-w-[170px] bg-slate-900 text-white rounded-2xl border border-amber-500/20 shadow-xl">
-                      <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                        <FiNavigation size={14} />
-                      </div>
-                      <span className="font-extrabold text-xs text-amber-400 block mb-1 tracking-tight">
-                        {t('home.yourCurrentLocation')}
-                      </span>
-                      <span className="text-[11px] text-slate-300 block leading-tight">
-                        {selectedDistance === 'all'
-                          ? t('home.referenceLocation')
-                          : t('home.searchingInRadius', { km: selectedDistance })}
-                      </span>
-                    </div>
-                  </Popup>
-                </Marker>
-              )}
+                <MapViewController
+                  center={userLocation ? [userLocation.lat, userLocation.lng] : [10.415, -75.54]}
+                  zoom={13}
+                />
 
-              {filteredMapEvents.map((event) => {
-                const distanceToUser =
-                  userLocation && event.lat != null && event.lng != null
-                    ? getDistanceKm(userLocation.lat, userLocation.lng, Number(event.lat), Number(event.lng))
-                    : null;
-
-                const priceDisplay = getEventPriceDisplay(event);
-
-                return (
+                {userLocation && (
                   <Marker
-                    key={event.id}
-                    position={[event.lat, event.lng]}
-                    icon={locationPinIcon()}
+                    position={[userLocation.lat, userLocation.lng]}
+                    icon={userLocationPinIcon()}
                   >
                     <Popup>
-                      <div className="w-[260px] sm:w-[280px] bg-slate-900 text-slate-100 rounded-2xl overflow-hidden shadow-2xl border border-slate-700/60 font-body">
-                        {/* Portada del evento si está disponible */}
-                        {event.photo && (
-                          <div className="relative h-24 sm:h-28 w-full overflow-hidden bg-slate-950">
-                            <img
-                              src={event.photo}
-                              alt={event.title}
-                              className="h-full w-full object-cover"
-                              loading="lazy"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/30 to-transparent" />
-                          </div>
-                        )}
-
-                        <div className="p-3.5 space-y-2.5">
-                          {/* Categoría y Distancia */}
-                          <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                            <span className="text-[10px] font-extrabold tracking-wider text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full uppercase">
-                              {event.category || 'Evento'}
-                            </span>
-                            {distanceToUser != null && (
-                              <span className="text-[10px] font-bold text-amber-300 bg-slate-800/90 border border-amber-400/20 px-2 py-0.5 rounded-full">
-                                {distanceToUser.toFixed(1)} km
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Título */}
-                          <h4 className="text-xs sm:text-sm font-extrabold text-white leading-snug line-clamp-2">
-                            {event.title}
-                          </h4>
-
-                          {/* Metadatos con micro-iconos */}
-                          <div className="space-y-1.5 pt-1 text-[11px] text-slate-300 border-t border-slate-800">
-                            {/* Ubicación resumida */}
-                            <div className="flex items-center gap-1.5 text-slate-300 truncate">
-                              <FiMapPin className="text-amber-400 shrink-0" size={13} />
-                              <span className="truncate">{event.location || 'Cartagena de Indias'}</span>
-                            </div>
-
-                            {/* Precio inicial o Entrada Libre según lógica real de localidades */}
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-1.5">
-                                <FiTag className="text-amber-400 shrink-0" size={13} />
-                                <span className="font-semibold text-amber-300">{priceDisplay}</span>
-                              </div>
-                              {event.shortDate && (
-                                <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                                  <FiCalendar size={11} className="shrink-0" />
-                                  <span>{event.shortDate}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Botón CTA táctil */}
-                          <Link
-                            to={`/eventos/${event.id}`}
-                            className="mt-2 w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 active:scale-[0.98] transition-all duration-200 cursor-pointer"
-                          >
-                            <span>{t('home.viewEvent')}</span>
-                            <FiArrowRight size={13} className="shrink-0" />
-                          </Link>
+                      <div className="p-3.5 text-center min-w-[170px] bg-slate-900 text-white rounded-2xl border border-amber-500/20 shadow-xl">
+                        <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                          <FiNavigation size={14} />
                         </div>
+                        <span className="font-extrabold text-xs text-amber-400 block mb-1 tracking-tight">
+                          {t('home.yourCurrentLocation')}
+                        </span>
+                        <span className="text-[11px] text-slate-300 block leading-tight">
+                          {selectedDistance === 'all'
+                            ? t('home.referenceLocation')
+                            : t('home.searchingInRadius', { km: selectedDistance })}
+                        </span>
                       </div>
                     </Popup>
                   </Marker>
-                );
-              })}
-            </MapContainer>
+                )}
+
+                {filteredMapEvents.map((event) => {
+                  const distanceToUser =
+                    userLocation && event.lat != null && event.lng != null
+                      ? getDistanceKm(userLocation.lat, userLocation.lng, Number(event.lat), Number(event.lng))
+                      : null;
+
+                  const priceDisplay = getEventPriceDisplay(event);
+
+                  return (
+                    <Marker
+                      key={event.id}
+                      position={[event.lat, event.lng]}
+                      icon={locationPinIcon()}
+                    >
+                      <Popup>
+                        <div className="w-[260px] sm:w-[280px] bg-slate-900 text-slate-100 rounded-2xl overflow-hidden shadow-2xl border border-slate-700/60 font-body">
+                          {/* Portada del evento si está disponible */}
+                          {event.photo && (
+                            <div className="relative h-24 sm:h-28 w-full overflow-hidden bg-slate-950">
+                              <img
+                                src={event.photo}
+                                alt={event.title}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/30 to-transparent" />
+                            </div>
+                          )}
+
+                          <div className="p-3.5 space-y-2.5">
+                            {/* Categoría y Distancia */}
+                            <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                              <span className="text-[10px] font-extrabold tracking-wider text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full uppercase">
+                                {event.category || 'Evento'}
+                              </span>
+                              {distanceToUser != null && (
+                                <span className="text-[10px] font-bold text-amber-300 bg-slate-800/90 border border-amber-400/20 px-2 py-0.5 rounded-full">
+                                  {distanceToUser.toFixed(1)} km
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Título */}
+                            <h4 className="text-xs sm:text-sm font-extrabold text-white leading-snug line-clamp-2">
+                              {event.title}
+                            </h4>
+
+                            {/* Metadatos con micro-iconos */}
+                            <div className="space-y-1.5 pt-1 text-[11px] text-slate-300 border-t border-slate-800">
+                              {/* Ubicación resumida */}
+                              <div className="flex items-center gap-1.5 text-slate-300 truncate">
+                                <FiMapPin className="text-amber-400 shrink-0" size={13} />
+                                <span className="truncate">{event.location || 'Cartagena de Indias'}</span>
+                              </div>
+
+                              {/* Precio inicial o Entrada Libre según lógica real de localidades */}
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-1.5">
+                                  <FiTag className="text-amber-400 shrink-0" size={13} />
+                                  <span className="font-semibold text-amber-300">{priceDisplay}</span>
+                                </div>
+                                {event.shortDate && (
+                                  <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                                    <FiCalendar size={11} className="shrink-0" />
+                                    <span>{event.shortDate}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Botón CTA táctil */}
+                            <Link
+                              to={`/eventos/${event.id}`}
+                              className="mt-2 w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 active:scale-[0.98] transition-all duration-200 cursor-pointer"
+                            >
+                              <span>{t('home.viewEvent')}</span>
+                              <FiArrowRight size={13} className="shrink-0" />
+                            </Link>
+                          </div>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  );
+                })}
+              </MapContainer>
             </div>
           </Scroll3DReveal>
         </div>

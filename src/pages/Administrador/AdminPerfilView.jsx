@@ -1,18 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import Swal from 'sweetalert2';
 import {
   User,
   ShieldCheck,
   Key,
   Mail,
   Phone,
-  Building2,
   Lock,
   CheckCircle2,
-  Clock,
   Save,
   Calendar,
-  Activity,
   ShoppingBag,
   Ticket,
   Heart,
@@ -29,23 +27,47 @@ import {
   ProfileCard,
   ProfileMetric,
 } from '../../components/Shared/DashboardProfileComponents.jsx';
-import { session } from '../../services/session.js';
-import userService from '../../services/userService.js';
+import { session, extractPhotoUrl, normalizeRole } from '../../services/session.js';
+import userService, { readFileAsDataUrl } from '../../services/userService.js';
 
-export default function AdminPerfilView({ onNavigateTab, showToast = () => {} }) {
+export default function AdminPerfilView({ onNavigateTab, showToast }) {
   const sessionUser = session.getUser();
   const fileInputRef = useRef(null);
+
+  const normalizedRole = normalizeRole(sessionUser?.role || sessionUser?.rol);
+  const isMarketing = normalizedRole === 'MARKETING';
+
+  const notify = (message, type = 'success') => {
+    if (typeof showToast === 'function') {
+      showToast(message, type);
+    } else {
+      Swal.fire({
+        icon: type === 'error' ? 'error' : 'success',
+        title: type === 'error' ? 'Error' : 'Operación exitosa',
+        text: message,
+        timer: 2200,
+        confirmButtonColor: '#087fea',
+      });
+    }
+  };
 
   // Estados del perfil
   const [perfil, setPerfil] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [nombre, setNombre] = useState(sessionUser?.name || 'Administrador');
-  const [email, setEmail] = useState(sessionUser?.email || 'admin@eventhive.com');
-  const [telefono, setTelefono] = useState('');
-  const [cargo, setCargo] = useState('Administrador General');
-  const [fotoUrl, setFotoUrl] = useState(sessionUser?.fotoUrl || sessionUser?.foto || '');
+  const [nombre, setNombre] = useState(
+    sessionUser?.name || sessionUser?.nombre || (isMarketing ? 'Especialista Marketing' : 'Administrador')
+  );
+  const [email, setEmail] = useState(
+    sessionUser?.email || (isMarketing ? 'marketing@eventhive.com' : 'admin@eventhive.com')
+  );
+  const [telefono, setTelefono] = useState(sessionUser?.telefono || '');
+  const [cargo, setCargo] = useState(
+    isMarketing ? 'Especialista en Difusión y Campañas' : 'Administrador General'
+  );
+  const [fotoUrl, setFotoUrl] = useState(extractPhotoUrl(sessionUser) || '');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoError, setPhotoError] = useState(false);
 
   // Modal lateral derecho para edición de datos de perfil
   const [showEditDrawer, setShowEditDrawer] = useState(false);
@@ -77,61 +99,66 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
   // Pestaña interna: perfil o compras/actividad
   const [activeTab, setActiveTab] = useState('perfil');
 
-  // Cargar perfil y actividad desde el backend
+  // Cargar perfil inmediatamente sin bloquear por las consultas de actividad
   useEffect(() => {
     let isMounted = true;
-    async function loadData() {
-      try {
-        setLoading(true);
-        const [perfilRes, actRes, comprasRes, deseosRes] = await Promise.allSettled([
-          userService.getPerfil(),
-          userService.getActividad(),
-          userService.getCompras({ page: 0, size: 5 }),
-          userService.getDeseos({ page: 0, size: 5 }),
-        ]);
 
-        if (!isMounted) return;
-
-        if (perfilRes.status === 'fulfilled' && perfilRes.value) {
-          const p = perfilRes.value;
-          setPerfil(p);
-          if (p.nombre) {
-            setNombre(p.nombre);
-            setEditNombre(p.nombre);
-          }
-          if (p.correo) setEmail(p.correo);
-          if (p.telefono) {
-            setTelefono(p.telefono);
-            setEditTelefono(p.telefono);
-          }
-          const photo = p.fotoUrl || p.foto || p.imagenUrl || p.imagen || p.avatarUrl || p.avatar || '';
-          if (photo) setFotoUrl(photo);
+    userService
+      .getPerfil()
+      .then((p) => {
+        if (!isMounted || !p) return;
+        setPerfil(p);
+        if (p.nombre) {
+          setNombre(p.nombre);
+          setEditNombre(p.nombre);
         }
+        if (p.correo || p.email) {
+          setEmail(p.correo || p.email);
+        }
+        if (p.telefono) {
+          setTelefono(p.telefono);
+          setEditTelefono(p.telefono);
+        }
+        const photo = extractPhotoUrl(p);
+        if (photo) {
+          setFotoUrl(photo);
+          setPhotoError(false);
+        }
+      })
+      .catch((err) => {
+        console.warn('Error al cargar perfil:', err);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
 
+    Promise.allSettled([
+      userService.getActividad(),
+      userService.getCompras({ page: 0, size: 5 }),
+      userService.getDeseos({ page: 0, size: 5 }),
+    ])
+      .then(([actRes, comprasRes, deseosRes]) => {
+        if (!isMounted) return;
         if (actRes.status === 'fulfilled' && actRes.value) {
           setActividad(actRes.value);
         }
-
         if (comprasRes.status === 'fulfilled' && comprasRes.value) {
-          const list = comprasRes.value?.content || (Array.isArray(comprasRes.value) ? comprasRes.value : []);
+          const list =
+            comprasRes.value?.content ||
+            (Array.isArray(comprasRes.value) ? comprasRes.value : []);
           setCompras(list);
         }
-
         if (deseosRes.status === 'fulfilled' && deseosRes.value) {
-          const list = deseosRes.value?.content || (Array.isArray(deseosRes.value) ? deseosRes.value : []);
+          const list =
+            deseosRes.value?.content ||
+            (Array.isArray(deseosRes.value) ? deseosRes.value : []);
           setDeseos(list);
         }
-      } catch (err) {
-        console.warn('Error al cargar datos del perfil administrativo:', err);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-          setLoadingActividad(false);
-        }
-      }
-    }
+      })
+      .finally(() => {
+        if (isMounted) setLoadingActividad(false);
+      });
 
-    loadData();
     return () => {
       isMounted = false;
     };
@@ -143,34 +170,64 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      showToast('Por favor selecciona un archivo de imagen válido.', 'error');
+      notify('Por favor selecciona un archivo de imagen válido (JPG, PNG, WebP).', 'error');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      showToast('La imagen no debe superar los 5MB.', 'error');
+      notify('La imagen no debe superar los 5MB.', 'error');
       return;
     }
 
-    // Vista previa local
-    const previewUrl = URL.createObjectURL(file);
-    setPhotoPreview(previewUrl);
+    const previousPhoto = fotoUrl;
+    const dataUrlPreview = await readFileAsDataUrl(file);
+    if (dataUrlPreview) {
+      setPhotoPreview(dataUrlPreview);
+      setPhotoError(false);
+      // Actualización optimista para reflejar la foto al instante en el Header y Navbar
+      session.updateUser({
+        urlImagenPerfil: dataUrlPreview,
+        imagenPerfil: dataUrlPreview,
+        fotoUrl: dataUrlPreview,
+        foto: dataUrlPreview,
+        avatar: dataUrlPreview,
+      });
+    }
 
     try {
       setUploadingPhoto(true);
       const res = await userService.uploadFotoPerfil(file);
-      const newUrl = res?.fotoUrl || res?.url || res?.imagenUrl || previewUrl;
-      setFotoUrl(newUrl);
-      session.updateUser({ fotoUrl: newUrl });
-      showToast('Fotografía de perfil actualizada exitosamente.', 'success');
+      const newUrl = extractPhotoUrl(res) || dataUrlPreview;
+      if (newUrl) {
+        setFotoUrl(newUrl);
+        setPhotoPreview(null);
+        setPhotoError(false);
+        session.updateUser({
+          urlImagenPerfil: newUrl,
+          imagenPerfil: newUrl,
+          fotoUrl: newUrl,
+          foto: newUrl,
+          avatar: newUrl,
+        });
+      }
+      notify('Fotografía de perfil actualizada exitosamente.', 'success');
     } catch (err) {
       setPhotoPreview(null);
-      showToast(
+      setFotoUrl(previousPhoto);
+      session.updateUser({
+        urlImagenPerfil: previousPhoto || null,
+        imagenPerfil: previousPhoto || null,
+        fotoUrl: previousPhoto || null,
+        foto: previousPhoto || null,
+        avatar: previousPhoto || null,
+      });
+      notify(
         err?.response?.data?.message || err?.message || 'Error al subir la fotografía de perfil.',
         'error'
       );
     } finally {
       setUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -183,14 +240,22 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
+    if (!editNombre.trim()) {
+      setEditError('El nombre completo es obligatorio.');
+      return;
+    }
     try {
       setSaving(true);
       setEditError(null);
       await userService.updatePerfil({ nombre: editNombre.trim(), telefono: editTelefono.trim() });
       setNombre(editNombre.trim());
       setTelefono(editTelefono.trim());
-      session.updateUser({ name: editNombre.trim(), telefono: editTelefono.trim() });
-      showToast('Perfil de administrador actualizado correctamente.', 'success');
+      session.updateUser({
+        name: editNombre.trim(),
+        nombre: editNombre.trim(),
+        telefono: editTelefono.trim(),
+      });
+      notify('Datos de perfil actualizados correctamente.', 'success');
       setShowEditDrawer(false);
     } catch (err) {
       setEditError(err?.response?.data?.message || err?.message || 'Error al actualizar perfil.');
@@ -219,7 +284,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      showToast('Contraseña de administrador actualizada exitosamente.', 'success');
+      notify('Contraseña actualizada exitosamente.', 'success');
     } catch (err) {
       setPasswordError(err?.response?.data?.message || err?.message || 'Error al cambiar la contraseña.');
     } finally {
@@ -235,6 +300,19 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
     }).format(val || 0);
 
   const displayPhoto = photoPreview || fotoUrl;
+  const showValidPhoto = Boolean(displayPhoto && !photoError);
+  const userInitials = nombre
+    ? nombre
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase()
+    : isMarketing
+      ? 'MK'
+      : 'AD';
+  const displayRoleBadge = perfil?.rolNombre || normalizedRole || 'ADMINISTRADOR';
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
@@ -251,38 +329,30 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
               className="hidden"
             />
 
-            {/* Círculo de la Fotografía - Clickeable para seleccionar archivo */}
-            <div className="relative group">
+            {/* Círculo de la Fotografía con botón de cámara directo */}
+            <div className="relative group shrink-0">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingPhoto}
-                title="Haga clic para cambiar su foto de perfil"
-                className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-100 font-display text-2xl font-bold text-slate-700 shadow-sm ring-4 ring-white transition-all group-hover:brightness-95 active:scale-95 sm:h-24 sm:w-24 sm:text-3xl"
+                title="Haz clic para cambiar tu foto de perfil"
+                className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-brand/30 bg-slate-900 font-display text-2xl font-bold text-white shadow-md ring-4 ring-white transition-all group-hover:brightness-95 active:scale-95 sm:h-24 sm:w-24 sm:text-3xl cursor-pointer"
               >
-                {displayPhoto ? (
+                {showValidPhoto ? (
                   <img
+                    key={displayPhoto}
                     src={displayPhoto}
                     alt={nombre}
                     className="w-full h-full object-cover object-center"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      if (e.currentTarget.nextSibling) {
-                        e.currentTarget.nextSibling.style.display = 'flex';
-                      }
-                    }}
+                    onError={() => setPhotoError(true)}
                   />
-                ) : null}
+                ) : (
+                  <span className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 text-white font-extrabold">
+                    {userInitials}
+                  </span>
+                )}
 
-                <span
-                  style={{ display: displayPhoto ? 'none' : 'flex' }}
-                  className="w-full h-full items-center justify-center text-slate-700"
-                >
-                  {nombre ? nombre.substring(0, 2).toUpperCase() : 'AD'}
-                </span>
-
-             
-                <div className="absolute inset-0 bg-black/40 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-0 bg-black/45 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   {uploadingPhoto ? (
                     <Loader2 size={20} className="animate-spin" />
                   ) : (
@@ -294,12 +364,15 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 </div>
               </button>
 
-              <span
-                className="absolute -bottom-1 -right-1 rounded-full bg-emerald-500 p-1.5 text-white ring-2 ring-white shadow-sm"
-                title="Sesión Verificada"
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingPhoto}
+                title="Cambiar fotografía de perfil"
+                className="absolute -bottom-1.5 -right-1.5 rounded-xl bg-brand p-2 text-white ring-2 ring-white shadow-md hover:bg-brand-dark transition-all active:scale-95 cursor-pointer disabled:opacity-50"
               >
-                <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2.5} />
-              </span>
+                <Camera className="w-3.5 h-3.5" />
+              </button>
             </div>
 
             <div>
@@ -309,7 +382,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 </h2>
                 <span className="inline-flex items-center gap-1 rounded-full border border-brand/15 bg-brand-light px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-dark">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  {perfil?.rolNombre || sessionUser?.role || 'ADMINISTRADOR'}
+                  {displayRoleBadge}
                 </span>
               </div>
               <p className="text-xs font-medium text-slate-500">{cargo}</p>
@@ -320,7 +393,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
             <button
               type="button"
               onClick={openEditDrawer}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand cursor-pointer"
             >
               <Edit2 className="w-3.5 h-3.5" />
               <span>Editar perfil</span>
@@ -329,7 +402,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
             <button
               type="button"
               onClick={() => setShowPasswordModal(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand cursor-pointer"
             >
               <Key className="w-4 h-4 text-slate-500" strokeWidth={1.75} />
               <span>Cambiar contraseña</span>
@@ -343,7 +416,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
             type="button"
             aria-pressed={activeTab === 'perfil'}
             onClick={() => setActiveTab('perfil')}
-            className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
+            className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors cursor-pointer ${
               activeTab === 'perfil'
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
@@ -357,7 +430,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
             type="button"
             aria-pressed={activeTab === 'compras'}
             onClick={() => setActiveTab('compras')}
-            className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
+            className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors cursor-pointer ${
               activeTab === 'compras'
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
@@ -388,7 +461,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
               <button
                 type="button"
                 onClick={openEditDrawer}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand cursor-pointer"
               >
                 <Edit2 size={13} />
                 <span>Editar</span>
@@ -422,7 +495,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 <div className="min-w-0">
                   <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Rol</span>
                   <span className="mt-1 inline-flex rounded-full border border-brand/15 bg-brand-light px-2.5 py-1 text-[11px] font-semibold text-brand-dark">
-                    {perfil?.rolNombre || 'ADMINISTRADOR'}
+                    {displayRoleBadge}
                   </span>
                 </div>
               </div>
@@ -475,15 +548,15 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
             />
           </div>
 
-          {/* Listado de Compras Recientes del Administrador */}
+          {/* Listado de Compras Recientes */}
           <ProfileCard className="p-5 sm:p-6">
             <div className="mb-4 flex items-center gap-3 border-b border-slate-100 pb-4">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
                 <Receipt className="h-5 w-5" />
               </span>
-                <div>
-                  <h3 className="font-display text-base font-bold text-slate-900">Historial de compras</h3>
-                </div>
+              <div>
+                <h3 className="font-display text-base font-bold text-slate-900">Historial de compras</h3>
+              </div>
             </div>
 
             {loadingActividad ? (
@@ -581,7 +654,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                   type="button"
                   onClick={() => setShowEditDrawer(false)}
                   aria-label="Cerrar edición de perfil"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 cursor-pointer"
                 >
                   <X size={18} />
                 </button>
@@ -594,6 +667,37 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                     <span>{editError}</span>
                   </div>
                 )}
+
+                {/* Cambio de foto de perfil también accesible desde el drawer */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                  <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
+                    {showValidPhoto ? (
+                      <img
+                        key={displayPhoto}
+                        src={displayPhoto}
+                        alt={nombre}
+                        className="w-full h-full object-cover"
+                        onError={() => setPhotoError(true)}
+                      />
+                    ) : (
+                      <span className="text-white font-extrabold text-lg">{userInitials}</span>
+                    )}
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingPhoto}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-xs font-bold text-slate-700 shadow-2xs cursor-pointer transition-colors"
+                    >
+                      <Camera size={14} className="text-brand" />
+                      <span>{uploadingPhoto ? 'Subiendo...' : 'Cambiar foto de perfil'}</span>
+                    </button>
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      JPG, PNG o WebP (máx. 5 MB)
+                    </p>
+                  </div>
+                </div>
 
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold text-slate-700">
@@ -644,7 +748,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 type="button"
                 onClick={() => setShowEditDrawer(false)}
                 disabled={saving}
-                className="rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100"
+                className="rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 cursor-pointer"
               >
                 Cancelar
               </button>
@@ -652,7 +756,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                 form="edit-profile-drawer-form"
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-brand-dark disabled:cursor-wait disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-brand-dark disabled:cursor-wait disabled:opacity-50 cursor-pointer"
               >
                 <Save size={14} />
                 <span>{saving ? 'Guardando...' : 'Guardar Cambios'}</span>
@@ -737,14 +841,14 @@ export default function AdminPerfilView({ onNavigateTab, showToast = () => {} })
                   type="button"
                   onClick={() => setShowPasswordModal(false)}
                   disabled={passwordLoading}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={passwordLoading}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-300 text-xs font-bold shadow-md transition-all active:scale-95 disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-300 text-xs font-bold shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {passwordLoading ? 'Actualizando...' : 'Actualizar'}
                 </button>

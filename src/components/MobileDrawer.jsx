@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { FiX, FiSun, FiMoon } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { NAV_LINKS } from '../constants/navigation.js';
@@ -9,11 +10,28 @@ import LanguageSwitcher from './common/LanguageSwitcher.jsx';
 export default function MobileDrawer({ isOpen, onClose, onHelpClick, currentUser, onLogout }) {
   const { toggleTheme, isDark } = useTheme();
   const { t } = useLanguage();
+  const [avatarError, setAvatarError] = useState(false);
+
+  const userPhoto =
+    currentUser?.urlImagenPerfil ||
+    currentUser?.imagenPerfil ||
+    currentUser?.fotoUrl ||
+    currentUser?.foto ||
+    currentUser?.avatar ||
+    currentUser?.urlLogo ||
+    currentUser?.logo ||
+    null;
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [userPhoto]);
 
   if (!isOpen) return null;
 
   const userRole = normalizeRole(currentUser?.role || currentUser?.rol);
   const accountPath = currentUser ? getDashboardPathForRole(userRole) : '/perfil';
+  const displayName = currentUser?.name || currentUser?.nombre || t('navbar.myAccountLower');
+  const userInitial = displayName ? displayName.charAt(0).toUpperCase() : 'U';
 
   return (
     <div
@@ -102,9 +120,24 @@ export default function MobileDrawer({ isOpen, onClose, onHelpClick, currentUser
             <Link
               to={accountPath}
               onClick={onClose}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-center text-sm font-semibold text-slate-900 dark:text-white"
+              className="w-full flex items-center justify-center gap-2.5 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-center text-sm font-semibold text-slate-900 dark:text-white"
             >
-              {currentUser.name || t('navbar.myAccountLower')}
+              {userPhoto && !avatarError ? (
+                <span className="w-6 h-6 rounded-full overflow-hidden border border-amber-400/60 bg-slate-800 flex items-center justify-center shrink-0">
+                  <img
+                    key={userPhoto}
+                    src={userPhoto}
+                    alt={displayName}
+                    className="w-full h-full object-cover"
+                    onError={() => setAvatarError(true)}
+                  />
+                </span>
+              ) : (
+                <span className="w-6 h-6 rounded-full bg-amber-500 text-[#0B132B] flex items-center justify-center text-[10px] font-black shrink-0">
+                  {userInitial}
+                </span>
+              )}
+              <span className="truncate">{displayName}</span>
             </Link>
             <button
               type="button"

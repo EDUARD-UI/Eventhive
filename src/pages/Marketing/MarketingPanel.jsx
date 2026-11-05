@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import StandardDashboardSidebar from '../../components/common/StandardDashboardSidebar.jsx';
 import Header from '../../components/Shared/Header.jsx';
 import { Sparkles, Award, Image, User } from 'lucide-react';
@@ -34,6 +35,7 @@ export default function MarketingPanel() {
   const currentTab = searchParams.get('tab') || 'eventos';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [sessionUser, setSessionUser] = useState(() => session.getUser());
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -42,8 +44,31 @@ export default function MarketingPanel() {
     return () => clearTimeout(timer);
   }, []);
 
-  const sessionUser = session.getUser();
-  const userName = sessionUser?.name || 'Especialista Marketing';
+  useEffect(() => {
+    const handleSessionUpdated = (e) => {
+      const updated = e?.detail || session.getUser();
+      setSessionUser(updated ? { ...updated } : null);
+    };
+    window.addEventListener('eventhive_session_updated', handleSessionUpdated);
+    window.addEventListener('storage', handleSessionUpdated);
+    return () => {
+      window.removeEventListener('eventhive_session_updated', handleSessionUpdated);
+      window.removeEventListener('storage', handleSessionUpdated);
+    };
+  }, []);
+
+  const showToast = useCallback((message, type = 'success') => {
+    Swal.fire({
+      icon: type === 'error' ? 'error' : type === 'info' ? 'info' : 'success',
+      title: type === 'error' ? 'Error' : 'Operación exitosa',
+      text: typeof message === 'string' ? message : String(message),
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#087fea',
+      timer: 2500,
+    });
+  }, []);
+
+  const userName = sessionUser?.name || sessionUser?.nombre || 'Especialista Marketing';
   const userInitials = userName
     ? userName
         .split(' ')
@@ -60,6 +85,7 @@ export default function MarketingPanel() {
     sessionUser?.fotoUrl ||
     sessionUser?.foto ||
     sessionUser?.imagenUrl ||
+    sessionUser?.avatar ||
     null;
 
   const handleSelectTab = (tabId) => {
@@ -75,7 +101,7 @@ export default function MarketingPanel() {
         return (
           <AdminPerfilView
             onNavigateTab={handleSelectTab}
-            showToast={() => {}}
+            showToast={showToast}
           />
         );
 
@@ -94,7 +120,7 @@ export default function MarketingPanel() {
       case 'banners':
         return 'Espacios Publicitarios y Banners';
       case 'perfil':
-        return 'Mi Perfil';
+        return 'Mi Perfil de Marketing';
       case 'planes':
         return 'Planes de Promoción';
       case 'eventos':
@@ -136,7 +162,7 @@ export default function MarketingPanel() {
             userName={userName}
             userInitials={userInitials}
             userPhoto={userPhoto}
-            userEmail={sessionUser?.email}
+            userEmail={sessionUser?.email || sessionUser?.correo}
             onProfileClick={() => handleSelectTab('perfil')}
             onMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
           />
