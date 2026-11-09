@@ -1,9 +1,10 @@
 const AZURE_API_URL = 'https://eventhive-bggyerbvhwa6akbq.brazilsouth-01.azurewebsites.net/api';
+const env = import.meta.env || {};
 
 const customUrl =
-  import.meta.env.VITE_API_URL?.trim() ||
-  import.meta.env.VITE_LOCAL_API_URL?.trim() ||
-  import.meta.env.VITE_BACKEND_TARGET?.trim();
+  env.VITE_API_URL?.trim() ||
+  env.VITE_LOCAL_API_URL?.trim() ||
+  env.VITE_BACKEND_TARGET?.trim();
 
 export const formatApiUrl = (url) => {
   if (!url) return AZURE_API_URL;

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import EventListCard from '../common/EventListCard.jsx';
 import EventCardSkeleton from '../common/EventCardSkeleton.jsx';
 import HiveEmptyState from './HiveEmptyState.jsx';
+import { useLanguage } from '../../context/LanguageContext.jsx';
 
 /**
  * UpcomingEventsScrollShowcase
@@ -84,9 +85,12 @@ function AnimatedCardItem({ children, index, isVisible }) {
 export default function UpcomingEventsScrollShowcase({
   events = [],
   isLoading = false,
+  hasError = false,
+  onRetry,
   emptyTitle,
   emptySubtitle,
 }) {
+  const { t } = useLanguage();
   const sectionRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -123,6 +127,30 @@ export default function UpcomingEventsScrollShowcase({
             <EventCardSkeleton aspectVariant="standard" />
           </AnimatedCardItem>
         ))}
+      </div>
+    );
+  }
+
+  if (hasError && events.length === 0) {
+    return (
+      <div
+        ref={sectionRef}
+        role="alert"
+        className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center"
+      >
+        <h3 className="font-bold text-rose-900">
+          {t('home.upcomingLoadErrorTitle')}
+        </h3>
+        <p className="mt-1 text-sm text-rose-800">
+          {t('home.upcomingLoadErrorDescription')}
+        </p>
+        <button
+          type="button"
+          onClick={() => onRetry?.()}
+          className="mt-4 rounded-lg bg-rose-700 px-4 py-2 text-sm font-bold text-white hover:bg-rose-800"
+        >
+          {t('home.retry')}
+        </button>
       </div>
     );
   }

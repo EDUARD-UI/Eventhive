@@ -3,20 +3,10 @@ import { httpClient } from './httpClient.js';
 export const normalizeBanner = (banner) => {
   let enlace = banner.enlaceUrl || '';
 
-  // Si el enlace apunta a un archivo de imagen (error de carga en BD/panel donde se guardó la imagen en lugar de la ruta del evento):
   const isImageFile = /\.(jpe?g|png|webp|gif|svg)(\?.*)?$/i.test(enlace);
+  if (isImageFile || enlace === '#') enlace = '';
 
-  if (isImageFile || !enlace || enlace === '#') {
-    if (/coachella/i.test(banner.titulo || '')) {
-      enlace = '/eventos/coachella';
-    } else if (/classic/i.test(banner.titulo || '')) {
-      enlace = '/eventos/22';
-    } else {
-      enlace = '/buscar';
-    }
-  }
-
-  // Si el enlace es una URL absoluta hacia un evento (ej. https://.../eventos/22 o /evento/21),
+  // Si el backend devuelve una URL absoluta hacia un evento,
   // convertirlo a ruta interna de React Router para navegación SPA sin recargar
   const eventMatch = enlace.match(/\/eventos?\/(\d+)/i);
   if (eventMatch) {
@@ -27,7 +17,7 @@ export const normalizeBanner = (banner) => {
     id: banner.id,
     titulo: banner.titulo || '',
     imagenUrl: banner.imagenUrl || banner.imagen || banner.foto || null,
-    textoBoton: banner.textoBoton || 'Ver más',
+    textoBoton: banner.textoBoton || '',
     enlaceUrl: enlace,
     posicion: banner.posicion ?? 1,
   };
@@ -38,14 +28,9 @@ export const normalizeBanner = (banner) => {
  * Endpoint público que devuelve los banners configurados para las posiciones 1 y 2.
  */
 export async function getHomeBanners() {
-  try {
-    const res = await httpClient.get('/banners-home');
-    const list = Array.isArray(res) ? res : res?.data || res?.content || [];
-    return list.map(normalizeBanner).sort((a, b) => a.posicion - b.posicion);
-  } catch (err) {
-    console.warn('No se pudieron obtener los banners del home:', err?.message);
-    return [];
-  }
+  const res = await httpClient.get('/banners-home');
+  const list = Array.isArray(res) ? res : res?.data || res?.content || [];
+  return list.map(normalizeBanner).sort((a, b) => a.posicion - b.posicion);
 }
 
 /**
@@ -68,17 +53,17 @@ export async function getAdminBanners() {
       })).sort((a, b) => a.posicion - b.posicion);
     }
   } catch (err) {
-    console.warn('No se pudieron obtener los banners de admin, usando fallback:', err?.message);
+    if (err?.status !== 404) throw err;
   }
 
-  // Fallback con los banners del home
+  // Fallback de compatibilidad para backends sin el endpoint administrativo.
   const publicBanners = await getHomeBanners();
   const slot1 = publicBanners.find((b) => Number(b.posicion) === 1) || {
     id: null,
     posicion: 1,
     titulo: '',
     imagenUrl: '',
-    textoBoton: 'Ver más',
+    textoBoton: '',
     enlaceUrl: '',
   };
   const slot2 = publicBanners.find((b) => Number(b.posicion) === 2) || {
@@ -86,7 +71,7 @@ export async function getAdminBanners() {
     posicion: 2,
     titulo: '',
     imagenUrl: '',
-    textoBoton: 'Ver más',
+    textoBoton: '',
     enlaceUrl: '',
   };
   return [slot1, slot2];
@@ -106,7 +91,9 @@ export async function saveBanner(posicion, bannerData) {
     if (bannerData.titulo !== undefined && bannerData.titulo !== null) {
       body.append('titulo', bannerData.titulo);
     }
-    body.append('textoBoton', bannerData.textoBoton || 'Ver más');
+    if (bannerData.textoBoton !== undefined && bannerData.textoBoton !== null) {
+      body.append('textoBoton', bannerData.textoBoton);
+    }
     body.append('enlaceUrl', bannerData.enlaceUrl || '');
     if (bannerData.imagenFile instanceof File) {
       body.append('imagen', bannerData.imagenFile);
@@ -152,4 +139,3 @@ export default {
   deleteBanner,
   normalizeBanner,
 };
-

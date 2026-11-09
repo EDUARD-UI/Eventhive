@@ -160,7 +160,12 @@ export default function Home() {
     staleTime: 1000 * 60 * 3,
   });
 
-  const { data: upcomingEvents = [], isLoading: isLoadingUpcoming } = useQuery({
+  const {
+    data: upcomingEvents = [],
+    isLoading: isLoadingUpcoming,
+    isError: upcomingEventsFailed,
+    refetch: retryUpcomingEvents,
+  } = useQuery({
     queryKey: ['home-upcoming-events'],
     queryFn: () => getUpcomingEvents({ page: 0, size: 8 }),
     staleTime: 1000 * 60 * 3,
@@ -424,6 +429,8 @@ export default function Home() {
           <UpcomingEventsScrollShowcase
             events={upcomingEvents}
             isLoading={isLoadingEvents}
+            hasError={upcomingEventsFailed}
+            onRetry={retryUpcomingEvents}
             emptyTitle={t('home.emptyUpcomingTitle')}
             emptySubtitle={t('home.emptyUpcomingSubtitle')}
           />

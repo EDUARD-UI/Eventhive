@@ -65,7 +65,7 @@ export const normalizeEvent = (event) => {
         ? event.categoria
         : event.categoria?.nombre || event.nombreCategoria || event.category || 'Evento',
     categoriaId: event.categoria?.id || event.categoriaId || null,
-    location: event.lugar || event.ubicacion || event.location || 'Cartagena de Indias',
+    location: event.lugar || event.ubicacion || event.location || '',
     shortDate,
     formattedTime,
     date: formattedTime ? `${shortDate} · ${formattedTime}` : shortDate,
@@ -272,22 +272,17 @@ export async function getFeaturedEvents({ page = 0, size = 10, sort } = {}) {
  * No se reorganizan ni priorizan eventos promocionados ni premium.
  */
 export async function getUpcomingEvents({ page = 0, size = 8 } = {}) {
-  try {
-    const proximosData = await httpClient.get('/eventos/proximos', { page, size });
-    const content = Array.isArray(proximosData)
-      ? proximosData
-      : Array.isArray(proximosData?.data?.content)
-      ? proximosData.data.content
-      : Array.isArray(proximosData?.data)
-      ? proximosData.data
-      : Array.isArray(proximosData?.content)
-      ? proximosData.content
-      : [];
-    return content.map(normalizeEvent);
-  } catch (err) {
-    console.warn('Error consultando /eventos/proximos:', err?.message);
-    return [];
-  }
+  const proximosData = await httpClient.get('/eventos/proximos', { page, size });
+  const content = Array.isArray(proximosData)
+    ? proximosData
+    : Array.isArray(proximosData?.data?.content)
+    ? proximosData.data.content
+    : Array.isArray(proximosData?.data)
+    ? proximosData.data
+    : Array.isArray(proximosData?.content)
+    ? proximosData.content
+    : [];
+  return content.map(normalizeEvent);
 }
 
 
@@ -378,68 +373,12 @@ export async function getMapEvents({ categoriaId, lat, lng, limite = 10 } = {}) 
   }
 }
 
-export const COACHELLA_HEROICA_EVENT = {
-  id: 'coachella',
-  titulo: 'La Versión del Coachella en la Heroica',
-  descripcion: 'El festival de música y arte más esperado del Caribe colombiano llega a Cartagena de Indias. Vive una jornada legendaria con artistas estelares en vivo, múltiples escenarios, experiencias inmersivas, gastronomía de autor y la mejor vibra festivalera frente a la Heroica.',
-  lugar: 'Plaza de Toros Monumental, Cartagena de Indias',
-  foto: 'https://jcigroanxweuzbkmqbib.supabase.co/storage/v1/object/public/banners-home/coachela.jpeg',
-  fecha: '2026-12-18',
-  hora: '17:00:00',
-  estado: 'PUBLICADO',
-  promocionado: true,
-  latitud: 10.40701,
-  longitud: -75.50567,
-  categoria: {
-    id: 1,
-    nombre: 'Conciertos',
-  },
-  organizacion: {
-    id: 15,
-    nombre: 'Passa Passa Music Publishing & Entertainment S.A.S',
-  },
-  localidades: [
-    {
-      id: 101,
-      nombre: 'General Early Bird',
-      precio: 150000.0,
-      capacidad: 3000,
-      disponibles: 1250,
-    },
-    {
-      id: 102,
-      nombre: 'VIP Coachella Experience',
-      precio: 350000.0,
-      capacidad: 1000,
-      disponibles: 420,
-    },
-    {
-      id: 103,
-      nombre: 'Palcos Exclusivos',
-      precio: 850000.0,
-      capacidad: 200,
-      disponibles: 45,
-    },
-  ],
-};
-
 /**
  * Detalle público de un evento (GET /api/eventos/{id}).
  */
 export async function getEventById(eventId) {
-  if (String(eventId).toLowerCase() === 'coachella') {
-    return normalizeEvent(COACHELLA_HEROICA_EVENT);
-  }
-
-  try {
-    const data = await httpClient.get(`/eventos/${getEventPathId(eventId)}`);
-    return data ? normalizeEvent(data) : null;
-  } catch (err) {
-    if (String(eventId).toLowerCase() === 'coachella') {
-      return normalizeEvent(COACHELLA_HEROICA_EVENT);
-    }
-    throw err;
-  }
+  const data = await httpClient.get(`/eventos/${getEventPathId(eventId)}`);
+  return data ? normalizeEvent(data) : null;
 }
 
 /**

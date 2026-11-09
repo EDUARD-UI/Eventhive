@@ -18,29 +18,14 @@ import { FiArrowRight, FiEdit2 } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import bannerService from '../../services/bannerService.js';
 import ImageWithFallback from '../../components/common/ImageWithFallback.jsx';
+import { getOptionalBannerTitle } from '../../utils/bannerTitle.js';
 
 export default function MarketingBannersView() {
-  const [banners, setBanners] = useState([
-    {
-      id: null,
-      posicion: 1,
-      titulo: 'Promociona tu evento en EventHive',
-      imagenUrl: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1200&q=80',
-      textoBoton: 'Conocer Planes',
-      enlaceUrl: '/organizadores',
-    },
-    {
-      id: null,
-      posicion: 2,
-      titulo: 'Descubre los mejores festivales de Cartagena',
-      imagenUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1200&q=80',
-      textoBoton: 'Explorar Cartelera',
-      enlaceUrl: '/buscar',
-    },
-  ]);
+  const [banners, setBanners] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [savingPos, setSavingPos] = useState(null);
+  const [loadError, setLoadError] = useState(null);
 
   // Modal drawer a la derecha para modificar el banner
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -54,6 +39,7 @@ export default function MarketingBannersView() {
   const fetchBanners = useCallback(async () => {
     try {
       setLoading(true);
+      setLoadError(null);
       const data = await bannerService.getAdminBanners();
       if (Array.isArray(data) && data.length > 0) {
         setBanners([1, 2].map((pos) => {
@@ -61,15 +47,15 @@ export default function MarketingBannersView() {
           return found || {
             id: null,
             posicion: pos,
-            titulo: pos === 1 ? 'Banner Principal' : 'Banner Secundario',
+            titulo: '',
             imagenUrl: '',
-            textoBoton: 'Ver más',
+            textoBoton: '',
             enlaceUrl: '',
           };
         }));
       }
     } catch (err) {
-      console.warn('Error al cargar banners administrativos:', err);
+      setLoadError(err?.message || 'No se pudieron cargar los banners.');
     } finally {
       setLoading(false);
     }
@@ -244,6 +230,23 @@ export default function MarketingBannersView() {
         </div>
       </div>
 
+      {loadError && (
+        <div
+          role="alert"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"
+        >
+          <span>{loadError}</span>
+          <button
+            type="button"
+            onClick={fetchBanners}
+            className="inline-flex items-center gap-2 font-bold text-rose-900 hover:text-rose-700"
+          >
+            <RefreshCw size={14} />
+            Reintentar
+          </button>
+        </div>
+      )}
+
       {/* Grid de Banners (Banner 1 y Banner 2) */}
       {loading ? (
         <div className="p-16 text-center text-slate-400 text-xs font-medium bg-white rounded-3xl border border-slate-200/80">
@@ -254,7 +257,7 @@ export default function MarketingBannersView() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
           {banners.map((banner, index) => {
             const hasImage = Boolean(banner.imagenUrl?.trim());
-            const hasTitle = Boolean(banner.titulo?.trim());
+            const bannerTitle = getOptionalBannerTitle(banner.titulo);
 
             return (
               <div
@@ -299,9 +302,11 @@ export default function MarketingBannersView() {
 
                   {/* Contenido textual inferior y botón */}
                   <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-6 z-10 pointer-events-none">
-                    <h3 className="font-extrabold text-white text-base sm:text-lg lg:text-xl leading-snug tracking-tight uppercase mb-3 max-w-md drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] line-clamp-2">
-                      {hasTitle ? banner.titulo : `Espacio de Banner ${banner.posicion} Disponible`}
-                    </h3>
+                    {bannerTitle && (
+                      <h3 className="font-extrabold text-white text-base sm:text-lg lg:text-xl leading-snug tracking-tight uppercase mb-3 max-w-md drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] line-clamp-2">
+                        {bannerTitle}
+                      </h3>
+                    )}
 
                     {banner.textoBoton && (
                       <div>
@@ -388,9 +393,11 @@ export default function MarketingBannersView() {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent pointer-events-none" />
 
                     <div className="relative z-10">
-                      <h4 className="font-bold text-white text-xs sm:text-sm uppercase line-clamp-1 drop-shadow-md">
-                        {editingBanner.titulo || `Título del Banner ${editingBanner.posicion}`}
-                      </h4>
+                      {getOptionalBannerTitle(editingBanner.titulo) && (
+                        <h4 className="font-bold text-white text-xs sm:text-sm uppercase line-clamp-1 drop-shadow-md">
+                          {getOptionalBannerTitle(editingBanner.titulo)}
+                        </h4>
+                      )}
                       {editingBanner.textoBoton && (
                         <div className="mt-2">
                           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-amber-500 text-slate-950 text-[10px] font-black uppercase">

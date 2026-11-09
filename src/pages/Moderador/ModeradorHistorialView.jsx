@@ -8,6 +8,7 @@ import {
   FiClock,
   FiInbox,
   FiLayers,
+  FiRefreshCw,
 } from 'react-icons/fi';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
@@ -32,6 +33,8 @@ export default function ModeradorHistorialView({
 }) {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
   const [totalElements, setTotalElements] = useState(0);
@@ -71,6 +74,7 @@ export default function ModeradorHistorialView({
     async function fetchEventos() {
       try {
         setLoading(true);
+        setLoadError(null);
         const res = await moderationService.buscarEventosModeracion({
           titulo: debouncedTitle,
           categoriaId: categoriaFilter || undefined,
@@ -87,8 +91,7 @@ export default function ModeradorHistorialView({
       } catch (err) {
         console.error('Error buscando eventos para moderación:', err);
         if (isMounted) {
-          setEventos([]);
-          setTotalElements(0);
+          setLoadError(err?.message || 'No se pudieron cargar los eventos.');
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -100,7 +103,7 @@ export default function ModeradorHistorialView({
     return () => {
       isMounted = false;
     };
-  }, [debouncedTitle, estadoFilter, categoriaFilter, page, size]);
+  }, [debouncedTitle, estadoFilter, categoriaFilter, page, size, retryCount]);
 
   const getToneForEstado = (estado) => {
     switch ((estado || '').toUpperCase()) {
@@ -192,6 +195,23 @@ export default function ModeradorHistorialView({
         </div>
       </div>
 
+      {loadError && eventos.length > 0 && (
+        <div
+          role="alert"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"
+        >
+          <span>{loadError}</span>
+          <button
+            type="button"
+            onClick={() => setRetryCount((count) => count + 1)}
+            className="inline-flex items-center gap-2 font-bold text-rose-900 hover:text-rose-700"
+          >
+            <FiRefreshCw size={14} />
+            Reintentar
+          </button>
+        </div>
+      )}
+
       {/* Resultados en Tabla estilizada */}
       <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
@@ -216,6 +236,25 @@ export default function ModeradorHistorialView({
                     </td>
                   </tr>
                 ))
+              ) : loadError && eventos.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-5 py-12 text-center">
+                    <p role="alert" className="font-bold text-rose-800 text-sm">
+                      No se pudieron cargar los eventos.
+                    </p>
+                    <p className="text-xs text-rose-700 mt-1 max-w-sm mx-auto">
+                      {loadError}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setRetryCount((count) => count + 1)}
+                      className="mt-3 inline-flex items-center gap-2 rounded-lg bg-rose-700 px-3 py-2 text-xs font-bold text-white hover:bg-rose-800"
+                    >
+                      <FiRefreshCw size={13} />
+                      Reintentar
+                    </button>
+                  </td>
+                </tr>
               ) : eventos.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-5 py-12 text-center">

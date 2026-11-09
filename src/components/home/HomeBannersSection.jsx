@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { FiArrowRight } from 'react-icons/fi';
 import { getHomeBanners } from '../../services/bannerService.js';
 import ImageWithFallback from '../common/ImageWithFallback.jsx';
+import { useLanguage } from '../../context/LanguageContext.jsx';
 
 /**
  * BannerCard
@@ -13,33 +14,22 @@ import ImageWithFallback from '../common/ImageWithFallback.jsx';
 function BannerCard({ banner }) {
   if (!banner) return null;
 
-  let targetUrl = banner.enlaceUrl || '';
-  if (/\.(jpe?g|png|webp|gif|svg)(\?.*)?$/i.test(targetUrl) || !targetUrl || targetUrl === '#') {
-    if (/coachella/i.test(banner.titulo || '')) {
-      targetUrl = '/eventos/coachella';
-    } else if (/classic/i.test(banner.titulo || '')) {
-      targetUrl = '/eventos/22';
-    } else {
-      targetUrl = '/buscar';
-    }
-  }
-
-  const eventMatch = targetUrl.match(/\/eventos?\/(\d+)/i);
-  if (eventMatch) {
-    targetUrl = `/eventos/${eventMatch[1]}`;
-  }
-
-  const isExternal = targetUrl.startsWith('http');
-  const CardWrapper = isExternal ? 'a' : Link;
+  const targetUrl = banner.enlaceUrl || '';
+  const isExternal = /^https?:\/\//i.test(targetUrl);
+  const CardWrapper = isExternal ? 'a' : targetUrl ? Link : 'div';
   const wrapperProps = isExternal
     ? { href: targetUrl, target: '_blank', rel: 'noopener noreferrer' }
-    : { to: targetUrl };
+    : targetUrl
+      ? { to: targetUrl }
+      : {};
 
   return (
     <div className="group relative w-full overflow-hidden rounded-[26px] border border-slate-200/90 dark:border-white/10 bg-slate-950 shadow-md hover:shadow-xl hover:border-amber-400/60 transition-all duration-300">
       <CardWrapper
         {...wrapperProps}
-        className="block relative w-full aspect-[16/10] sm:aspect-[16/9] min-h-[230px] sm:min-h-[270px] overflow-hidden bg-slate-950 cursor-pointer"
+        className={`block relative w-full aspect-[16/10] sm:aspect-[16/9] min-h-[230px] sm:min-h-[270px] overflow-hidden bg-slate-950 ${
+          targetUrl ? 'cursor-pointer' : 'cursor-default'
+        }`}
       >
         {/* Imagen de fondo del banner */}
         {banner.imagenUrl ? (
@@ -71,7 +61,7 @@ function BannerCard({ banner }) {
           )}
 
           {/* Botón de acción oficial del banner (sin tag de destacado) */}
-          {banner.textoBoton && (
+          {banner.textoBoton && targetUrl && (
             <div>
               <span
                 className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-95 cursor-pointer pointer-events-auto"
@@ -91,8 +81,14 @@ function BannerCard({ banner }) {
 }
 
 export default function HomeBannersSection() {
+  const { t } = useLanguage();
   // Consulta de banners con TanStack Query (Stale-While-Revalidate)
-  const { data: banners = [], isLoading: loading } = useQuery({
+  const {
+    data: banners = [],
+    isLoading: loading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['home-banners'],
     queryFn: getHomeBanners,
     staleTime: 1000 * 60 * 5,
@@ -111,6 +107,26 @@ export default function HomeBannersSection() {
             <div className="w-36 h-10 bg-amber-400/30 dark:bg-amber-500/20 rounded-xl" />
           </div>
         </div>
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <section
+        role="alert"
+        className="mx-auto w-full max-w-7xl px-4 py-8 text-center"
+      >
+        <p className="text-sm font-semibold text-rose-700">
+          {t('home.bannersLoadError')}
+        </p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="mt-3 rounded-lg bg-rose-700 px-4 py-2 text-sm font-bold text-white hover:bg-rose-800"
+        >
+          {t('home.retry')}
+        </button>
       </section>
     );
   }
