@@ -136,6 +136,39 @@ export const moderationService = {
       { params: { motivo } }
     );
   },
+
+  /** GET /api/administracion/palabras-prohibidas - Palabras prohibidas paginadas (Moderador/Admin) */
+  getPalabrasProhibidas({ page = 0, size = 10, sort = 'id,desc' } = {}) {
+    return httpClient.get('/administracion/palabras-prohibidas', { page, size, sort });
+  },
+
+  /** POST /api/administracion/palabras-prohibidas - Crear palabra prohibida */
+  crearPalabraProhibida({ palabra, severidad = 'GRAVE' }) {
+    return httpClient.post('/administracion/palabras-prohibidas', {
+      palabra: String(palabra).trim(),
+      severidad: String(severidad).toUpperCase(),
+    });
+  },
+
+  /** PUT /api/administracion/palabras-prohibidas/{id} - Actualizar palabra prohibida */
+  actualizarPalabraProhibida(id, { palabra, severidad = 'GRAVE' }) {
+    return httpClient.put(`/administracion/palabras-prohibidas/${id}`, {
+      palabra: String(palabra).trim(),
+      severidad: String(severidad).toUpperCase(),
+    });
+  },
+
+  /** PATCH /api/administracion/palabras-prohibidas/{id}/activa - Activar/Desactivar palabra prohibida */
+  cambiarEstadoPalabraProhibida(id, activa) {
+    return httpClient.patch(`/administracion/palabras-prohibidas/${id}/activa`, null, {
+      params: { activa: Boolean(activa) },
+    });
+  },
+
+  /** DELETE /api/administracion/palabras-prohibidas/{id} - Eliminar palabra prohibida */
+  eliminarPalabraProhibida(id) {
+    return httpClient.delete(`/administracion/palabras-prohibidas/${id}`);
+  },
 };
 
 export default moderationService;

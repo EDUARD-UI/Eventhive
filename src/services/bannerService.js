@@ -94,39 +94,47 @@ export async function getAdminBanners() {
 
 /**
  * Guardar o actualizar banner por posición (POST o PUT /api/banners-home/{posicion})
+ * Requiere multipart/form-data según especificación oficial del backend.
  */
 export async function saveBanner(posicion, bannerData) {
   let body;
-  const isForm = bannerData instanceof FormData || Boolean(bannerData.imagenFile || bannerData.imagen instanceof File);
-
   if (bannerData instanceof FormData) {
     body = bannerData;
-  } else if (isForm) {
+  } else {
     body = new FormData();
     body.append('posicion', Number(posicion));
-    body.append('titulo', bannerData.titulo || '');
+    if (bannerData.titulo !== undefined && bannerData.titulo !== null) {
+      body.append('titulo', bannerData.titulo);
+    }
     body.append('textoBoton', bannerData.textoBoton || 'Ver más');
     body.append('enlaceUrl', bannerData.enlaceUrl || '');
-    if (bannerData.imagenFile) {
+    if (bannerData.imagenFile instanceof File) {
       body.append('imagen', bannerData.imagenFile);
     } else if (bannerData.imagen instanceof File) {
       body.append('imagen', bannerData.imagen);
     }
-  } else {
-    body = {
-      titulo: bannerData.titulo || '',
-      imagenUrl: bannerData.imagenUrl || '',
-      textoBoton: bannerData.textoBoton || 'Ver más',
-      enlaceUrl: bannerData.enlaceUrl || '',
-      posicion: Number(posicion),
-    };
   }
 
-  try {
-    return await httpClient.put(`/banners-home/${posicion}`, body, { isFormData: isForm });
-  } catch {
-    // Si da 404 (no existe aún en esa posición), usar POST
-    return await httpClient.post(`/banners-home/${posicion}`, body, { isFormData: isForm });
+  const isExisting = Boolean(bannerData.id || bannerData.ocupado);
+
+  if (isExisting) {
+    try {
+      return await httpClient.put(`/banners-home/${posicion}`, body, { isFormData: true });
+    } catch (err) {
+      if (err.status === 404) {
+        return await httpClient.post(`/banners-home/${posicion}`, body, { isFormData: true });
+      }
+      throw err;
+    }
+  } else {
+    try {
+      return await httpClient.post(`/banners-home/${posicion}`, body, { isFormData: true });
+    } catch (err) {
+      if (err.status === 400 || err.status === 409) {
+        return await httpClient.put(`/banners-home/${posicion}`, body, { isFormData: true });
+      }
+      throw err;
+    }
   }
 }
 

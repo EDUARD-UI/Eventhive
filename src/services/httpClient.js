@@ -130,14 +130,9 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
     if (sesionRenovada) {
       token = session.getToken();
     } else {
-      // Si el refresh token falló, limpiamos la sesión
-      session.clear();
-      token = null;
-      // Solo lanzamos error bloqueante si es una petición privada que modifica datos
-      if (method !== 'GET') {
-        cerrarSesionYRedirigir();
-        throw new Error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
-      }
+      // Si el refresh token falló o expiró, cerramos la sesión y redirigimos
+      cerrarSesionYRedirigir();
+      throw new Error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
     }
   }
 

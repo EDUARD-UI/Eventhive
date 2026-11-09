@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Sparkles,
@@ -22,6 +22,7 @@ import {
   Star,
   FileText,
   Share2,
+  Upload,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import Badge from '../../components/Shared/Badge.jsx';
@@ -54,7 +55,9 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
   const [promoImageModalEvent, setPromoImageModalEvent] = useState(null);
   const [inputPromoImage, setInputPromoImage] = useState('');
   const [savingPromoImage, setSavingPromoImage] = useState(false);
+  const [uploadingPromoFile, setUploadingPromoFile] = useState(false);
   const [promoImageError, setPromoImageError] = useState(null);
+  const promoFileInputRef = useRef(null);
 
   // Gestión de Planes de Promoción
   const [planes, setPlanes] = useState([]);
@@ -210,6 +213,35 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
     setPromoImageModalEvent(item);
     setInputPromoImage(item.urlImagenDestacado || '');
     setPromoImageError(null);
+  };
+
+  // Carga de archivo de imagen directa a /api/marketing/imagenes
+  const handlePromoFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setPromoImageError('Formato no válido. Solo se admiten archivos JPG, PNG o WEBP.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setPromoImageError('El archivo excede el tamaño máximo permitido de 5 MB.');
+      return;
+    }
+
+    try {
+      setUploadingPromoFile(true);
+      setPromoImageError(null);
+      const url = await promotionPlanService.subirImagenMarketing(file);
+      setInputPromoImage(url);
+    } catch (err) {
+      setPromoImageError(err?.message || 'Error al cargar la imagen en el servidor.');
+    } finally {
+      setUploadingPromoFile(false);
+      if (promoFileInputRef.current) promoFileInputRef.current.value = '';
+    }
   };
 
   // Guardar imagen destacada (PUT /api/promociones/eventos/{id}/posicionar)
@@ -1098,20 +1130,59 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                   </p>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    URL de la Imagen para Banner Destacado <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="url"
-                    value={inputPromoImage}
-                    onChange={(e) => setInputPromoImage(e.target.value)}
-                    placeholder="https://..."
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 transition-all outline-none"
-                  />
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Esta imagen se asignará a <code>url_imagen_destacado</code> y se utilizará en el carrusel principal.
-                  </p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                      Subir archivo de imagen (Directo al Servidor)
+                    </label>
+                    <input
+                      ref={promoFileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handlePromoFileUpload}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => promoFileInputRef.current?.click()}
+                      disabled={uploadingPromoFile}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 border-2 border-dashed border-slate-300 hover:border-slate-800 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all cursor-pointer disabled:opacity-60"
+                    >
+                      {uploadingPromoFile ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin text-amber-500" />
+                          <span>Subiendo imagen al servidor...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={16} className="text-amber-600" />
+                          <span>Seleccionar archivo (JPG, PNG o WEBP - máx. 5 MB)</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="relative flex items-center justify-center my-2">
+                    <span className="bg-white px-2 text-[10px] uppercase font-bold text-slate-400">
+                      o ingresa la URL directamente
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                      URL de la Imagen para Banner Destacado <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="url"
+                      value={inputPromoImage}
+                      onChange={(e) => setInputPromoImage(e.target.value)}
+                      placeholder="https://..."
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 transition-all outline-none"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Esta imagen se asignará a <code>url_imagen_destacado</code> y se utilizará en el carrusel principal.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Previsualización del Banner */}

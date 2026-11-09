@@ -176,6 +176,17 @@ En caso de error, la respuesta suele devolver:
 }
 ```
 
+#### `POST /api/auth/olvide-password` (alias: `/api/auth/olvide-clave`)
+- Público. Recibe `{"correo":"persona@example.com"}`; también acepta el campo `email`.
+- Genera un token de un solo uso, válido durante 30 minutos, y envía el enlace al correo registrado.
+- Si el correo no existe o la cuenta está inactiva, devuelve la misma respuesta para no revelar cuentas.
+- Devuelve HTTP 200 cuando la solicitud puede procesarse; si Gmail no acepta el correo, devuelve HTTP 502 y registra el diagnóstico del proveedor.
+
+#### `POST /api/auth/restablecer-clave`
+- Público. Recibe `{"token":"...","clave":"NuevaClave123!"}`; también acepta `nuevaClave`, `password` o `newPassword`.
+- El token es de un solo uso y vence a los 30 minutos. Al utilizarlo, actualiza la contraseña y desbloquea la cuenta.
+- Devuelve HTTP 400 si el token es inválido, ya se usó o expiró.
+
 ---
 
 ## 3. Usuarios
@@ -709,7 +720,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/eventos/organizador/{id}`
 - Recibe: `id` del evento en path.
 - Devuelve: `ApiResponse<EventoDTO>`
-- Permisos: REPRESENTANTE o OPERADOR.
+- Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
 ```json
@@ -751,7 +762,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/eventos/organizador`
 - Recibe: query params opcionales `categoriaId` (Long), `estado` (enum `EstadoEvento`: BORRADOR, PUBLICADO, FINALIZADO, etc.), `titulo` (coincidencia parcial en el título) y paginación estándar (`page`, `size`, `sort`).
 - Devuelve: `ApiResponse<PagedResponse<EventoDTO>>`
-- Permisos: REPRESENTANTE o OPERADOR de la organización.
+- Permisos: REPRESENTANTE de la organización.
 - Descripción: lista los eventos pertenecientes a la organización del usuario autenticado, permitiendo combinar filtros por categoría, estado y búsqueda por título de forma eficiente.
 - Ejemplo de petición: `/api/eventos/organizador?categoriaId=1&estado=PUBLICADO&titulo=Jazz&page=0&size=10`
 - Ejemplo de respuesta:
@@ -906,7 +917,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/eventos/organizador/buscar`
 - Recibe: `titulo` y paginación.
 - Devuelve: `ApiResponse<PagedResponse<EventoDTO>>`
-- Permisos: REPRESENTANTE o OPERADOR.
+- Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
 ```json
@@ -994,7 +1005,7 @@ En caso de error, la respuesta suele devolver:
   - `datos`: `EventoRequest` (incluyendo `fecha`, `hora`, y opcionalmente `fechaFin` y `horaFin`).
   - `foto`: archivo opcional
 - Devuelve: `ApiResponse<EventoDTO>`
-- Permisos: REPRESENTANTE o OPERADOR.
+- Permisos: REPRESENTANTE.
 - Validaciones de fechas (zona horaria oficial `America/Bogota`):
   - La fecha de inicio (`fecha`) no puede ser anterior al día actual.
   - Si el evento comienza en la fecha actual (hoy), la hora de inicio (`hora`) debe ser estrictamente posterior a la hora actual.
@@ -1036,7 +1047,7 @@ En caso de error, la respuesta suele devolver:
   - `datos`: `EventoRequest`
   - `foto`: archivo opcional
 - Devuelve: `ApiResponse<EventoDTO>`
-- Permisos: REPRESENTANTE o OPERADOR.
+- Permisos: REPRESENTANTE.
 - Validaciones de edición y preservación histórica:
   - Si el evento aún no ha iniciado, aplican las mismas validaciones de fecha de inicio futura y hora válida.
   - Si el evento ya inició o es un evento pasado, se permite modificar sus otros campos (título, descripción, lugar, imagen, etc.), pero el backend congela y protege su inicio histórico (`fecha` y `hora`), rechazando con `BusinessException` cualquier intento de alterar retroactivamente su inicio.
@@ -1082,7 +1093,7 @@ En caso de error, la respuesta suele devolver:
 #### `PATCH /api/eventos/{id}/cancelar`
 - Recibe: `id` en path.
 - Devuelve: `ApiResponse<Void>`
-- Permisos: REPRESENTANTE o OPERADOR.
+- Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
 ```json
@@ -1096,7 +1107,7 @@ En caso de error, la respuesta suele devolver:
 #### `PATCH /api/eventos/{id}/retirar`
 - Recibe: `id` en path.
 - Devuelve: `ApiResponse<Void>`
-- Permisos: REPRESENTANTE o OPERADOR.
+- Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
 ```json
@@ -1129,7 +1140,7 @@ En caso de error, la respuesta suele devolver:
 - Recibe: `id` del evento en path, sin body.
 - Devuelve: `ApiResponse<Void>`
 - Descripción: reabre el evento y lo devuelve a borrador.
-- Permisos: REPRESENTANTE o OPERADOR.
+- Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
 ```json
@@ -1143,7 +1154,7 @@ En caso de error, la respuesta suele devolver:
 #### `DELETE /api/eventos/{id}`
 - Recibe: `id` en path.
 - Devuelve: `ApiResponse<Void>`
-- Permisos: REPRESENTANTE o OPERADOR.
+- Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
 ```json
@@ -1163,7 +1174,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/eventos/{eventoId}/localidades`
 - Recibe: `eventoId` en path.
 - Devuelve: `ApiResponse<List<LocalidadDTO>>`
-- Permisos: Público (si el evento se encuentra en estado `PUBLICADO`) o usuarios autenticados con rol `MODERADOR`, `ADMINISTRADOR`, `REPRESENTANTE` u `OPERADOR`. Permite a los moderadores examinar las localidades, nombres y capacidades de los eventos a moderar sin generar error 403.
+- Permisos: Público (si el evento se encuentra en estado `PUBLICADO`) o usuarios autenticados con rol `MODERADOR`, `ADMINISTRADOR` o `REPRESENTANTE`. Permite a los moderadores examinar las localidades, nombres y capacidades de los eventos a moderar sin generar error 403.
 - Ejemplo de respuesta:
 
 ```json
@@ -1185,7 +1196,7 @@ En caso de error, la respuesta suele devolver:
 #### `POST /api/eventos/{eventoId}/localidades`
 - Recibe: `eventoId` en path y body `LocalidadRequest`.
 - Devuelve: `ApiResponse<LocalidadDTO>`
-- Permisos: REPRESENTANTE o OPERADOR.
+- Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
 ```json
@@ -1205,7 +1216,7 @@ En caso de error, la respuesta suele devolver:
 #### `PUT /api/eventos/{eventoId}/localidades/{localidadId}`
 - Recibe: `eventoId` y `localidadId` en path, body `LocalidadRequest`.
 - Devuelve: `ApiResponse<LocalidadDTO>`
-- Permisos: REPRESENTANTE o OPERADOR.
+- Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
 ```json
@@ -1225,7 +1236,7 @@ En caso de error, la respuesta suele devolver:
 #### `DELETE /api/eventos/{eventoId}/localidades/{localidadId}`
 - Recibe: `eventoId` y `localidadId` en path.
 - Devuelve: `ApiResponse<Void>`
-- Permisos: REPRESENTANTE o OPERADOR.
+- Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
 ```json
@@ -1242,16 +1253,22 @@ En caso de error, la respuesta suele devolver:
 
 ### Base: `/api/compras`
 
-#### Reglas de precios y comisiones de boletas
-- El precio configurado en cada localidad representa el **precio base** de la organización.
-- La comisión comercial de EventHive se **adiciona** al precio base y la asume íntegramente el comprador.
-- **Fórmulas oficiales:**
-  - `precioBase = sum(localidad.precio * cantidad)`
-  - `comisionEventhive = precioBase * comisionPorcentaje / 100`
-  - `totalComprador = precioBase + comisionEventhive`
-  - `netoOrganizador = precioBase`
-- La comisión **no se deduce** de los ingresos de la organización.
-- Todo cálculo se efectúa estrictamente en el backend.
+#### Reglas de precios, comisiones y distribución de fondos
+- **Cálculo individual por cada boleta en el carrito**:
+  - El sistema identifica la localidad seleccionada por el cliente y resuelve el evento asociado.
+  - Se aplica automáticamente el porcentaje de comisión del plan contratado por dicho evento (`evento.comisionPromocionPorcentaje`, o `4.0%` por defecto si no tiene plan promocional).
+  - Por cada boleta emitida:
+    - `precioBaseUnitario = localidad.precio`
+    - `comisionUnitaria = precioBaseUnitario * porcentajeComision / 100`
+    - `precioFinalUnitario = precioBaseUnitario + comisionUnitaria`
+  - Por cada item en el carrito (`cantidad` boletas de una localidad):
+    - `subtotalBase = precioBaseUnitario * cantidad`
+    - `comisionTotalItem = subtotalBase * porcentajeComision / 100`
+- **Distribución automatizada de saldos**:
+  - `netoOrganizador = sum(subtotalBase)` -> Saldo restante liberado de forma íntegra para el organizador del evento (sin deducción de comisiones).
+  - `comisionEventhive = sum(comisionTotalItem)` -> Utilidades de la comisión acreditadas a la cuenta operativa de EventHive.
+  - `totalComprador = netoOrganizador + comisionEventhive` -> Importe total cobrado al cliente en la pasarela.
+- **Transparencia en respuestas**: Cada item en la compra expone `porcentajeComision`, `comisionTotal` y `precioFinalUnitario` en `ItemCompraDTO`.
 
 #### `GET /api/compras`
 - Recibe: paginación.
@@ -1439,7 +1456,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/boletos/validar/{codigoQR}`
 - Recibe: `codigoQR` en path.
 - Devuelve: `ApiResponse<BoletoDTO>`
-- Permisos: REPRESENTANTE u OPERADOR (debe pertenecer a la organización organizadora del evento y tener permiso `CHECK_IN`).
+- Permisos: REPRESENTANTE u OPERADOR asociado a la organización organizadora del evento. El acceso se valida mediante el rol y la pertenencia a la organización; no existen permisos granulares por evento.
 - Descripción: Escanea y valida si un boleto es auténtico y pertenece a la organización, devolviendo el detalle del boleto, localidad y evento sin marcarlo como consumido.
 - Ejemplo de respuesta exitosa:
 
@@ -1477,7 +1494,7 @@ En caso de error, la respuesta suele devolver:
       "mensaje": "Lo siento, este código no es uno de nuestros boletos"
     }
     ```
-  - **403 Forbidden** (Operador de otra organización o sin permiso `CHECK_IN`):
+  - **403 Forbidden** (Usuario sin autorización para operar en la organización del evento):
     ```json
     {
       "success": false,
@@ -1495,7 +1512,7 @@ En caso de error, la respuesta suele devolver:
 #### `POST /api/boletos/checkin/{codigoQR}`
 - Recibe: `codigoQR` en path.
 - Devuelve: `ApiResponse<Void>`
-- Permisos: REPRESENTANTE u OPERADOR (debe pertenecer a la organización organizadora del evento y tener permiso `CHECK_IN`).
+- Permisos: REPRESENTANTE u OPERADOR asociado a la organización organizadora del evento. El acceso se valida mediante el rol y la pertenencia a la organización; no existen permisos granulares por evento.
 - Descripción: Escanea el código QR, valida su existencia y autenticidad en la organización y marca el tiquete como utilizado de forma atómica.
 - Ejemplo de respuesta exitosa:
 
@@ -1521,7 +1538,7 @@ En caso de error, la respuesta suele devolver:
       "mensaje": "El tiquete ya fue utilizado"
     }
     ```
-  - **403 Forbidden** (Operador de otra organización o sin permiso `CHECK_IN`):
+  - **403 Forbidden** (Usuario sin autorización para operar en la organización del evento):
     ```json
     {
       "success": false,
@@ -1931,7 +1948,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/organizaciones/mi-organizacion`
 - Recibe: sin body.
 - Devuelve: `ApiResponse<OrganizacionDTO>`
-- Permisos: REPRESENTANTE u OPERADOR.
+- Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
 ```json
@@ -2007,7 +2024,6 @@ En caso de error, la respuesta suele devolver:
         "id": 12,
         "nombreCompleto": "Luis González",
         "correo": "luis@correo.com",
-        "permisosEvento": ["CREAR_EVENTO", "EDITAR_EVENTO"]
       }
     ]
   }
@@ -2019,7 +2035,7 @@ Los operadores se agregan mediante invitación por correo, aceptan o rechazan la
 #### `GET /api/organizaciones/mi-organizacion/estadisticas`
 - Recibe: paginación estándar (`page`, `size`, `sort`).
 - Devuelve: `ApiResponse<PanelEntradasDTO>`
-- Permisos: REPRESENTANTE u OPERADOR asociado a la organización.
+- Permisos: REPRESENTANTE.
 - Reglas de negocio:
   - `totalBoletas` / `totalBoletasVendidasPorEventosPublicados`: total de boletas vendidas correspondientes **exclusivamente a eventos publicados** (`PUBLICADO`) en compras y pagos confirmados (excluyendo compras pendientes, canceladas o fallidas).
   - `ingresosNetos`: suma de los ingresos netos de la organización (el precio base de las localidades vendidas, sin descontar comisiones adicionales asumidas por el comprador).
@@ -2029,7 +2045,7 @@ Los operadores se agregan mediante invitación por correo, aceptan o rechazan la
 #### `GET /api/organizaciones/mi-organizacion/ganancias-boletas` (Alias: `/ganancias`)
 - Recibe: paginación estándar (`page`, `size`, `sort`).
 - Devuelve: `ApiResponse<PagedResponse<EventoEntradasResumenDTO>>` con el desglose paginado directo de las boletas vendidas y ganancias generadas por cada evento de la organización.
-- Permisos: REPRESENTANTE u OPERADOR asociado.
+- Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
 ```json
@@ -2068,12 +2084,12 @@ Los operadores se agregan mediante invitación por correo, aceptan o rechazan la
 #### `GET /api/organizaciones/mi-organizacion/valoraciones`
 - Recibe: paginación estándar (`page`, `size`, `sort`).
 - Devuelve: `ApiResponse<PagedResponse<ValoracionDTO>>`.
-- Permisos: REPRESENTANTE u OPERADOR asociado a la organización. La organización se determina desde el usuario autenticado.
+- Permisos: REPRESENTANTE.
 
 #### `GET /api/organizaciones/mi-organizacion/seguidores`
 - Recibe: paginación.
 - Devuelve: `ApiResponse<PagedResponse<UsuarioDTO>>`
-- Permisos: REPRESENTANTE u OPERADOR.
+- Permisos: REPRESENTANTE.
 - Ejemplo de respuesta:
 
 ```json
@@ -3049,17 +3065,19 @@ descuentos de compra ya no están disponibles ni se aplican al checkout.
 
 ### Dashboard MARKETING
 
+> **Nota de Seguridad y Roles**: Por regla estricta de negocio, el rol `ADMINISTRADOR` no realiza funciones operativas de Marketing (ni gestión de banners ni configuración de eventos promocionados). Estos endpoints están autorizados exclusivamente para el rol `MARKETING`.
+
 #### `GET /api/marketing/estadisticas`
 - Recibe: sin parámetros.
 - Devuelve: `ApiResponse<MarketingEstadisticasDTO>` con:
   - `eventosActivosPromocionados`: número de eventos activos (PUBLICADOS) con plan de promoción pagado y confirmado.
   - `eventosPorPlan`: lista de objetos `PlanPromocionConteoDTO` con `planId`, `planCodigo`, `planNombre` y `cantidadEventos` contratados.
-- Permisos: MARKETING o ADMINISTRADOR.
+- Permisos: `MARKETING`.
 
 #### `POST /api/marketing/imagenes`
 - Recibe: `multipart/form-data` con campo `imagen`.
 - Devuelve: `ApiResponse<Map<String, String>>` con `{ "url": "https://..." }`.
-- Permisos: MARKETING o ADMINISTRADOR.
+- Permisos: `MARKETING`.
 - Valida tipo de archivo (magic bytes y MIME) y tamaño máximo (5MB) para evitar subir archivos peligrosos.
 
 #### `POST /api/marketing/planes`
@@ -3072,32 +3090,36 @@ descuentos de compra ya no están disponibles ni se aplican al checkout.
   - `pautaRedes` / `llevaPautaRedes` (booleano)
   - `comisionPorcentaje` / `porcentajeComision` (número entre 0.00 y 100.00)
 - Devuelve: `ApiResponse<PlanPromocionDTO>` (incluye tanto `comisionPorcentaje` como `porcentajeComision`).
-- Permisos: MARKETING o ADMINISTRADOR.
+- Permisos: `MARKETING`.
 - Descripción: crea un nuevo plan publicitario de precio fijo y comisión configurable.
 
 #### `GET /api/marketing/planes`
 - Lista todos los planes configurados en el sistema ordenados por precio ascendente.
-- Permisos: MARKETING o ADMINISTRADOR.
+- Permisos: `MARKETING`.
 
 #### `PUT /api/marketing/planes/{id}`
 - Recibe: `id` del plan en path y body `PlanPromocionRequest`.
 - Devuelve: `ApiResponse<PlanPromocionDTO>`
-- Permisos: MARKETING o ADMINISTRADOR.
+- Permisos: `MARKETING`.
 - Descripción: actualiza nombre, código, precio fijo, porcentaje de comisión (entre 0 y 100), Premium, pauta en redes y detalle publicitario, conservando la comisión existente si el campo no se envía.
 
 #### `GET /api/marketing/eventos-promocionados`
-- Permisos: MARKETING o ADMINISTRADOR.
-- Lista eventos y organizaciones con pago confirmado, plan contratado y estado de campaña, garantizando que no existan eventos duplicados (mostrando la contratación más reciente por evento).
+- Permisos: `MARKETING`.
+- Lista eventos y organizaciones con pago confirmado, plan contratado y estado de campaña, garantizando que no existan eventos duplicados (mostrando la contratación más reciente por evento). Indica qué plan pagó el representante y si requiere carga de imagen destacada (en planes premium).
 
 #### Banners del Home
-- `GET /api/banners-home/admin` y las operaciones de escritura de `/api/banners-home` permiten ADMINISTRADOR y MARKETING. Banners soportan posiciones 1 y 2 con carga directa de imágenes mediante `multipart/form-data`.
+- `GET /api/banners-home/admin` y las operaciones de creación, edición y eliminación de `/api/banners-home` están restringidas exclusivamente al rol `MARKETING`. Banners soportan posiciones 1 y 2 con carga directa de imágenes mediante `multipart/form-data`.
 
-La aplicación usa `spring.jpa.hibernate.ddl-auto=none`. Antes de desplegar
-esta versión, aplicar una vez
-[`V1__marketing_invitations_and_paid_promotions.sql`](./demo/src/main/resources/db/manual/V1__marketing_invitations_and_paid_promotions.sql).
-Configurar el envío por Brevo SMTP mediante las variables `MAIL_HOST`,
-`MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` y
-`eventhive.frontend-url` (URL base de la web para aceptar invitaciones).
+La aplicación usa `spring.jpa.hibernate.ddl-auto=none`; aplicar manualmente
+los scripts SQL incluidos para los cambios de esquema antes de desplegarlos.
+Configurar el envío mediante Gmail API con `GMAIL_CLIENT_ID`,
+`GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`, `GMAIL_SENDER` y
+`FRONTEND_URL` (URL base de la web para aceptar invitaciones y restablecer
+contraseñas y único origen CORS permitido). CORS acepta un solo origen exacto
+tomado de `FRONTEND_URL`; si la variable falta o está vacía, el único origen
+permitido es `http://localhost:5173`. No se permiten comodines ni listas de
+orígenes. Configure `FRONTEND_URL` explícitamente con el origen del frontend
+desplegado en Azure.
 
 ---
 
@@ -3169,8 +3191,8 @@ Configurar el envío por Brevo SMTP mediante las variables `MAIL_HOST`,
 
 Una Administración autenticada puede invitar a MODERADOR o MARKETING; un
 REPRESENTANTE solo puede invitar a OPERADOR. Se puede invitar un correo
-sin cuenta o uno que ya tenga una cuenta CLIENTE. El enlace de Brevo es
-de un solo uso y vence 24 horas después del envío.
+sin cuenta o uno que ya tenga una cuenta CLIENTE. El enlace enviado por
+correo es de un solo uso y vence 24 horas después del envío.
 
 #### `POST /api/invitaciones/roles`
 - Body: `{ "correo": "persona@correo.com", "rol": "MARKETING" }`.
@@ -3191,10 +3213,10 @@ de un solo uso y vence 24 horas después del envío.
 #### `GET /api/invitaciones/roles/enviadas`
 - ADMINISTRADOR o REPRESENTANTE. Devuelve la lista paginada de invitaciones enviadas por la persona autenticada.
 
-#### Preparación de despliegue y prueba SMTP
-- Antes del primer despliegue, ejecutar una vez `demo/src/main/resources/db/migration/20261012_correo_invitaciones.sql` contra PostgreSQL/Supabase. `spring.jpa.hibernate.ddl-auto=none` está configurado, así que las tablas no se crean automáticamente.
-- Configurar `MAIL_HOST` (opcional; por defecto `smtp-relay.brevo.com`), `MAIL_PORT` (opcional; por defecto `587`), `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` (remitente verificado por Brevo), `MAIL_FROM_NAME` (opcional; por defecto `EventHive`) y `FRONTEND_URL` (origen del frontend que recibe los enlaces).
-- Para probar el envío real, autenticar un ADMINISTRADOR y llamar a `POST /api/invitaciones/roles` con `{"correo":"destino@correo.com","rol":"MARKETING"}`; un REPRESENTANTE puede probar con `"rol":"OPERADOR"`. Un envío SMTP fallido responde con error y no deja guardada la invitación.
+#### Preparación de despliegue y prueba de correo
+- `spring.jpa.hibernate.ddl-auto=none` está configurado. Ejecutar `demo/src/main/resources/db/migration/20261102_tokens_recuperacion_clave.sql` una vez contra PostgreSQL/Supabase antes de habilitar la recuperación de contraseña.
+- El envío implementado utiliza Gmail API, no `MAIL_HOST`/SMTP. Configurar `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` y `GMAIL_SENDER` en Azure App Service. `FRONTEND_URL` debe apuntar al frontend que implementa `/restablecer-clave?token=...`.
+- Para probar recuperación, enviar `POST /api/auth/olvide-password` con `{"correo":"destino@correo.com"}`. El correo se envía de forma síncrona; un error de Gmail devuelve HTTP 502 y queda registrado en los logs.
 
 ---
 
@@ -3378,7 +3400,7 @@ Todos los endpoints son de solo lectura, no reciben parámetros y requieren rol 
 
 ### Base: `/api/administracion/palabras-prohibidas`
 
-Todos los endpoints de este módulo requieren rol ADMINISTRADOR. `PalabraProhibidaRequest` recibe `palabra` (texto de hasta 100 caracteres) y `severidad` (`GRAVE` o `SOSPECHOSA`, enum `SeveridadPalabra`).
+Todos los endpoints de este módulo requieren rol MODERADOR. `PalabraProhibidaRequest` recibe `palabra` (texto de hasta 100 caracteres) y `severidad` (`GRAVE` o `SOSPECHOSA`, enum `SeveridadPalabra`).
 
 #### `GET /api/administracion/palabras-prohibidas`
 - Recibe: parámetros de paginación (`page`, `size`, `sort`).
@@ -3475,42 +3497,43 @@ Este módulo administra los dos espacios promocionales propios de Eventhive. No 
 ```
 
 #### `GET /api/banners-home/admin`
-- Requiere rol `ADMINISTRADOR`.
-- Devuelve: `ApiResponse<List<BannerHomeDTO>>` con exactamente los dos espacios administrativos (posiciones 1 y 2). Si un espacio no tiene banner, sus campos son `null`, excepto `posicion`.
+- Requiere rol `MARKETING`.
+- Devuelve: `ApiResponse<List<BannerHomeDTO>>` con exactamente los dos espacios administrativos (posiciones 1 y 2). Si un espacio no tiene banner, sus campos son `null`, excepto `posicion` y `ocupado: false`.
+- **Nota**: El título (`titulo`) es opcional. Que un banner no tenga título no significa que el espacio esté disponible; el campo `ocupado: true` (e `id != null`) define si el espacio está en uso.
 - Respuesta: HTTP 200.
 
 #### `POST /api/banners-home`
-- Requiere rol `ADMINISTRADOR`.
+- Requiere rol `MARKETING`.
 - Content-Type: `multipart/form-data`.
-- Parámetros: `posicion` (int: 1 o 2), `titulo` (string), `textoBoton` (string), `enlaceUrl` (string), `imagen` (archivo obligatorio).
+- Parámetros: `posicion` (int: 1 o 2), `titulo` (string opcional), `textoBoton` (string obligatorio), `enlaceUrl` (string obligatorio), `imagen` (archivo obligatorio).
 - Devuelve: `ApiResponse<BannerHomeDTO>` con HTTP 201 Created.
-- Validaciones: posición válida, la posición debe estar vacía, los campos de texto no pueden estar vacíos y la imagen es obligatoria. No se puede crear un tercer espacio ni duplicar una posición.
+- Validaciones: posición válida (1 o 2), la posición debe estar vacía, `textoBoton` y `enlaceUrl` obligatorios, `titulo` opcional (máx 150 caracteres) y la imagen es obligatoria. No se puede crear un tercer espacio ni duplicar una posición.
 - Imagen: se carga a Supabase Storage (PNG, JPG o WebP, máximo 5 MB); la respuesta contiene `imagenUrl`, no el archivo.
 
 #### `POST /api/banners-home/{posicion}`
-- Requiere rol `ADMINISTRADOR`.
+- Requiere rol `MARKETING`.
 - Content-Type: `multipart/form-data`.
-- Parámetros: `posicion` en el path (int: 1 o 2), `titulo`, `textoBoton`, `enlaceUrl` e `imagen` (archivo obligatorio).
+- Parámetros: `posicion` en el path (int: 1 o 2), `titulo` (string opcional), `textoBoton`, `enlaceUrl` e `imagen` (archivo obligatorio).
 - Devuelve: `ApiResponse<BannerHomeDTO>` con HTTP 201 Created.
 - Aplica las mismas validaciones de creación; si la posición ya existe, devuelve error 400.
 
 #### `PUT /api/banners-home/{posicion}`
-- Requiere rol `ADMINISTRADOR`.
+- Requiere rol `MARKETING`.
 - Content-Type: `multipart/form-data`.
-- Parámetros: `posicion` en el path (int: 1 o 2), `titulo`, `textoBoton`, `enlaceUrl` e `imagen` (archivo opcional; si se omite, se conserva la imagen actual).
+- Parámetros: `posicion` en el path (int: 1 o 2), `titulo` (string opcional), `textoBoton`, `enlaceUrl` e `imagen` (archivo opcional; si se omite, se conserva la imagen actual).
 - Devuelve: `ApiResponse<BannerHomeDTO>` con HTTP 200.
-- Validaciones: los campos de texto no pueden estar vacíos y la posición debe tener un banner creado; si no existe, devuelve error 404.
+- Validaciones: `textoBoton` y `enlaceUrl` no pueden estar vacíos, `titulo` es opcional, y la posición debe tener un banner creado; si no existe, devuelve error 404.
 
 #### `DELETE /api/banners-home/{posicion}`
-- Requiere rol `ADMINISTRADOR`.
+- Requiere rol `MARKETING`.
 - Parámetro: `posicion` en el path (int: 1 o 2).
 - Elimina el registro de la posición indicada y libera ese espacio. Si no existe, devuelve error 404.
 - Devuelve `ApiResponse<Void>` con HTTP 200 y el mensaje `Banner eliminado exitosamente`.
 
 #### Respuestas de error
-- Posición distinta de `1` o `2`, campos de texto vacíos, creación sobre una posición ocupada o imagen faltante al crear: HTTP 400.
+- Posición distinta de `1` o `2`, texto del botón o enlace vacíos, creación sobre una posición ocupada o imagen faltante al crear: HTTP 400.
 - Intentar actualizar o eliminar una posición sin banner: HTTP 404.
-- Usuario sin rol `ADMINISTRADOR`: HTTP 403.
+- Usuario sin rol `MARKETING`: HTTP 403.
 
 ---
 
@@ -3533,7 +3556,7 @@ Este módulo administra los dos espacios promocionales propios de Eventhive. No 
   - `REPRESENTANTE`: solo puede invitar a `OPERADOR` para su propia organización (determinada por el representante autenticado). No puede invitar moderadores, marketing ni administradores.
   - La cuenta de destino no debe poseer ya un rol administrativo o estar vinculada a una organización distinta.
   - Si ya existe una invitación pendiente para ese correo, el sistema realiza un reenvío seguro: invalida el token previo, genera un nuevo token criptográfico de 32 bytes con expiración de 24 horas y reenvía el correo, previniendo duplicados en la base de datos.
-  - Si el envío de correo falla (SMTP), la transacción se revierte por completo evitando dejar invitaciones huérfanas.
+  - Si el envío por Gmail API falla, la transacción se revierte por completo evitando dejar invitaciones huérfanas.
 - **Respuesta**: HTTP 201 Created.
   ```json
   {
@@ -3740,7 +3763,7 @@ Este módulo administra los dos espacios promocionales propios de Eventhive. No 
 
 #### `GET /api/organizaciones/mis-operadores`
 - **Roles autorizados**: `REPRESENTANTE`.
-- **Descripción**: Lista todos los operadores activos pertenecientes a la organización del representante con sus respectivos permisos granulares sobre eventos.
+- **Descripción**: Lista los operadores activos vinculados a la organización del representante.
 - **Devuelve**: `ApiResponse<PagedResponse<OperadorDTO>>`
 - **Ejemplo de respuesta**:
   ```json
@@ -3753,7 +3776,6 @@ Este módulo administra los dos espacios promocionales propios de Eventhive. No 
           "id": 14,
           "nombreCompleto": "Andrés Operador",
           "correo": "andres@eventos.com",
-          "permisosEvento": ["CHECK_IN", "CREAR_EVENTO", "EDITAR_EVENTO"]
         }
       ],
       "pageNumber": 0,
@@ -3864,12 +3886,14 @@ Este módulo administra los dos espacios promocionales propios de Eventhive. No 
   - Por arquitectura y seguridad mediante `@PreAuthorize`, su acceso operativo está enfocado exclusivamente en:
     - Validación y control de acceso / ingreso de tiquetes (`POST /api/boletos/checkin`, `POST /api/boletos/validar`).
     - Consulta y actualización de su propio perfil de usuario.
+    - Consulta, creación y cancelación de sus propias compras y consulta de sus boletos.
   - No tiene permisos para crear, editar, solicitar revisión o cancelar eventos ni localidades.
   - No puede invitar usuarios ni alterar su rol.
 - **MODERADOR**:
   - Bandeja de eventos pendientes de revisión (`GET /api/moderaciones/eventos/pendientes`).
   - Aprobación o solicitud de correcciones en eventos (`PATCH .../aprobar`, `PATCH .../solicitar-correccion`).
   - Consulta de eventos administrativos.
+  - Gestión de palabras prohibidas (`/api/administracion/palabras-prohibidas`).
 - **MARKETING**:
   - Gestión de planes promocionales y comisiones (`/api/marketing/planes`).
   - Consulta de campañas y eventos con promoción pagada (`GET /api/marketing/eventos-promocionados`).
@@ -3879,7 +3903,7 @@ Este módulo administra los dos espacios promocionales propios de Eventhive. No 
   - Envío de comunicados oficiales administrativos (`POST /api/admin/correos/enviar`).
   - Revocación de roles y eliminación administrativa de cuentas.
   - Aprobación de organizaciones, validación de RUT y gestión de niveles.
-  - Administración de banners del home, categorías y palabras prohibidas.
+  - Administración de banners del home y categorías.
   - Métricas globales de la plataforma.
 
 ---
@@ -3959,14 +3983,14 @@ Para la operación en producción (por ejemplo en Render) y desarrollo local, se
 | `GROQ_MODEL` | Identificador del modelo de lenguaje en Groq | `llama-3.1-8b-instant` |
 | `GROQ_BASE_URL` | URL base compatible con OpenAI de Groq | `https://api.groq.com/openai/v1` |
 | `GROQ_RPM_LIMIT` | Límite preventivo de peticiones por minuto (margen de seguridad) | `25` |
-| `MAIL_HOST` | Host del servidor relay SMTP de Brevo / Gmail API | `smtp-relay.brevo.com` |
-| `MAIL_PORT` | Puerto SMTP con STARTTLS | `587` |
-| `MAIL_USERNAME` | Usuario SMTP (clave de API Brevo o login de relay) | `7a1b2c...@smtp-brevo.com` |
-| `MAIL_PASSWORD` | Contraseña SMTP (Master SMTP Key de Brevo) | `xsmtpsib-...` |
-| `MAIL_FROM` | Remitente verificado en la consola de correos | `eventhiveContacto@gmail.com` |
+| `GMAIL_CLIENT_ID` | Client ID OAuth de Google para Gmail API | Configurado en Google Cloud |
+| `GMAIL_CLIENT_SECRET` | Client secret OAuth de Google para Gmail API | Configurado en Google Cloud |
+| `GMAIL_REFRESH_TOKEN` | Refresh token autorizado con permiso `gmail.send` | Token generado en OAuth |
+| `GMAIL_SENDER` | Dirección de Gmail autorizada como remitente | `eventhiveContacto@gmail.com` |
+| `GMAIL_REDIRECT_URI` | URI de callback OAuth registrada en Google Cloud | `https://<app>/oauth2/callback/google` |
 | `MAIL_FROM_NAME` | Nombre visible del remitente en los correos | `EventHive` |
-| `MAIL_MAX_REINTENTOS` | Número de intentos automáticos ante fallos de conexión | `2` |
-| `FRONTEND_URL` | URL base del frontend para enlaces de invitación | `https://eventhive-ruby-zeta.vercel.app` |
+| `MAIL_MAX_REINTENTOS` | Número de intentos automáticos ante fallos de Gmail API | `2` |
+| `FRONTEND_URL` | URL base del frontend para enlaces y origen CORS único. CORS usa `http://localhost:5173` como fallback cuando falta o está vacía. | `https://eventhive-ruby-zeta.vercel.app` |
 | `DB_URL` | URL de conexión JDBC a PostgreSQL (Supabase Session Pooler) | `jdbc:postgresql://...` |
 | `DB_USERNAME` | Usuario de base de datos PostgreSQL | `postgres.[id_proyecto]` |
 | `DB_PASSWORD` | Contraseña de base de datos PostgreSQL | `...` |
@@ -4044,7 +4068,7 @@ Endpoints ultraligeros de sondeo de estado operativo, diseñados para consumir 0
 El sistema de recomendaciones personalizadas de EventHive integra el backend Spring Boot con un microservicio predictivo desarrollado en **Python FastAPI** (`eventhive_predictive_python`). El sistema opera bajo un esquema híbrido de consulta bajo demanda y notificaciones reactivas de alta afinidad por correo electrónico.
 
 #### `GET /api/recommendations` o `GET /api/recomendaciones`
-- **Roles autorizados**: Autenticado (`CLIENTE`, `REPRESENTANTE`, `OPERADOR`, `MODERADOR`, `MARKETING`, `ADMINISTRADOR`).
+- **Roles autorizados**: Cualquier usuario autenticado (`CLIENTE`, `REPRESENTANTE`, `OPERADOR`, `MODERADOR`, `MARKETING`, `ADMINISTRADOR`).
 - **Parámetros**:
   - `limit` (query param, entero opcional, por defecto `10`): cantidad máxima de eventos recomendados a devolver.
 - **Descripción del flujo**:
@@ -4369,5 +4393,3 @@ flowchart TD
 1. **Nunca asumir formato fijo**: No asumir que todas las imágenes contienen el subdominio de Supabase o la estructura `/object/public/`.
 2. **Prioridad a la consistencia de datos**: Si un archivo previo no puede identificarse o eliminarse físicamente en el storage, **la transacción de base de datos nunca debe cancelarse ni arrojar HTTP 500**.
 3. **Imágenes por defecto**: Las entidades `Evento`, `Organizacion`, `Usuario`, `Categoria` y `Banner` aceptan URLs externas como portadas o logos de prueba sin provocar errores al ser reemplazadas o eliminadas.
-
-

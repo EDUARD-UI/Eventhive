@@ -16,13 +16,14 @@ export const promotionPlanService = {
         precio: Number(p.precio || 0),
         precioFormateado: `$${Number(p.precio || 0).toLocaleString('es-CO')} COP`,
         detallePublicidad: p.detallePublicidad || '',
-        comisionPorcentaje: Number(p.comisionPorcentaje || 0),
+        comisionPorcentaje: Number(p.comisionPorcentaje ?? p.porcentajeComision ?? 0),
+        porcentajeComision: Number(p.porcentajeComision ?? p.comisionPorcentaje ?? 0),
         premium: Boolean(p.premium),
         pautaRedes: Boolean(p.pautaRedes || p.llevaPautaRedes),
         popular: Boolean(p.premium),
         beneficios: [
           p.premium ? 'Banner rotativo en el Carrusel Principal del Home' : 'Destacado en cartelera y catálogo',
-          `Comisión comercial de ${p.comisionPorcentaje || 0}%`,
+          `Comisión comercial de ${p.comisionPorcentaje ?? p.porcentajeComision ?? 0}%`,
           p.detallePublicidad || 'Posicionamiento oficial garantizado',
         ],
       }));
@@ -47,7 +48,8 @@ export const promotionPlanService = {
         precio: Number(p.precio || 0),
         precioFormateado: `$${Number(p.precio || 0).toLocaleString('es-CO')} COP`,
         detallePublicidad: p.detallePublicidad || '',
-        comisionPorcentaje: Number(p.comisionPorcentaje || 0),
+        comisionPorcentaje: Number(p.comisionPorcentaje ?? p.porcentajeComision ?? 0),
+        porcentajeComision: Number(p.porcentajeComision ?? p.comisionPorcentaje ?? 0),
         premium: Boolean(p.premium),
         pautaRedes: Boolean(p.pautaRedes || p.llevaPautaRedes),
       }));
@@ -62,10 +64,29 @@ export const promotionPlanService = {
   },
 
   /**
+   * Carga una imagen publicitaria al servidor/Supabase:
+   * POST /api/marketing/imagenes
+   * Recibe FormData con campo 'imagen'.
+   * Devuelve { url: string }
+   */
+  async subirImagenMarketing(file) {
+    if (!file) throw new Error('No se ha proporcionado ningún archivo para subir.');
+    const formData = new FormData();
+    formData.append('imagen', file);
+    const res = await httpClient.post('/marketing/imagenes', formData, { isFormData: true });
+    const url = res?.url || (typeof res === 'string' ? res : null);
+    if (!url) {
+      throw new Error('El servidor no retornó una URL válida para la imagen.');
+    }
+    return url;
+  },
+
+  /**
    * Crea un nuevo plan publicitario:
    * POST /api/marketing/planes
    */
   async crearPlan(planData) {
+    const comision = Number(planData.comisionPorcentaje ?? planData.porcentajeComision ?? 0);
     const payload = {
       nombre: planData.nombre?.trim(),
       codigo: planData.codigo?.trim().toUpperCase(),
@@ -73,7 +94,8 @@ export const promotionPlanService = {
       detallePublicidad: planData.detallePublicidad?.trim() || '',
       premium: Boolean(planData.premium),
       pautaRedes: Boolean(planData.pautaRedes),
-      comisionPorcentaje: Number(planData.comisionPorcentaje || 0),
+      comisionPorcentaje: comision,
+      porcentajeComision: comision,
     };
     return httpClient.post('/marketing/planes', payload);
   },
@@ -83,6 +105,7 @@ export const promotionPlanService = {
    * PUT /api/marketing/planes/{id}
    */
   async actualizarPlan(id, planData) {
+    const comision = Number(planData.comisionPorcentaje ?? planData.porcentajeComision ?? 0);
     const payload = {
       nombre: planData.nombre?.trim(),
       codigo: planData.codigo?.trim().toUpperCase(),
@@ -90,7 +113,8 @@ export const promotionPlanService = {
       detallePublicidad: planData.detallePublicidad?.trim() || '',
       premium: Boolean(planData.premium),
       pautaRedes: Boolean(planData.pautaRedes),
-      comisionPorcentaje: Number(planData.comisionPorcentaje || 0),
+      comisionPorcentaje: comision,
+      porcentajeComision: comision,
     };
     return httpClient.put(`/marketing/planes/${id}`, payload);
   },

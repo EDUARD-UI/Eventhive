@@ -14,7 +14,7 @@ import Registro from '../pages/Registro.jsx';
 import RutaProtegida from './RutaProtegida.jsx';
 import PerfilRouteGuard from './PerfilRouteGuard.jsx';
 import PasarelaPagoPage from '../pages/PasarelaPagoPage.jsx';
-import { session, normalizeRole, getDashboardPathForRole } from '../services/session.js';
+import { session, normalizeRole, getDashboardPathForRole, isTokenExpired } from '../services/session.js';
 import AcercaDe from '../pages/SobreNosotros/AcercaDe.jsx';
 import Privacidad from '../pages/SobreNosotros/Privacidad.jsx';
 import Terminos from '../pages/SobreNosotros/Terminos.jsx';
@@ -30,6 +30,11 @@ import AceptarInvitacionPage from '../pages/AceptarInvitacionPage.jsx';
 function GuestOnlyRoute({ children }) {
   const token = session.getToken();
   const user = session.getUser();
+
+  if (token && isTokenExpired(token) && !session.isDevSession()) {
+    session.clear();
+    return children;
+  }
 
   if (token && user?.role) {
     const role = normalizeRole(user.role);
