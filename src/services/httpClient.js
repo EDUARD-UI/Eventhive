@@ -112,25 +112,27 @@ function cerrarSesionYRedirigir() {
 }
 
 async function request(path, { method = 'GET', params, body, isFormData = false, skipAuth = false, _retried = false } = {}) {
-  // Rutas de autenticación pública que no deben pasar por refresh de token ni enviar Authorization
-  const esRutaAuthPublica =
-    path === '/auth/login' ||
-    path === '/auth/refresh' ||
-    path === '/auth/registro' ||
-    path.startsWith('/auth/verificar-codigo') ||
-    path.startsWith('/auth/reenviar-codigo');
-  const omitirAutenticacion = skipAuth || esRutaAuthPublica;
+  // Rutas de consulta pública que no requieren autenticación obligatoria para visualizarse
+  const esRutaPublica =
+    path.startsWith('/auth/') ||
+    path.startsWith('/eventos') ||
+    path.startsWith('/categorias') ||
+    path.startsWith('/banners-home') ||
+    path.startsWith('/organizaciones') ||
+    path.startsWith('/promociones/planes') ||
+    path.startsWith('/chatbot/');
+
+  const omitirAutenticacion = skipAuth || esRutaPublica;
 
   let token = session.getToken();
 
-  // 1. REFRESH PREVENTIVO: Si el token existe pero está expirado o vence en < 15s,
-  // refrescarlo silenciosamente ANTES de disparar la petición para evitar errores 401 en consola.
+  // 1. REFRESH PREVENTIVO: Solo para rutas estrictamente privadas que requieren token
   if (!omitirAutenticacion && token && isTokenExpired(token)) {
     const sesionRenovada = await intentarRefrescarToken();
     if (sesionRenovada) {
       token = session.getToken();
     } else {
-      // Si el refresh token falló o expiró, cerramos la sesión y redirigimos
+      // Si el refresh token falló o expiró en una ruta privada, cerramos la sesión y redirigimos
       cerrarSesionYRedirigir();
       throw new Error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
     }
@@ -143,8 +145,15 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
   } catch {
     headers['Accept-Language'] = 'es';
   }
-  if (!isFormData) headers['Content-Type'] = 'application/json';
-  if (!omitirAutenticacion && token && token !== 'dev-session-token') {
+
+  // En peticiones GET y HEAD nunca se envía Content-Type para mantener la solicitud como "Simple Request" CORS
+  const isBodyAllowed = method !== 'GET' && method !== 'HEAD';
+  if (!isFormData && isBodyAllowed && body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  // Solo adjuntamos Authorization si no es dev-session y el token es válido
+  if (!omitirAutenticacion && token && token !== 'dev-session-token' && !isTokenExpired(token)) {
     headers.Authorization = `Bearer ${token}`;
   }
 
@@ -158,14 +167,21 @@ async function request(path, { method = 'GET', params, body, isFormData = false,
     response = await fetch(buildUrl(path, params), {
       method,
       headers,
-      body: isFormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
+      body: isFormData ? body : isBodyAllowed && body !== undefined ? JSON.stringify(body) : undefined,
       signal: controller.signal,
     });
   } catch (err) {
     if (err.name === 'AbortError') {
-      throw new Error('Error de servidor. Por favor, reintenta más tarde.');
+      const error = new Error('El servidor tardó demasiado en responder. Por favor, reintenta más tarde.');
+      error.status = 504;
+      throw error;
     }
-    throw new Error('Error de servidor. Por favor, reintenta más tarde.');
+    // Errores de red o rechazo de conexión (ej. servidor Azure detenido o fuera de servicio)
+    const error = new Error('No fue posible conectar con el servidor de EventHive. El servicio puede estar temporalmente suspendido o en mantenimiento.');
+    error.status = 503;
+    error.isNetworkError = true;
+    error.originalError = err;
+    throw error;
   } finally {
     if (timeoutId) clearTimeout(timeoutId);
   }
