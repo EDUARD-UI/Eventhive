@@ -34,10 +34,11 @@ import {
   ProfileMetric,
 } from '../../components/Shared/DashboardProfileComponents.jsx';
 import ModalTicketQR from '../../components/perfilUsuario/ModalTicketQR.jsx';
+import TicketQRCode from '../../components/perfilUsuario/TicketQRCode.jsx';
 import { session, extractPhotoUrl } from '../../services/session.js';
 import userService, { readFileAsDataUrl } from '../../services/userService.js';
 import moderationService from '../../services/moderationService.js';
-import { organizerService } from '../../services/organizerService.js';
+import { ticketService } from '../../services/ticketService.js';
 import { formatPrice, formatHora12 } from '../../utils/formatters.js';
 
 const formatBoletoFecha = (fechaRaw) => {
@@ -104,6 +105,7 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
 
   // Compras y Boletos del moderador
   const [compras, setCompras] = useState([]);
+  const [ticketsError, setTicketsError] = useState('');
   const [ticketModal, setTicketModal] = useState(null);
   const [selectedCompraTickets, setSelectedCompraTickets] = useState([]);
 
@@ -146,39 +148,23 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
       })
       .catch(() => {});
 
-    const sessionUser = session.getUser() || {};
-    const userStorageKey = sessionUser?.id ? `eventhive_local_compras_${sessionUser.id}` : null;
-    let localCompras = [];
-    try {
-      if (userStorageKey) {
-        localCompras = JSON.parse(localStorage.getItem(userStorageKey) || '[]');
-      }
-      if (localCompras.length === 0) {
-        const legacyCompras = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
-        localCompras = legacyCompras.filter((item) => {
-          if (item?.userId && sessionUser?.id) return String(item.userId) === String(sessionUser.id);
-          if (item?.userEmail && sessionUser?.email) {
-            return String(item.userEmail).toLowerCase() === String(sessionUser.email).toLowerCase();
-          }
-          return false;
-        });
-      }
-    } catch {
-      localCompras = [];
-    }
-
-    organizerService
-      .getMisCompras({ page: 0, size: 50 })
-      .then((comprasRes) => {
+    ticketService
+      .getMisComprasConBoletos()
+      .then((result) => {
         if (!isMounted) return;
-        const itemsCompras = Array.isArray(comprasRes)
-          ? comprasRes
-          : comprasRes?.content || comprasRes?.data || [];
-        setCompras([...localCompras, ...itemsCompras]);
+        setCompras(result.compras);
+        setTicketsError(
+          result.errorCount > 0
+            ? 'No fue posible consultar los boletos de algunas compras.'
+            : ''
+        );
       })
       .catch((err) => {
-        console.warn('No se pudo cargar compras en perfil moderador:', err);
-        if (isMounted) setCompras(localCompras);
+        console.warn('No se pudieron cargar las compras y boletos del perfil moderador:', err);
+        if (isMounted) {
+          setCompras([]);
+          setTicketsError('No fue posible cargar tus boletos desde el servidor.');
+        }
       });
 
     return () => {
@@ -378,60 +364,27 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
   const rechazadosCount = stats.rechazados ?? 0;
   const totalAuditados = publicadosCount + enCorreccionCount + rechazadosCount;
 
-  // Formatear boletos digitales a partir de las compras reales y locales
+  // Formatear boletos emitidos por el backend
   const boletosList = React.useMemo(() => {
     const list = [];
     compras.forEach((compra) => {
-      const evento = compra.evento || {};
-      const localidad = compra.localidad || {};
-      const boletos = compra.boletos || [];
-
-      if (boletos.length > 0) {
-        boletos.forEach((b) => {
-          list.push({
-            id: b.codigo || `TKT-${b.id || compra.id}`,
-            compraId: compra.id,
-            evento: b.eventoTitulo || evento.titulo || compra.eventoTitulo || 'Evento EventHive',
-            eventoId: evento.id || b.eventoId,
-            fecha: formatBoletoFecha(evento.fecha || compra.fechaCompra),
-            hora: evento.hora ? formatHora12(evento.hora) : 'Hora por confirmar',
-            lugar: evento.lugar || evento.ubicacion || 'Cartagena de Indias',
-            zona: b.localidadNombre || localidad.nombre || 'Entrada General',
-            asiento: b.asiento || b.numeroAsiento || 'Acceso General',
-            titular: b.titular || nombre || 'Moderador',
-            precio: b.precio ? formatPrice(b.precio) : formatPrice(compra.total || 0),
-            estado: b.estado || compra.estado || 'Válido para ingreso',
-            codigoQR: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
-              b.codigo || `TKT-${b.id || compra.id}-${nombre}`
-            )}`,
-          });
+      (compra.boletos || []).forEach((boleto) => {
+        list.push({
+          ...boleto,
+          evento: boleto.evento || '—',
+          fecha: boleto.fecha ? formatBoletoFecha(boleto.fecha) : '—',
+          hora: boleto.hora ? formatHora12(boleto.hora) : '—',
+          lugar: boleto.lugar || '—',
+          zona: boleto.zona || '—',
+          asiento: boleto.asiento || '—',
+          titular: boleto.titular || '—',
+          precio: boleto.precio === null ? '—' : formatPrice(boleto.precio),
+          estado: boleto.estado || '—',
         });
-      } else {
-        const cantidad = compra.cantidad || 1;
-        for (let i = 1; i <= cantidad; i++) {
-          const tktId = `TKT-${compra.id}-${i}`;
-          list.push({
-            id: tktId,
-            compraId: compra.id,
-            evento: evento.titulo || compra.eventoTitulo || 'Evento EventHive',
-            eventoId: evento.id || compra.eventoId,
-            fecha: formatBoletoFecha(evento.fecha || compra.fechaCompra),
-            hora: evento.hora ? formatHora12(evento.hora) : 'Hora por confirmar',
-            lugar: evento.lugar || evento.ubicacion || 'Cartagena de Indias',
-            zona: localidad.nombre || compra.localidadNombre || 'Entrada General',
-            asiento: `Boleto #${i}`,
-            titular: nombre || 'Moderador',
-            precio: formatPrice(compra.total || 0),
-            estado: compra.estado || 'Válido para ingreso',
-            codigoQR: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
-              `${tktId}-${nombre}`
-            )}`,
-          });
-        }
-      }
+      });
     });
     return list;
-  }, [compras, nombre]);
+  }, [compras]);
 
   // Abrir modal de QR directamente desde una compra
   const handleOpenTicketModalForCompra = (compra) => {
@@ -440,26 +393,12 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
       setTicketModal(matchingTickets[0]);
       setSelectedCompraTickets(matchingTickets);
     } else {
-      const evento = compra.evento || {};
-      const localidad = compra.localidad || {};
-      const fallbackTicket = {
-        id: `TKT-${compra.id}`,
-        compraId: compra.id,
-        evento: evento.titulo || compra.eventoTitulo || 'Evento Cultural EventHive',
-        fecha: formatBoletoFecha(evento.fecha || compra.fechaCompra),
-        hora: evento.hora ? formatHora12(evento.hora) : 'Hora por confirmar',
-        lugar: evento.lugar || evento.ubicacion || 'Cartagena de Indias',
-        zona: localidad.nombre || compra.localidadNombre || 'Entrada General',
-        asiento: 'Acceso General',
-        titular: nombre || 'Moderador',
-        precio: formatPrice(compra.total || 0),
-        estado: compra.estado || 'Válido para ingreso',
-        codigoQR: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
-          `TKT-${compra.id}-${nombre}`
-        )}`,
-      };
-      setTicketModal(fallbackTicket);
-      setSelectedCompraTickets([fallbackTicket]);
+      Swal.fire({
+        icon: 'info',
+        title: 'Boletos no disponibles',
+        text: 'El servidor no devolvió boletos asociados a esta compra.',
+        confirmButtonColor: '#087fea',
+      });
     }
   };
 
@@ -735,7 +674,11 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
             </Link>
           </div>
 
-          {boletosList.length === 0 ? (
+          {boletosList.length === 0 && ticketsError ? (
+            <div role="alert" className="rounded-3xl border border-rose-200 bg-rose-50 p-8 text-center text-sm text-rose-800">
+              {ticketsError}
+            </div>
+          ) : boletosList.length === 0 ? (
             <div className="bg-white rounded-3xl border border-dashed border-slate-200 p-10 sm:p-14 text-center shadow-xs">
               <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-3.5 border border-amber-200/80">
                 <FiShoppingBag size={22} />
@@ -744,7 +687,7 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
                 Aún no tienes boletos adquiridos
               </h4>
               <p className="text-xs font-medium text-slate-500 max-w-sm mx-auto mb-5">
-                Como moderador también puedes adquirir entradas y asistir a los eventos culturales oficiales de Cartagena.
+                No hay boletos asociados a tus compras.
               </p>
               <Link
                 to="/buscar"
@@ -803,16 +746,14 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
                     {/* QR en miniatura y Botón de Apertura de QR Completo */}
                     <div className="pt-3 border-t border-dashed border-slate-200 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5">
-                        <img
-                          src={ticket.codigoQR}
-                          alt="QR Boleto"
-                          className="w-12 h-12 rounded-lg border border-slate-200 p-0.5 bg-white shrink-0 shadow-2xs"
-                        />
+                        <TicketQRCode value={ticket.codigoQR} size={48} />
                         <div>
                           <p className="text-[11px] font-mono font-bold text-slate-900 flex items-center gap-1">
-                            <FiCheckCircle size={12} className="text-emerald-500" /> {ticket.estado}
+                            {ticket.estado === '—' ? null : <FiCheckCircle size={12} className="text-emerald-500" />} {ticket.estado}
                           </p>
-                          <p className="text-[10px] text-slate-400 font-medium">Acceso Oficial</p>
+                          <p className="text-[10px] text-slate-400 font-medium">
+                            {ticket.codigoQR || 'Código no disponible'}
+                          </p>
                         </div>
                       </div>
 
@@ -853,7 +794,11 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
             </span>
           </div>
 
-          {compras.length === 0 ? (
+          {compras.length === 0 && ticketsError ? (
+            <div role="alert" className="rounded-3xl border border-rose-200 bg-rose-50 p-8 text-center text-sm text-rose-800">
+              {ticketsError}
+            </div>
+          ) : compras.length === 0 ? (
             <div className="bg-white rounded-3xl border border-dashed border-slate-200 p-10 sm:p-14 text-center shadow-xs">
               <div className="w-12 h-12 mx-auto rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center mb-3.5 border border-slate-200">
                 <FiClock size={22} />
@@ -875,11 +820,15 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
           ) : (
             <div className="space-y-3">
               {compras.map((compra, index) => {
-                const evento = compra.evento || {};
-                const total = compra.total ? formatPrice(compra.total) : '$0';
-                const fecha = formatBoletoFecha(compra.fechaCompra || evento.fecha);
-                const orderId = compra.id || index + 1;
-                const boletosCount = compra.boletos?.length || compra.cantidad || 1;
+                const items = compra.items || compra.detalles || [];
+                const eventNames = items.map((item) => item.eventoNombre).filter(Boolean);
+                const firstTicket = compra.boletos?.[0];
+                const total = compra.total === null || compra.total === undefined
+                  ? '—'
+                  : formatPrice(compra.total);
+                const fecha = compra.fechaCompra ? formatBoletoFecha(compra.fechaCompra) : '—';
+                const orderId = compra.id ?? `compra-${index + 1}`;
+                const boletosCount = compra.boletos?.length || 0;
 
                 return (
                   <div
@@ -895,19 +844,19 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
                           <FiCalendar size={11} className="text-brand" />
                           <span>{fecha}</span>
                         </span>
-                        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          Pago Confirmado
+                        <span className="text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                          {compra.estado || '—'}
                         </span>
                       </div>
 
                       <h4 className="text-sm sm:text-base font-bold text-slate-900">
-                        {evento.titulo || compra.eventoTitulo || 'Evento Cultural EventHive'}
+                        {eventNames.length > 0 ? eventNames.join(', ') : firstTicket?.evento || '—'}
                       </h4>
 
                       <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
                         <span className="flex items-center gap-1">
                           <FiMapPin size={11} />
-                          <span>{evento.lugar || evento.ubicacion || 'Cartagena de Indias'}</span>
+                          <span>{firstTicket?.lugar || '—'}</span>
                         </span>
                         <span>·</span>
                         <span>{boletosCount} entrada(s)</span>
@@ -927,11 +876,12 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
                       <button
                         type="button"
                         onClick={() => handleOpenTicketModalForCompra(compra)}
+                        disabled={boletosCount === 0}
                         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
                         title="Ver código QR de los boletos"
                       >
                         <FiExternalLink size={13} />
-                        <span>Ver boletos (QR)</span>
+                        <span>Ver boletos ({boletosCount})</span>
                       </button>
                     </div>
                   </div>

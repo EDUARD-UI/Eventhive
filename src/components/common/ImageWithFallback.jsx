@@ -45,7 +45,7 @@ export default function ImageWithFallback({
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
         decoding="async"
-        fetchPriority={priority ? 'high' : 'auto'}
+        fetchpriority={priority ? 'high' : 'auto'}
         onError={() => setHasError(true)}
         onLoad={onLoad}
         className={`h-full w-full object-center ${defaultFit} transition-all duration-300 ${imgClassName}`}

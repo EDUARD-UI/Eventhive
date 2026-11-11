@@ -5,24 +5,23 @@ import PerfilUsuario from '../pages/PerfilUsuario.jsx';
 
 /**
  * Guard específico para /perfil:
- * Si quien accede es un ADMINISTRADOR o un ORGANIZADOR, se le redirige inmediatamente
- * a su respectivo panel (/admin o /organizacion).
- * Esta vista de /perfil queda restringida exclusivamente para CLIENTES / USUARIOS compradores.
+ * Los clientes y operadores comparten el perfil personal; los demás roles regresan a su panel.
  */
 export default function PerfilRouteGuard() {
   const navigate = useNavigate();
   const user = session.getUser();
   const token = session.getToken();
   const role = normalizeRole(user?.role);
+  const canAccessProfile = role === 'CLIENTE' || role === 'OPERADOR';
 
   useEffect(() => {
-    if (token && role && role !== 'CLIENTE') {
+    if (token && role && !canAccessProfile) {
       const targetPath = getDashboardPathForRole(role);
       navigate(targetPath, { replace: true });
     }
-  }, [token, role, navigate]);
+  }, [token, role, canAccessProfile, navigate]);
 
-  if (token && role && role !== 'CLIENTE') {
+  if (token && role && !canAccessProfile) {
     return null;
   }
 

@@ -78,22 +78,22 @@ export const normalizeEvent = (event) => {
       event.precio != null
         ? Number(event.precio)
         : event.price != null
-        ? Number(event.price)
-        : Array.isArray(event.localidades) && event.localidades.length > 0
-        ? Number(event.localidades[0]?.precio ?? event.localidades[0]?.price ?? 0)
-        : null,
+          ? Number(event.price)
+          : Array.isArray(event.localidades) && event.localidades.length > 0
+            ? Number(event.localidades[0]?.precio ?? event.localidades[0]?.price ?? 0)
+            : null,
     minPrice:
       Array.isArray(event.localidades) && event.localidades.length > 0
         ? Math.min(
-            ...event.localidades
-              .map((l) => Number(l.precio ?? l.price))
-              .filter((n) => !isNaN(n) && n >= 0)
-          )
+          ...event.localidades
+            .map((l) => Number(l.precio ?? l.price))
+            .filter((n) => !isNaN(n) && n >= 0)
+        )
         : event.precio != null
-        ? Number(event.precio)
-        : event.price != null
-        ? Number(event.price)
-        : null,
+          ? Number(event.precio)
+          : event.price != null
+            ? Number(event.price)
+            : null,
     favorite: false,
     photo: event.imagenPromocional || event.urlImagenDestacado || event.foto || event.fotoUrl || event.imagen || event.imagenUrl || event.banner || null,
     organization: event.organizacion || event.organizador,
@@ -113,10 +113,10 @@ export async function getCarouselEvents() {
     const content = Array.isArray(data)
       ? data
       : Array.isArray(data?.data)
-      ? data.data
-      : Array.isArray(data?.content)
-      ? data.content
-      : [];
+        ? data.data
+        : Array.isArray(data?.content)
+          ? data.content
+          : [];
 
     return content
       .map((item, idx) => {
@@ -124,16 +124,16 @@ export async function getCarouselEvents() {
           typeof item === 'string'
             ? item
             : item?.url_imagen_promocionado ||
-              item?.urlImagenPromocionado ||
-              item?.url_imagen_destacado ||
-              item?.urlImagenDestacado ||
-              item?.url_imagen ||
-              item?.urlImagen ||
-              item?.url ||
-              item?.imagen ||
-              item?.foto ||
-              item?.photo ||
-              '';
+            item?.urlImagenPromocionado ||
+            item?.url_imagen_destacado ||
+            item?.urlImagenDestacado ||
+            item?.url_imagen ||
+            item?.urlImagen ||
+            item?.url ||
+            item?.imagen ||
+            item?.foto ||
+            item?.photo ||
+            '';
 
         if (!imageUrl) return null;
 
@@ -197,6 +197,7 @@ export async function getCarouselEvents() {
       })
       .filter(Boolean);
   } catch (err) {
+    if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
     console.warn('No se pudo consultar /eventos/carrusel:', err?.message);
     return [];
   }
@@ -240,6 +241,7 @@ export async function getPrimerEventoDestacado() {
       hora: data.hora || '',
     };
   } catch (err) {
+    if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
     console.warn('Error consultando /eventos/primer-destacado:', err?.message);
     return null;
   }
@@ -253,14 +255,15 @@ export async function getFeaturedEvents({ page = 0, size = 10, sort } = {}) {
     const content = Array.isArray(data)
       ? data
       : Array.isArray(data?.data?.content)
-      ? data.data.content
-      : Array.isArray(data?.data)
-      ? data.data
-      : Array.isArray(data?.content)
-      ? data.content
-      : [];
+        ? data.data.content
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.content)
+            ? data.content
+            : [];
     return content.map(normalizeEvent);
   } catch (err) {
+    if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
     console.warn('Error consultando /eventos/destacados:', err?.message);
     return [];
   }
@@ -276,12 +279,12 @@ export async function getUpcomingEvents({ page = 0, size = 8 } = {}) {
   const content = Array.isArray(proximosData)
     ? proximosData
     : Array.isArray(proximosData?.data?.content)
-    ? proximosData.data.content
-    : Array.isArray(proximosData?.data)
-    ? proximosData.data
-    : Array.isArray(proximosData?.content)
-    ? proximosData.content
-    : [];
+      ? proximosData.data.content
+      : Array.isArray(proximosData?.data)
+        ? proximosData.data
+        : Array.isArray(proximosData?.content)
+          ? proximosData.content
+          : [];
   return content.map(normalizeEvent);
 }
 
@@ -368,6 +371,7 @@ export async function getMapEvents({ categoriaId, lat, lng, limite = 10 } = {}) 
 
     return merged.map(normalizeEvent);
   } catch (err) {
+    if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
     console.warn('Error consultando /eventos/mapa:', err?.message);
     return [];
   }

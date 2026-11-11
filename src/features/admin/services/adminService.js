@@ -17,6 +17,7 @@ export const adminService = {
       const data = await httpClient.get('/admin/estadisticas/organizaciones-por-validacion');
       return { success: true, data };
     } catch (err) {
+      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
       console.warn('Endpoint /admin/estadisticas/organizaciones-por-validacion fallback:', err);
       return {
         success: true,
@@ -35,6 +36,7 @@ export const adminService = {
       const data = await httpClient.get('/admin/estadisticas/eventos-por-estado');
       return { success: true, data: Array.isArray(data) ? data : [] };
     } catch (err) {
+      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
       console.warn('Endpoint /admin/estadisticas/eventos-por-estado fallback:', err);
       return { success: true, data: [] };
     }
@@ -45,6 +47,7 @@ export const adminService = {
       const data = await httpClient.get('/admin/estadisticas/eventos-por-categoria');
       return { success: true, data: Array.isArray(data) ? data : [] };
     } catch (err) {
+      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
       console.warn('Endpoint /admin/estadisticas/eventos-por-categoria fallback:', err);
       return { success: true, data: [] };
     }
@@ -55,6 +58,7 @@ export const adminService = {
       const data = await httpClient.get('/admin/estadisticas/top-eventos-ventas');
       return { success: true, data: Array.isArray(data) ? data : [] };
     } catch (err) {
+      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
       console.warn('Endpoint /admin/estadisticas/top-eventos-ventas fallback:', err);
       return { success: true, data: [] };
     }
@@ -72,6 +76,7 @@ export const adminService = {
             : [];
       return { success: true, data: organizations };
     } catch (err) {
+      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
       console.warn('Endpoint /admin/estadisticas/top-organizaciones-ventas fallback:', err);
       return { success: true, data: [] };
     }
@@ -168,7 +173,7 @@ export const adminService = {
       // Extraer conteos por estado de organización
       const orgAprobadas = orgsValData?.porEstado?.find((e) => e.estado === 'APROBADA')?.cantidad ?? 0;
       const orgSuspendidas = orgsValData?.porEstado?.find((e) => e.estado === 'SUSPENDIDA')?.cantidad ?? 0;
-      const orgPendientes = orgsValData?.porEstado?.find((e) => e.estado === 'PENDIENTE_REVISION' || e.estado === 'PENDIENTE')?.cantidad ?? solicitudesPendientes;
+      const orgPendientes = orgsValData?.porEstado?.find((e) => e.estado === 'PENDIENTE_REVISION')?.cantidad ?? solicitudesPendientes;
 
       const ventaBrutaTotal = Number(ingresosData?.ventaBrutaTotal || 0);
       const comisionesVentas = Number(ingresosData?.comisionesVentas || 0);

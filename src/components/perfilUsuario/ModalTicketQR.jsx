@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { FiX, FiDownload } from 'react-icons/fi';
 import { showInfoAlert } from '../../utils/alertUtils.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
+import TicketQRCode from './TicketQRCode.jsx';
 
 export default function ModalTicketQR({ ticket: initialTicket, tickets = [], onClose }) {
   const { t } = useLanguage();
@@ -55,13 +56,9 @@ export default function ModalTicketQR({ ticket: initialTicket, tickets = [], onC
         </p>
 
         <div className="my-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 inline-block shadow-inner">
-          <img
-            src={ticket.codigoQR}
-            alt="QR Code"
-            className="w-44 h-44 mx-auto object-contain rounded-lg bg-white p-2"
-          />
+          <TicketQRCode value={ticket.codigoQR} size={176} className="mx-auto" />
           <p className="font-mono text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-widest">
-            {t('Código de Acceso Oficial')}
+            {ticket.codigoQR || t('Código no disponible')}
           </p>
         </div>
 

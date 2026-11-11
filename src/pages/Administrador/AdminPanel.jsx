@@ -210,7 +210,7 @@ export default function AdminPanel() {
 
   // Contadores dinámicos para los ítems del menú lateral
   const orgsPendientesCount = useMemo(
-    () => organizaciones.filter((o) => o.estado === 'PENDIENTE' || o.estado === 'PENDIENTE_REVISION').length,
+    () => organizaciones.filter((o) => o.estado === 'PENDIENTE_REVISION').length,
     [organizaciones]
   );
 

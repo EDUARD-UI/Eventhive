@@ -166,12 +166,12 @@ export default function AdminUsuariosView({
             className="w-full sm:w-auto text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           >
             <option value="TODOS">Todos los Roles</option>
-            <option value="CLIENTE">Clientes</option>
+            <option value="ADMINISTRADOR">Administradores</option>
+            <option value="MODERADOR">Moderadores</option>
             <option value="REPRESENTANTE">Representantes</option>
             <option value="OPERADOR">Operadores</option>
-            <option value="MODERADOR">Moderadores</option>
+            <option value="CLIENTE">Clientes</option>
             <option value="MARKETING">Marketing</option>
-            <option value="ADMINISTRADOR">Administradores</option>
           </select>
 
           

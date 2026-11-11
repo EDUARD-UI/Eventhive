@@ -17,6 +17,7 @@ import AjustesPartial from './partial/AjustesPartial.jsx';
 import { usePerfilUsuario } from './usePerfilUsuario.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
+import DashboardNotifications from '../../components/common/DashboardNotifications.jsx';
 
 export default function PerfilUsuario() {
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ export default function PerfilUsuario() {
     organizacionesSeguidas,
     organizacionesDisponibles,
     boletosList,
+    ticketsError,
     eventosProximos,
     eventosHistorial,
     passwordForm,
@@ -76,7 +78,7 @@ export default function PerfilUsuario() {
       {/* Contenedor Flotante Principal Centrado */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
         {/* Botón Volver: Por fuera del div header, en la esquina superior izquierda */}
-        <div className="flex items-center justify-start w-full">
+        <div className="flex items-center justify-between w-full">
           <button
             type="button"
             onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
@@ -85,6 +87,7 @@ export default function PerfilUsuario() {
             <FiArrowLeft size={16} />
             <span>{t('Volver')}</span>
           </button>
+          <DashboardNotifications />
         </div>
 
         {/* 1. Tarjeta Superior de Identidad Centrada (Mockup) */}
@@ -163,6 +166,7 @@ export default function PerfilUsuario() {
                 {activeTab === 'entradas' && (
                   <BoletosPartial
                     boletosList={boletosList}
+                    loadError={ticketsError}
                     onSelectTicket={setTicketModal}
                   />
                 )}

@@ -27,7 +27,10 @@ import { promotionPlanService } from '../../services/promotionPlanService.js';
 import StatCard from '../../components/Shared/StatCard.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
 import PlanCard from '../../components/Shared/PlanCard.jsx';
+import Pagination from '../../components/Shared/Pagination.jsx';
 import { formatPrice } from '../../utils/formatters.js';
+
+const EVENTOS_POR_PAGINA = 6;
 
 // Pin temático ámbar para el mapa de posicionamiento cultural
 const positionPinIcon = () =>
@@ -63,6 +66,7 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
   const [loadingEventos, setLoadingEventos] = useState(true);
   const [loadingPlanes, setLoadingPlanes] = useState(true);
   const [selectedEventoId, setSelectedEventoId] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [planes, setPlanes] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [procesando, setProcesando] = useState(false);
@@ -98,10 +102,10 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
   const loadEventosPublicados = async () => {
     setLoadingEventos(true);
     try {
-      const data = await organizerService.getEventosOrganizador({ page: 0, size: 200 });
-      const items = Array.isArray(data) ? data : data?.content || data?.data || [];
+      const items = await organizerService.getTodosEventosOrganizador();
       const publicados = items.filter((ev) => ev.estado === 'PUBLICADO');
       setEventosPublicados(publicados);
+      setCurrentPage(1);
       if (publicados.length > 0 && !selectedEventoId) {
         setSelectedEventoId(String(publicados[0].id));
       }
@@ -120,6 +124,10 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
   const selectedEvento = eventosPublicados.find(
     (ev) => String(ev.id) === String(selectedEventoId)
   );
+  const eventosPublicadosPaginados = useMemo(() => {
+    const start = (currentPage - 1) * EVENTOS_POR_PAGINA;
+    return eventosPublicados.slice(start, start + EVENTOS_POR_PAGINA);
+  }, [eventosPublicados, currentPage]);
 
   // Eventos actualmente promocionados
   const eventosConPromocion = useMemo(() => {
@@ -333,7 +341,7 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {eventosPublicados.map((ev) => {
+            {eventosPublicadosPaginados.map((ev) => {
               const isSelected = String(ev.id) === String(selectedEventoId);
               const isPromocionado = Boolean(ev.promocionado || ev.destacado);
 
@@ -389,6 +397,15 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
               );
             })}
           </div>
+        )}
+        {!loadingEventos && eventosPublicados.length > EVENTOS_POR_PAGINA && (
+          <Pagination
+            currentPage={currentPage}
+            totalItems={eventosPublicados.length}
+            pageSize={EVENTOS_POR_PAGINA}
+            onPageChange={setCurrentPage}
+            showPageSize={false}
+          />
         )}
       </div>
 

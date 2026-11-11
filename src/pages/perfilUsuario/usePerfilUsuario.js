@@ -4,13 +4,14 @@ import { userService } from '../../services/userService.js';
 import { organizerService, organizationService } from '../../services/organizerService.js';
 import followService from '../../services/followService.js';
 import { normalizeEvent } from '../../services/eventService.js';
+import { ticketService } from '../../services/ticketService.js';
 import { session } from '../../services/session.js';
 import { formatPrice, formatHora12 } from '../../utils/formatters.js';
 import { sanitizeText, sanitizePhone } from '../../utils/sanitizer.js';
 import { showSuccessAlert, showErrorAlert, showWarningAlert } from '../../utils/alertUtils.js';
 
 const formatBoletoFecha = (fechaRaw) => {
-  if (!fechaRaw) return 'Fecha por confirmar';
+  if (!fechaRaw) return '—';
   if (typeof fechaRaw === 'string') {
     const trimmed = fechaRaw.trim();
     if (trimmed.includes('T') || (trimmed.includes('-') && trimmed.length >= 10)) {
@@ -92,6 +93,7 @@ export function usePerfilUsuario() {
   // Datos reales de listas
   const [guardados, setGuardados] = useState([]);
   const [compras, setCompras] = useState([]);
+  const [ticketsError, setTicketsError] = useState('');
   const [organizacionesSeguidas, setOrganizacionesSeguidas] = useState([]);
   const [organizacionesDisponibles, setOrganizacionesDisponibles] = useState([]);
 
@@ -115,7 +117,7 @@ export function usePerfilUsuario() {
         const [perfilRes, deseosRes, comprasRes, orgsRes, seguidasRes] = await Promise.allSettled([
           userService.getPerfil(),
           organizerService.getDeseos({ page: 0, size: 50 }),
-          organizerService.getMisCompras({ page: 0, size: 50 }),
+          ticketService.getMisComprasConBoletos(),
           organizationService.listOrganizations({ page: 0, size: 50, skipAuth: true }),
           organizationService.getOrganizacionesSeguidas({ page: 0, size: 50 }),
         ]);
@@ -160,34 +162,18 @@ export function usePerfilUsuario() {
           setGuardados([]);
         }
 
-        // 3. Procesar mis compras y boletos (con aislamiento por usuario en localStorage)
-        const userStorageKey = sessionUser?.id ? `eventhive_local_compras_${sessionUser.id}` : null;
-        let localCompras = [];
-        try {
-          if (userStorageKey) {
-            localCompras = JSON.parse(localStorage.getItem(userStorageKey) || '[]');
-          }
-          if (localCompras.length === 0) {
-            const legacyCompras = JSON.parse(localStorage.getItem('eventhive_local_compras') || '[]');
-            localCompras = legacyCompras.filter((item) => {
-              if (item?.userId && sessionUser?.id) return String(item.userId) === String(sessionUser.id);
-              if (item?.userEmail && sessionUser?.email) {
-                return String(item.userEmail).toLowerCase() === String(sessionUser.email).toLowerCase();
-              }
-              return false;
-            });
-          }
-        } catch {
-          localCompras = [];
-        }
-
-        if (comprasRes.status === 'fulfilled' && comprasRes.value) {
-          const itemsCompras = Array.isArray(comprasRes.value)
-            ? comprasRes.value
-            : comprasRes.value?.content || comprasRes.value?.data || [];
-          setCompras([...localCompras, ...itemsCompras]);
+        // 3. Procesar compras y boletos emitidos por el backend
+        if (comprasRes.status === 'fulfilled') {
+          setCompras(comprasRes.value.compras);
+          setTicketsError(
+            comprasRes.value.errorCount > 0
+              ? 'No fue posible consultar los boletos de algunas compras.'
+              : ''
+          );
         } else {
-          setCompras(localCompras);
+          console.warn('No se pudieron cargar las compras y boletos del backend:', comprasRes.reason);
+          setCompras([]);
+          setTicketsError('No fue posible cargar tus boletos desde el servidor.');
         }
 
         // 4. Procesar organizaciones y seguidas
@@ -234,73 +220,45 @@ export function usePerfilUsuario() {
   const boletosList = useMemo(() => {
     const list = [];
     compras.forEach((compra) => {
-      const evento = compra.evento || {};
-      const localidad = compra.localidad || {};
-      const boletos = compra.boletos || [];
-
-      if (boletos.length > 0) {
-        boletos.forEach((b) => {
-          list.push({
-            id: b.codigo || `TKT-${b.id || compra.id}`,
-            compraId: compra.id,
-            evento: b.eventoTitulo || evento.titulo || compra.eventoTitulo || 'Evento EventHive',
-            eventoId: evento.id || b.eventoId,
-            fecha: formatBoletoFecha(evento.fecha || compra.fechaCompra),
-            hora: evento.hora ? formatHora12(evento.hora) : 'Hora por confirmar',
-            lugar: evento.lugar || evento.ubicacion || 'Cartagena de Indias',
-            zona: b.localidadNombre || localidad.nombre || 'Entrada General',
-            asiento: b.asiento || b.numeroAsiento || 'Acceso General',
-            titular: b.titular || usuario.nombreCompleto || 'Titular',
-            precio: b.precio ? formatPrice(b.precio) : formatPrice(compra.total || 0),
-            estado: b.estado || compra.estado || 'Válido para ingreso',
-            codigoQR: `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-              b.codigo || `TKT-${b.id || compra.id}-${usuario.nombreCompleto}`
-            )}`,
-          });
+      (compra.boletos || []).forEach((boleto) => {
+        list.push({
+          ...boleto,
+          evento: boleto.evento || '—',
+          fecha: boleto.fecha ? formatBoletoFecha(boleto.fecha) : '—',
+          hora: boleto.hora ? formatHora12(boleto.hora) : '—',
+          lugar: boleto.lugar || '—',
+          zona: boleto.zona || '—',
+          asiento: boleto.asiento || '—',
+          titular: boleto.titular || '—',
+          precio: boleto.precio === null ? '—' : formatPrice(boleto.precio),
+          estado: boleto.estado || '—',
         });
-      } else {
-        const cantidad = compra.cantidad || 1;
-        for (let i = 1; i <= cantidad; i++) {
-          const tktId = `TKT-${compra.id}-${i}`;
-          list.push({
-            id: tktId,
-            compraId: compra.id,
-            evento: evento.titulo || compra.eventoTitulo || 'Evento EventHive',
-            eventoId: evento.id || compra.eventoId,
-            fecha: formatBoletoFecha(evento.fecha || compra.fechaCompra),
-            hora: evento.hora ? formatHora12(evento.hora) : 'Hora por confirmar',
-            lugar: evento.lugar || evento.ubicacion || 'Cartagena de Indias',
-            zona: localidad.nombre || compra.localidadNombre || 'Entrada General',
-            asiento: `Boleto #${i}`,
-            titular: usuario.nombreCompleto || 'Titular',
-            precio: formatPrice(compra.total || 0),
-            estado: compra.estado || 'Válido para ingreso',
-            codigoQR: `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-              `${tktId}-${usuario.nombreCompleto}`
-            )}`,
-          });
-        }
-      }
+      });
     });
     return list;
   }, [compras, usuario.nombreCompleto]);
 
   // Clasificar eventos de compras en Próximos e Historial
   const { eventosProximos, eventosHistorial } = useMemo(() => {
-    const proximos = [];
-    const historial = [];
+    const eventsById = new Map();
     const now = new Date();
 
     compras.forEach((compra) => {
-      const ev = compra.evento ? normalizeEvent(compra.evento) : null;
-      if (!ev) return;
+      (compra.boletos || []).forEach((ticket) => {
+        const event = ticket.eventoDetalle;
+        if (!event || typeof event !== 'object') return;
+        const normalized = normalizeEvent(event);
+        const key = normalized.id ?? normalized.title;
+        if (key) eventsById.set(String(key), normalized);
+      });
+    });
 
-      const eventDate = ev.startsAt ? new Date(ev.startsAt) : null;
-      if (eventDate && eventDate < now) {
-        historial.push(ev);
-      } else {
-        proximos.push(ev);
-      }
+    const proximos = [];
+    const historial = [];
+    eventsById.forEach((event) => {
+      const eventDate = event.startsAt ? new Date(event.startsAt) : null;
+      if (eventDate && eventDate < now) historial.push(event);
+      else proximos.push(event);
     });
 
     return { eventosProximos: proximos, eventosHistorial: historial };
@@ -638,6 +596,7 @@ export function usePerfilUsuario() {
     organizacionesSeguidas,
     organizacionesDisponibles,
     boletosList,
+    ticketsError,
     eventosProximos,
     eventosHistorial,
     passwordForm,

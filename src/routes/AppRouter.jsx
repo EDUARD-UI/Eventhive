@@ -39,7 +39,7 @@ function GuestOnlyRoute({ children }) {
   if (token && user?.role) {
     const role = normalizeRole(user.role);
     if (role === 'CLIENTE' || role === 'OPERADOR') {
-      return <Navigate to="/" replace />;
+      return <Navigate to={role === 'OPERADOR' ? '/perfil' : '/'} replace />;
     }
     return <Navigate to={getDashboardPathForRole(user.role)} replace />;
   }
@@ -138,7 +138,7 @@ export default function AppRouter() {
           }
         />
 
-        {/* Perfil exclusivo de clientes compradores (si entra un Admin u Organizador, es redirigido a su panel) */}
+        {/* Perfil personal compartido por clientes y operadores */}
         <Route
           path="/perfil"
           element={

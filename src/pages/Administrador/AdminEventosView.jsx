@@ -84,8 +84,11 @@ export default function AdminEventosView({
           >
             <option value="TODOS">Todos los Estados</option>
             <option value="PUBLICADO">Publicados</option>
-            <option value="EN_REVISION">En Revisión</option>
+            <option value="PENDIENTE_REVISION">Pendiente de revisión</option>
             <option value="EN_CORRECCION">En Corrección</option>
+            <option value="BORRADOR">Borrador</option>
+            <option value="CANCELADO">Cancelados</option>
+            <option value="RECHAZADO">Rechazados</option>
             <option value="SUSPENDIDO">Suspendidos</option>
             <option value="FINALIZADO">Finalizados</option>
           </select>

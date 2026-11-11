@@ -37,7 +37,7 @@ export default function AdminOrganizacionesView({
     const list = Array.isArray(initialOrganizaciones) && initialOrganizaciones.length > 0
       ? initialOrganizaciones
       : (Array.isArray(organizacionesList) ? organizacionesList : []);
-    return list.filter((o) => o?.estado === 'APROBADA' || o?.estado === 'VERIFICADA').length;
+    return list.filter((o) => o?.estado === 'APROBADA').length;
   }, [initialOrganizaciones, organizacionesList]);
 
   const countPendientes = useMemo(() => {
@@ -45,7 +45,7 @@ export default function AdminOrganizacionesView({
       ? initialOrganizaciones
       : (Array.isArray(organizacionesList) ? organizacionesList : []);
     return list.filter(
-      (o) => o?.estado === 'PENDIENTE' || o?.estado === 'PENDIENTE_REVISION' || o?.estado === 'EN_REVISION'
+      (o) => o?.estado === 'PENDIENTE_REVISION'
     ).length;
   }, [initialOrganizaciones, organizacionesList]);
 
@@ -53,7 +53,7 @@ export default function AdminOrganizacionesView({
     const list = Array.isArray(initialOrganizaciones) && initialOrganizaciones.length > 0
       ? initialOrganizaciones
       : (Array.isArray(organizacionesList) ? organizacionesList : []);
-    return list.filter((o) => o?.estado === 'SUSPENDIDA' || o?.estado === 'RECHAZADA').length;
+    return list.filter((o) => o?.estado === 'SUSPENDIDA').length;
   }, [initialOrganizaciones, organizacionesList]);
 
   // Carga reactiva de organizaciones utilizando los endpoints paginados del backend
@@ -100,18 +100,9 @@ export default function AdminOrganizacionesView({
 
   // Conteo rápido de estados (de los datos disponibles o totales)
   const getDisplayBadge = (org) => {
-    const rawEstado = org.estado ? String(org.estado).toUpperCase() : 'PENDIENTE';
+    const rawEstado = org.estado ? String(org.estado).toUpperCase() : 'PENDIENTE_REVISION';
 
-    // Regla 2: Si tiene el RUT rechazado, debe mostrarse como suspendida hasta que realice una nueva verificación
-    if (rawEstado === 'RECHAZADA') {
-      return (
-        <Badge variant="danger" size="xs" title="Suspendida por RUT rechazado">
-          SUSPENDIDA
-        </Badge>
-      );
-    }
-
-    if (rawEstado === 'APROBADA' || rawEstado === 'VERIFICADA') {
+    if (rawEstado === 'APROBADA') {
       return (
         <Badge variant="success" size="xs">
           APROBADA
@@ -127,7 +118,7 @@ export default function AdminOrganizacionesView({
       );
     }
 
-    if (rawEstado === 'PENDIENTE_REVISION' || rawEstado === 'EN_REVISION' || rawEstado === 'PENDIENTE') {
+    if (rawEstado === 'PENDIENTE_REVISION') {
       return (
         <Badge variant="warning" size="xs">
           EN REVISIÓN
@@ -192,17 +183,17 @@ export default function AdminOrganizacionesView({
         <button
           type="button"
           onClick={() => {
-            setFiltroEstado('PENDIENTE');
+            setFiltroEstado('PENDIENTE_REVISION');
             setCurrentPage(1);
           }}
           className={`p-4 rounded-2xl border text-left transition-all ${
-            filtroEstado === 'PENDIENTE'
+            filtroEstado === 'PENDIENTE_REVISION'
               ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
               : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50 hover:border-slate-300'
           }`}
         >
           <span className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
-            filtroEstado === 'PENDIENTE' ? 'text-slate-300' : 'text-slate-500'
+            filtroEstado === 'PENDIENTE_REVISION' ? 'text-slate-300' : 'text-slate-500'
           }`}>
             <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
             <span>En Revisión</span>
@@ -263,7 +254,7 @@ export default function AdminOrganizacionesView({
           >
             <option value="TODOS">Todos los Estados</option>
             <option value="APROBADA">Solo Aprobadas</option>
-            <option value="PENDIENTE">En Revisión / Pendientes</option>
+            <option value="PENDIENTE_REVISION">En revisión</option>
             <option value="SUSPENDIDA">Suspendidas</option>
           </select>
         </div>
@@ -299,8 +290,8 @@ export default function AdminOrganizacionesView({
                 </tr>
               ) : (
                 organizacionesList.map((org) => {
-                  const rawEstado = org.estado ? String(org.estado).toUpperCase() : 'PENDIENTE';
-                  const isSuspendida = rawEstado === 'SUSPENDIDA' || rawEstado === 'RECHAZADA';
+                  const rawEstado = org.estado ? String(org.estado).toUpperCase() : 'PENDIENTE_REVISION';
+                  const isSuspendida = rawEstado === 'SUSPENDIDA';
                   const razonSocialDisplay = org.razonSocial || org.nombre || 'Organización';
                   const fechaDisplay = org.fechaCreacion
                     ? org.fechaCreacion.split('T')[0]

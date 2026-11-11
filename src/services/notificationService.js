@@ -9,6 +9,7 @@ export const notificationService = {
       const data = await httpClient.get('/notificaciones');
       return Array.isArray(data) ? data : data?.content || [];
     } catch (err) {
+      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
       console.warn('Error al obtener notificaciones:', err);
       return [];
     }
@@ -21,7 +22,8 @@ export const notificationService = {
     try {
       const data = await httpClient.get('/notificaciones/no-leidas');
       return typeof data === 'number' ? data : Number(data) || 0;
-    } catch {
+    } catch (err) {
+      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
       return 0;
     }
   },

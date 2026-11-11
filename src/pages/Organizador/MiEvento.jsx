@@ -281,10 +281,12 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
               <option value="Todos">Todos los estados</option>
               <option value="PUBLICADO">Publicados (Activos)</option>
               <option value="BORRADOR">Borrador</option>
-              <option value="PENDIENTE_REVISION">En revisión</option>
-              <option value="CANCELADO">Cancelados</option>
-              <option value="SUSPENDIDO">Suspendidos</option>
+              <option value="PENDIENTE_REVISION">Pendiente de revisión</option>
               <option value="EN_CORRECCION">En corrección</option>
+              <option value="RECHAZADO">Rechazados</option>
+              <option value="CANCELADO">Cancelados</option>
+              <option value="FINALIZADO">Finalizados</option>
+              <option value="SUSPENDIDO">Suspendidos</option>
             </select>
           </div>
 

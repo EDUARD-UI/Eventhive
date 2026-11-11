@@ -1,3 +1,5 @@
+import { queryClient } from '../config/queryClient.js';
+
 const TOKEN_KEY = 'eventhive_token';
 const REFRESH_TOKEN_KEY = 'eventhive_refresh_token';
 const USER_KEY = 'eventhive_user';
@@ -52,7 +54,7 @@ export const getDashboardPathForRole = (role) => {
     case 'ORGANIZADOR':
       return '/organizacion';
     case 'OPERADOR':
-      return '/';
+      return '/perfil';
     case 'MODERADOR':
       return '/moderador';
     case 'CLIENTE':
@@ -273,6 +275,9 @@ export const session = {
             localStorage.removeItem(key);
           }
         }
+        try {
+          queryClient.clear();
+        } catch {}
       }
     } catch {}
 
@@ -334,6 +339,10 @@ export const session = {
   isDevSession: () => localStorage.getItem(DEV_SESSION_KEY) === 'true',
 
   clear: () => {
+    try {
+      // Limpiar caché de React Query para evitar mostrar datos sensibles entre sesiones
+      queryClient.clear();
+    } catch {}
     try {
       // Limpiar cachés locales de compras y boletos para evitar filtraciones entre cuentas
       localStorage.removeItem('eventhive_local_compras');

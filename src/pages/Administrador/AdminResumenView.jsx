@@ -55,7 +55,7 @@ export default function AdminResumenView({
     metrics?.organizacionesSuspendidas ??
     0;
   const enRevisionCount =
-    orgsPorEstadoBackend.find((e) => e.estado === 'PENDIENTE_REVISION' || e.estado === 'PENDIENTE')?.cantidad ??
+    orgsPorEstadoBackend.find((e) => e.estado === 'PENDIENTE_REVISION')?.cantidad ??
     metrics?.organizacionesPendientes ??
     0;
 
@@ -88,7 +88,7 @@ export default function AdminResumenView({
 
   // Organizaciones con solicitudes o pendientes
   const orgsRequierenAtencion = organizaciones.filter(
-    (o) => o.estado === 'PENDIENTE' || o.estado === 'PENDIENTE_REVISION' || o.estado === 'SUSPENDIDA' || o.estado === 'RECHAZADA'
+    (o) => o.estado === 'PENDIENTE_REVISION' || o.estado === 'SUSPENDIDA'
   );
 
   return (

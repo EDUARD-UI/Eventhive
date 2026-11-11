@@ -126,9 +126,6 @@ export default function AuthLayout({
                 </span>
               ))}
             </span>
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-2">
-              Cartagena Cultural Experience
-            </span>
           </Link>
 
           {/* Contenido Central */}
@@ -265,9 +262,6 @@ export default function AuthLayout({
                   <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 animate-pulse">
                     Hive
                   </span>
-                </span>
-                <span className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-400">
-                  Cartagena Cultural Experience
                 </span>
               </div>
             </Link>

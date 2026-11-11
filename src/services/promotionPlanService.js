@@ -28,6 +28,7 @@ export const promotionPlanService = {
         ],
       }));
     } catch (err) {
+      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
       console.warn('Error al consultar /promociones/planes:', err);
       return [];
     }
@@ -54,7 +55,7 @@ export const promotionPlanService = {
         pautaRedes: Boolean(p.pautaRedes || p.llevaPautaRedes),
       }));
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
+      if (err.status === 401 || err.status === 403 || err?.isNetworkError || (err?.status && err.status >= 500)) {
         throw err;
       }
       console.warn('Error al consultar planes en marketing:', err);

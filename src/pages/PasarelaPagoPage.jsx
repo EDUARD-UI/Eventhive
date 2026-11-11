@@ -159,33 +159,6 @@ export default function PasarelaPagoPage() {
     }
 
     setProcesando(true);
-    const generatedRef = `EVH-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
-
-    const currentUserId = currentUser?.id || currentUser?.sub || null;
-    const currentUserEmail = currentUser?.email || buyerForm?.correo || null;
-
-    const localPurchaseItem = {
-      id: Date.now(),
-      userId: currentUserId,
-      userEmail: currentUserEmail,
-      evento: event || { id: Number(event?.id || id), titulo: 'Entrada Oficial EventHive' },
-      localidad: selectedLocalidad || { nombre: 'General', precio: precioBaseUnitario },
-      total,
-      cantidad: Number(cantidad),
-      fechaCompra: new Date().toISOString(),
-      estado: 'COMPLETADO',
-      boletos: Array.from({ length: Number(cantidad) }).map((_, i) => ({
-        id: `${generatedRef}-${i + 1}`,
-        codigo: `${generatedRef}-${i + 1}`,
-        eventoTitulo: event?.title || 'Entrada Oficial EventHive',
-        eventoId: event?.id || id,
-        localidadNombre: selectedLocalidad?.nombre || 'General',
-        precio: precioBaseUnitario,
-        titular: buyerForm.nombre || cardForm.titular || 'Titular',
-        asiento: `Asiento ${i + 1}`,
-        estado: 'Válido para ingreso',
-      })),
-    };
 
     try {
       const idempotencyKey = `PAY-CARD-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -209,18 +182,11 @@ export default function PasarelaPagoPage() {
       };
 
       const purchase = await organizerService.crearCompra(payload);
-
-      try {
-        const userStorageKey = currentUserId
-          ? `eventhive_local_compras_${currentUserId}`
-          : 'eventhive_local_compras';
-        const existing = JSON.parse(localStorage.getItem(userStorageKey) || '[]');
-        localStorage.setItem(userStorageKey, JSON.stringify([localPurchaseItem, ...existing]));
-      } catch (storageError) {
-        console.warn('No se pudo guardar el respaldo local de la compra confirmada:', storageError);
+      if (purchase?.id === undefined || purchase?.id === null) {
+        throw new Error('El servidor no devolvió el identificador de la compra confirmada.');
       }
 
-      setOrderReference(purchase?.id ? `EVH-${purchase.id}` : generatedRef);
+      setOrderReference(`EVH-${purchase.id}`);
       setIsSuccess(true);
     } catch (err) {
       await showErrorAlert({

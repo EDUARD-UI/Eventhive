@@ -48,8 +48,8 @@ export default function AceptarInvitacionPage() {
         let res;
         try {
           res = await httpClient.get('/invitaciones/roles/validar', { token }, { skipAuth: true });
-        } catch {
-          // Fallback a ruta alternativa si aplica
+        } catch (error) {
+          if (error?.status !== 404) throw error;
           res = await httpClient.get('/invitaciones-rol/validar', { token }, { skipAuth: true });
         }
         setInvitacionData(res);
@@ -72,21 +72,21 @@ export default function AceptarInvitacionPage() {
     setFormError(null);
 
     const nombreTrim = nombre.trim();
-    const telTrim = telefono.trim();
-    const claveTrim = clave.trim();
+    const telTrim = telefono.replace(/\D/g, '').slice(0, 10);
+    const claveTrim = clave;
 
     if (!nombreTrim) {
       setFormError('Por favor ingresa tu nombre completo.');
       return;
     }
 
-    if (!telTrim || telTrim.length < 7) {
-      setFormError('Por favor ingresa un número de teléfono válido (mínimo 7 dígitos).');
+    if (telTrim.length !== 10) {
+      setFormError('El teléfono debe tener exactamente 10 dígitos.');
       return;
     }
 
-    if (claveTrim.length < 8) {
-      setFormError('La contraseña debe tener al menos 8 caracteres.');
+    if (claveTrim.length < 6) {
+      setFormError('La contraseña debe tener al menos 6 caracteres.');
       return;
     }
 
@@ -103,12 +103,12 @@ export default function AceptarInvitacionPage() {
         nombre: nombreTrim,
         telefono: telTrim,
         clave: claveTrim,
-        password: claveTrim,
       };
 
       try {
         await httpClient.post('/invitaciones/roles/aceptar', payload, { skipAuth: true });
-      } catch {
+      } catch (error) {
+        if (error?.status !== 404) throw error;
         await httpClient.post('/invitaciones-rol/aceptar', payload, { skipAuth: true });
       }
 
@@ -188,7 +188,7 @@ export default function AceptarInvitacionPage() {
               <span className="text-slate-600 dark:text-slate-400">Rol asignado:</span>
               <span className="inline-flex items-center gap-1 rounded-md border border-amber-300/80 bg-amber-100 px-2 py-0.5 font-bold text-amber-900 dark:border-amber-400/30 dark:bg-amber-400/15 dark:text-amber-200">
                 <FiShield size={11} />
-                {invitacionData?.rol || invitacionData?.rolDestino || 'COLABORADOR'}
+                {invitacionData?.rol || invitacionData?.rolDestino || '—'}
               </span>
             </div>
             {invitacionData?.organizacionNombre && (
@@ -201,7 +201,7 @@ export default function AceptarInvitacionPage() {
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+          <form onSubmit={handleSubmit} className="space-y-3.5" noValidate>
             {formError && (
               <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-medium flex items-center gap-2">
                 <FiAlertCircle size={15} className="shrink-0" />
@@ -210,56 +210,69 @@ export default function AceptarInvitacionPage() {
             )}
 
             <InputField
-              id="nombre"
-              name="nombre"
+              id="name"
+              name="name"
               type="text"
-              label="Nombre completo"
-              placeholder="Ej: Carlos Silva"
+              label="Nombre y apellido"
+              placeholder="Ej: Sofia Vergara"
               icon={FiUser}
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              required
               autoComplete="name"
+              required
             />
             <InputField
-              id="telefono"
-              name="telefono"
+              id="email"
+              name="email"
+              type="email"
+              label="Correo electrónico"
+              placeholder="ejemplo@cartagena.co"
+              icon={FiMail}
+              value={invitacionData?.correo || invitacionData?.correoInvitado || ''}
+              readOnly
+              autoComplete="email"
+              required
+              className="[&_input]:cursor-not-allowed [&_input]:bg-slate-100 dark:[&_input]:bg-slate-800"
+            />
+            <InputField
+              id="phone"
+              name="phone"
               type="tel"
-              label="Teléfono móvil"
-              placeholder="10 dígitos numéricos"
+              label="Teléfono o WhatsApp de contacto (máx. 10 dígitos)"
+              placeholder="Ej: 3001234567"
               icon={FiPhone}
               value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
+              onChange={(e) => setTelefono(e.target.value.replace(/\D/g, '').slice(0, 10))}
               required
               maxLength={10}
               autoComplete="tel"
             />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <InputField
-                id="clave"
-                name="clave"
+                id="password"
+                name="password"
                 type="password"
                 label="Contraseña"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="••••••••"
                 icon={FiLock}
                 value={clave}
                 onChange={(e) => setClave(e.target.value)}
                 required
-                minLength={8}
+                minLength={6}
                 autoComplete="new-password"
               />
               <InputField
-                id="confirmarClave"
-                name="confirmarClave"
+                id="confirmPassword"
+                name="confirmPassword"
                 type="password"
                 label="Confirmar contraseña"
-                placeholder="Repite la contraseña"
+                placeholder="••••••••"
                 icon={FiLock}
                 value={confirmarClave}
                 onChange={(e) => setConfirmarClave(e.target.value)}
                 required
-                minLength={8}
+                minLength={6}
                 autoComplete="new-password"
               />
             </div>
@@ -267,7 +280,7 @@ export default function AceptarInvitacionPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full mt-2.5 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 hover:shadow-amber-500/35 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full mt-2 py-2 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 hover:shadow-amber-500/35 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
             >
               {submitting ? (
                 <>

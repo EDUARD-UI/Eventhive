@@ -10,10 +10,11 @@ import {
 } from 'react-icons/fi';
 import { useLanguage } from '../../../context/LanguageContext.jsx';
 import Pagination from '../../../components/Shared/Pagination.jsx';
+import TicketQRCode from '../../../components/perfilUsuario/TicketQRCode.jsx';
 
 const TICKETS_PAGE_SIZE = 6;
 
-export default function BoletosPartial({ boletosList = [], onSelectTicket }) {
+export default function BoletosPartial({ boletosList = [], loadError = '', onSelectTicket }) {
   const { t } = useLanguage();
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(boletosList.length / TICKETS_PAGE_SIZE));
@@ -22,6 +23,14 @@ export default function BoletosPartial({ boletosList = [], onSelectTicket }) {
     (safePage - 1) * TICKETS_PAGE_SIZE,
     safePage * TICKETS_PAGE_SIZE
   );
+
+  if (boletosList.length === 0 && loadError) {
+    return (
+      <div role="alert" className="rounded-3xl border border-rose-200 bg-rose-50 p-8 text-center text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200">
+        {loadError}
+      </div>
+    );
+  }
 
   if (boletosList.length === 0) {
     return (
@@ -96,16 +105,14 @@ export default function BoletosPartial({ boletosList = [], onSelectTicket }) {
               {/* QR y Acciones */}
               <div className="pt-3 border-t border-dashed border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <img
-                    src={ticket.codigoQR}
-                    alt="QR Boleto"
-                    className="w-12 h-12 rounded-lg border border-slate-200 dark:border-slate-700 p-0.5 bg-white shrink-0 shadow-2xs"
-                  />
+                  <TicketQRCode value={ticket.codigoQR} size={48} />
                   <div>
                     <p className="text-[11px] font-mono font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1">
-                      <FiCheckCircle size={12} className="text-emerald-500" /> {ticket.estado}
+                      {ticket.estado === '—' ? null : <FiCheckCircle size={12} className="text-emerald-500" />} {ticket.estado}
                     </p>
-                    <p className="text-[10px] text-slate-400 font-medium">{t('Acceso Oficial')}</p>
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      {ticket.codigoQR || 'Código no disponible'}
+                    </p>
                   </div>
                 </div>
 

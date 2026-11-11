@@ -60,8 +60,9 @@ export default function RutaProtegida({ children, rolesPermitidos }) {
             });
             setCurrentUser(userUpdated);
           }
-        } catch {
-          if (!session.getUser()?.role) {
+        } catch (err) {
+          // Si es un error de conexión, no destruir la sesión inmediatamente para preservar credenciales
+          if (!err?.isNetworkError && !session.getUser()?.role) {
             session.clear();
             if (activo) setCurrentUser(null);
           }
@@ -99,25 +100,7 @@ export default function RutaProtegida({ children, rolesPermitidos }) {
   // 2. Si se especifican roles permitidos y el usuario no lo posee:
   if (rolesPermitidos && rolesPermitidos.length > 0) {
     const userRole = normalizeRole(currentUser.role || currentUser.rol);
-
-    const isAuthorized = rolesPermitidos.some((r) => {
-      const allowed = normalizeRole(r);
-      if (allowed === userRole) return true;
-      // Compatibilidad de acceso entre roles de organización
-      if (
-        (allowed === 'REPRESENTANTE' || allowed === 'OPERADOR' || allowed === 'ORGANIZADOR') &&
-        (userRole === 'REPRESENTANTE' || userRole === 'OPERADOR' || userRole === 'ORGANIZADOR')
-      ) {
-        return true;
-      }
-      if (
-        (allowed === 'ADMINISTRADOR' || allowed === 'ADMIN') &&
-        (userRole === 'ADMINISTRADOR' || userRole === 'ADMIN')
-      ) {
-        return true;
-      }
-      return false;
-    });
+    const isAuthorized = rolesPermitidos.some((role) => normalizeRole(role) === userRole);
 
     if (!isAuthorized) {
       const redirectPath = getDashboardPathForRole(userRole);

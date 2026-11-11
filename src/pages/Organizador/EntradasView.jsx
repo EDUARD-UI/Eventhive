@@ -2,15 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   FiCreditCard,
   FiDollarSign,
-  FiTrendingUp,
   FiSearch,
-  FiLayers,
-  FiCheckCircle,
-  FiActivity,
-  FiTag,
   FiCalendar,
 } from 'react-icons/fi';
-import StatCard from '../../components/Shared/StatCard.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import { organizerService } from '../../services/organizerService.js';
@@ -42,8 +36,7 @@ export default function EntradasView() {
     eventos: [],
   });
 
-  // Lista detallada de eventos con localidades completas
-  const [eventsWithLocalidades, setEventsWithLocalidades] = useState([]);
+  const [organizerEvents, setOrganizerEvents] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -73,12 +66,14 @@ export default function EntradasView() {
       });
 
     const pEvs = organizerService
-      .getEventosOrganizador({ page: 0, size: 200 })
+      .getTodosEventosOrganizador()
       .then((events) => {
         if (!isMounted || !events) return;
-        setEventsWithLocalidades(events);
+        setOrganizerEvents(events);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn('No se pudieron cargar todos los eventos de la organización:', err);
+      });
 
     Promise.allSettled([pEst, pEvs]).finally(() => {
       if (isMounted) setLoading(false);
@@ -89,66 +84,33 @@ export default function EntradasView() {
     };
   }, []);
 
-  // Consolidar eventos con estadísticas y localidades
+  // Consolidar el directorio completo de eventos con sus estadísticas disponibles
   const eventosGanancias = useMemo(() => {
-    const rawList = estadisticas.eventos.length > 0 ? estadisticas.eventos : eventsWithLocalidades;
-    const activeEvs = rawList.filter(
-      (ev) => (ev.estado || '').toUpperCase() !== 'FINALIZADO'
-    );
-
-    return activeEvs.map((ev, idx) => {
-      // Cruzar con información de localidades si está disponible
-      const matchedEvent = eventsWithLocalidades.find(
-        (e) => String(e.id) === String(ev.eventoId || ev.id)
-      );
-
-      const localidades = matchedEvent?.localidades || ev.localidades || [];
-
-      // Calcular boletas y recaudos de respaldo si vienen en localidades
-      let boletasCalculadas = 0;
-      let recaudoCalculado = 0;
-      let capacidadTotal = 0;
-
-      if (Array.isArray(localidades) && localidades.length > 0) {
-        localidades.forEach((loc) => {
-          const cap = Number(loc.capacidad || 0);
-          const disp = Number(loc.disponibles !== undefined ? loc.disponibles : cap);
-          const vend = Math.max(0, cap - disp);
-          boletasCalculadas += vend;
-          recaudoCalculado += vend * Number(loc.precio || 0);
-          capacidadTotal += cap;
-        });
+    const eventosPorId = new Map();
+    organizerEvents.forEach((event) => {
+      if (event.id !== undefined && event.id !== null) {
+        eventosPorId.set(String(event.id), event);
       }
-
-      const boletasFinales = Number(
-        ev.boletasVendidas ??
-          ev.totalBoletasVendidas ??
-          boletasCalculadas
-      );
-
-      const ingresosFinales = Number(
-        ev.ingresosNetos ??
-          ev.ingresosGenerados ??
-          ev.totalIngresos ??
-          ev.ingresos ??
-          recaudoCalculado
-      );
-
-      return {
-        key: `ev-stat-${ev.id || idx}`,
-        id: ev.eventoId || ev.id,
-        titulo: ev.titulo || ev.nombre || ev.nombreEvento || 'Evento Cultural',
-        fecha: matchedEvent?.fecha || ev.fecha,
-        boletasVendidas: boletasFinales,
-        ingresosGenerados: ingresosFinales,
-        estado: ev.estado || matchedEvent?.estado || 'PUBLICADO',
-        localidades,
-        capacidadTotal,
-        pctOcupacion:
-          capacidadTotal > 0 ? Math.round((boletasFinales / capacidadTotal) * 100) : 0,
-      };
     });
-  }, [estadisticas.eventos, eventsWithLocalidades]);
+
+    estadisticas.eventos.forEach((stat, index) => {
+      const id = stat.eventoId ?? stat.id;
+      const key = id === undefined || id === null ? `estadistica-${index}` : String(id);
+      eventosPorId.set(key, { ...eventosPorId.get(key), ...stat, id: id ?? key });
+    });
+
+    return Array.from(eventosPorId.values()).map((ev, idx) => ({
+      key: `ev-stat-${ev.id ?? idx}`,
+      id: ev.eventoId ?? ev.id,
+      titulo: ev.titulo || ev.nombre || ev.nombreEvento || 'Evento Cultural',
+      fecha: ev.fecha,
+      boletasVendidas: Number(ev.boletasVendidas ?? ev.totalBoletasVendidas ?? 0),
+      ingresosGenerados: Number(
+        ev.ingresosNetos ?? ev.ingresosGenerados ?? ev.totalIngresos ?? ev.ingresos ?? 0
+      ),
+      estado: ev.estado || 'PUBLICADO',
+    }));
+  }, [estadisticas.eventos, organizerEvents]);
 
   // Filtrado de eventos
   const filteredEventos = useMemo(() => {
@@ -185,7 +147,7 @@ export default function EntradasView() {
             <span>Gestión de Entradas y Boletaje</span>
           </h2>
           <p className="mt-0.5 text-xs text-slate-500 max-w-xl font-medium">
-            Supervisa en tiempo real el aforo, la venta de boletas por localidad y los recaudos netos de tu organización sin comisiones.
+            Supervisa las ventas de boletas y los recaudos netos de tu organización sin comisiones.
           </p>
         </div>
       </div>
@@ -250,7 +212,12 @@ export default function EntradasView() {
               <option value="Todos">Todos</option>
               <option value="PUBLICADO">Publicados</option>
               <option value="BORRADOR">Borrador</option>
-              <option value="PENDIENTE_REVISION">En revisión</option>
+              <option value="PENDIENTE_REVISION">Pendiente de revisión</option>
+              <option value="EN_CORRECCION">En corrección</option>
+              <option value="RECHAZADO">Rechazados</option>
+              <option value="CANCELADO">Cancelados</option>
+              <option value="FINALIZADO">Finalizados</option>
+              <option value="SUSPENDIDO">Suspendidos</option>
             </select>
           </div>
         </div>
@@ -272,10 +239,10 @@ export default function EntradasView() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
           <div>
             <h3 className="font-display text-base font-black text-slate-900">
-              Rendimiento de Entradas y Aforo por Evento
+              Rendimiento de Entradas y Recaudo por Evento
             </h3>
             <p className="text-xs text-slate-500 font-medium">
-              Detalle consolidado de tickets emitidos y localidades configuradas
+              Detalle consolidado de tickets emitidos y recaudos
             </p>
           </div>
           <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
@@ -337,56 +304,6 @@ export default function EntradasView() {
                   </div>
                 </div>
 
-                {/* Localidades configuradas con barras de progreso de aforo */}
-                {Array.isArray(ev.localidades) && ev.localidades.length > 0 ? (
-                  <div className="pt-2 border-t border-slate-100 space-y-2">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
-                      Localidades ({ev.localidades.length})
-                    </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                      {ev.localidades.map((loc, idx) => {
-                        const cap = Number(loc.capacidad || 0);
-                        const disp = Number(loc.disponibles !== undefined ? loc.disponibles : cap);
-                        const vend = Math.max(0, cap - disp);
-                        const pct = cap > 0 ? Math.round((vend / cap) * 100) : 0;
-
-                        return (
-                          <div
-                            key={loc.id || idx}
-                            className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/80 flex flex-col justify-between gap-1.5"
-                          >
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="font-bold text-slate-900 truncate">
-                                {loc.nombre || `Zona ${idx + 1}`}
-                              </span>
-                              <span className="font-display font-black text-amber-700 text-xs">
-                                {formatPrice(loc.precio || 0)}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center justify-between text-[10px] text-slate-500">
-                              <span>Capacidad: {cap}</span>
-                              <span className="font-bold text-slate-700">{pct}% vendido</span>
-                            </div>
-
-                            <div className="h-1.5 w-full bg-slate-200/80 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all duration-300 ${
-                                  pct >= 90 ? 'bg-emerald-500' : 'bg-amber-500'
-                                }`}
-                                style={{ width: `${Math.min(100, pct)}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="pt-1 text-[11px] text-slate-400 italic">
-                    Sin localidades detalladas para este registro.
-                  </div>
-                )}
               </div>
             ))}
           </div>

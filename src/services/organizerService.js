@@ -145,19 +145,25 @@ export const organizationService = {
       const data = await httpClient.get('/seguidores/mis-seguidos', { page, size });
       const items = Array.isArray(data) ? data : data?.content || data?.data?.content || data?.data || [];
       if (items.length > 0) return items.map(normalizeOrganization);
-    } catch {}
+    } catch (err) {
+      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
+    }
 
     try {
       const data = await httpClient.get('/seguidores/siguiendo', { page, size });
       const items = Array.isArray(data) ? data : data?.content || data?.data?.content || data?.data || [];
       if (items.length > 0) return items.map(normalizeOrganization);
-    } catch {}
+    } catch (err) {
+      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
+    }
 
     try {
       const data = await httpClient.get('/organizaciones/seguidas', { page, size });
       const items = Array.isArray(data) ? data : data?.content || data?.data?.content || data?.data || [];
       if (items.length > 0) return items.map(normalizeOrganization);
-    } catch {}
+    } catch (err) {
+      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
+    }
 
     return [];
   },
@@ -243,7 +249,8 @@ export const organizerService = {
         income: '$0',
         attendees: 0,
       };
-    } catch {
+    } catch (err) {
+      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
       return { eventsActive: 0, ticketsSold: 0, income: '$0', attendees: 0 };
     }
   },
@@ -272,6 +279,32 @@ export const organizerService = {
   /** GET /api/eventos/organizador — returns full paged response object */
   async getEventosOrganizadorPaginated({ page = 0, size = 10 } = {}) {
     return httpClient.get('/eventos/organizador', { page, size });
+  },
+
+  /** GET all organizer events by following the backend pagination metadata */
+  async getTodosEventosOrganizador({ size = 200 } = {}) {
+    const eventos = [];
+    let page = 0;
+
+    while (true) {
+      const response = await httpClient.get('/eventos/organizador', { page, size });
+      const pageData = response?.data?.content ? response.data : response;
+      const content = pageData?.content || (Array.isArray(pageData) ? pageData : []);
+      eventos.push(...content);
+
+      const totalPages = Number(pageData?.totalPages);
+      if (
+        pageData?.last === true ||
+        (Number.isFinite(totalPages) && totalPages > 0 && page + 1 >= totalPages) ||
+        content.length < size
+      ) {
+        break;
+      }
+
+      page += 1;
+    }
+
+    return eventos;
   },
 
   /** Alias en inglés para mantener compatibilidad con consumidores existentes. */

@@ -63,8 +63,9 @@ export async function getFeaturedCategories() {
     const data = await httpClient.get('/categorias/destacadas');
     const list = Array.isArray(data) ? data : data?.content || [];
     if (list.length > 0) return list.map(normalizeCategory);
-  } catch {
-    // Si no está disponible /categorias/destacadas, tomar las primeras de /categorias
+  } catch (err) {
+    if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
+    // Si no está disponible /categorias/destacadas (404), tomar las primeras de /categorias
   }
   const all = await getAllCategories();
   return all.slice(0, 6);
@@ -75,7 +76,8 @@ export async function getCategoryById(categoriaId) {
   try {
     const data = await httpClient.get(`/categorias/${categoriaId}`);
     return data ? normalizeCategory(data) : null;
-  } catch {
+  } catch (err) {
+    if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
     const all = await getAllCategories();
     return all.find((c) => String(c.id) === String(categoriaId)) || null;
   }
