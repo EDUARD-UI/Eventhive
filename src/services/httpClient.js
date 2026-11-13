@@ -152,12 +152,22 @@ async function request(
   path,
   { method = 'GET', params, body, isFormData = false, skipAuth = false, timeout, _retried = false } = {}
 ) {
+  // Rutas de consulta pública que no requieren autenticación obligatoria para visualizarse
+  const esRutaPublica =
+    path.startsWith('/auth/') ||
+    path.startsWith('/eventos') ||
+    path.startsWith('/categorias') ||
+    path.startsWith('/banners-home') ||
+    path.startsWith('/organizaciones') ||
+    path.startsWith('/promociones/planes') ||
+    path.startsWith('/chatbot/');
+
   const omitirAutenticacion = skipAuth || rutasAuthPublicas.has(path);
 
   let token = session.getToken();
 
-  // 1. REFRESH PREVENTIVO: Solo para rutas privadas que requieren token
-  if (!omitirAutenticacion && token && isTokenExpired(token)) {
+  // 1. REFRESH PREVENTIVO: Solo para rutas estrictamente privadas que requieren token
+  if (!omitirAutenticacion && !esRutaPublica && token && isTokenExpired(token)) {
     const sesionRenovada = await intentarRefrescarToken();
     if (sesionRenovada) {
       token = session.getToken();
@@ -180,6 +190,10 @@ async function request(
     headers['Content-Type'] = 'application/json';
   }
 
+  // Si el usuario tiene una sesión activa válida, enviamos Authorization en todas las solicitudes
+  // excepto en rutas estrictamente públicas de autenticación (/auth/login, /auth/registro, etc.)
+  // Esto permite que endpoints con sesión opcional (ej. /eventos/recomendaciones-para-ti)
+  // personalicen la respuesta según Documentacion_Endpoints.md
   if (!omitirAutenticacion && token && token !== 'dev-session-token' && !isTokenExpired(token)) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -228,7 +242,7 @@ async function request(
   // 3. MANEJO REACTIVO DE 401 UNAUTHORIZED
   if (
     response.status === 401 &&
-    !omitirAutenticacion &&
+    requiereAutenticacion &&
     token &&
     token !== 'dev-session-token'
   ) {

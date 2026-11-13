@@ -245,14 +245,6 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
                     </span>
                   )}
                   <span className="truncate">{displayName}</span>
-                  {role && role !== 'CLIENTE' && (
-                    <span className={`ml-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${isDark
-                        ? 'bg-amber-400/20 text-amber-300 border-amber-400/40'
-                        : 'bg-amber-100 text-amber-800 border-amber-200'
-                      }`}>
-                      {role}
-                    </span>
-                  )}
                 </Link>
 
                 <button

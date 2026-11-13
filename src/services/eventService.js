@@ -1,5 +1,6 @@
 import { httpClient } from './httpClient.js';
 import { formatHora12 } from '../utils/formatters.js';
+import session from './session.js';
 
 const getEventPathId = (value) => {
   const id = value && typeof value === 'object' ? value.id : value;
@@ -288,6 +289,42 @@ export async function getUpcomingEvents({ page = 0, size = 8 } = {}) {
   return content.map(normalizeEvent);
 }
 
+/**
+ * Recomendaciones personalizadas para el usuario (GET /api/eventos/recomendaciones-para-ti).
+ * Endpoint público que personaliza según sesión opcional (Spring Boot + FastAPI).
+ * Devuelve hasta 12 eventos de recomendaciones. Si hay usuario autenticado,
+ * se envía su identificador para que el backend calcule la afinidad.
+ */
+export async function getRecomendacionesParaTi({ usuarioId, id, size = 12 } = {}) {
+  try {
+    const user = typeof session !== 'undefined' && session?.getUser ? session.getUser() : null;
+    const resolvedUserId = usuarioId ?? id ?? user?.id ?? user?.usuarioId ?? null;
+
+    const params = { size };
+    if (resolvedUserId) {
+      params.usuarioId = resolvedUserId;
+      params.usuario_id = resolvedUserId;
+      params.id = resolvedUserId;
+    }
+
+    const res = await httpClient.get('/eventos/recomendaciones-para-ti', params);
+    const content = Array.isArray(res)
+      ? res
+      : Array.isArray(res?.content)
+      ? res.content
+      : Array.isArray(res?.data?.content)
+      ? res.data.content
+      : Array.isArray(res?.data)
+      ? res.data
+      : [];
+
+    return content.map(normalizeEvent);
+  } catch (err) {
+    console.warn('Error consultando /eventos/recomendaciones-para-ti:', err?.message);
+    return [];
+  }
+}
+
 
 /**
  * Listado general de eventos públicos paginados (GET /api/eventos).
@@ -417,6 +454,7 @@ export default {
   getPrimerEventoDestacado,
   getFeaturedEvents,
   getUpcomingEvents,
+  getRecomendacionesParaTi,
   getEvents,
   getEventsByCategory,
   getMapEvents,

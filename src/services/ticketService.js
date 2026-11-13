@@ -53,74 +53,87 @@ const mapTicket = (ticket, compra, index) => {
 const loadAllPurchases = async () => {
   const purchases = [];
   let page = 0;
-  const pageSize = 50;
+  const pageSize = 20;
 
-  while (true) {
-    const response = await organizerService.getMisCompras({ page, size: pageSize });
-    const content = getPageContent(response);
-    purchases.push(...content);
+  try {
+    while (true) {
+      const response = await organizerService.getMisCompras({ page, size: pageSize });
+      const content = getPageContent(response);
+      purchases.push(...content);
 
-    const totalPages = Number(response?.totalPages ?? response?.data?.totalPages);
-    if (
-      response?.last === true ||
-      (Number.isFinite(totalPages) && totalPages > 0 && page + 1 >= totalPages) ||
-      content.length < pageSize
-    ) {
-      return purchases;
+      const totalPages = Number(response?.totalPages ?? response?.data?.totalPages);
+      if (
+        response?.last === true ||
+        (Number.isFinite(totalPages) && totalPages > 0 && page + 1 >= totalPages) ||
+        content.length < pageSize
+      ) {
+        return purchases;
+      }
+
+      page += 1;
     }
-
-    page += 1;
+  } catch (err) {
+    console.warn('No se pudieron consultar compras del backend:', err?.message);
+    return purchases;
   }
 };
 
 export const ticketService = {
   async getMisComprasConBoletos() {
-    const purchases = await loadAllPurchases();
-    const results = await Promise.all(
-      purchases.map(async (compra) => {
-        const preloadedTickets = getTicketEntries(compra);
-        if (preloadedTickets.length > 0) {
-          return {
-            compra: {
-              ...compra,
-              boletos: preloadedTickets.map((ticket, index) =>
-                mapTicket(ticket, compra, index)
-              ),
-            },
-            error: null,
-          };
-        }
+    try {
+      const purchases = await loadAllPurchases();
+      const results = await Promise.all(
+        purchases.map(async (compra) => {
+          const preloadedTickets = getTicketEntries(compra);
+          if (preloadedTickets.length > 0) {
+            return {
+              compra: {
+                ...compra,
+                boletos: preloadedTickets.map((ticket, index) =>
+                  mapTicket(ticket, compra, index)
+                ),
+              },
+              error: null,
+            };
+          }
 
-        if (compra.id === undefined || compra.id === null) {
-          return {
-            compra: { ...compra, boletos: [] },
-            error: new Error('La compra no tiene un identificador válido para consultar sus boletos.'),
-          };
-        }
+          if (compra.id === undefined || compra.id === null) {
+            return {
+              compra: { ...compra, boletos: [] },
+              error: new Error('La compra no tiene un identificador válido para consultar sus boletos.'),
+            };
+          }
 
-        try {
-          const response = await organizerService.getBoletos(compra.id);
-          const tickets = getTicketEntries(response);
-          return {
-            compra: {
-              ...compra,
-              boletos: tickets.map((ticket, index) => mapTicket(ticket, compra, index)),
-            },
-            error: null,
-          };
-        } catch (error) {
-          return {
-            compra: { ...compra, boletos: [] },
-            error,
-          };
-        }
-      })
-    );
+          try {
+            const response = await organizerService.getBoletos(compra.id);
+            const tickets = getTicketEntries(response);
+            return {
+              compra: {
+                ...compra,
+                boletos: tickets.map((ticket, index) => mapTicket(ticket, compra, index)),
+              },
+              error: null,
+            };
+          } catch (error) {
+            return {
+              compra: { ...compra, boletos: [] },
+              error,
+            };
+          }
+        })
+      );
 
-    return {
-      compras: results.map((result) => result.compra),
-      errorCount: results.filter((result) => result.error).length,
-    };
+      return {
+        compras: results.map((result) => result.compra),
+        errorCount: results.filter((result) => result.error).length,
+      };
+    } catch (error) {
+      console.warn('Error general obteniendo compras con boletos:', error?.message);
+      return {
+        compras: [],
+        errorCount: 1,
+      };
+    }
   },
 };
 

@@ -111,26 +111,6 @@ export default function HomeBannersSection() {
     );
   }
 
-  if (isError) {
-    return (
-      <section
-        role="alert"
-        className="mx-auto w-full max-w-7xl px-4 py-8 text-center"
-      >
-        <p className="text-sm font-semibold text-rose-700">
-          {t('home.bannersLoadError')}
-        </p>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="mt-3 rounded-lg bg-rose-700 px-4 py-2 text-sm font-bold text-white hover:bg-rose-800"
-        >
-          {t('home.retry')}
-        </button>
-      </section>
-    );
-  }
-
   if (!banners || banners.length === 0) {
     return null;
   }

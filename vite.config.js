@@ -27,14 +27,14 @@ export default defineConfig(({ mode }) => {
           },
           configure: (proxy) => {
             proxy.on('error', (err, _req, res) => {
-              console.warn('[Vite Proxy]: Error de conexión con el backend local:', err?.message);
+              console.warn('[Vite Proxy]: Error de conexión con el backend:', err?.message);
               if (res && !res.headersSent) {
                 res.writeHead(503, { 'Content-Type': 'application/json' });
                 res.end(
                   JSON.stringify({
                     success: false,
                     mensaje:
-                      'El backend local no está disponible. Verifica que Spring Boot esté ejecutándose en localhost:8080.',
+                      'El servicio no está disponible en este momento. Por favor, intenta de nuevo más tarde.',
                   })
                 );
               }

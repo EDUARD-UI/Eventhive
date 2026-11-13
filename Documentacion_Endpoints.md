@@ -195,12 +195,13 @@ En caso de error, la respuesta suele devolver:
 
 #### `GET /api/usuarios`
 - Recibe: query params opcionales para filtros combinados o individuales:
-  - `nombre` (string): búsqueda parcial insensible a mayúsculas sobre el nombre de usuario.
+  - `buscar`, `q` o `nombre` (string): búsqueda parcial insensible a mayúsculas sobre nombre, correo, teléfono y razón social asociada.
   - `organizacion` (string): búsqueda parcial insensible a mayúsculas sobre la razón social de la organización asociada.
   - `estado` (string): estado de cuenta del usuario (`ACTIVO`, `INACTIVO`, etc.).
   - `activo` (boolean): flag booleano alternativo de estado activo/inactivo.
   - `rolId` (numérico): identificador del rol.
-  - `rolNombre` (string): nombre del rol (`ADMINISTRADOR`, `REPRESENTANTE`, `OPERADOR`, `MODERADOR`, `MARKETING`, `CLIENTE`).
+  - `rol` (string): nombre del rol (`ADMINISTRADOR`, `REPRESENTANTE`, `OPERADOR`, `MODERADOR`, `MARKETING`, `CLIENTE`); también acepta el alias `rolNombre`.
+  - `fechaDesde`, `fechaHasta` (`yyyy-MM-dd`): rango inclusivo de fecha de registro.
   - `page`, `size`, `sort`: parámetros estándar de paginación.
 - Descripción: Directorio general de usuarios para el dashboard de administración. Permite combinar libremente filtros o consultarlos individualmente. Si no se especifican filtros, retorna todos los usuarios de la plataforma de manera paginada.
 - Devuelve: `ApiResponse<PagedResponse<UsuarioAdminDTO>>`; incluye teléfono, nombre del rol y resumen de organización (`id`, `razonSocial`), sin exponer datos sensibles.
@@ -242,7 +243,7 @@ En caso de error, la respuesta suele devolver:
 ```
 
 #### `GET /api/usuarios/buscar`
-- Recibe: los mismos parámetros que `GET /api/usuarios` (`nombre`, `organizacion`, `estado`, `activo`, `rolId`, `rolNombre`, `page`, `size`, `sort`).
+- Recibe: los mismos filtros que `GET /api/usuarios` (`buscar`, `q`, `nombre`, `organizacion`, `estado`, `activo`, `rolId`, `rol`, `rolNombre`, `fechaDesde`, `fechaHasta`, `page`, `size`, `sort`).
 - Devuelve: `ApiResponse<PagedResponse<UsuarioAdminDTO>>`
 - Permisos: ADMINISTRADOR.
 - Descripción: Endpoint de búsqueda avanzada para el directorio de usuarios que soporta coincidencia parcial, combinación simultánea de filtros por organización y estado, y paginación.
@@ -474,10 +475,10 @@ En caso de error, la respuesta suele devolver:
 ### Base: `/api/eventos`
 
 #### `GET /api/eventos`
-- Recibe: `categoriaId` y `fecha` opcionales, y paginación (`page`, `size`, `sort`). La fecha debe enviarse en formato `yyyy-MM-dd` y filtra por ese día exacto.
+- Recibe filtros opcionales combinables: `q` o `titulo`, `categoriaId`, `fecha`, `fechaDesde`, `fechaHasta`, `precioMin`, `precioMax`, `ciudad` y `promocionado`; además de paginación (`page`, `size`, `sort`). Las fechas usan formato `yyyy-MM-dd`. `ciudad` busca sobre `lugar`, que es el campo disponible en el modelo; el texto busca en título, descripción y lugar.
 - Devuelve: `ApiResponse<PagedResponse<EventoDTO>>`
-- Descripción: lista eventos públicos; permite combinar los filtros opcionales de categoría y fecha. El filtro de fecha se evalúa como fecha de calendario sin conversiones de zona horaria, evitando devolver eventos del día anterior. Los promocionados aparecen primero y el orden secundario predeterminado es por fecha, hora e ID ascendente.
-- Ejemplos: `/api/eventos?fecha=2026-10-14` o `/api/eventos?categoriaId=1&fecha=2026-10-14`
+- Descripción: lista eventos publicados y combina todos los filtros enviados. `precioMin` y `precioMax` evalúan los precios de localidades del evento; si se envían ambos, una misma localidad debe cumplir el rango. `sort=precio,asc|desc` ordena por el precio mínimo de las localidades. Sin `sort` explícito, se mantienen primero los eventos promocionados y después el orden temporal.
+- Ejemplos: `/api/eventos?fecha=2026-10-14`, `/api/eventos?q=jazz&categoriaId=1&fechaDesde=2026-10-01&precioMax=150000&page=0&size=12` o `/api/eventos?sort=precio,asc`
 - Ejemplo de respuesta:
 
 ```json
@@ -620,6 +621,11 @@ En caso de error, la respuesta suele devolver:
 }
 ```
 
+#### `GET /api/eventos/recomendaciones-para-ti`
+- Recibe: paginación (`page`); el tamaño de página siempre es de 4 eventos.
+- Devuelve: `ApiResponse<PagedResponse<EventoDTO>>`, con los mismos campos que `GET /api/eventos/proximos`.
+- Descripción: endpoint público que personaliza la sección según la sesión opcional. Para usuarios autenticados usa hasta 12 eventos publicados próximos asociados al usuario en `recomendacion_envios` cuando hay al menos 5; si no, usa hasta 5 eventos próximos de la categoría con más entradas compradas. Para visitantes combina hasta 6 eventos destacados próximos con hasta 6 eventos próximos de la categoría con más eventos publicados. Si las fuentes principales no alcanzan 6 eventos, completa con otros eventos próximos publicados. Los resultados se deduplican y se muestran en páginas de 4; se devuelven entre 6 y 12 eventos cuando hay suficientes eventos próximos disponibles.
+
 #### `GET /api/eventos/{id}`
 - Recibe: `id` en path.
 - Devuelve: `ApiResponse<EventoDTO>`
@@ -760,11 +766,11 @@ En caso de error, la respuesta suele devolver:
 ```
 
 #### `GET /api/eventos/organizador`
-- Recibe: query params opcionales `categoriaId` (Long), `estado` (enum `EstadoEvento`: BORRADOR, PUBLICADO, FINALIZADO, etc.), `titulo` (coincidencia parcial en el título) y paginación estándar (`page`, `size`, `sort`).
+- Recibe: query params opcionales `buscar`, `q` o `titulo` (búsqueda parcial en título y descripción), `categoriaId`, `estado`, `fechaDesde`, `fechaHasta` y paginación estándar (`page`, `size`, `sort`).
 - Devuelve: `ApiResponse<PagedResponse<EventoDTO>>`
 - Permisos: REPRESENTANTE de la organización.
-- Descripción: lista los eventos pertenecientes a la organización del usuario autenticado, permitiendo combinar filtros por categoría, estado y búsqueda por título de forma eficiente.
-- Ejemplo de petición: `/api/eventos/organizador?categoriaId=1&estado=PUBLICADO&titulo=Jazz&page=0&size=10`
+- Descripción: lista eventos de la organización autenticada y combina filtros de categoría, estado, búsqueda y rango inclusivo de fecha de realización. Los eventos FINALIZADOS continúan excluidos.
+- Ejemplo de petición: `/api/eventos/organizador?categoriaId=1&estado=PUBLICADO&buscar=Jazz&fechaDesde=2026-11-01&fechaHasta=2026-12-31&page=0&size=10`
 - Ejemplo de respuesta:
 
 ```json
@@ -958,9 +964,10 @@ En caso de error, la respuesta suele devolver:
 ```
 
 #### `GET /api/eventos/admin/buscar`
-- Recibe: `titulo`, `categoriaId`, `estado`, paginación.
+- Recibe filtros opcionales combinables `q` o `titulo`, `categoriaId`, `estado`, `organizacionId`, `lugar`, `fechaDesde`, `fechaHasta` y paginación. El texto se busca en título y descripción; las fechas se aplican al evento.
 - Devuelve: `ApiResponse<PagedResponse<EventoDTO>>`
 - Permisos: MODERADOR o ADMINISTRADOR.
+- No se ofrece filtro `pulep`: el modelo actual de eventos no tiene ese campo.
 - Ejemplo de respuesta:
 
 ```json
@@ -1271,9 +1278,10 @@ En caso de error, la respuesta suele devolver:
 - **Transparencia en respuestas**: Cada item en la compra expone `porcentajeComision`, `comisionTotal` y `precioFinalUnitario` en `ItemCompraDTO`.
 
 #### `GET /api/compras`
-- Recibe: paginación.
+- Recibe filtros opcionales combinables: `estado`, `fechaDesde`, `fechaHasta`, `eventoId`; y paginación (`page`, `size`, `sort`). Las fechas usan formato `yyyy-MM-dd`.
 - Devuelve: `ApiResponse<PagedResponse<CompraResponseDTO>>`
 - Permisos: autenticado.
+- Las compras se limitan siempre al usuario autenticado. `PAGADA` se acepta como alias de `CONFIRMADA`; los estados persistidos son `PENDIENTE`, `CONFIRMADA`, `CANCELADA` y `REEMBOLSADA`.
 - Ejemplo de respuesta:
 
 ```json
@@ -1786,9 +1794,9 @@ En caso de error, la respuesta suele devolver:
 ### Base: `/api/organizaciones`
 
 #### `GET /api/organizaciones`
-- Recibe: parámetro opcional `estado` (enum `EstadoOrganizacion`: `PENDIENTE_REVISION`, `APROBADA`, `RECHAZADA`, `SUSPENDIDA`, insensible a mayúsculas/minúsculas) y parámetros de paginación (`page`, `size`, `sort`).
+- Recibe filtros opcionales combinables `buscar` o `q` (también se aceptan `nombre`, `razonSocial` y `nit` como alias), `estado` (enum `EstadoOrganizacion`), `verificadoRut` (boolean), `fechaDesde` (`yyyy-MM-dd`) y paginación (`page`, `size`, `sort`).
 - Si no se especifica el parámetro `estado`, el endpoint devuelve todas las organizaciones registradas sin discriminación de estado.
-- Las organizaciones que ya cuenten con `urlRut` registrado en su entidad son reconocidas y conservadas automáticamente en estado `APROBADA`.
+- El texto se busca parcialmente en razón social, NIT y correo empresarial. `verificadoRut=true` requiere una URL de RUT no vacía; `false` incluye organizaciones sin URL de RUT.
 - Devuelve: `ApiResponse<PagedResponse<OrganizacionPublicaDTO>>`
 - Permisos: público.
 - Ejemplo de respuesta:
@@ -1892,6 +1900,12 @@ En caso de error, la respuesta suele devolver:
   }
 }
 ```
+
+#### `GET /api/organizaciones/eventos/{eventoId}/asistentes`
+- Recibe filtros opcionales `buscar` o `q` (nombre, correo o teléfono), `localidadId`, `estado` (`CONFIRMADO`, `PENDIENTE`, `CHECK_IN`, `CANCELADO`), `checkInRealizado` (boolean), `codigoBoleto` (coincidencia exacta) y paginación.
+- Devuelve: `ApiResponse<PagedResponse<AsistenteEventoDTO>>`.
+- Permisos: REPRESENTANTE dueño del evento o ADMINISTRADOR. La consulta verifica la pertenencia al evento y no expone asistentes de otras organizaciones.
+- Los estados `CANCELADO` incluyen compras `CANCELADA` y `REEMBOLSADA`; el check-in se deriva del campo `usado` del tiquete.
 
 #### `GET /api/organizaciones/{organizacionId}/rut-url`
 - Recibe: `organizacionId` en path.
@@ -2472,10 +2486,11 @@ Para el panel autenticado se recomienda `GET /api/organizaciones/mi-organizacion
 }
 ```
 
-#### `GET /api/verificacion/pendientes`
-- Recibe: paginación.
-- Devuelve: `ApiResponse<Page<SolicitudVerificacionDTO>>`
-- Descripción: lista las solicitudes con RUT enviado que esperan verificación administrativa.
+#### `GET /api/verificacion/pendientes` (alias: `/api/verificacion/solicitudes`)
+- Recibe filtros opcionales combinables `estado`, `buscar` o `nit`, `fechaDesde`, `fechaHasta`, y paginación (`page`, `size`, `sort`). Las fechas usan formato `yyyy-MM-dd`.
+- `estado=TODOS` omite el filtro; `EN_CORRECCION` es alias de `CORRECCION_SOLICITADA`.
+- Devuelve: `ApiResponse<PagedResponse<SolicitudVerificacionDTO>>`
+- Sin estado, devuelve todos los estados de solicitud para permitir la auditoría; las búsquedas parciales se aplican sobre NIT y razón social.
 - Permisos: ADMINISTRADOR.
 - Ejemplo de respuesta:
 
@@ -2738,7 +2753,7 @@ Para el panel autenticado se recomienda `GET /api/organizaciones/mi-organizacion
 ```
 
 #### `GET /api/moderaciones/eventos/pendientes`
-- Recibe: paginación.
+- Recibe filtros opcionales `buscar` o `q` (título de evento o razón social), `categoriaId`, `organizacionId`, `fechaEventoDesde` (`yyyy-MM-dd`) y paginación (`page`, `size`, `sort`). El orden predeterminado es FIFO (`fechaCreacion,asc`).
 - Devuelve: `ApiResponse<PagedResponse<EventoDTO>>`
 - Descripción: lista exclusivamente los eventos que las reglas del sistema derivaron a revisión humana; no representa todos los eventos enviados para publicación.
 - Permisos: MODERADOR.
@@ -2834,7 +2849,7 @@ Para el panel autenticado se recomienda `GET /api/organizaciones/mi-organizacion
 ```
 
 #### `GET /api/moderaciones/eventos/{eventoId}/moderaciones`
-- Recibe: `eventoId` en path, paginación.
+- Recibe: `eventoId` en path y filtros opcionales `estado`, `moderadorId`, `fechaDesde`, `fechaHasta`, además de paginación (`page`, `size`, `sort`). Las fechas aplican a la fecha de la acción de moderación.
 - Devuelve: `ApiResponse<Page<ModeracionEventoDTO>>`
 - Permisos: autenticado.
 - Ejemplo de respuesta:
@@ -2861,6 +2876,11 @@ Para el panel autenticado se recomienda `GET /api/organizaciones/mi-organizacion
   }
 }
 ```
+
+#### `GET /api/moderaciones/historial`
+- Recibe filtros opcionales combinables `titulo` o `q`, `estado`, `categoriaId`, `moderadorId`, `fechaDesde`, `fechaHasta`, además de paginación.
+- Las fechas (`yyyy-MM-dd`) filtran la fecha de la acción de moderación. Devuelve `ApiResponse<PagedResponse<ModeracionEventoDTO>>`.
+- Permisos: MODERADOR o ADMINISTRADOR.
 
 #### `PATCH /api/moderaciones/eventos/{eventoId}/aprobar`
 - Recibe: `eventoId` en path.
@@ -3104,6 +3124,9 @@ descuentos de compra ya no están disponibles ni se aplican al checkout.
 - Descripción: actualiza nombre, código, precio fijo, porcentaje de comisión (entre 0 y 100), Premium, pauta en redes y detalle publicitario, conservando la comisión existente si el campo no se envía.
 
 #### `GET /api/marketing/eventos-promocionados`
+- Recibe filtros opcionales combinables `buscar` o `q` (título y organización), `planCodigo`, `planId`, `estadoPago`, `activo`, y paginación (`page`, `size`, `sort`). El orden predeterminado es por fecha de contratación descendente.
+- `estadoPago` usa los estados existentes de posicionamiento: `PENDIENTE`, `CONFIRMADO` y `CANCELADO`; si se omite, solo muestra `CONFIRMADO`. `activo` indica si la fecha/hora del evento aún no ha pasado, ya que el modelo no registra otra vigencia de campaña.
+- Devuelve: `ApiResponse<PagedResponse<EventoPromocionadoMarketingDTO>>`.
 - Permisos: `MARKETING`.
 - Lista eventos y organizaciones con pago confirmado, plan contratado y estado de campaña, garantizando que no existan eventos duplicados (mostrando la contratación más reciente por evento). Indica qué plan pagó el representante y si requiere carga de imagen destacada (en planes premium).
 
@@ -3115,11 +3138,12 @@ los scripts SQL incluidos para los cambios de esquema antes de desplegarlos.
 Configurar el envío mediante Gmail API con `GMAIL_CLIENT_ID`,
 `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`, `GMAIL_SENDER` y
 `FRONTEND_URL` (URL base de la web para aceptar invitaciones y restablecer
-contraseñas y único origen CORS permitido). CORS acepta un solo origen exacto
-tomado de `FRONTEND_URL`; si la variable falta o está vacía, el único origen
-permitido es `http://localhost:5173`. No se permiten comodines ni listas de
-orígenes. Configure `FRONTEND_URL` explícitamente con el origen del frontend
-desplegado en Azure.
+contraseñas). CORS y los enlaces del frontend usan la propiedad
+`eventhive.frontend-url`, resuelta desde `frontend_url` o `FRONTEND_URL`.
+CORS permite el origen configurado y `http://localhost:5173`; no se permiten
+comodines ni listas de orígenes en la configuración. Configure `FRONTEND_URL`
+explícitamente en Azure App Service con el origen del frontend desplegado
+(por ejemplo, `https://eventhive-ruby-zeta.vercel.app`).
 
 ---
 
@@ -3250,19 +3274,24 @@ correo es de un solo uso y vence 24 horas después del envío.
 
 Todos los endpoints son de solo lectura, no reciben parámetros y requieren rol ADMINISTRADOR.
 
-#### `GET /api/admin/estadisticas/organizaciones-por-validacion`
-- Devuelve: `ApiResponse<OrganizacionesPorValidacionDTO>` con conteos de organizaciones según el estado de validación del RUT.
+#### `GET /api/admin/estadisticas/organizaciones-por-validacion` (y aliases `/organizaciones-por-estado`, `/organizaciones-estados`)
+- Devuelve: `ApiResponse<OrganizacionesPorValidacionDTO>` con conteos coherentes y directos de las organizaciones según su estado y validación del RUT.
 - Ejemplo de `data`:
 
 ```json
 {
-  "pendientesValidacionRut": 3,
-  "sinRut": 2,
-  "total": 12,
+  "total": 36,
+  "aprobadas": 7,
+  "enRevision": 28,
+  "pendientesRevision": 28,
+  "suspendidas": 1,
+  "pendientesValidacionRut": 28,
+  "sinRut": 26,
+  "solicitudesPendientes": 2,
   "porEstado": [
     { "estado": "APROBADA", "cantidad": 7 },
-    { "estado": "PENDIENTE_REVISION", "cantidad": 3 },
-    { "estado": "SUSPENDIDA", "cantidad": 2 }
+    { "estado": "PENDIENTE_REVISION", "cantidad": 28 },
+    { "estado": "SUSPENDIDA", "cantidad": 1 }
   ]
 }
 ```
@@ -3398,12 +3427,13 @@ Todos los endpoints son de solo lectura, no reciben parámetros y requieren rol 
 
 ## 21. Palabras prohibidas
 
-### Base: `/api/administracion/palabras-prohibidas`
+### Base: `/api/administracion/palabras-prohibidas` (alias: `/api/moderaciones/palabras-prohibidas`)
 
 Todos los endpoints de este módulo requieren rol MODERADOR. `PalabraProhibidaRequest` recibe `palabra` (texto de hasta 100 caracteres) y `severidad` (`GRAVE` o `SOSPECHOSA`, enum `SeveridadPalabra`).
 
 #### `GET /api/administracion/palabras-prohibidas`
-- Recibe: parámetros de paginación (`page`, `size`, `sort`).
+- Recibe: parámetros opcionales `buscar`, `q` o `palabra`, `nivel` o `gravedad`, `activa` (boolean), y paginación (`page`, `size`, `sort`). La búsqueda textual es parcial e insensible a mayúsculas.
+- Los únicos niveles existentes en el modelo son `GRAVE` y `SOSPECHOSA`.
 - Devuelve: `ApiResponse<PagedResponse<PalabraProhibidaDTO>>`; cada elemento contiene `id`, `palabra`, `severidad`, `activa` y `fechaCreacion`.
 - Ejemplo de respuesta:
 
@@ -3427,6 +3457,50 @@ Todos los endpoints de este módulo requieren rol MODERADOR. `PalabraProhibidaRe
     "totalPages": 1,
     "hasNext": false,
     "hasPrevious": false
+  }
+}
+```
+
+#### `GET /api/administracion/palabras-prohibidas/verificar`
+- Permite verificar si un término o palabra ingresado en un input es considerado prohibido por el sistema.
+- Recibe: parámetro query `palabra` (requerido). Ejemplo: `?palabra=fraude`.
+- Devuelve: `ApiResponse<VerificacionPalabraDTO>` con los detalles de coincidencia, severidad y estado activo.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "La palabra 'fraude' es prohibida (Severidad: GRAVE)",
+  "data": {
+    "esProhibida": true,
+    "palabraConsultada": "fraude",
+    "severidad": "GRAVE",
+    "activa": true,
+    "mensaje": "La palabra 'fraude' se encuentra registrada como término prohibido.",
+    "coincidencias": ["fraude"]
+  }
+}
+```
+
+#### `GET /api/administracion/palabras-prohibidas/estadisticas`
+- Devuelve las estadísticas agregadas de las palabras prohibidas registradas en el sistema.
+- Devuelve: `ApiResponse<PalabrasProhibidasEstadisticasDTO>`.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "Estadísticas de palabras prohibidas obtenidas",
+  "data": {
+    "total": 45,
+    "activas": 40,
+    "inactivas": 5,
+    "graves": 28,
+    "sospechosas": 17,
+    "porSeveridad": {
+      "GRAVE": 28,
+      "SOSPECHOSA": 17
+    }
   }
 }
 ```
@@ -3990,7 +4064,7 @@ Para la operación en producción (por ejemplo en Render) y desarrollo local, se
 | `GMAIL_REDIRECT_URI` | URI de callback OAuth registrada en Google Cloud | `https://<app>/oauth2/callback/google` |
 | `MAIL_FROM_NAME` | Nombre visible del remitente en los correos | `EventHive` |
 | `MAIL_MAX_REINTENTOS` | Número de intentos automáticos ante fallos de Gmail API | `2` |
-| `FRONTEND_URL` | URL base del frontend para enlaces y origen CORS único. CORS usa `http://localhost:5173` como fallback cuando falta o está vacía. | `https://eventhive-ruby-zeta.vercel.app` |
+| `frontend_url` o `FRONTEND_URL` | URL base del frontend para enlaces y origen CORS. CORS permite además `http://localhost:5173`; configurar el origen Vercel explícitamente en Azure. | `https://eventhive-ruby-zeta.vercel.app` |
 | `DB_URL` | URL de conexión JDBC a PostgreSQL (Supabase Session Pooler) | `jdbc:postgresql://...` |
 | `DB_USERNAME` | Usuario de base de datos PostgreSQL | `postgres.[id_proyecto]` |
 | `DB_PASSWORD` | Contraseña de base de datos PostgreSQL | `...` |
@@ -4048,16 +4122,24 @@ Aunque las consultas se sirvan desde la memoria RAM, **si ocurre cualquier cambi
 
 ---
 
-## 31. Monitoreo de Salud y Keep-Alive
+## 31. Monitoreo de Salud
 
-### Base: `/api/health` y `/health`
+### Base: `/api/health` y `/health`; Actuator: `/actuator/health`
 
-Endpoints ultraligeros de sondeo de estado operativo, diseñados para consumir 0 memoria RAM y no realizar consultas a la base de datos ni procesamiento de seguridad JWT.
+Las rutas legacy `/api/health` y `/health` reflejan el estado general de Actuator;
+devuelven HTTP 503 si la aplicación o una dependencia crítica están indisponibles.
+La respuesta no incluye detalles internos.
 
 #### `GET /api/health` o `GET /health`
 - **Público**: libre acceso (excluido de `JwtAuthFilter` y configurado con `permitAll()` en `SecurityConfig`).
-- Devuelve: `{"status":"UP"}` con Content-Type `application/json` y código HTTP 200 OK.
-- **Keep-Alive automático**: Tarea programada cada 13 minutos (`@Scheduled(fixedRate = 780000)`) que efectúa un ping HTTP ligero al servicio (usando `RENDER_EXTERNAL_URL` o `http://localhost:PORT/api/health`), evitando que instancias gratuitas en plataformas en la nube (Render, Koyeb) entren en suspensión por inactividad.
+- Devuelve `{"status":"UP"}` con HTTP 200 cuando la aplicación está saludable; usa HTTP 503 si no lo está.
+- El endpoint solo responde a solicitudes externas; la aplicación no genera pings periódicos automáticos.
+
+#### Health checks de Spring Boot Actuator
+- `GET /actuator/health`: estado general, sin detalles de dependencias.
+- `GET /actuator/health/liveness`: liveness del proceso Spring.
+- `GET /actuator/health/readiness`: readiness más disponibilidad de PostgreSQL.
+- Configura `/actuator/health/readiness` como **Health check path** en Azure App Service.
 
 ---
 

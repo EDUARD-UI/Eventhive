@@ -357,6 +357,9 @@ export const session = {
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(DEV_SESSION_KEY);
+    try {
+      window.dispatchEvent(new CustomEvent('eventhive_session_updated', { detail: null }));
+    } catch {}
   },
 };
 

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FiCalendar,
@@ -6,16 +6,10 @@ import {
   FiArrowRight,
   FiChevronLeft,
   FiChevronRight,
+  FiImage,
 } from 'react-icons/fi';
 import ImageWithFallback from '../common/ImageWithFallback.jsx';
 
-/**
- * FeaturedEventsCarousel
- * Carrusel panorámico refinado para Eventos Destacados:
- * - Proporción visual limpia (aspect ratio panorámico y escalado proporcional sin deformar ni recortar).
- * - Colores sobrios y bordes sutiles sin gradientes estridentes.
- * - Deslizamiento suave y controles accesibles con transiciones de 200ms.
- */
 export default function FeaturedEventsCarousel({ events = [] }) {
   // Solo eventos elegibles devueltos por GET /api/eventos/carrusel con imagen destacada válida
   const displayEvents = (Array.isArray(events) ? events : [])
@@ -24,11 +18,11 @@ export default function FeaturedEventsCarousel({ events = [] }) {
         typeof e === 'string'
           ? e
           : e?.url_imagen_promocionado ||
-            e?.urlImagenPromocionado ||
-            e?.url_imagen_destacado ||
-            e?.urlImagenDestacado ||
-            e?.photo ||
-            e?.imagen;
+          e?.urlImagenPromocionado ||
+          e?.url_imagen_destacado ||
+          e?.urlImagenDestacado ||
+          e?.photo ||
+          e?.imagen;
       return Boolean(src);
     })
     .slice(0, 10);
@@ -119,7 +113,33 @@ export default function FeaturedEventsCarousel({ events = [] }) {
   };
 
   if (!displayEvents || displayEvents.length === 0) {
-    return null;
+    return (
+      <div className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-slate-800 bg-[#0B132B] aspect-[16/9] sm:aspect-[21/9] min-h-[260px] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[400px] max-h-[480px] flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none">
+        {/* Fondo azul profundo institucional con gradiente */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0B132B] via-[#0D1D45] to-[#060B18]" />
+
+        {/* Resplandores azul y ámbar sutiles */}
+        <div className="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-blue-600/15 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col items-center justify-center max-w-lg space-y-3">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-amber-400 shadow-inner">
+            <FiImage size={28} className="text-amber-400/90" />
+          </div>
+          <div className="space-y-1.5">
+            <span className="inline-flex items-center px-3 py-1 rounded-md text-[11px] font-black uppercase tracking-wider bg-slate-900/90 text-amber-400 border border-slate-700/80">
+              Carrusel Principal
+            </span>
+            <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+              Espacio para banners destacados
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-400 max-w-sm mx-auto">
+              Aún no hay imágenes asignadas por marketing para este carrusel.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -274,11 +294,10 @@ export default function FeaturedEventsCarousel({ events = [] }) {
                 handleUserIndicatorClick(idx);
               }}
               aria-label={`Ir al evento ${idx + 1}`}
-              className={`h-1.5 sm:h-2 rounded-full transition-all duration-200 cursor-pointer ${
-                currentIndex === idx
+              className={`h-1.5 sm:h-2 rounded-full transition-all duration-200 cursor-pointer ${currentIndex === idx
                   ? 'w-6 sm:w-9 bg-amber-400'
                   : 'w-2.5 sm:w-4 bg-white/40 hover:bg-white/70'
-              }`}
+                }`}
             />
           ))}
         </div>

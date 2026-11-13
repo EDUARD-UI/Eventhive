@@ -113,13 +113,12 @@ export function usePerfilUsuario() {
       const sessionUser = session.getUser() || {};
 
       try {
-        // Ejecución concurrente y optimizada de todas las peticiones iniciales del perfil
-        const [perfilRes, deseosRes, comprasRes, orgsRes, seguidasRes] = await Promise.allSettled([
+        // Ejecución concurrente y optimizada de las peticiones del perfil del cliente
+        const [perfilRes, deseosRes, comprasRes, seguidasRes] = await Promise.allSettled([
           userService.getPerfil(),
           organizerService.getDeseos({ page: 0, size: 50 }),
           ticketService.getMisComprasConBoletos(),
-          organizationService.listOrganizations({ page: 0, size: 50, skipAuth: true }),
-          organizationService.getOrganizacionesSeguidas({ page: 0, size: 50 }),
+          organizationService.getOrganizacionesSeguidas(),
         ]);
 
         if (!isMounted) return;
@@ -176,28 +175,15 @@ export function usePerfilUsuario() {
           setTicketsError('No fue posible cargar tus boletos desde el servidor.');
         }
 
-        // 4. Procesar organizaciones y seguidas
-        if (orgsRes.status === 'fulfilled' && orgsRes.value) {
-          const allOrgs = orgsRes.value.organizations || [];
-          const seguidasBackend =
-            seguidasRes.status === 'fulfilled' && Array.isArray(seguidasRes.value)
-              ? seguidasRes.value
-              : [];
-
+        // 4. Procesar organizaciones seguidas por el cliente usando directamente su endpoint
+        if (seguidasRes.status === 'fulfilled' && Array.isArray(seguidasRes.value)) {
+          const seguidasList = seguidasRes.value;
           const storedFollowed = new Set(getStoredFollowedIds(sessionUser.id));
-          seguidasBackend.forEach((o) => storedFollowed.add(String(o.id)));
+          seguidasList.forEach((o) => storedFollowed.add(String(o.id)));
           saveStoredFollowedIds(sessionUser.id, Array.from(storedFollowed));
 
-          const seguidasList = allOrgs.filter((org) => storedFollowed.has(String(org.id)));
-          seguidasBackend.forEach((bOrg) => {
-            if (!seguidasList.some((s) => String(s.id) === String(bOrg.id))) {
-              seguidasList.push(bOrg);
-            }
-          });
-
-          const disponiblesList = allOrgs.filter((org) => !storedFollowed.has(String(org.id)));
           setOrganizacionesSeguidas(seguidasList);
-          setOrganizacionesDisponibles(disponiblesList);
+          setOrganizacionesDisponibles([]);
         } else {
           setOrganizacionesSeguidas([]);
           setOrganizacionesDisponibles([]);

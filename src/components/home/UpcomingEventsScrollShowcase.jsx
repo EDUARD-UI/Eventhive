@@ -131,30 +131,6 @@ export default function UpcomingEventsScrollShowcase({
     );
   }
 
-  if (hasError && events.length === 0) {
-    return (
-      <div
-        ref={sectionRef}
-        role="alert"
-        className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center"
-      >
-        <h3 className="font-bold text-rose-900">
-          {t('home.upcomingLoadErrorTitle')}
-        </h3>
-        <p className="mt-1 text-sm text-rose-800">
-          {t('home.upcomingLoadErrorDescription')}
-        </p>
-        <button
-          type="button"
-          onClick={() => onRetry?.()}
-          className="mt-4 rounded-lg bg-rose-700 px-4 py-2 text-sm font-bold text-white hover:bg-rose-800"
-        >
-          {t('home.retry')}
-        </button>
-      </div>
-    );
-  }
-
   if (!events || events.length === 0) {
     return (
       <div ref={sectionRef}>

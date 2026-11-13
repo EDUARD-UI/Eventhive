@@ -28,6 +28,7 @@ import Navbar from '../components/usersComponets/Navbar.jsx';
 import CustomSelect from '../components/common/CustomSelect.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
 import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
+import RecommendationsSection from '../components/home/RecommendationsSection.jsx';
 import { getCarouselEvents, getFeaturedEvents, getMapEvents, getUpcomingEvents } from '../services/eventService.js';
 import { getCategoryNames } from '../services/categoryService.js';
 import { formatPrice } from '../utils/formatters.js';
@@ -163,8 +164,6 @@ export default function Home() {
   const {
     data: upcomingEvents = [],
     isLoading: isLoadingUpcoming,
-    isError: upcomingEventsFailed,
-    refetch: retryUpcomingEvents,
   } = useQuery({
     queryKey: ['home-upcoming-events'],
     queryFn: () => getUpcomingEvents({ page: 0, size: 8 }),
@@ -429,13 +428,14 @@ export default function Home() {
           <UpcomingEventsScrollShowcase
             events={upcomingEvents}
             isLoading={isLoadingEvents}
-            hasError={upcomingEventsFailed}
-            onRetry={retryUpcomingEvents}
             emptyTitle={t('home.emptyUpcomingTitle')}
             emptySubtitle={t('home.emptyUpcomingSubtitle')}
           />
         </div>
       </section>
+
+      {/* Sección: Recomendaciones para ti (Personalizado por Backend para logueados y visitantes) */}
+      <RecommendationsSection />
 
       {/* 4. Mapa de Eventos en Cartagena con Fondo de Puntos Flotantes, Perspectiva 3D y Elevación Interactiva */}
       <section

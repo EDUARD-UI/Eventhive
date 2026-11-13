@@ -142,30 +142,13 @@ export const organizationService = {
 
   async getOrganizacionesSeguidas({ page = 0, size = 50 } = {}) {
     try {
-      const data = await httpClient.get('/seguidores/mis-seguidos', { page, size });
+      const data = await httpClient.get('/seguidores/mis-seguidos');
       const items = Array.isArray(data) ? data : data?.content || data?.data?.content || data?.data || [];
-      if (items.length > 0) return items.map(normalizeOrganization);
+      return items.map(normalizeOrganization);
     } catch (err) {
-      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
+      console.warn('Error consultando /seguidores/mis-seguidos:', err?.message);
+      return [];
     }
-
-    try {
-      const data = await httpClient.get('/seguidores/siguiendo', { page, size });
-      const items = Array.isArray(data) ? data : data?.content || data?.data?.content || data?.data || [];
-      if (items.length > 0) return items.map(normalizeOrganization);
-    } catch (err) {
-      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
-    }
-
-    try {
-      const data = await httpClient.get('/organizaciones/seguidas', { page, size });
-      const items = Array.isArray(data) ? data : data?.content || data?.data?.content || data?.data || [];
-      if (items.length > 0) return items.map(normalizeOrganization);
-    } catch (err) {
-      if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
-    }
-
-    return [];
   },
 
   async getOrganizationEvents(organizationId, { page = 0, size = 50 } = {}) {
