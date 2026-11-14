@@ -1,7 +1,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { FiCalendar, FiMapPin, FiArrowLeft, FiArrowRight, FiHeart, FiShare2, FiShield, FiTag, FiClock, FiCheckCircle, FiPlus, FiMinus } from 'react-icons/fi';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Flame, Users } from 'lucide-react';
+import EventAttendanceHeatmap from '../components/common/EventAttendanceHeatmap.jsx';
+import { getEventAttendanceInfo, generateAttendanceHeatPoints } from '../utils/heatmapUtils.js';
 import L from 'leaflet';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import Swal from 'sweetalert2';
@@ -80,6 +82,7 @@ export default function EventDetailPage() {
   const [isFollowingBusy, setIsFollowingBusy] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [similarEvents, setSimilarEvents] = useState([]);
+  const [showHeatmap, setShowHeatmap] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -260,6 +263,12 @@ export default function EventDetailPage() {
     }
     return [10.4236, -75.5513];
   }, [event]);
+
+  const attendanceInfo = useMemo(() => getEventAttendanceInfo(event), [event]);
+  const heatPoints = useMemo(() => {
+    if (!mapCenter || !showHeatmap) return [];
+    return generateAttendanceHeatPoints(mapCenter[0], mapCenter[1], attendanceInfo);
+  }, [mapCenter, showHeatmap, attendanceInfo]);
 
   const handleToggleFollow = async () => {
     const user = currentUser;
@@ -587,12 +596,33 @@ export default function EventDetailPage() {
               </div>
             </article>
 
-            {/* Tarjeta: Ubicación y Mapa (los demás componentes siguen intactos) */}
+            {/* Tarjeta: Ubicación y Mapa de Calor de Asistencia (Densidad / Popularidad) */}
             <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1428] p-5 sm:p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
-                  {t('eventDetail.location')}
-                </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h2 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase shrink-0">
+                    {t('eventDetail.location')}
+                  </h2>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider border ${attendanceInfo.badgeColor}`}>
+                    <Flame size={12} className="text-amber-500 shrink-0 animate-pulse" />
+                    <span className="truncate">{attendanceInfo.statusText}</span>
+                  </span>
+                </div>
+
+                {/* Switch interactivo de Mapa de Calor estilo Eventhive */}
+                <button
+                  type="button"
+                  onClick={() => setShowHeatmap((prev) => !prev)}
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs border shrink-0 ${
+                    showHeatmap
+                      ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-amber-500/20 active:scale-95'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-amber-400'
+                  }`}
+                  title="Alternar mapa de calor de asistencia"
+                >
+                  <Flame size={14} className={showHeatmap ? 'text-slate-950 fill-slate-950' : 'text-slate-400'} />
+                  <span>{showHeatmap ? 'Mapa de calor activo' : 'Ver mapa de calor'}</span>
+                </button>
               </div>
 
               {event.location && (
@@ -602,8 +632,28 @@ export default function EventDetailPage() {
                 </div>
               )}
 
-              {/* Contenedor del Mapa con OSM estándar */}
-              <div className="relative z-0 isolate overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner h-60 sm:h-72 w-full bg-slate-100 dark:bg-slate-900">
+              {/* Barra informativa de asistencia y termómetro de colores Eventhive */}
+              {showHeatmap && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-3.5 py-2.5 rounded-2xl bg-amber-500/10 dark:bg-[#071124] border border-amber-500/20 text-xs">
+                  <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-semibold">
+                    <Users size={15} className="text-amber-500 shrink-0" />
+                    <span>
+                      <strong className="text-slate-950 dark:text-white font-extrabold">{attendanceInfo.attendees.toLocaleString('es-CO')}</strong> {attendanceInfo.attendeesText}
+                      <span className="text-slate-500 dark:text-slate-400 text-[11px] ml-1.5 font-normal">({attendanceInfo.displayPercentage} de {attendanceInfo.capacity.toLocaleString('es-CO')} cupos)</span>
+                    </span>
+                  </div>
+
+                  {/* Leyenda de temperatura Eventhive */}
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-600 dark:text-slate-400 self-end sm:self-auto">
+                    <span>Menor asistencia</span>
+                    <div className="w-20 h-2 rounded-full bg-gradient-to-r from-[#007BFF] via-[#FFC107] to-[#EF4444] shadow-xs" title="Gradiente de calor Eventhive" />
+                    <span className="text-amber-600 dark:text-amber-400 font-black"> Mayor Asistencia </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Contenedor del Mapa con OSM estándar y capa de calor */}
+              <div className="relative z-0 isolate overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner h-64 sm:h-80 w-full bg-slate-100 dark:bg-slate-900">
                 <MapContainer
                   center={mapCenter}
                   zoom={15}
@@ -615,6 +665,12 @@ export default function EventDetailPage() {
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     maxZoom={19}
                   />
+
+                  {/* Capa de calor con gradiente oficial de Eventhive */}
+                  {showHeatmap && heatPoints.length > 0 && (
+                    <EventAttendanceHeatmap points={heatPoints} />
+                  )}
+
                   <Marker position={mapCenter} icon={amberHivePinIcon()} />
                 </MapContainer>
               </div>

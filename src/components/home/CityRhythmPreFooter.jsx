@@ -6,7 +6,7 @@ import torreRelojImg from '../../assets/torre-reloj.png';
 import colombiaImg from '../../assets/Colombia.jpg';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 
-const RHYTHM_WORDS = ['el picó', 'tu parche', 'conciertos', 'el vacile', 'tu cultura'];
+const RHYTHM_WORDS = ['el picó', 'tu parche', 'tus eventos', 'el vacile', 'tu cultura', 'la rumba'];
 
 function useTypewriter(words, { typingSpeed = 90, deletingSpeed = 45, pauseDuration = 1600 } = {}) {
   const [index, setIndex] = useState(0);

@@ -169,9 +169,45 @@ export default function RecommendationsSection() {
   return (
     <section
       id="recomendaciones"
-      className="w-full px-4 sm:px-6 lg:px-10 py-12 sm:py-16 md:py-20 bg-slate-100/70 dark:bg-slate-950/40 transition-colors duration-200 overflow-hidden relative"
+      className="w-full relative px-4 sm:px-6 lg:px-10 py-14 sm:py-18 md:py-22 overflow-hidden isolate transition-colors duration-300 bg-gradient-to-b from-slate-100 via-slate-50 to-slate-100 dark:from-[#0B0F19] dark:via-[#0F172A] dark:to-[#0B0F19] border-y border-slate-200/80 dark:border-white/[0.08]"
     >
-      <div className="max-w-[1720px] mx-auto">
+      {/* Resplandor lineal superior dorado/ámbar centrado */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[1px] bg-gradient-to-r from-transparent via-amber-500/40 dark:via-amber-400/50 to-transparent z-10"
+      />
+
+      {/* Resplandor lineal inferior sutil */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[1px] bg-gradient-to-r from-transparent via-amber-500/20 dark:via-amber-400/30 to-transparent z-10"
+      />
+
+      {/* Destello radial superior difuminado */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] sm:w-[1000px] h-[360px] rounded-full bg-gradient-to-b from-amber-500/10 via-yellow-500/5 to-transparent dark:from-amber-400/[0.12] dark:via-amber-500/[0.05] dark:to-transparent blur-3xl opacity-75 z-0"
+      />
+
+      {/* Halo ambiental difuminado detrás del carrusel */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5 max-w-5xl h-72 sm:h-96 rounded-full bg-gradient-to-r from-amber-500/5 via-amber-400/[0.10] to-yellow-500/5 dark:from-amber-500/[0.08] dark:via-amber-400/[0.14] dark:to-yellow-500/[0.08] blur-[90px] opacity-80 z-0"
+      />
+
+      {/* Textura sutil geométrica con atenuación radial */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.055] z-0"
+        style={{
+          backgroundImage: 'radial-gradient(currentColor 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+          maskImage: 'radial-gradient(ellipse 70% 65% at 50% 50%, black 25%, transparent 85%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 70% 65% at 50% 50%, black 25%, transparent 85%)',
+        }}
+      />
+
+      <div className="max-w-[1720px] mx-auto relative z-10">
         <Scroll3DReveal variant="fade-elevate" duration={800}>
           <div className="flex flex-col items-center justify-center mb-10 text-center relative">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase">
@@ -216,13 +252,13 @@ export default function RecommendationsSection() {
               className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-44 rounded-full bg-amber-500/10 dark:bg-amber-400/10 blur-3xl"
             />
 
-            {/* Flecha Izquierda: Blanca, sin círculo contenedor, ubicada muy al costado */}
+            {/* Flecha Izquierda: Sin círculo contenedor, ubicada muy al costado */}
             {events.length > visibleCards && (
               <button
                 type="button"
                 onClick={handlePrev}
                 aria-label="Recomendación anterior"
-                className="absolute left-0 sm:left-1 lg:left-2 top-1/2 -translate-y-1/2 z-20 text-white hover:text-amber-400 p-1 sm:p-2 transition-transform duration-200 hover:scale-125 active:scale-95 cursor-pointer select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
+                className="absolute left-0 sm:left-1 lg:left-2 top-1/2 -translate-y-1/2 z-20 text-slate-800 dark:text-white hover:text-amber-600 dark:hover:text-amber-400 p-1 sm:p-2 transition-all duration-200 hover:scale-125 active:scale-95 cursor-pointer select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)] dark:drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]"
               >
                 <FiChevronLeft className="w-8 h-8 sm:w-11 sm:h-11" strokeWidth={2.75} />
               </button>
@@ -250,13 +286,13 @@ export default function RecommendationsSection() {
               </div>
             </div>
 
-            {/* Flecha Derecha: Blanca, sin círculo contenedor, ubicada muy al costado */}
+            {/* Flecha Derecha: Sin círculo contenedor, ubicada muy al costado */}
             {events.length > visibleCards && (
               <button
                 type="button"
                 onClick={handleNext}
                 aria-label="Siguiente recomendación"
-                className="absolute right-0 sm:right-1 lg:right-2 top-1/2 -translate-y-1/2 z-20 text-white hover:text-amber-400 p-1 sm:p-2 transition-transform duration-200 hover:scale-125 active:scale-95 cursor-pointer select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
+                className="absolute right-0 sm:right-1 lg:right-2 top-1/2 -translate-y-1/2 z-20 text-slate-800 dark:text-white hover:text-amber-600 dark:hover:text-amber-400 p-1 sm:p-2 transition-all duration-200 hover:scale-125 active:scale-95 cursor-pointer select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)] dark:drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]"
               >
                 <FiChevronRight className="w-8 h-8 sm:w-11 sm:h-11" strokeWidth={2.75} />
               </button>

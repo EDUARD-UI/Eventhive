@@ -20,7 +20,7 @@ import { useTheme } from '../context/ThemeContext.jsx';
 import { useLenisScroll } from '../hooks/useLenisScroll.js';
 import { useLanguage } from '../context/LanguageContext.jsx';
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 20;
 
 export default function BuscarEventosPage() {
   const { t } = useLanguage();
@@ -108,7 +108,7 @@ export default function BuscarEventosPage() {
         const result = await searchEvents({
           titulo: tituloParam.trim(),
           page: hasDate || hasCategory ? 0 : pageParam,
-          size: hasDate || hasCategory ? 60 : PAGE_SIZE,
+          size: hasDate || hasCategory ? 100 : PAGE_SIZE,
         });
 
         let allMatches = result.events || [];
@@ -118,7 +118,7 @@ export default function BuscarEventosPage() {
               searchEvents({
                 titulo: tituloParam.trim(),
                 page: index + 1,
-                size: 60,
+                size: 100,
               })
             )
           );
@@ -455,7 +455,7 @@ export default function BuscarEventosPage() {
                 ))}
               </div>
 
-              {/* Paginación exacta de 12 eventos por página */}
+              {/* Paginación exacta de 20 eventos por página */}
               {totalElements > PAGE_SIZE && (
                 <div className="mt-12 w-full max-w-lg mx-auto flex justify-center">
                   <Pagination
@@ -512,9 +512,7 @@ export default function BuscarEventosPage() {
                 <span className="text-amber-500 dark:text-amber-400 font-black text-xs uppercase tracking-widest block mb-1">{t("EXPLORA POR INTERÉS")}</span>
                 <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-950 dark:text-white">{t("Tu ciudad, a tu manera")}</h2>
               </div>
-              <Link to="/categorias" className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-amber-500 hover:text-amber-400 uppercase tracking-wider transition-colors">
-                <span>{t("Ver todas")}</span><FiArrowUpRight size={16} />
-              </Link>
+              
             </div>
 
             {loadingCategories ? (

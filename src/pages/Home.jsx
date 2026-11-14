@@ -23,6 +23,9 @@ import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 import Scroll3DReveal from '../components/home/Scroll3DReveal.jsx';
 import UpcomingEventsScrollShowcase from '../components/home/UpcomingEventsScrollShowcase.jsx';
 import MapDynamicBackground from '../components/home/MapDynamicBackground.jsx';
+import EventAttendanceHeatmap from '../components/common/EventAttendanceHeatmap.jsx';
+import { generateCityEventsHeatPoints } from '../utils/heatmapUtils.js';
+import { Flame } from 'lucide-react';
 import Footer from '../components/usersComponets/Footer.jsx';
 import Navbar from '../components/usersComponets/Navbar.jsx';
 import CustomSelect from '../components/common/CustomSelect.jsx';
@@ -180,6 +183,7 @@ export default function Home() {
 
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDistance, setSelectedDistance] = useState('all');
+  const [showHeatmap, setShowHeatmap] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
   const [mapRevealed, setMapRevealed] = useState(false);
@@ -309,6 +313,11 @@ export default function Home() {
     });
   }, [mapEvents, selectedDistance, userLocation]);
 
+  const cityHeatPoints = useMemo(() => {
+    if (!showHeatmap || !filteredMapEvents || !filteredMapEvents.length) return [];
+    return generateCityEventsHeatPoints(filteredMapEvents);
+  }, [showHeatmap, filteredMapEvents]);
+
   const categoryOptions = useMemo(() => [
     { value: 'all', label: t('home.allCategories') },
     ...categoryList.map((category) => ({
@@ -403,8 +412,41 @@ export default function Home() {
       </Scroll3DReveal>
 
       {/* 3. Próximos Eventos: Tarjetas con revelación 3D al entrar en pantalla */}
-      <section id="proximos" className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 bg-white/60 dark:bg-slate-900/40 transition-colors duration-200 overflow-hidden">
-        <div className="max-w-6xl xl:max-w-7xl mx-auto">
+      <section
+        id="proximos"
+        className="w-full relative px-4 sm:px-6 lg:px-8 py-14 sm:py-18 md:py-22 overflow-hidden isolate transition-colors duration-300 bg-gradient-to-b from-slate-100 via-slate-50 to-slate-100 dark:from-[#0B0F19] dark:via-[#0F172A] dark:to-[#0B0F19] border-t border-slate-200/80 dark:border-white/[0.08]"
+      >
+        {/* Resplandor lineal superior dorado/ámbar centrado */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[1px] bg-gradient-to-r from-transparent via-amber-500/40 dark:via-amber-400/50 to-transparent z-10"
+        />
+
+        {/* Destello radial superior difuminado */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] sm:w-[1000px] h-[360px] rounded-full bg-gradient-to-b from-amber-500/10 via-yellow-500/5 to-transparent dark:from-amber-400/[0.12] dark:via-amber-500/[0.05] dark:to-transparent blur-3xl opacity-75 z-0"
+        />
+
+        {/* Halo ambiental difuminado detrás de las tarjetas */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5 max-w-5xl h-72 sm:h-96 rounded-full bg-gradient-to-r from-amber-500/5 via-amber-400/[0.10] to-yellow-500/5 dark:from-amber-500/[0.08] dark:via-amber-400/[0.14] dark:to-yellow-500/[0.08] blur-[90px] opacity-80 z-0"
+        />
+
+        {/* Textura sutil geométrica con atenuación radial */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.055] z-0"
+          style={{
+            backgroundImage: 'radial-gradient(currentColor 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+            maskImage: 'radial-gradient(ellipse 70% 65% at 50% 50%, black 25%, transparent 85%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 70% 65% at 50% 50%, black 25%, transparent 85%)',
+          }}
+        />
+
+        <div className="max-w-6xl xl:max-w-7xl mx-auto relative z-10">
           <Scroll3DReveal variant="fade-elevate" duration={800}>
             <div className="flex flex-col items-center justify-center mb-10 text-center relative">
 
@@ -434,14 +476,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sección: Recomendaciones para ti (Personalizado por Backend para logueados y visitantes) */}
-      <RecommendationsSection />
 
       {/* 4. Mapa de Eventos en Cartagena con Fondo de Puntos Flotantes, Perspectiva 3D y Elevación Interactiva */}
       <section
         id="mapa"
         ref={mapSectionRef}
-        className="w-full bg-slate-100 dark:bg-[#0B0F19] text-slate-900 dark:text-white px-4 sm:px-10 lg:px-20 py-16 sm:py-22 relative z-0 isolate overflow-hidden border-y border-slate-200 dark:border-white/[0.08]"
+        className="w-full bg-slate-100 dark:bg-[#0B0F19] text-slate-900 dark:text-white px-4 sm:px-10 lg:px-20 pt-12 sm:pt-16 md:pt-20 pb-16 sm:pb-22 relative z-0 isolate overflow-hidden border-b border-slate-200/60 dark:border-white/[0.06]"
       >
         {/* Fondo animado de puntos flotantes y ondas de radar detrás del mapa */}
         <MapDynamicBackground />
@@ -505,6 +545,20 @@ export default function Home() {
                     variant={isDark ? 'dark' : 'light'}
                   />
                 </div>
+
+                {/* Botón Mapa de Calor / Modo Movida */}
+                <button
+                  type="button"
+                  onClick={() => setShowHeatmap((prev) => !prev)}
+                  className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm cursor-pointer relative z-30 ${showHeatmap
+                      ? 'border-amber-400 bg-amber-500 text-slate-950 shadow-amber-500/25 ring-2 ring-amber-400/40'
+                      : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-400'
+                    }`}
+                  title={showHeatmap ? 'Ocultar mapa de calor' : 'Ver mapa de calor de asistencia'}
+                >
+                  <Flame size={15} className={showHeatmap ? 'text-slate-950 fill-slate-950 animate-pulse' : 'text-slate-400'} />
+                  <span>{showHeatmap ? 'Modo Movida: Activo' : 'Ver Mapa de Calor'}</span>
+                </button>
               </div>
             </div>
           </Scroll3DReveal>
@@ -524,6 +578,17 @@ export default function Home() {
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/80 to-transparent z-20"
               />
+              {/* Leyenda flotante del mapa de calor si está activo */}
+              {showHeatmap && (
+                <div className="hidden sm:flex items-center gap-2 absolute top-4 right-6 z-30 px-3.5 py-1.5 rounded-2xl bg-slate-900/90 text-white border border-amber-400/30 shadow-lg text-[11px] font-bold backdrop-blur-xs pointer-events-none">
+                  <Flame size={13} className="text-amber-400 animate-pulse" />
+                  <span className="text-slate-300">Asistencia:</span>
+                  <span>Baja</span>
+                  <div className="w-16 h-2 rounded-full bg-gradient-to-r from-[#007BFF] via-[#FFC107] to-[#EF4444]" />
+                  <span className="text-amber-400 font-extrabold">Alta 🔥</span>
+                </div>
+              )}
+
               <MapContainer
                 center={userLocation ? [userLocation.lat, userLocation.lng] : [10.415, -75.54]}
                 zoom={13}
@@ -542,6 +607,11 @@ export default function Home() {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+
+                {/* Capa de calor con las manchas de asistencia y popularidad */}
+                {showHeatmap && cityHeatPoints.length > 0 && (
+                  <EventAttendanceHeatmap points={cityHeatPoints} />
+                )}
 
                 <MapViewController
                   center={userLocation ? [userLocation.lat, userLocation.lng] : [10.415, -75.54]}
@@ -672,12 +742,15 @@ export default function Home() {
         </Scroll3DReveal>
       </section>
 
-      {/* 6. Banners Interactivos 3D (Evento Destacado & Organizadores) */}
+      {/* 6. Sección: Recomendaciones para ti (Personalizado por Backend para logueados y visitantes) */}
+      <RecommendationsSection />
+
+      {/* 7. Banners Interactivos 3D (Evento Destacado & Organizadores) */}
       <section id="banners-section" className="relative scroll-mt-20 my-8 sm:my-12 overflow-hidden">
         <HomeBannersSection />
       </section>
 
-      {/* 7. Pre-footer and footer */}
+      {/* 8. Pre-footer and footer */}
       <section id="prefooter-section" className="relative scroll-mt-16">
         <CityRhythmPreFooter />
       </section>

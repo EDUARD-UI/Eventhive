@@ -9,7 +9,7 @@ import { useTheme } from '../../context/ThemeContext.jsx';
  * - Incluye ondas de radar concéntricas sutiles que refuerzan la temática de geolocalización en vivo.
  * - Renderizado a 60 FPS en Canvas con pointer-events-none para no interferir con Leaflet.
  */
-export default function MapDynamicBackground({ className = '' }) {
+export default function MapDynamicBackground({ className = '', fadeTop = true }) {
   const canvasRef = useRef(null);
   const { isDark } = useTheme();
 
@@ -164,6 +164,10 @@ export default function MapDynamicBackground({ className = '' }) {
     <div
       aria-hidden="true"
       className={`absolute inset-0 pointer-events-none select-none overflow-hidden z-0 ${className}`}
+      style={fadeTop ? {
+        maskImage: 'linear-gradient(to bottom, transparent 0%, black 56px, black 100%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 56px, black 100%)',
+      } : undefined}
     >
       {/* Resplandores ambientales y anillos de radar concéntricos detrás del mapa */}
       <div

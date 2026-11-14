@@ -51,33 +51,39 @@ export const formatApiUrl = (url) => {
 };
 
 /**
- * Obtiene la URL base de la API determinísticamente según el hostname del entorno actual.
+ * Obtiene la URL base de la API determinísticamente según el entorno actual y configuración.
+ * Permite cambiar fácilmente entre Azure y backend local según VITE_API_MODE o VITE_API_URL.
  */
 export const getApiBaseUrl = () => {
   const isLocal = isLocalEnvironment();
   const env = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : (typeof process !== 'undefined' ? process.env : {});
 
   if (isLocal) {
-    // Entorno Local: localhost:5173 -> localhost:8080
-    // Permitir sobrescritura local SOLO si apunta a una dirección estrictamente local
+    // Si se especifica explícitamente modo local
+    if (env?.VITE_API_MODE === 'local' || env?.VITE_USE_LOCAL_BACKEND === 'true') {
+      const customLocal = env?.VITE_LOCAL_API_URL?.trim();
+      return customLocal ? formatApiUrl(customLocal) : LOCAL_API_URL;
+    }
+
+    // Si se especifica explícitamente modo azure
+    if (env?.VITE_API_MODE === 'azure') {
+      const customAzure = env?.VITE_API_URL?.trim();
+      return customAzure ? formatApiUrl(customAzure) : AZURE_API_URL;
+    }
+
+    // Si se provee una URL personalizada en VITE_API_URL (ej. Azure u otro destino)
+    const customApiUrl = env?.VITE_API_URL?.trim();
+    if (customApiUrl) {
+      return formatApiUrl(customApiUrl);
+    }
+
+    // Si se provee una URL local personalizada
     const customLocal = env?.VITE_LOCAL_API_URL?.trim();
     if (customLocal) {
-      try {
-        const parsed = new URL(customLocal);
-        const host = parsed.hostname.toLowerCase();
-        if (
-          host === 'localhost' ||
-          host === '127.0.0.1' ||
-          host === '::1' ||
-          host.endsWith('.local') ||
-          host.endsWith('.localhost')
-        ) {
-          return formatApiUrl(customLocal);
-        }
-      } catch {
-        // En caso de URL inválida, usar LOCAL_API_URL por defecto
-      }
+      return formatApiUrl(customLocal);
     }
+
+    // Por defecto en local si no hay variables de entorno configuradas
     return LOCAL_API_URL;
   }
 
