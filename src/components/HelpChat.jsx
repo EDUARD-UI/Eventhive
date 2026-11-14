@@ -81,10 +81,10 @@ export default function HelpChat({
         setMessages([{ id: 1, from: "bot", text: t("helpChat.initialMessage") }]);
       }
       setDraft("");
-      // Enfocar automáticamente el input para que el usuario pueda escribir directamente
+      // Enfocar automáticamente el input previniendo scroll inesperado
       const timer = setTimeout(() => {
-        inputRef.current?.focus();
-      }, 150);
+        inputRef.current?.focus({ preventScroll: true });
+      }, 100);
       return () => clearTimeout(timer);
     }
   }, [isOpen, t]);
@@ -162,7 +162,7 @@ export default function HelpChat({
 
   return (
     <>
-      {/* 1. VENTANA DEL CHAT FLOTANTE */}
+      {/* 1. VENTANA DEL CHAT FLOTANTE: Capa aislada para evitar repintado del video en Hero */}
       {isOpen && (
         <aside
           aria-label="Ventana de chat de ayuda EventHive"
@@ -171,6 +171,8 @@ export default function HelpChat({
           className="fixed z-[9999] left-4 sm:left-auto sm:right-6 bottom-20 sm:bottom-24 w-[calc(100vw-2rem)] max-w-[360px] sm:max-w-[375px] h-[520px] max-h-[65vh] flex flex-col rounded-[28px] overflow-hidden shadow-2xl ring-1 ring-black/10 border border-slate-200/90 dark:border-white/10 bg-white dark:bg-[#0B132B] transition-all animate-fade-in"
           style={{
             boxShadow: "0 20px 40px -15px rgba(11, 19, 43, 0.35), 0 0 1px 1px rgba(0,0,0,0.06)",
+            contain: "paint layout",
+            transform: "translateZ(0)",
           }}
         >
           {/* Cabecera Azul Marino (#0B132B) */}

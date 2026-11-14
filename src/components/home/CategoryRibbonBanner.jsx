@@ -113,6 +113,8 @@ export default function CategoryRibbonBanner() {
               <img
                 src="/LOGO32x32.png"
                 alt="Eventhive Logo"
+                loading="lazy"
+                decoding="async"
                 className="h-5 sm:h-6 w-auto object-contain shrink-0 inline-block drop-shadow-xs dark:brightness-0 dark:invert transition-all"
               />
             </div>

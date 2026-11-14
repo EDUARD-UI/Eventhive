@@ -233,13 +233,13 @@ export default function MarketingBannersView() {
       {loadError && (
         <div
           role="alert"
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-slate-800 dark:text-slate-200"
         >
           <span>{loadError}</span>
           <button
             type="button"
             onClick={fetchBanners}
-            className="inline-flex items-center gap-2 font-bold text-rose-900 hover:text-rose-700"
+            className="inline-flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
           >
             <RefreshCw size={14} />
             Reintentar

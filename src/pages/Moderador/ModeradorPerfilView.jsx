@@ -675,8 +675,16 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
           </div>
 
           {boletosList.length === 0 && ticketsError ? (
-            <div role="alert" className="rounded-3xl border border-rose-200 bg-rose-50 p-8 text-center text-sm text-rose-800">
-              {ticketsError}
+            <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center shadow-xs max-w-xl mx-auto my-6">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-3.5 border border-amber-200/80">
+                <FiAlertCircle size={22} />
+              </div>
+              <h4 className="font-extrabold text-base sm:text-lg text-slate-900 uppercase tracking-tight mb-1">
+                No pudimos cargar tus boletos
+              </h4>
+              <p className="text-xs sm:text-sm font-medium text-slate-500 max-w-sm mx-auto">
+                {ticketsError}
+              </p>
             </div>
           ) : boletosList.length === 0 ? (
             <div className="bg-white rounded-3xl border border-dashed border-slate-200 p-10 sm:p-14 text-center shadow-xs">
@@ -795,8 +803,16 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
           </div>
 
           {compras.length === 0 && ticketsError ? (
-            <div role="alert" className="rounded-3xl border border-rose-200 bg-rose-50 p-8 text-center text-sm text-rose-800">
-              {ticketsError}
+            <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center shadow-xs max-w-xl mx-auto my-6">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-3.5 border border-amber-200/80">
+                <FiAlertCircle size={22} />
+              </div>
+              <h4 className="font-extrabold text-base sm:text-lg text-slate-900 uppercase tracking-tight mb-1">
+                No pudimos cargar tus compras
+              </h4>
+              <p className="text-xs sm:text-sm font-medium text-slate-500 max-w-sm mx-auto">
+                {ticketsError}
+              </p>
             </div>
           ) : compras.length === 0 ? (
             <div className="bg-white rounded-3xl border border-dashed border-slate-200 p-10 sm:p-14 text-center shadow-xs">

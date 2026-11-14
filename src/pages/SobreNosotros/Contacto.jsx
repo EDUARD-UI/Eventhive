@@ -150,7 +150,6 @@ export default function Contacto() {
     if (Object.keys(validationErrors).length > 0) return;
 
     setStatus('loading');
-    await new Promise((r) => setTimeout(r, 1400));
     setStatus('success');
     setForm(INITIAL_FORM);
     setTouched({});

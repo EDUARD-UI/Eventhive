@@ -22,8 +22,8 @@ const BRAND_LETTERS = [
 /**
  * AuthLayout
  * Layout compartido para Inicio de Sesión y Registro.
- * - Panel Izquierdo: Fondo ambiental con gradiente, hexágonos y marca con animación secuencial.
- * - Panel Derecho: Formulario compacto con título EventHive animado en dispositivos móviles.
+ * - Panel Izquierdo: Fondo ambiental con gradiente, hexágonos y marca con textos centrados.
+ * - Panel Derecho: Formulario centrado con ancho reducido estilizado.
  */
 export default function AuthLayout({
   children,
@@ -94,7 +94,7 @@ export default function AuthLayout({
         />
 
         {/* Bloque Superior + Central alineados con animación de letras */}
-        <div className="relative z-20 flex-1 flex flex-col justify-evenly w-full max-w-[360px] xl:max-w-[390px] mx-0">
+        <div className="relative z-20 flex-1 flex flex-col justify-evenly w-full max-w-[360px] xl:max-w-[390px] mx-auto items-center text-center">
           {/* Identidad EventHive con animación letra por letra */}
           <Link
             to="/"
@@ -128,10 +128,10 @@ export default function AuthLayout({
             </span>
           </Link>
 
-          {/* Contenido Central */}
-          <div className="text-left">
+          {/* Contenido Central: centrado armónico */}
+          <div className="text-center flex flex-col items-center">
             <h1
-              className={`font-display text-2xl sm:text-3xl lg:text-[28px] xl:text-[32px] font-black leading-[1.16] max-w-sm tracking-tight ${
+              className={`font-display text-2xl sm:text-3xl lg:text-[28px] xl:text-[32px] font-black leading-[1.16] max-w-sm tracking-tight text-center ${
                 isDark ? 'text-white' : 'text-slate-950'
               }`}
             >
@@ -143,15 +143,15 @@ export default function AuthLayout({
             </h1>
 
             <p
-              className={`text-xs sm:text-sm mt-2.5 max-w-sm leading-relaxed font-normal ${
+              className={`text-xs sm:text-sm mt-2.5 max-w-sm leading-relaxed font-normal text-center ${
                 isDark ? 'text-slate-300' : 'text-slate-600'
               }`}
             >
               {t('auth.leftSubtitle')}
             </p>
 
-            {/* Lista de características */}
-            <div className="mt-5 space-y-2.5">
+            {/* Lista de características centrada como bloque */}
+            <div className="mt-5 space-y-2.5 inline-flex flex-col items-start mx-auto">
               {[
                 t('auth.feature1'),
                 t('auth.feature2'),
@@ -189,7 +189,7 @@ export default function AuthLayout({
       </div>
 
       {/* ========================================================
-          PANEL DERECHO: FORMULARIO COMPACTO Y ACCESIBLE
+          PANEL DERECHO: FORMULARIO COMPACTO CENTRADO Y ACCESIBLE
           ======================================================== */}
       <div className="flex-1 flex flex-col justify-between p-5 sm:p-7 lg:p-8 xl:p-10 overflow-y-auto bg-white dark:bg-[#0B1428] text-slate-900 dark:text-slate-100 transition-colors duration-300 lg:border-l border-slate-200 dark:border-slate-800/80">
         
@@ -232,8 +232,8 @@ export default function AuthLayout({
           </div>
         </div>
 
-        {/* Caja Central del Formulario */}
-        <div className="auth-form w-full max-w-md sm:max-w-lg lg:max-w-xl mx-auto my-auto py-4 sm:py-6 [&_input]:py-2 [&_input]:text-xs [&_label]:mb-1 [&_label]:text-[11px]">
+        {/* Caja Central del Formulario Centrada con Ancho Reducido */}
+        <div className="auth-form w-full max-w-sm sm:max-w-md lg:max-w-[440px] mx-auto my-auto py-4 sm:py-6 [&_input]:py-2 [&_input]:text-xs [&_label]:mb-1 [&_label]:text-[11px]">
           
           {/* TÍTULO EVENTHIVE ANIMADO EXCLUSIVO PARA DISPOSITIVOS MÓVILES (Ubicado arriba del título inicio de sesión) */}
           <div className="lg:hidden mb-6 flex flex-col items-center justify-center text-center">

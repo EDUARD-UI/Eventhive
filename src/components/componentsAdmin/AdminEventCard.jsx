@@ -21,6 +21,8 @@ export default function AdminEventCard({
           <img
             src={evento.foto}
             alt={evento.titulo}
+            loading="lazy"
+            decoding="async"
             onError={() => setImgError(true)}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />

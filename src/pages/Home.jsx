@@ -145,13 +145,46 @@ function MapEventViewport({ events, userLocation }) {
   return null;
 }
 
-function MapViewController({ center, zoom }) {
+function MapInteractiveController({ defaultCenter, defaultZoom = 13 }) {
   const map = useMap();
+  const timerRef = useRef(null);
+
+  const centerLat = defaultCenter?.[0];
+  const centerLng = defaultCenter?.[1];
+
+  // Si cambia la ubicación de referencia del mapa, actualizar la vista si no está en zoom de evento
   useEffect(() => {
-    if (center && center[0] && center[1]) {
-      map.flyTo(center, zoom || 13, { duration: 1.2 });
+    if (centerLat != null && centerLng != null && !map._isZoomedToEvent) {
+      map.flyTo([centerLat, centerLng], defaultZoom, { duration: 1.0 });
     }
-  }, [center, zoom, map]);
+  }, [centerLat, centerLng, defaultZoom, map]);
+
+  // Listener para cuando se cierra la información del evento (click en la X)
+  useEffect(() => {
+    const handlePopupClose = () => {
+      if (!map._isZoomedToEvent) return;
+
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        // Al dar click en la X de la sección de info, regresa al zoom por defecto
+        if (!map._popup) {
+          map._isZoomedToEvent = false;
+          const targetCenter =
+            centerLat != null && centerLng != null
+              ? [centerLat, centerLng]
+              : [10.415, -75.54];
+          map.flyTo(targetCenter, defaultZoom, { duration: 1.0 });
+        }
+      }, 100);
+    };
+
+    map.on('popupclose', handlePopupClose);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      map.off('popupclose', handlePopupClose);
+    };
+  }, [map, centerLat, centerLng, defaultZoom]);
+
   return null;
 }
 
@@ -167,6 +200,8 @@ export default function Home() {
   const {
     data: upcomingEvents = [],
     isLoading: isLoadingUpcoming,
+    isError: upcomingEventsFailed,
+    refetch: retryUpcomingEvents,
   } = useQuery({
     queryKey: ['home-upcoming-events'],
     queryFn: () => getUpcomingEvents({ page: 0, size: 8 }),
@@ -312,6 +347,11 @@ export default function Home() {
       ) <= Number(selectedDistance);
     });
   }, [mapEvents, selectedDistance, userLocation]);
+
+  const defaultMapCenter = useMemo(
+    () => (userLocation ? [userLocation.lat, userLocation.lng] : [10.415, -75.54]),
+    [userLocation]
+  );
 
   const cityHeatPoints = useMemo(() => {
     if (!showHeatmap || !filteredMapEvents || !filteredMapEvents.length) return [];
@@ -470,12 +510,13 @@ export default function Home() {
           <UpcomingEventsScrollShowcase
             events={upcomingEvents}
             isLoading={isLoadingEvents}
+            hasError={upcomingEventsFailed}
+            onRetry={retryUpcomingEvents}
             emptyTitle={t('home.emptyUpcomingTitle')}
             emptySubtitle={t('home.emptyUpcomingSubtitle')}
           />
         </div>
       </section>
-
 
       {/* 4. Mapa de Eventos en Cartagena con Fondo de Puntos Flotantes, Perspectiva 3D y Elevación Interactiva */}
       <section
@@ -613,9 +654,9 @@ export default function Home() {
                   <EventAttendanceHeatmap points={cityHeatPoints} />
                 )}
 
-                <MapViewController
-                  center={userLocation ? [userLocation.lat, userLocation.lng] : [10.415, -75.54]}
-                  zoom={13}
+                <MapInteractiveController
+                  defaultCenter={defaultMapCenter}
+                  defaultZoom={13}
                 />
 
                 {userLocation && (
@@ -654,8 +695,19 @@ export default function Home() {
                       key={event.id}
                       position={[event.lat, event.lng]}
                       icon={locationPinIcon()}
+                      eventHandlers={{
+                        click: (e) => {
+                          const mapInstance = e.target._map;
+                          if (mapInstance) {
+                            mapInstance._isZoomedToEvent = true;
+                            const targetLat = Number(event.lat) + 0.0022;
+                            const targetLng = Number(event.lng);
+                            mapInstance.flyTo([targetLat, targetLng], 16, { duration: 0.9 });
+                          }
+                        },
+                      }}
                     >
-                      <Popup>
+                      <Popup autoPan={false}>
                         <div className="w-[260px] sm:w-[280px] bg-slate-900 text-slate-100 rounded-2xl overflow-hidden shadow-2xl border border-slate-700/60 font-body">
                           {/* Portada del evento si está disponible */}
                           {event.photo && (
@@ -665,6 +717,7 @@ export default function Home() {
                                 alt={event.title}
                                 className="h-full w-full object-cover"
                                 loading="lazy"
+                                decoding="async"
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/30 to-transparent" />
                             </div>
@@ -742,10 +795,10 @@ export default function Home() {
         </Scroll3DReveal>
       </section>
 
-      {/* 6. Sección: Recomendaciones para ti (Personalizado por Backend para logueados y visitantes) */}
+      {/* Sección: Recomendaciones para ti (después de categorías y antes de banners) */}
       <RecommendationsSection />
 
-      {/* 7. Banners Interactivos 3D (Evento Destacado & Organizadores) */}
+      {/* 6. Banners Interactivos 3D (Evento Destacado & Organizadores) */}
       <section id="banners-section" className="relative scroll-mt-20 my-8 sm:my-12 overflow-hidden">
         <HomeBannersSection />
       </section>

@@ -116,7 +116,7 @@ export function usePerfilUsuario() {
         // Ejecución concurrente y optimizada de las peticiones del perfil del cliente
         const [perfilRes, deseosRes, comprasRes, seguidasRes] = await Promise.allSettled([
           userService.getPerfil(),
-          organizerService.getDeseos({ page: 0, size: 50 }),
+          organizerService.getDeseos({ page: 0, size: 20 }),
           ticketService.getMisComprasConBoletos(),
           organizationService.getOrganizacionesSeguidas(),
         ]);

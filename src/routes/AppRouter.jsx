@@ -1,3 +1,4 @@
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import ScrollToTop from './ScrollToTop.jsx';
 import Home from '../pages/Home.jsx';
@@ -5,23 +6,36 @@ import EventDetailPage from '../pages/EventDetailPage.jsx';
 import BuscarEventosPage from '../pages/BuscarEventosPage.jsx';
 import OrganizadoresPage from '../pages/OrganizadoresPage.jsx';
 import PerfilOrganizacionPublicoPage from '../pages/PerfilOrganizacionPublicoPage.jsx';
-import AdminPanel from '../pages/Administrador/AdminPanel.jsx';
-import ModeradorPanel from '../pages/Moderador/ModeradorPanel.jsx';
-import OrganizadorIndex from '../pages/Organizador/organizadorIndex.jsx';
-import MarketingPanel from '../pages/Marketing/MarketingPanel.jsx';
 import InicioSesion from '../pages/InicioSesion.jsx';
 import Registro from '../pages/Registro.jsx';
 import RutaProtegida from './RutaProtegida.jsx';
-import PerfilRouteGuard from './PerfilRouteGuard.jsx';
-import PasarelaPagoPage from '../pages/PasarelaPagoPage.jsx';
-import { session, normalizeRole, getDashboardPathForRole, isTokenExpired } from '../services/session.js';
-import AcercaDe from '../pages/SobreNosotros/AcercaDe.jsx';
-import Privacidad from '../pages/SobreNosotros/Privacidad.jsx';
-import Terminos from '../pages/SobreNosotros/Terminos.jsx';
-import Contacto from '../pages/SobreNosotros/Contacto.jsx';
 import NotFoundPage from '../pages/NotFoundPage.jsx';
-import RecuperarContrasenaPage from '../pages/RecuperarContrasenaPage.jsx';
-import AceptarInvitacionPage from '../pages/AceptarInvitacionPage.jsx';
+import { session, normalizeRole, getDashboardPathForRole, isTokenExpired } from '../services/session.js';
+
+// Lazy loading de paneles y rutas secundarias para acelerar la carga inicial
+const AdminPanel = lazy(() => import('../pages/Administrador/AdminPanel.jsx'));
+const ModeradorPanel = lazy(() => import('../pages/Moderador/ModeradorPanel.jsx'));
+const OrganizadorIndex = lazy(() => import('../pages/Organizador/organizadorIndex.jsx'));
+const MarketingPanel = lazy(() => import('../pages/Marketing/MarketingPanel.jsx'));
+const PerfilRouteGuard = lazy(() => import('./PerfilRouteGuard.jsx'));
+const PasarelaPagoPage = lazy(() => import('../pages/PasarelaPagoPage.jsx'));
+const AcercaDe = lazy(() => import('../pages/SobreNosotros/AcercaDe.jsx'));
+const Privacidad = lazy(() => import('../pages/SobreNosotros/Privacidad.jsx'));
+const Terminos = lazy(() => import('../pages/SobreNosotros/Terminos.jsx'));
+const Contacto = lazy(() => import('../pages/SobreNosotros/Contacto.jsx'));
+const RecuperarContrasenaPage = lazy(() => import('../pages/RecuperarContrasenaPage.jsx'));
+const AceptarInvitacionPage = lazy(() => import('../pages/AceptarInvitacionPage.jsx'));
+
+/**
+ * Fallback limpio y sutil mientras carga un chunk diferido
+ */
+function RouteLoadingFallback() {
+  return (
+    <div className="w-full min-h-[60vh] flex items-center justify-center">
+      <div className="w-7 h-7 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
+    </div>
+  );
+}
 
 /**
  * Si el usuario ya está autenticado e intenta ir a /iniciosesion o /registro,
@@ -51,152 +65,154 @@ export default function AppRouter() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ScrollToTop />
-      <Routes>
-        {/* Ruta principal: visible para todos los usuarios, incluidos los roles con dashboard */}
-        <Route path="/" element={<Home />} />
+      <Suspense fallback={<RouteLoadingFallback />}>
+        <Routes>
+          {/* Ruta principal: visible para todos los usuarios, incluidos los roles con dashboard */}
+          <Route path="/" element={<Home />} />
 
-        {/* Rutas públicas */}
-        <Route path="/eventos/:id" element={<EventDetailPage />} />
-        <Route path="/evento/:id" element={<EventDetailPage />} />
-        <Route path="/buscar" element={<BuscarEventosPage />} />
-        <Route path="/categorias" element={<Navigate to="/buscar" replace />} />
-        <Route path="/organizaciones" element={<OrganizadoresPage />} />
-        <Route path="/organizaciones/:id" element={<PerfilOrganizacionPublicoPage />} />
-        <Route path="/organizacion/perfil/:id" element={<PerfilOrganizacionPublicoPage />} />
-        <Route path="/organizadores" element={<Navigate to="/organizaciones" replace />} />
+          {/* Rutas públicas */}
+          <Route path="/eventos/:id" element={<EventDetailPage />} />
+          <Route path="/evento/:id" element={<EventDetailPage />} />
+          <Route path="/buscar" element={<BuscarEventosPage />} />
+          <Route path="/categorias" element={<Navigate to="/buscar" replace />} />
+          <Route path="/organizaciones" element={<OrganizadoresPage />} />
+          <Route path="/organizaciones/:id" element={<PerfilOrganizacionPublicoPage />} />
+          <Route path="/organizacion/perfil/:id" element={<PerfilOrganizacionPublicoPage />} />
+          <Route path="/organizadores" element={<Navigate to="/organizaciones" replace />} />
 
-        {/* Rutas de Nosotros */}
-        <Route path="/acerca-de" element={<AcercaDe />} />
-        <Route path="/sobre-nosotros" element={<AcercaDe />} />
-        <Route path="/sobrenosotros" element={<AcercaDe />} />
-        <Route path="/privacidad" element={<Privacidad />} />
-        <Route path="/terminos" element={<Terminos />} />
-        <Route path="/contacto" element={<Contacto />} />
+          {/* Rutas de Nosotros */}
+          <Route path="/acerca-de" element={<AcercaDe />} />
+          <Route path="/sobre-nosotros" element={<AcercaDe />} />
+          <Route path="/sobrenosotros" element={<AcercaDe />} />
+          <Route path="/privacidad" element={<Privacidad />} />
+          <Route path="/terminos" element={<Terminos />} />
+          <Route path="/contacto" element={<Contacto />} />
 
-        {/* Paneles y rutas protegidas estrictas por rol */}
-        <Route
-          path="/admin"
-          element={
-            <RutaProtegida rolesPermitidos={['ADMINISTRADOR']}>
-              <AdminPanel />
-            </RutaProtegida>
-          }
-        />
-        <Route path="/Admin" element={<Navigate to="/admin" replace />} />
-        <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
+          {/* Paneles y rutas protegidas estrictas por rol */}
+          <Route
+            path="/admin"
+            element={
+              <RutaProtegida rolesPermitidos={['ADMINISTRADOR']}>
+                <AdminPanel />
+              </RutaProtegida>
+            }
+          />
+          <Route path="/Admin" element={<Navigate to="/admin" replace />} />
+          <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
 
-        <Route
-          path="/moderador"
-          element={
-            <RutaProtegida rolesPermitidos={['ADMINISTRADOR', 'MODERADOR']}>
-              <ModeradorPanel />
-            </RutaProtegida>
-          }
-        />
-        <Route path="/Moderador" element={<Navigate to="/moderador" replace />} />
-        <Route path="/moderador/dashboard" element={<Navigate to="/moderador" replace />} />
+          <Route
+            path="/moderador"
+            element={
+              <RutaProtegida rolesPermitidos={['ADMINISTRADOR', 'MODERADOR']}>
+                <ModeradorPanel />
+              </RutaProtegida>
+            }
+          />
+          <Route path="/Moderador" element={<Navigate to="/moderador" replace />} />
+          <Route path="/moderador/dashboard" element={<Navigate to="/moderador" replace />} />
 
-        <Route
-          path="/organizacion"
-          element={
-            <RutaProtegida rolesPermitidos={['REPRESENTANTE']}>
-              <OrganizadorIndex />
-            </RutaProtegida>
-          }
-        />
-        <Route path="/organizador" element={<Navigate to="/organizacion" replace />} />
-        <Route path="/organization" element={<Navigate to="/organizacion" replace />} />
-        <Route path="/organizador/dashboard" element={<Navigate to="/organizacion" replace />} />
-        <Route path="/organizacion/dashboard" element={<Navigate to="/organizacion" replace />} />
+          <Route
+            path="/organizacion"
+            element={
+              <RutaProtegida rolesPermitidos={['REPRESENTANTE']}>
+                <OrganizadorIndex />
+              </RutaProtegida>
+            }
+          />
+          <Route path="/organizador" element={<Navigate to="/organizacion" replace />} />
+          <Route path="/organization" element={<Navigate to="/organizacion" replace />} />
+          <Route path="/organizador/dashboard" element={<Navigate to="/organizacion" replace />} />
+          <Route path="/organizacion/dashboard" element={<Navigate to="/organizacion" replace />} />
 
-        <Route
-          path="/marketing"
-          element={
-            <RutaProtegida rolesPermitidos={['MARKETING', 'ADMINISTRADOR']}>
-              <MarketingPanel />
-            </RutaProtegida>
-          }
-        />
-        <Route path="/Marketing" element={<Navigate to="/marketing" replace />} />
-        <Route path="/marketing/dashboard" element={<Navigate to="/marketing" replace />} />
+          <Route
+            path="/marketing"
+            element={
+              <RutaProtegida rolesPermitidos={['MARKETING', 'ADMINISTRADOR']}>
+                <MarketingPanel />
+              </RutaProtegida>
+            }
+          />
+          <Route path="/Marketing" element={<Navigate to="/marketing" replace />} />
+          <Route path="/marketing/dashboard" element={<Navigate to="/marketing" replace />} />
 
-        {/* Autenticación protegida para usuarios ya logueados */}
-        <Route
-          path="/iniciosesion"
-          element={
-            <GuestOnlyRoute>
-              <InicioSesion />
-            </GuestOnlyRoute>
-          }
-        />
-        <Route
-          path="/registro"
-          element={
-            <GuestOnlyRoute>
-              <Registro />
-            </GuestOnlyRoute>
-          }
-        />
+          {/* Autenticación protegida para usuarios ya logueados */}
+          <Route
+            path="/iniciosesion"
+            element={
+              <GuestOnlyRoute>
+                <InicioSesion />
+              </GuestOnlyRoute>
+            }
+          />
+          <Route
+            path="/registro"
+            element={
+              <GuestOnlyRoute>
+                <Registro />
+              </GuestOnlyRoute>
+            }
+          />
 
-        {/* Perfil personal compartido por clientes y operadores */}
-        <Route
-          path="/perfil"
-          element={
-            <RutaProtegida>
-              <PerfilRouteGuard />
-            </RutaProtegida>
-          }
-        />
+          {/* Perfil personal compartido por clientes y operadores */}
+          <Route
+            path="/perfil"
+            element={
+              <RutaProtegida>
+                <PerfilRouteGuard />
+              </RutaProtegida>
+            }
+          />
 
-        {/* Pasarela de Pago Minimalista (Interfaz nueva dedicada) */}
-        <Route
-          path="/pago/:id"
-          element={
-            <RutaProtegida>
-              <PasarelaPagoPage />
-            </RutaProtegida>
-          }
-        />
-        <Route
-          path="/pago"
-          element={
-            <RutaProtegida>
-              <PasarelaPagoPage />
-            </RutaProtegida>
-          }
-        />
-        <Route
-          path="/checkout/:id"
-          element={
-            <RutaProtegida>
-              <PasarelaPagoPage />
-            </RutaProtegida>
-          }
-        />
-        <Route
-          path="/checkout"
-          element={
-            <RutaProtegida>
-              <PasarelaPagoPage />
-            </RutaProtegida>
-          }
-        />
+          {/* Pasarela de Pago Minimalista (Interfaz nueva dedicada) */}
+          <Route
+            path="/pago/:id"
+            element={
+              <RutaProtegida>
+                <PasarelaPagoPage />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/pago"
+            element={
+              <RutaProtegida>
+                <PasarelaPagoPage />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/checkout/:id"
+            element={
+              <RutaProtegida>
+                <PasarelaPagoPage />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/checkout"
+            element={
+              <RutaProtegida>
+                <PasarelaPagoPage />
+              </RutaProtegida>
+            }
+          />
 
-        <Route
-          path="/recuperar-contrasena"
-          element={
-            <GuestOnlyRoute>
-              <RecuperarContrasenaPage />
-            </GuestOnlyRoute>
-          }
-        />
-        <Route path="/olvide-contrasena" element={<Navigate to="/recuperar-contrasena" replace />} />
-        <Route path="/restablecer-contrasena" element={<RecuperarContrasenaPage />} />
-        <Route path="/aceptar-invitacion" element={<AceptarInvitacionPage />} />
+          <Route
+            path="/recuperar-contrasena"
+            element={
+              <GuestOnlyRoute>
+                <RecuperarContrasenaPage />
+              </GuestOnlyRoute>
+            }
+          />
+          <Route path="/olvide-contrasena" element={<Navigate to="/recuperar-contrasena" replace />} />
+          <Route path="/restablecer-contrasena" element={<RecuperarContrasenaPage />} />
+          <Route path="/aceptar-invitacion" element={<AceptarInvitacionPage />} />
 
-        {/* Fallback de ruta no encontrada: página 404 personalizada */}
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+          {/* Fallback de ruta no encontrada: página 404 personalizada */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

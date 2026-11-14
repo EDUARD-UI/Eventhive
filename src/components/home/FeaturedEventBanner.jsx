@@ -49,6 +49,8 @@ export default function FeaturedEventBanner() {
           src={activeBanner.imagenUrl}
           alt=""
           aria-hidden="true"
+          loading="lazy"
+          decoding="async"
           className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-110 sm:hidden pointer-events-none"
         />
         <ImageWithFallback

@@ -115,6 +115,8 @@ export default function PerfilHeaderCard({
                 <img
                   src={photoPreview || usuario.urlImagenPerfil}
                   alt={usuario.nombreCompleto}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.target.onerror = null;

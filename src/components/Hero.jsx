@@ -40,8 +40,7 @@ export default function Hero() {
 
   // Animación de entrada inicial suave
   useEffect(() => {
-    const timer = setTimeout(() => setIsMounted(true), 60);
-    return () => clearTimeout(timer);
+    setIsMounted(true);
   }, []);
 
   // Inicialización y reproducción fluida a velocidad nativa (1.0x para máxima nitidez y sin pérdida de frames)
@@ -98,7 +97,10 @@ export default function Hero() {
           onCanPlay={() => setIsVideoReady(true)}
           onPlaying={() => setIsVideoReady(true)}
           onError={() => setIsVideoReady(false)}
-          className={`absolute inset-0 w-full h-full object-cover object-center transform-gpu will-change-transform [backface-visibility:hidden] [image-rendering:-webkit-optimize-contrast] transition-opacity duration-700 ${
+          onPause={(e) => {
+            e.target.play().catch(() => {});
+          }}
+          className={`absolute inset-0 w-full h-full object-cover object-center transform-gpu [backface-visibility:hidden] transition-opacity duration-700 ${
             isVideoReady ? 'opacity-100' : 'opacity-0'
           }`}
         >
@@ -131,28 +133,28 @@ export default function Hero() {
           }`}
         >
           {/* Titular Principal */}
-          <h1 className="font-display font-extrabold text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08] tracking-tight mb-6 text-white drop-shadow-lg">
+          <h1 className="font-display font-extrabold text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08] tracking-tight mb-6 sm:mb-8 lg:mb-6 text-white drop-shadow-lg">
             <span>{t('hero.titleLine1', 'Tus Eventos al')} </span>
             <span className="block mt-2 bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 bg-clip-text text-transparent font-black">
               {t('hero.titleLine2', 'Ritmo de la Ciudad')}
             </span>
           </h1>
 
-          {/* Subtítulo */}
-          <p className="max-w-2xl text-base sm:text-lg md:text-xl text-slate-100/95 font-normal leading-relaxed mb-8 sm:mb-10 drop-shadow-md">
+          {/* Subtítulo: Oculto en teléfonos y tablets (visible solo en escritorio lg+) */}
+          <p className="hidden lg:block max-w-2xl text-base sm:text-lg md:text-xl text-slate-100/95 font-normal leading-relaxed mb-8 sm:mb-10 drop-shadow-md">
             {t(
               'hero.subtitle',
               'Descubre festivales, conciertos, arte, gastronomía y vida nocturna en la mágica Cartagena de Indias. Vive cada momento al máximo.'
             )}
           </p>
 
-          {/* Botón Explorar Cartelera */}
+          {/* Botón Explorar Cartelera / Catálogo */}
           <div>
             <Link
               to="/buscar"
               className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl sm:rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold text-sm sm:text-base uppercase tracking-wider shadow-xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.03] active:scale-98 transition-all cursor-pointer group"
             >
-              <span>{t('hero.cta', 'Explorar Cartelera')}</span>
+              <span>{t('hero.cta', 'Explorar Catálogo')}</span>
               <ArrowRight className="w-5 h-5 stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
           </div>

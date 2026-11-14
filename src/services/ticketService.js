@@ -53,7 +53,7 @@ const mapTicket = (ticket, compra, index) => {
 const loadAllPurchases = async () => {
   const purchases = [];
   let page = 0;
-  const pageSize = 20;
+  const pageSize = 4;
 
   try {
     while (true) {

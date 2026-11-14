@@ -65,7 +65,7 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
     setLoading(true);
 
     Promise.all([
-      organizerService.getEventosOrganizador({ page: 0, size: 200 }),
+      organizerService.getEventosOrganizador({ page: 0, size: 50 }),
       getCategoryNames(),
     ])
       .then(([eventsData, categoriesData]) => {

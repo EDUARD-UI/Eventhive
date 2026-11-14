@@ -399,7 +399,7 @@ export default function OrganizadorIndex() {
       });
 
     const pEvs = organizerService
-      .getEventosOrganizador({ page: 0, size: 200 })
+      .getEventosOrganizador({ page: 0, size: 50 })
       .then((events) => {
         const list = (events || []).filter(
           (e) =>

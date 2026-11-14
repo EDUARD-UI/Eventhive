@@ -433,7 +433,7 @@ export const organizerService = {
   },
 
   /** GET /api/compras — mis compras paginadas */
-  getMisCompras({ page = 0, size = 10 } = {}) {
+  getMisCompras({ page = 0, size = 4 } = {}) {
     return httpClient.get('/compras', { page, size });
   },
 

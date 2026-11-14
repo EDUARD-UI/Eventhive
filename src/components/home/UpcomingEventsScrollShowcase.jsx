@@ -131,6 +131,22 @@ export default function UpcomingEventsScrollShowcase({
     );
   }
 
+  if (hasError && events.length === 0) {
+    return (
+      <div ref={sectionRef}>
+        <HiveEmptyState
+          title={t('home.upcomingLoadErrorTitle') || 'No se pudieron cargar los próximos eventos'}
+          subtitle={t('home.upcomingLoadErrorDescription') || 'El servicio de eventos no está disponible en este momento.'}
+          showAction={Boolean(onRetry)}
+          actionType="retry"
+          onAction={onRetry}
+          actionLabel={t('home.retry') || 'Reintentar'}
+          iconType="alert"
+        />
+      </div>
+    );
+  }
+
   if (!events || events.length === 0) {
     return (
       <div ref={sectionRef}>
