@@ -73,6 +73,7 @@ export default function InicioSesion() {
         text: t('auth.welcomeBackText'),
         timer: 1400,
         showConfirmButton: false,
+        showCancelButton: false,
       });
 
       const user = session.getUser();

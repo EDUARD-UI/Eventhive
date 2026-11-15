@@ -82,7 +82,7 @@ test('localhost uses local backend by default when no environment override is se
   }
 });
 
-test('localhost connects to Azure backend when VITE_API_MODE=azure or VITE_API_URL points to Azure', () => {
+test('localhost connects to Azure backend only when VITE_API_MODE=azure', () => {
   const originalWindow = globalThis.window;
   const originalMode = process.env.VITE_API_MODE;
   const originalUrl = process.env.VITE_API_URL;
@@ -94,7 +94,8 @@ test('localhost connects to Azure backend when VITE_API_MODE=azure or VITE_API_U
 
     delete process.env.VITE_API_MODE;
     process.env.VITE_API_URL = AZURE_API_URL;
-    assert.equal(getApiBaseUrl(), AZURE_API_URL);
+    // In local without VITE_API_MODE=azure, it must NOT connect to Azure
+    assert.equal(getApiBaseUrl(), LOCAL_API_URL);
   } finally {
     globalThis.window = originalWindow;
     if (originalMode !== undefined) process.env.VITE_API_MODE = originalMode;

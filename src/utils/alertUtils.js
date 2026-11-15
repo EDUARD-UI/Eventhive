@@ -38,7 +38,12 @@ const normalizeAlertOptions = (titleOrOptions, maybeText, defaultTitle) => {
       badge: titleOrOptions.badge,
       confirmButtonText: titleOrOptions.confirmButtonText,
       cancelButtonText: titleOrOptions.cancelButtonText,
-      showConfirmButton: titleOrOptions.showConfirmButton ?? true,
+      showConfirmButton:
+        titleOrOptions.showConfirmButton !== undefined
+          ? titleOrOptions.showConfirmButton
+          : titleOrOptions.timer
+            ? false
+            : true,
       showCancelButton: titleOrOptions.showCancelButton ?? false,
       timer: titleOrOptions.timer,
       ...titleOrOptions,
@@ -48,6 +53,7 @@ const normalizeAlertOptions = (titleOrOptions, maybeText, defaultTitle) => {
     title: titleOrOptions ?? defaultTitle,
     text: maybeText ?? '',
     showConfirmButton: true,
+    showCancelButton: false,
   };
 };
 
@@ -60,6 +66,8 @@ export const showSuccessAlert = (titleOrOptions = '¡Éxito!', maybeText = '') =
     icon: 'success',
     title: opts.title,
     confirmButtonText: opts.confirmButtonText || 'Aceptar',
+    showConfirmButton: opts.showConfirmButton,
+    showCancelButton: opts.showCancelButton,
     timer: opts.timer,
     buttonsStyling: false,
     customClass: BASE_SWAL_CLASSES,

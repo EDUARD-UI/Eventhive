@@ -145,7 +145,7 @@ function MapEventViewport({ events, userLocation }) {
   return null;
 }
 
-function MapInteractiveController({ defaultCenter, defaultZoom = 13 }) {
+function MapInteractiveController({ defaultCenter, defaultZoom = 14.2 }) {
   const map = useMap();
   const timerRef = useRef(null);
 
@@ -159,28 +159,43 @@ function MapInteractiveController({ defaultCenter, defaultZoom = 13 }) {
     }
   }, [centerLat, centerLng, defaultZoom, map]);
 
-  // Listener para cuando se cierra la información del evento (click en la X)
+  // Listener para cuando se abre o cierra la información del evento
   useEffect(() => {
-    const handlePopupClose = () => {
-      if (!map._isZoomedToEvent) return;
-
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => {
-        // Al dar click en la X de la sección de info, regresa al zoom por defecto
-        if (!map._popup) {
-          map._isZoomedToEvent = false;
-          const targetCenter =
-            centerLat != null && centerLng != null
-              ? [centerLat, centerLng]
-              : [10.415, -75.54];
-          map.flyTo(targetCenter, defaultZoom, { duration: 1.0 });
-        }
-      }, 100);
+    const returnToDefault = () => {
+      map._isZoomedToEvent = false;
+      const targetCenter =
+        centerLat != null && centerLng != null
+          ? [centerLat, centerLng]
+          : [10.415, -75.54];
+      map.flyTo(targetCenter, defaultZoom, { duration: 0.8 });
     };
 
+    const handlePopupOpen = (e) => {
+      // Enganchar el click en la "X" del popup nativo de Leaflet
+      const closeBtn = e.popup?.getElement?.()?.querySelector('.leaflet-popup-close-button');
+      if (closeBtn) {
+        closeBtn.onclick = () => {
+          returnToDefault();
+        };
+      }
+    };
+
+    const handlePopupClose = () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        // Al cerrar el card info (y no abrir otro inmediatamente), regresa al zoom por defecto
+        const hasOpenPopup = document.querySelector('.leaflet-popup');
+        if (!hasOpenPopup) {
+          returnToDefault();
+        }
+      }, 60);
+    };
+
+    map.on('popupopen', handlePopupOpen);
     map.on('popupclose', handlePopupClose);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
+      map.off('popupopen', handlePopupOpen);
       map.off('popupclose', handlePopupClose);
     };
   }, [map, centerLat, centerLng, defaultZoom]);
@@ -631,10 +646,10 @@ export default function Home() {
               )}
 
               <MapContainer
-                center={userLocation ? [userLocation.lat, userLocation.lng] : [10.415, -75.54]}
-                zoom={13}
-                minZoom={9}
-                maxZoom={17}
+                center={defaultMapCenter}
+                zoom={14.2}
+                minZoom={10}
+                maxZoom={18}
                 scrollWheelZoom={false}
                 dragging={true}
                 doubleClickZoom={false}
@@ -643,7 +658,6 @@ export default function Home() {
                 zoomControl={true}
                 className="h-full w-full relative z-0 overflow-hidden rounded-3xl"
               >
-                <MapEventViewport events={filteredMapEvents} userLocation={userLocation} />
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -656,7 +670,7 @@ export default function Home() {
 
                 <MapInteractiveController
                   defaultCenter={defaultMapCenter}
-                  defaultZoom={13}
+                  defaultZoom={14.2}
                 />
 
                 {userLocation && (

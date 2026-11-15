@@ -196,7 +196,7 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
       >
         <div className="relative flex flex-col md:flex-row items-stretch justify-between w-full min-h-[96px] sm:min-h-[105px] md:min-h-[110px]">
           
-          {/* LADO IZQUIERDO: Imagen compacta a toda la altura con degradado ámbar derecho */}
+          {/* LADO IZQUIERDO: Imagen compacta a toda la altura sin degradado sobrepuesto */}
           <div className="relative w-full md:w-44 lg:w-52 xl:w-60 shrink-0 self-stretch min-h-[120px] md:min-h-[105px] overflow-hidden">
             <img
               src={displayImage}
@@ -204,11 +204,6 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
               loading="lazy"
               decoding="async"
               className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-            />
-            {/* Degradado dorado ámbar desde la derecha (y desde abajo en mobile) para integrarse perfectamente */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-transparent via-amber-500/40 to-amber-500 pointer-events-none"
             />
             {isLive && (
               <span className="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-[#0B132B] text-white shadow-md animate-pulse">

@@ -179,17 +179,22 @@ export default function CityRhythmPreFooter() {
       </section>
 
       {/* =========================================================================
-          Divisor de Picos / Festón festoneado (Scallop) en dorado ámbar (#C86A00)
-          hacia el Footer, con ondas de repetición.
+          Divisor de Ondas Fluidas (Waves) en dorado ámbar (#C86A00)
+          hacia el Footer, para un final fluido y continuo.
          ========================================================================= */}
       <div className="w-full overflow-hidden leading-none -mt-px pointer-events-none">
         <svg
-          viewBox="0 0 1200 24"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1440 320"
           preserveAspectRatio="none"
-          className="w-full h-5 sm:h-7 md:h-8 block fill-[#C86A00]"
+          className="w-full h-10 sm:h-14 md:h-18 lg:h-22 block"
           aria-hidden="true"
         >
-          <path d="M 0,0 L 0,4 Q 25,24 50,4 Q 75,24 100,4 Q 125,24 150,4 Q 175,24 200,4 Q 225,24 250,4 Q 275,24 300,4 Q 325,24 350,4 Q 375,24 400,4 Q 425,24 450,4 Q 475,24 500,4 Q 525,24 550,4 Q 575,24 600,4 Q 625,24 650,4 Q 675,24 700,4 Q 725,24 750,4 Q 775,24 800,4 Q 825,24 850,4 Q 875,24 900,4 Q 925,24 950,4 Q 975,24 1000,4 Q 1025,24 1050,4 Q 1075,24 1100,4 Q 1125,24 1150,4 Q 1175,24 1200,4 L 1200,0 Z" />
+          <path
+            fill="#C86A00"
+            fillOpacity="1"
+            d="M0,320L60,277.3C120,235,240,149,360,138.7C480,128,600,192,720,197.3C840,203,960,149,1080,138.7C1200,128,1320,160,1380,176L1440,192L1440,0L1380,0C1320,0,1200,0,1080,0C960,0,840,0,720,0C600,0,480,0,360,0C240,0,120,0,60,0L0,0Z"
+          />
         </svg>
       </div>
     </div>

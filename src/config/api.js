@@ -71,19 +71,13 @@ export const getApiBaseUrl = () => {
       return customAzure ? formatApiUrl(customAzure) : AZURE_API_URL;
     }
 
-    // Si se provee una URL personalizada en VITE_API_URL (ej. Azure u otro destino)
-    const customApiUrl = env?.VITE_API_URL?.trim();
-    if (customApiUrl) {
-      return formatApiUrl(customApiUrl);
-    }
-
-    // Si se provee una URL local personalizada
+    // Por defecto en local NUNCA llamar a Azure: usar backend local
     const customLocal = env?.VITE_LOCAL_API_URL?.trim();
-    if (customLocal) {
+    if (customLocal && !customLocal.includes('azurewebsites.net')) {
       return formatApiUrl(customLocal);
     }
 
-    // Por defecto en local si no hay variables de entorno configuradas
+    // Por defecto en local
     return LOCAL_API_URL;
   }
 

@@ -113,12 +113,12 @@ export default function Hero() {
         {/* Desvanecimiento superior sutil para integrar el navbar */}
         <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#080E1C]/80 to-transparent pointer-events-none" />
 
-        {/* Difusión inferior suave hacia la siguiente sección */}
+        {/* Difusión inferior rápida y clara en la misma altura hacia la siguiente sección */}
         <div
-          className={`absolute inset-x-0 bottom-0 h-36 pointer-events-none transition-colors duration-500 ${
+          className={`absolute inset-x-0 bottom-0 h-32 sm:h-36 pointer-events-none transition-colors duration-500 ${
             isDark
               ? 'bg-gradient-to-t from-[#070D1B] via-[#070D1B]/70 to-transparent'
-              : 'bg-gradient-to-t from-slate-50 via-slate-950/40 to-transparent'
+              : 'bg-gradient-to-t from-slate-100 via-slate-100/30 to-transparent'
           }`}
         />
       </div>
@@ -126,9 +126,9 @@ export default function Hero() {
       {/* =========================================================
           2. CONTENIDO PRINCIPAL: TÍTULO, SUBTÍTULO Y BOTÓN CTA
          ========================================================= */}
-      <div className="relative z-10 w-full max-w-[1560px] mx-auto px-6 sm:px-10 lg:px-16 py-16 sm:py-20 lg:py-24 flex flex-col justify-center">
+      <div className="relative z-10 w-full max-w-[1560px] mx-auto px-6 sm:px-10 lg:px-16 pt-28 pb-14 sm:pt-36 sm:pb-18 lg:py-24 flex flex-col justify-center">
         <div
-          className={`max-w-3xl flex flex-col items-start text-left transition-all duration-700 ease-out transform ${
+          className={`max-w-3xl flex flex-col items-start text-left mt-6 sm:mt-10 lg:mt-0 transition-all duration-700 ease-out transform ${
             isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
           }`}
         >

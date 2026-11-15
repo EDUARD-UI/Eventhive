@@ -232,38 +232,41 @@ export default function AuthLayout({
           </div>
         </div>
 
-        {/* Caja Central del Formulario Centrada con Ancho Reducido */}
-        <div className="auth-form w-full max-w-sm sm:max-w-md lg:max-w-[440px] mx-auto my-auto py-4 sm:py-6 [&_input]:py-2 [&_input]:text-xs [&_label]:mb-1 [&_label]:text-[11px]">
+        {/* Caja Central del Formulario Centrada con Ancho Ampliado en PC */}
+        <div className="auth-form w-full max-w-sm sm:max-w-md lg:max-w-[490px] xl:max-w-[520px] mx-auto my-auto py-4 sm:py-6 [&_input]:py-2.5 [&_input]:text-xs [&_label]:mb-1 [&_label]:text-[11px]">
           
-          {/* TÍTULO EVENTHIVE ANIMADO EXCLUSIVO PARA DISPOSITIVOS MÓVILES (Ubicado arriba del título inicio de sesión) */}
+          {/* TÍTULO EVENTHIVE ANIMADO EXCLUSIVO PARA DISPOSITIVOS MÓVILES (Idéntico a la parte izquierda de PC con su tamaño y animación) */}
           <div className="lg:hidden mb-6 flex flex-col items-center justify-center text-center">
             <Link
               to="/"
-              className="group inline-flex flex-col items-center gap-2.5 focus:outline-none"
-              title="EventHive - Portal de Eventos"
+              onMouseEnter={handleReplayBrandAnimation}
+              onFocus={handleReplayBrandAnimation}
+              aria-label="EventHive"
+              className="self-center flex flex-col items-center w-fit focus:outline-none"
             >
-              {/* Isotipo con halo animado */}
-              <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#0B1B3D] via-[#0e214d] to-[#152e68] border border-amber-400/40 p-2 shadow-lg shadow-amber-500/10 group-hover:scale-105 transition-transform duration-300">
-                <div className="absolute inset-0 rounded-2xl bg-amber-400/20 blur-md animate-pulse pointer-events-none" />
-                <img
-                  src="/LOGO45x50.png"
-                  alt="EventHive Logo"
-                  className="h-10 w-auto object-contain relative z-10 drop-shadow-md"
-                  onError={(e) => {
-                    e.currentTarget.src = '/LOGO32x32.png';
-                  }}
-                />
-              </div>
-
-              {/* Tipografía de Marca con animación de brillo suave */}
-              <div className="flex flex-col items-center">
-                <span className="font-display text-3xl font-black tracking-tight text-slate-900 dark:text-white leading-none">
-                  <span>Event</span>
-                  <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 animate-pulse">
-                    Hive
+              <span
+                key={`mobile-${animKey}`}
+                aria-hidden="true"
+                className="font-display text-[44px] sm:text-[52px] font-black leading-none tracking-tight inline-flex items-baseline"
+              >
+                {BRAND_LETTERS.map(({ char, isHive }, index) => (
+                  <span
+                    key={`mob-${char}-${index}`}
+                    style={{ animationDelay: `${index * 85}ms` }}
+                    className={`inline-block animate-auth-letter ${
+                      isHive
+                        ? isDark
+                          ? 'text-amber-400'
+                          : 'text-amber-500'
+                        : isDark
+                          ? 'text-white'
+                          : 'text-[#0F172A]'
+                    }`}
+                  >
+                    {char}
                   </span>
-                </span>
-              </div>
+                ))}
+              </span>
             </Link>
           </div>
 

@@ -72,10 +72,6 @@ export default function Registro() {
         errors.password = t('auth.errPasswordMin');
       }
 
-      if (values.password !== values.confirmPassword) {
-        errors.confirmPassword = t('auth.errPasswordMatch');
-      }
-
       return errors;
     },
     [t]
@@ -103,7 +99,6 @@ export default function Registro() {
       nombreCompleto: '',
       correoUsuario: '',
       password: '',
-      confirmPassword: '',
     },
     validateRegister
   );
@@ -346,7 +341,7 @@ export default function Registro() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div className="pt-1">
             <InputField
               id="password"
               name="password"
@@ -359,22 +354,6 @@ export default function Registro() {
               onBlur={handleBlur}
               error={errors.password}
               touched={touched.password}
-              required
-              autoComplete="new-password"
-            />
-
-            <InputField
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              label={t('auth.confirmPasswordLabel')}
-              placeholder="••••••••"
-              icon={FiLock}
-              value={values.confirmPassword}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              error={errors.confirmPassword}
-              touched={touched.confirmPassword}
               required
               autoComplete="new-password"
             />

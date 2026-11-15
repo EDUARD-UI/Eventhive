@@ -135,10 +135,16 @@ export default function HomeBannersSection() {
       <div
         className={`grid grid-cols-1 ${
           bannerRight ? 'lg:grid-cols-2' : ''
-        } gap-7 sm:gap-9 items-center relative z-10`}
+        } gap-7 sm:gap-10 items-start relative z-10`}
       >
-        <BannerCard banner={bannerLeft} />
-        {bannerRight && <BannerCard banner={bannerRight} />}
+        <div className="w-full lg:-translate-y-3.5 transition-transform duration-300">
+          <BannerCard banner={bannerLeft} />
+        </div>
+        {bannerRight && (
+          <div className="w-full lg:translate-y-5 transition-transform duration-300">
+            <BannerCard banner={bannerRight} />
+          </div>
+        )}
       </div>
     </section>
   );

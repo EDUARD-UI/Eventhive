@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FiGlobe, FiMessageSquare, FiInstagram, FiMail } from 'react-icons/fi';
+import { FiGlobe, FiMessageSquare, FiInstagram } from 'react-icons/fi';
 import AppLogo from '../common/AppLogo.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 
@@ -108,7 +108,13 @@ export default function Footer({ onHelpClick }) {
         {/* Bottom bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
           <p>{t('footer.copyright')}</p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            <a
+              href="mailto:eventhiveContacto@gmail.com"
+              className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+            >
+              eventhiveContacto@gmail.com
+            </a>
             <a
               href="https://instagram.com/eventhive.ctg"
               target="_blank"
@@ -117,13 +123,6 @@ export default function Footer({ onHelpClick }) {
               className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white border border-slate-200 dark:border-white/10 flex items-center justify-center transition-colors duration-200"
             >
               <FiInstagram size={15} />
-            </a>
-            <a
-              href="mailto:contacto@eventhive.co"
-              aria-label={t('footer.contactEmailAria')}
-              className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white border border-slate-200 dark:border-white/10 flex items-center justify-center transition-colors duration-200"
-            >
-              <FiMail size={15} />
             </a>
           </div>
         </div>
