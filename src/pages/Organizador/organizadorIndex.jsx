@@ -123,6 +123,7 @@ export default function OrganizadorIndex() {
   const [notification, setNotification] = useState(false);
   const [orgData, setOrgData] = useState(null);
   const [solicitudVerif, setSolicitudVerif] = useState(null);
+  const [eventsRefreshKey, setEventsRefreshKey] = useState(0);
 
   const [allOrgEvents, setAllOrgEvents] = useState([]);
 
@@ -284,6 +285,7 @@ export default function OrganizadorIndex() {
     setEditingEvent(null);
     setActiveItem('eventos');
     setNotification(true);
+    setEventsRefreshKey((k) => k + 1);
 
     if (savedEvent && (savedEvent.id || savedEvent.eventoId)) {
       const eventId = savedEvent.id || savedEvent.eventoId;
@@ -310,6 +312,10 @@ export default function OrganizadorIndex() {
       setCarteleraTotal((prev) => prev + 1);
     }
 
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('eventhive:events_updated', { detail: savedEvent }));
+    }
+
     loadData();
   };
 
@@ -317,6 +323,11 @@ export default function OrganizadorIndex() {
     setCreationView(null);
     setActiveItem('eventos');
     setNotification(false);
+    setEventsRefreshKey((k) => k + 1);
+    loadData();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('eventhive:events_updated', { detail: null }));
+    }
   };
 
   // Próximos eventos ordenados
@@ -636,8 +647,11 @@ export default function OrganizadorIndex() {
       case 'eventos':
         return (
           <MiEvento
+            key={`mi-evento-${eventsRefreshKey}`}
             onCreate={() => setCreationView('wizard')}
             onViewDetail={(eventId) => setSelectedEventId(eventId)}
+            initialEvents={allOrgEvents}
+            refreshTrigger={eventsRefreshKey}
           />
         );
       case 'operadores':

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   FiCalendar,
   FiCheckCircle,
@@ -46,10 +46,47 @@ const labelMap = {
   RECHAZADO: 'Rechazado',
 };
 
-export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }) {
-  const [organizerEvents, setOrganizerEvents] = useState([]);
+const normalizeOrganizerEvent = (e) => ({
+  ...e,
+  id: e.id || e.eventoId,
+  eventoId: e.id || e.eventoId,
+  title: e.titulo || e.nombre || e.title || 'Sin título',
+  titulo: e.titulo || e.nombre || e.title || 'Sin título',
+  category:
+    typeof e.categoria === 'string'
+      ? e.categoria
+      : e.categoria?.nombre || e.nombreCategoria || e.categoriaNombre || 'Evento Cultural',
+  date: e.fecha || e.date || 'Próximamente',
+  fecha: e.fecha || e.date || 'Próximamente',
+  time: formatHora12(e.hora || e.time) || 'Hora por confirmar',
+  hora: formatHora12(e.hora || e.time) || 'Hora por confirmar',
+  location: e.lugar || e.ubicacion || e.location || 'Cartagena',
+  lugar: e.lugar || e.ubicacion || e.location || 'Cartagena',
+  status: e.estado || e.rawStatus || 'BORRADOR',
+  rawStatus: e.estado || e.rawStatus || 'BORRADOR',
+  estado: e.estado || e.rawStatus || 'BORRADOR',
+  tone: toneMap[e.estado || e.rawStatus] || 'warning',
+  photo: e.foto || e.imagen || e.imagenUrl || null,
+  localidades: Array.isArray(e.localidades) ? e.localidades : [],
+});
+
+export default function MiEvento({
+  onCreate,
+  onViewDetail,
+  externalSearch = '',
+  initialEvents = null,
+  refreshTrigger = 0,
+}) {
+  const [organizerEvents, setOrganizerEvents] = useState(() => {
+    if (Array.isArray(initialEvents) && initialEvents.length > 0) {
+      return initialEvents.map(normalizeOrganizerEvent);
+    }
+    return [];
+  });
   const [categoryOptions, setCategoryOptions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(
+    () => !(Array.isArray(initialEvents) && initialEvents.length > 0)
+  );
   const [category, setCategory] = useState('Todos');
   const [statusFilter, setStatusFilter] = useState('Todos');
   const [localSearch, setLocalSearch] = useState('');
@@ -60,53 +97,60 @@ export default function MiEvento({ onCreate, onViewDetail, externalSearch = '' }
   // Protección de operaciones asíncronas y doble clic
   const [deletingId, setDeletingId] = useState(null);
 
-  useEffect(() => {
-    let isMounted = true;
-    setLoading(true);
-
-    Promise.all([
-      organizerService.getEventosOrganizador({ page: 0, size: 50 }),
-      getCategoryNames(),
-    ])
-      .then(([eventsData, categoriesData]) => {
-        if (!isMounted) return;
-        const validEvents = (eventsData || []).filter(
-          (e) =>
-            (e.estado || '').toUpperCase() !== 'FINALIZADO' &&
-            (e.rawStatus || '').toUpperCase() !== 'FINALIZADO'
-        );
-        const normalized = validEvents.map((e) => ({
-          ...e,
-          id: e.id,
-          title: e.titulo || e.title || 'Sin título',
-          category:
-            typeof e.categoria === 'string'
-              ? e.categoria
-              : e.categoria?.nombre || e.nombreCategoria || 'Evento Cultural',
-          date: e.fecha || e.date || 'Próximamente',
-          time: formatHora12(e.hora || e.time) || 'Hora por confirmar',
-          hora: formatHora12(e.hora || e.time) || 'Hora por confirmar',
-          location: e.lugar || e.ubicacion || e.location || 'Cartagena',
-          status: e.estado || 'BORRADOR',
-          rawStatus: e.estado || 'BORRADOR',
-          tone: toneMap[e.estado] || 'warning',
-          photo: e.foto || e.imagen || null,
-          localidades: Array.isArray(e.localidades) ? e.localidades : [],
-        }));
-        setOrganizerEvents(normalized);
-        if (categoriesData) setCategoryOptions(categoriesData);
-      })
-      .catch((err) => {
-        console.error('Error cargando eventos:', err);
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
+  const fetchEvents = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const [eventsData, categoriesData] = await Promise.all([
+        organizerService.getEventosOrganizador({ page: 0, size: 50 }),
+        getCategoryNames(),
+      ]);
+      const validEvents = (eventsData || []).filter(
+        (e) =>
+          (e.estado || '').toUpperCase() !== 'FINALIZADO' &&
+          (e.rawStatus || '').toUpperCase() !== 'FINALIZADO'
+      );
+      setOrganizerEvents(validEvents.map(normalizeOrganizerEvent));
+      if (categoriesData) setCategoryOptions(categoriesData);
+    } catch (err) {
+      console.error('Error cargando eventos del organizador:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchEvents(Boolean(initialEvents && initialEvents.length > 0));
+  }, [fetchEvents, refreshTrigger]);
+
+  useEffect(() => {
+    if (Array.isArray(initialEvents) && initialEvents.length > 0) {
+      setOrganizerEvents(initialEvents.map(normalizeOrganizerEvent));
+      setLoading(false);
+    }
+  }, [initialEvents]);
+
+  // Escuchar evento global cuando se crea/edita un evento en cualquier modal o wizard
+  useEffect(() => {
+    const handleEventsUpdated = (e) => {
+      const saved = e.detail;
+      if (saved && (saved.id || saved.eventoId)) {
+        const norm = normalizeOrganizerEvent(saved);
+        setOrganizerEvents((prev) => {
+          const index = prev.findIndex((item) => String(item.id) === String(norm.id));
+          if (index >= 0) {
+            const next = [...prev];
+            next[index] = { ...next[index], ...norm };
+            return next;
+          }
+          return [norm, ...prev];
+        });
+      }
+      fetchEvents(true);
+    };
+
+    window.addEventListener('eventhive:events_updated', handleEventsUpdated);
+    return () => window.removeEventListener('eventhive:events_updated', handleEventsUpdated);
+  }, [fetchEvents]);
 
   const effectiveSearch = externalSearch || localSearch;
 
