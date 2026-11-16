@@ -1,5 +1,6 @@
 import { httpClient } from './httpClient.js';
 import { normalizeEvent } from './eventService.js';
+import { apiCache } from './cacheService.js';
 
 const getPathId = (value, label = 'Identificador') => {
   const id = value && typeof value === 'object' ? value.id : value;
@@ -83,25 +84,31 @@ export const organizationService = {
   },
 
   async getOrganizationById(organizationId) {
-    try {
-      const data = await httpClient.get(
-        `/organizaciones/${getPathId(organizationId, 'Organización')}`
-      );
-      if (data) return normalizeOrganization(data);
-    } catch {
-      // Ignorar para buscar en listas
-    }
+    return apiCache.fetchWithCache(
+      `org_${organizationId}`,
+      async () => {
+        try {
+          const data = await httpClient.get(
+            `/organizaciones/${getPathId(organizationId, 'Organización')}`
+          );
+          if (data) return normalizeOrganization(data);
+        } catch {
+          // Ignorar para buscar en listas
+        }
 
-    try {
-      const top = await this.listTopOrganizations({ page: 0, size: 50 });
-      const foundTop = top.organizations.find((o) => String(o.id) === String(organizationId));
-      if (foundTop) return foundTop;
+        try {
+          const top = await this.listTopOrganizations({ page: 0, size: 50 });
+          const foundTop = top.organizations.find((o) => String(o.id) === String(organizationId));
+          if (foundTop) return foundTop;
 
-      const all = await this.listOrganizations({ page: 0, size: 50 });
-      return all.organizations.find((o) => String(o.id) === String(organizationId)) || null;
-    } catch {
-      return null;
-    }
+          const all = await this.listOrganizations({ page: 0, size: 50 });
+          return all.organizations.find((o) => String(o.id) === String(organizationId)) || null;
+        } catch {
+          return null;
+        }
+      },
+      { ttlMs: 60000, staleWhileRevalidate: true }
+    );
   },
 
   async followOrganization(organizationId) {

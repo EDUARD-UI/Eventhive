@@ -9,7 +9,6 @@ import MarketingBannersView from './MarketingBannersView.jsx';
 import AdminPerfilView from '../Administrador/AdminPerfilView.jsx';
 import { session } from '../../services/session.js';
 import { useDashboardTheme } from '../../hooks/useDashboardTheme.js';
-import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
 
 const menuItems = [
   { id: 'eventos', label: 'Eventos Promocionados', icon: Sparkles },
@@ -122,16 +121,6 @@ export default function MarketingPanel() {
         return 'Eventos Promocionados';
     }
   };
-
-  if (pageLoading) {
-    return (
-      <HiveBeeLoader
-        text="Cargando..."
-        subtext="Panel de Marketing"
-        fullScreen={true}
-      />
-    );
-  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#EEF2F6] font-body text-slate-800 antialiased">

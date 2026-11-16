@@ -40,22 +40,6 @@ import { useLenisScroll } from '../hooks/useLenisScroll.js';
 
 const toRad = (value) => (value * Math.PI) / 180;
 
-const formatUltimaCompra = (isoDate) => {
-  if (!isoDate) return null;
-  try {
-    const d = new Date(isoDate);
-    if (isNaN(d.getTime())) return null;
-    return d.toLocaleString('es-CO', {
-      hour: '2-digit',
-      minute: '2-digit',
-      day: 'numeric',
-      month: 'short',
-    });
-  } catch {
-    return null;
-  }
-};
-
 const getEventPriceDisplay = (event) => {
   if (!event) return 'Boletería disponible';
 
@@ -383,16 +367,7 @@ export default function Home() {
     [userLocation]
   );
 
-  const [timeWindow, setTimeWindow] = useState(24);
-
-  const timeWindowOptions = useMemo(
-    () => [
-      { value: '6', label: 'Últimas 6 horas' },
-      { value: '24', label: 'Últimas 24 horas' },
-      { value: '168', label: 'Últimos 7 días' },
-    ],
-    []
-  );
+  const timeWindow = 24;
 
   const {
     data: demandPoints = [],
@@ -687,19 +662,6 @@ export default function Home() {
                   <Flame size={15} className={showHeatmap ? 'text-slate-950 fill-slate-950 animate-pulse' : 'text-slate-400'} />
                   <span>{showHeatmap ? 'Modo Movida: Activo' : 'Ver Mapa de Calor'}</span>
                 </button>
-
-                {/* Selector de periodo para demanda comercial (Modo Movida) */}
-                {showHeatmap && (
-                  <div className="w-44 sm:w-48 relative z-30">
-                    <CustomSelect
-                      value={String(timeWindow)}
-                      onChange={(event) => setTimeWindow(Number(event.target.value))}
-                      options={timeWindowOptions}
-                      placeholder="Periodo"
-                      variant={isDark ? 'dark' : 'light'}
-                    />
-                  </div>
-                )}
               </div>
             </div>
           </Scroll3DReveal>
@@ -727,7 +689,7 @@ export default function Home() {
                   ) : (
                     <Flame size={13} className="text-amber-400 animate-pulse shrink-0" />
                   )}
-                  <span className="text-slate-300 font-extrabold uppercase tracking-wide">Compras Recientes:</span>
+                  <span className="text-slate-300 font-extrabold uppercase tracking-wide">Popularidad en compras:</span>
                   <span className="text-slate-300 font-medium">Baja</span>
                   <div className="w-16 h-2 rounded-full bg-gradient-to-r from-[#007BFF] via-[#00D2FF] via-[#FFC107] via-[#FF7A00] to-[#EF4444]" />
                   <span className="text-amber-400 font-extrabold">Alta 🔥</span>
@@ -844,43 +806,6 @@ export default function Home() {
                             <h4 className="text-xs sm:text-sm font-extrabold text-white leading-snug line-clamp-2">
                               {event.title}
                             </h4>
-
-                            {/* Información de Demanda Comercial (compras recientes confirmadas) */}
-                            {showHeatmap && demandInfo && (
-                              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-400/25 text-[11px] space-y-1.5">
-                                <div className="flex items-center justify-between font-extrabold text-amber-400">
-                                  <span className="flex items-center gap-1.5">
-                                    <Flame size={12} className="animate-pulse text-amber-400" />
-                                    <span>Demanda comercial</span>
-                                  </span>
-                                  <span className="text-[10px] font-semibold text-amber-300 bg-amber-400/15 px-1.5 py-0.5 rounded-md">
-                                    {timeWindow === 6 ? 'Últimas 6h' : timeWindow === 168 ? 'Últimos 7d' : 'Últimas 24h'}
-                                  </span>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 text-slate-300 pt-0.5">
-                                  <div className="bg-slate-950/40 p-1.5 rounded-lg border border-white/5">
-                                    <span className="text-[10px] text-slate-400 block font-medium">Entradas:</span>
-                                    <span className="text-xs font-black text-amber-300">
-                                      {Number(demandInfo.entradasCompradas ?? 0).toLocaleString('es-CO')}
-                                    </span>
-                                  </div>
-                                  <div className="bg-slate-950/40 p-1.5 rounded-lg border border-white/5">
-                                    <span className="text-[10px] text-slate-400 block font-medium">Compras:</span>
-                                    <span className="text-xs font-black text-white">
-                                      {Number(demandInfo.totalCompras ?? 0).toLocaleString('es-CO')}
-                                    </span>
-                                  </div>
-                                </div>
-                                {demandInfo.ultimaCompra && (
-                                  <div className="text-[10px] text-slate-400 pt-1 border-t border-amber-400/15 flex items-center justify-between">
-                                    <span>Última compra:</span>
-                                    <span className="font-semibold text-slate-200">
-                                      {formatUltimaCompra(demandInfo.ultimaCompra) || demandInfo.ultimaCompra}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
 
                             {/* Metadatos con micro-iconos */}
                             <div className="space-y-1.5 pt-1 text-[11px] text-slate-300 border-t border-slate-800">

@@ -26,6 +26,8 @@ export default function ModeradorPalabrasProhibidasView() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalElements, setTotalElements] = useState(0);
+  const [activasGlobal, setActivasGlobal] = useState(null);
+  const [gravesGlobal, setGravesGlobal] = useState(null);
 
   // Modal para agregar/editar palabra
   const [modalOpen, setModalOpen] = useState(false);
@@ -55,6 +57,15 @@ export default function ModeradorPalabrasProhibidasView() {
         res?.totalElements ??
         res?.data?.totalElements ??
         (Array.isArray(items) ? items.length : 0);
+
+      const totalActivasBackend = res?.totalActivas ?? res?.data?.totalActivas;
+      if (totalActivasBackend !== undefined && totalActivasBackend !== null) {
+        setActivasGlobal(Number(totalActivasBackend));
+      }
+      const totalGravesBackend = res?.totalGraves ?? res?.data?.totalGraves;
+      if (totalGravesBackend !== undefined && totalGravesBackend !== null) {
+        setGravesGlobal(Number(totalGravesBackend));
+      }
 
       const normalized = (Array.isArray(items) ? items : []).map((item) => ({
         id: item.id,
@@ -100,8 +111,8 @@ export default function ModeradorPalabrasProhibidasView() {
 
   // KPIs reales provenientes del backend
   const totalRegistradas = totalElements || palabras.length;
-  const activasCount = palabras.filter((p) => p.activa).length;
-  const gravesCount = palabras.filter((p) => p.severidad === 'GRAVE').length;
+  const activasCount = activasGlobal !== null ? activasGlobal : palabras.filter((p) => p.activa).length;
+  const gravesCount = gravesGlobal !== null ? gravesGlobal : palabras.filter((p) => p.severidad === 'GRAVE').length;
 
   // Acciones: Abrir modales
   const handleOpenCreateModal = () => {
@@ -196,6 +207,7 @@ export default function ModeradorPalabrasProhibidasView() {
       setPalabras((prev) =>
         prev.map((item) => (item.id === p.id ? { ...item, activa: nextActiva } : item))
       );
+      setActivasGlobal((prev) => (prev !== null ? Math.max(0, prev + (nextActiva ? 1 : -1)) : null));
 
       const toast = Swal.mixin({
         toast: true,

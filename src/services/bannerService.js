@@ -1,4 +1,5 @@
 import { httpClient } from './httpClient.js';
+import { apiCache } from './cacheService.js';
 
 export const normalizeBanner = (banner) => {
   let enlace = banner.enlaceUrl || '';
@@ -28,9 +29,11 @@ export const normalizeBanner = (banner) => {
  * Endpoint público que devuelve los banners configurados para las posiciones 1 y 2.
  */
 export async function getHomeBanners() {
-  const res = await httpClient.get('/banners-home');
-  const list = Array.isArray(res) ? res : res?.data || res?.content || [];
-  return list.map(normalizeBanner).sort((a, b) => a.posicion - b.posicion);
+  return apiCache.fetchWithCache('home_banners_public', async () => {
+    const res = await httpClient.get('/banners-home');
+    const list = Array.isArray(res) ? res : res?.data || res?.content || [];
+    return list.map(normalizeBanner).sort((a, b) => a.posicion - b.posicion);
+  }, { ttlMs: 90000, staleWhileRevalidate: true });
 }
 
 /**

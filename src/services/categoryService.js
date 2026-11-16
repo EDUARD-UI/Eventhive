@@ -1,4 +1,5 @@
 import { httpClient } from './httpClient.js';
+import { apiCache } from './cacheService.js';
 
 export const normalizeCategory = (categoria) => {
   if (typeof categoria === 'string') {
@@ -33,23 +34,27 @@ export const normalizeCategory = (categoria) => {
  * Usado para la interfaz de Categorías y tarjetas completas.
  */
 export async function getAllCategories() {
-  const data = await httpClient.get('/categorias');
-  const list = Array.isArray(data) ? data : data?.content || [];
-  return list.map(normalizeCategory);
+  return apiCache.fetchWithCache('categories_all', async () => {
+    const data = await httpClient.get('/categorias');
+    const list = Array.isArray(data) ? data : data?.content || [];
+    return list.map(normalizeCategory);
+  }, { ttlMs: 120000, staleWhileRevalidate: true });
 }
 
 /**
  * Listado exclusivo de nombres para menús desplegables / selects (GET /categorias/nombres).
  */
 export async function getCategoryNames() {
-  const data = await httpClient.get('/categorias/nombres');
-  const list = Array.isArray(data) ? data : data?.content || [];
-  return list.map((item) => {
-    if (typeof item === 'string') {
-      return { id: item, nombre: item };
-    }
-    return { id: item.id || item.nombre, nombre: item.nombre || item };
-  });
+  return apiCache.fetchWithCache('categories_names', async () => {
+    const data = await httpClient.get('/categorias/nombres');
+    const list = Array.isArray(data) ? data : data?.content || [];
+    return list.map((item) => {
+      if (typeof item === 'string') {
+        return { id: item, nombre: item };
+      }
+      return { id: item.id || item.nombre, nombre: item.nombre || item };
+    });
+  }, { ttlMs: 120000, staleWhileRevalidate: true });
 }
 
 /** Mantener compatibilidad: /categorias/con-eventos delega a getAllCategories. */

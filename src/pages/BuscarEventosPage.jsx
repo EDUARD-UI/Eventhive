@@ -3,7 +3,6 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { FiSearch, FiX, FiCalendar, FiArrowUpRight } from 'react-icons/fi';
 import Navbar from '../components/usersComponets/Navbar.jsx';
-import HiveBeeLoader from '../components/common/HiveBeeLoader.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
 import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
@@ -474,10 +473,14 @@ export default function BuscarEventosPage() {
                 <FiCalendar size={24} />
               </div>
               <h3 className="text-lg sm:text-xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-2">
-                {t("search.noResultsTitle", "No encontramos eventos con estos criterios")}
+                {(tituloParam || searchInput)?.trim()
+                  ? 'Ningún pase coincide con ese nombre.'
+                  : 'El escenario está a oscuras.'}
               </h3>
               <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto mb-6 leading-relaxed">
-                {t("search.noResultsSubtitle", "Prueba ajustando la fecha, cambiando de categoría o restableciendo los filtros para ver toda la cartelera cultural.")}
+                {(tituloParam || searchInput)?.trim()
+                  ? 'Prueba ajustando el nombre del evento o restableciendo los filtros para ver toda la cartelera cultural.'
+                  : 'Aún no hay funciones en cartelera. Enciende las luces y publica tu primer evento.'}
               </p>
               <button
                 type="button"

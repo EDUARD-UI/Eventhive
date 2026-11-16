@@ -518,8 +518,8 @@ export default function CreateEventWizard({
               estado: reviewResult?.estado || 'PENDIENTE_REVISION',
             };
             await showInfoAlert({
-              title: 'Evento enviado a revisión',
-              text: 'El evento fue creado como borrador y enviado a moderación para su revisión.',
+              title: '¡Arriba el telón!',
+              text: 'Tu evento ya está en cartelera y la taquilla digital quedó abierta.',
             });
           } catch (error) {
             await showErrorAlert({
@@ -622,21 +622,29 @@ export default function CreateEventWizard({
             const isCompleted = s.id < currentStep;
             const isCurrent = s.id === currentStep;
             return (
-              <div key={s.id} className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                key={s.id}
+                onClick={() => setCurrentStep(s.id)}
+                className="flex items-center gap-2 shrink-0 cursor-pointer group text-left p-1 rounded-xl hover:bg-slate-50 transition-colors"
+                title={`Ir a ${s.label}`}
+              >
                 <span
                   className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black transition-all ${
                     isCurrent
                       ? 'bg-[#0B1B3D] text-amber-300 shadow-sm'
                       : isCompleted
                       ? 'bg-emerald-500 text-white'
-                      : 'bg-slate-100 text-slate-400'
+                      : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'
                   }`}
                 >
                   {isCompleted ? <FiCheck size={13} /> : s.id}
                 </span>
                 <span
                   className={`text-xs font-bold uppercase tracking-wider ${
-                    isCurrent ? 'text-slate-900' : 'text-slate-400'
+                    isCurrent
+                      ? 'text-slate-900'
+                      : 'text-slate-400 group-hover:text-slate-600'
                   }`}
                 >
                   {s.label}
@@ -644,7 +652,7 @@ export default function CreateEventWizard({
                 {s.id < STEPS.length && (
                   <span className="w-6 h-0.5 bg-slate-200 mx-1 hidden md:block" />
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
@@ -653,22 +661,22 @@ export default function CreateEventWizard({
       {/* 4. Split Layout (Luma Style): Preview Izquierda + Wizard Formulario Derecha */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-8 items-start">
         {/* COLUMNA IZQUIERDA: Vista Previa en Vivo (Estilo Luma / Card Home) */}
-        <div className="lg:col-span-5 xl:col-span-5 lg:sticky lg:top-4 z-10 space-y-3">
+        <div className="lg:col-span-5 xl:col-span-5 lg:sticky lg:top-4 z-10 space-y-4">
           <div className="flex items-center justify-between px-1">
             <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-              <span>Vista previa en el Home</span>
+              <span>Vista previa en Cartelera</span>
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               En vivo
             </span>
           </div>
 
-          {/* Tarjeta Visual de Evento idéntica a HiveEventCard del Home */}
-          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-md flex flex-col justify-between text-slate-900 transition-all hover:shadow-lg">
+          {/* Tarjeta Visual de Evento (Proporción y estética Luma combinada con EventHive) */}
+          <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-lg flex flex-col justify-between text-slate-900 transition-all hover:shadow-xl">
             <div>
               {/* Imagen de Portada con badge de categoría y botón de carga rápida */}
-              <div className="relative aspect-[16/10] overflow-hidden bg-slate-900 group">
+              <div className="relative aspect-[4/3] sm:aspect-square max-h-[380px] overflow-hidden bg-slate-900 group">
                 {fotoPreview ? (
                   <img
                     src={fotoPreview}
@@ -676,16 +684,18 @@ export default function CreateEventWizard({
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0B1B3D] via-[#102754] to-slate-900 text-slate-300 p-4">
-                    <FiImage size={34} className="text-amber-400 mb-2 opacity-80" />
-                    <span className="text-xs font-bold text-amber-200 uppercase tracking-wider text-center">
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0B1B3D] via-[#102754] to-slate-900 text-slate-300 p-6 text-center">
+                    <FiImage size={40} className="text-amber-400 mb-2.5 opacity-80" />
+                    <span className="text-sm font-extrabold text-amber-200 uppercase tracking-wider">
                       {selectedCategoryName || 'Evento Cultural'}
                     </span>
-                    <span className="text-[10px] text-slate-400 mt-0.5">Portada del evento</span>
+                    <span className="text-xs text-slate-400 mt-1 max-w-[220px]">
+                      Sube una portada llamativa para tu evento cultural
+                    </span>
                   </div>
                 )}
 
-                {/* Gradiente estilo Home */}
+                {/* Gradiente sutil */}
                 <div
                   className="absolute inset-0 pointer-events-none opacity-40 group-hover:opacity-50 transition-opacity"
                   style={{
@@ -694,15 +704,15 @@ export default function CreateEventWizard({
                 />
 
                 {/* Badge de Categoría */}
-                <div className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-white/95 text-amber-800 border border-slate-200 shadow-xs flex items-center gap-1 backdrop-blur-sm">
-                    <span>⬡</span>
+                <div className="absolute left-3.5 top-3.5 z-10 flex flex-col items-start gap-1">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-lg bg-white/95 text-amber-900 border border-slate-200 shadow-xs flex items-center gap-1.5 backdrop-blur-sm">
+                    <span className="text-amber-500">⬡</span>
                     <span>{selectedCategoryName}</span>
                   </span>
                 </div>
 
                 {/* Botón flotante para subir/cambiar foto (Estilo Luma) */}
-                <div className="absolute right-3 bottom-3 z-10">
+                <div className="absolute right-3.5 bottom-3.5 z-10">
                   <input
                     ref={photoInputRef}
                     type="file"
@@ -714,46 +724,46 @@ export default function CreateEventWizard({
                     type="button"
                     onClick={() => photoInputRef.current?.click()}
                     title="Subir o cambiar imagen de portada"
-                    className="px-2.5 py-1.5 rounded-xl bg-black/75 hover:bg-black text-white text-[11px] font-bold uppercase tracking-wider border border-white/20 shadow-md flex items-center gap-1.5 cursor-pointer backdrop-blur-sm transition-all hover:scale-105"
+                    className="px-3 py-1.5 rounded-xl bg-black/80 hover:bg-black text-white text-xs font-bold uppercase tracking-wider border border-white/20 shadow-md flex items-center gap-2 cursor-pointer backdrop-blur-sm transition-all hover:scale-105 active:scale-95"
                   >
-                    <FiUpload size={12} className="text-amber-300" />
+                    <FiUpload size={13} className="text-amber-400" />
                     <span>{fotoPreview ? 'Cambiar Foto' : 'Subir Foto'}</span>
                   </button>
                 </div>
               </div>
 
               {/* Contenido de la Tarjeta */}
-              <div className="p-4 sm:p-5">
-                <h3 className="font-extrabold text-[15px] sm:text-[16px] leading-snug mb-2.5 text-slate-900 uppercase tracking-tight line-clamp-2 min-h-[2.5rem]">
+              <div className="p-5 sm:p-6">
+                <h3 className="font-extrabold text-base sm:text-lg leading-snug mb-3 text-slate-900 uppercase tracking-tight line-clamp-2 min-h-[2.5rem]">
                   {form.titulo?.trim() || 'Nombre del evento'}
                 </h3>
 
-                <div className="space-y-1.5 text-xs text-slate-600">
-                  <div className="flex items-center gap-2">
-                    <FiCalendar className="text-amber-600 shrink-0" size={13.5} />
-                    <span className="truncate">
+                <div className="space-y-2 text-xs text-slate-600">
+                  <div className="flex items-center gap-2.5">
+                    <FiCalendar className="text-amber-600 shrink-0" size={15} />
+                    <span className="font-medium truncate">
                       {form.fecha ? formatFechaHora12(form.fecha, form.hora) : 'Fecha y hora por definir'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <FiMapPin className="text-amber-600 shrink-0" size={13.5} />
-                    <span className="truncate">
+                  <div className="flex items-center gap-2.5">
+                    <FiMapPin className="text-amber-600 shrink-0" size={15} />
+                    <span className="font-medium truncate">
                       {form.lugar?.trim() || 'Ubicación del evento'}
                     </span>
                   </div>
                 </div>
 
                 {/* Precios y Cupos */}
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Entradas</span>
-                    <span className="font-extrabold text-slate-900 text-sm">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Entradas</span>
+                    <span className="font-black text-slate-900 text-sm">
                       {minPrice !== null ? `Desde ${formatPrice(minPrice)}` : 'Precio a definir'}
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Capacidad</span>
-                    <span className="font-semibold text-slate-600 text-xs">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Capacidad</span>
+                    <span className="font-extrabold text-slate-700 text-xs">
                       {totalCapacidad > 0 ? `${totalCapacidad} cupos` : 'Por configurar'}
                     </span>
                   </div>
@@ -762,111 +772,202 @@ export default function CreateEventWizard({
             </div>
           </div>
 
-          {/* Caja explicativa interactiva (Inspirada en Luma) */}
-          <div className="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200/70 text-[11px] text-amber-950 space-y-1">
-            <div className="flex items-center justify-between font-bold">
-              <span className="flex items-center gap-1.5">
-                <FiInfo size={13} className="text-amber-600 shrink-0" />
-                <span>Vista en Cartelera</span>
-              </span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-200/80 text-amber-900 font-extrabold uppercase">
-                {localidades.length} {localidades.length === 1 ? 'localidad' : 'localidades'}
-              </span>
+          {/* Selector / Indicador de Categoría estilo Luma Tema */}
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex items-center justify-between px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 flex items-center justify-center text-xs font-black">
+                  ⬡
+                </div>
+                <div>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block leading-tight">Categoría</span>
+                  <span className="font-bold text-slate-900 text-xs">{selectedCategoryName || 'General'}</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                className="text-[10px] font-bold text-amber-700 hover:text-amber-800 underline cursor-pointer"
+              >
+                Cambiar
+              </button>
             </div>
-            <p className="text-amber-800 text-[11px] leading-relaxed">
-              Los cambios en el título, categoría, fecha, lugar, precio y portada se reflejan de inmediato.
-            </p>
           </div>
         </div>
 
         {/* COLUMNA DERECHA: Pasos del Formulario */}
-        <div className="lg:col-span-7 xl:col-span-7 bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-sm">
-        {/* PASO 1: Información Básica */}
+        <div className="lg:col-span-7 xl:col-span-7 bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+        {/* PASO 1: Información Básica (Estilo Luma Clean) */}
         {currentStep === 1 && (
-          <div className="space-y-5 animate-in fade-in duration-200">
-            <div>
-              <h3 className="text-base font-black text-[#0B1B3D] uppercase tracking-wider">
-                1. Información Básica
-              </h3>
-              
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Nombre del Evento *
-                </label>
-                <input
-                  type="text"
-                  value={form.titulo}
-                  onChange={(e) => updateForm('titulo', e.target.value)}
-                  placeholder="Ej: Festival Internacional de Música de Cartagena"
-                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Categoría *
-                  </label>
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Cabecera de paso con selector de categoría y visibilidad tipo pills de Luma */}
+            <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2">
+              <div className="flex items-center gap-2">
+                <div className="relative">
                   <select
                     value={form.categoriaId}
                     onChange={(e) => updateForm('categoriaId', e.target.value)}
-                    className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
+                    className="text-xs font-bold pl-3 pr-8 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 outline-none appearance-none cursor-pointer transition-colors"
                   >
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
-                        {cat.nombre}
+                        ⬡ {cat.nombre}
                       </option>
                     ))}
                   </select>
+                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-500">
+                    ▼
+                  </span>
                 </div>
 
-                <div>
-                  <StyledDatePicker
-                    id="fecha"
-                    name="fecha"
-                    label="Fecha"
-                    required
-                    value={form.fecha}
-                    minDate={minimumEventDate}
-                    variant="light"
-                    onChange={(e) => updateForm('fecha', e.target.value)}
-                    helperText="Selecciona una fecha con al menos 7 días de anticipación."
-                  />
+                <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                  <span>🌐</span>
+                  <span>Público en Cartelera</span>
+                </span>
+              </div>
+
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Paso 1 de 5
+              </span>
+            </div>
+
+            {/* Input Gran Titular Estilo Luma: Nombre del evento */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Nombre del Evento *
+              </label>
+              <input
+                type="text"
+                value={form.titulo}
+                onChange={(e) => updateForm('titulo', e.target.value)}
+                placeholder="Nombre del evento"
+                className="w-full text-2xl sm:text-3xl font-black text-slate-900 placeholder:text-slate-300 border-b-2 border-slate-200 focus:border-amber-500 focus:outline-none pb-2 transition-colors"
+                required
+              />
+            </div>
+
+            {/* Bloque Compuesto de Fecha y Hora (Inspirado en Luma) */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 divide-y divide-slate-200/80 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Inicio *
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StyledDatePicker
+                      id="fecha"
+                      name="fecha"
+                      label=""
+                      required
+                      value={form.fecha}
+                      minDate={minimumEventDate}
+                      variant="light"
+                      onChange={(e) => updateForm('fecha', e.target.value)}
+                    />
+                    <input
+                      type="time"
+                      aria-label="Hora de inicio"
+                      value={form.hora}
+                      onChange={(e) => updateForm('hora', e.target.value)}
+                      step="60"
+                      className="text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-amber-500 cursor-pointer"
+                      style={{ colorScheme: 'light' }}
+                      required
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Hora de Inicio *
-                  </label>
-                  <input
-                    type="time"
-                    aria-label="Hora de inicio"
-                    value={form.hora}
-                    onChange={(e) => updateForm('hora', e.target.value)}
-                    step="60"
-                    className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
-                    style={{ colorScheme: 'light' }}
-                    required
-                  />
+                <div className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
+                  <span>🌐</span>
+                  <span>GMT-05:00 Colombia</span>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Descripción del Evento *
-                </label>
-                <textarea
-                  rows={4}
-                  value={form.descripcion}
-                  onChange={(e) => updateForm('descripcion', e.target.value)}
-                  placeholder="Detalla los artistas participantes, la agenda cultural, recomendaciones de acceso y requisitos de ingreso."
-                  className="w-full text-xs font-medium px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all resize-none leading-relaxed"
+              <div className="pt-2 text-[11px] text-slate-500">
+                <span>Fecha mínima requerida: </span>
+                <strong className="text-slate-700">{minimumEventDate}</strong>
+                <span> (al menos 7 días de anticipación)</span>
+              </div>
+            </div>
+
+            {/* Ubicación del Evento (Acceso rápido / integración con Paso 2) */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 flex items-center justify-between">
+                <span>Lugar del Evento *</span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(2)}
+                  className="text-[11px] font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1 cursor-pointer"
+                >
+                  <FiMapPin size={12} />
+                  <span>Ubicar en Mapa interactivo</span>
+                </button>
+              </label>
+              <div className="relative">
+                <FiMapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+                <input
+                  type="text"
+                  value={form.lugar}
+                  onChange={(e) => updateForm('lugar', e.target.value)}
+                  placeholder="Ej: Plaza de la Aduana, Centro Histórico / Teatro Adolfo Mejía"
+                  className="w-full text-xs sm:text-sm font-semibold pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                   required
                 />
+              </div>
+            </div>
+
+            {/* Descripción del Evento */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Descripción del Evento *
+              </label>
+              <textarea
+                rows={4}
+                value={form.descripcion}
+                onChange={(e) => updateForm('descripcion', e.target.value)}
+                placeholder="Detalla los artistas participantes, la agenda cultural, recomendaciones de acceso y requisitos de ingreso."
+                className="w-full text-xs font-medium px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all resize-none leading-relaxed"
+                required
+              />
+            </div>
+
+            {/* Opciones del evento resumidas (Estilo Luma) */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 space-y-3">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 block">
+                Opciones del evento
+              </span>
+
+              {/* Fila Precio */}
+              <div className="flex items-center justify-between text-xs py-1.5 border-b border-slate-200/60">
+                <span className="font-semibold text-slate-700 flex items-center gap-2">
+                  <FiDollarSign size={14} className="text-amber-600" />
+                  <span>Precio de la entrada</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(3)}
+                  className="font-bold text-amber-700 hover:text-amber-800 underline cursor-pointer"
+                >
+                  {minPrice !== null ? `Desde ${formatPrice(minPrice)}` : 'Configurar en Localidades →'}
+                </button>
+              </div>
+
+              {/* Fila Cupo */}
+              <div className="flex items-center justify-between text-xs py-1.5">
+                <span className="font-semibold text-slate-700 flex items-center gap-2">
+                  <FiUsers size={14} className="text-amber-600" />
+                  <span>Cupo total</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(3)}
+                  className="font-bold text-amber-700 hover:text-amber-800 underline cursor-pointer"
+                >
+                  {totalCapacidad > 0 ? `${totalCapacidad} cupos` : 'Configurar en Localidades →'}
+                </button>
               </div>
             </div>
           </div>
@@ -1196,7 +1297,7 @@ export default function CreateEventWizard({
         <div
           ref={drawerPanelRef}
           data-lenis-prevent="true"
-          className="relative z-50 w-full sm:w-[680px] md:w-[840px] lg:w-[1060px] xl:w-[1240px] 2xl:w-[1360px] max-w-[98vw] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300"
+          className="relative z-50 w-full sm:w-[720px] md:w-[920px] lg:w-[1180px] xl:w-[1380px] 2xl:w-[1500px] max-w-[98vw] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300"
         >
           {wizardContent}
         </div>

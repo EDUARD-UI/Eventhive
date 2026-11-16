@@ -1,6 +1,7 @@
 import { httpClient } from './httpClient.js';
 import { formatHora12 } from '../utils/formatters.js';
 import session from './session.js';
+import { apiCache } from './cacheService.js';
 
 const getEventPathId = (value) => {
   const id = value && typeof value === 'object' ? value.id : value;
@@ -223,57 +224,70 @@ export async function getCarouselEvents() {
  * Estructura: id, nombre (alias titulo), urlImagen (alias foto), fechaCreacion, fecha, hora.
  */
 export async function getPrimerEventoDestacado() {
-  try {
-    const res = await httpClient.get('/eventos/primer-destacado');
-    const data = res?.data || res;
-    if (!data || (!data.id && !data.nombre && !data.titulo)) return null;
+  return apiCache.fetchWithCache(
+    'first_featured_event',
+    async () => {
+      try {
+        const res = await httpClient.get('/eventos/primer-destacado');
+        const data = res?.data || res;
+        if (!data || (!data.id && !data.nombre && !data.titulo)) return null;
 
-    const rawId = data.id || data.eventoId || null;
-    const title = data.titulo || data.nombre || '';
-    const imgUrl = data.urlImagen || data.foto || data.imagen || '';
+        const rawId = data.id || data.eventoId || null;
+        const title = data.titulo || data.nombre || '';
+        const imgUrl = data.urlImagen || data.foto || data.imagen || '';
 
-    return {
-      ...data,
-      id: rawId ? String(rawId) : null,
-      eventoId: rawId,
-      nombre: title,
-      titulo: title,
-      title,
-      urlImagen: imgUrl,
-      foto: imgUrl,
-      photo: imgUrl,
-      fechaCreacion: data.fechaCreacion || null,
-      createdAt: data.fechaCreacion || null,
-      fecha: data.fecha || '',
-      hora: data.hora || '',
-    };
-  } catch (err) {
-    if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
-    console.warn('Error consultando /eventos/primer-destacado:', err?.message);
-    return null;
-  }
+        return {
+          ...data,
+          id: rawId ? String(rawId) : null,
+          eventoId: rawId,
+          nombre: title,
+          titulo: title,
+          title,
+          urlImagen: imgUrl,
+          foto: imgUrl,
+          photo: imgUrl,
+          fechaCreacion: data.fechaCreacion || null,
+          createdAt: data.fechaCreacion || null,
+          fecha: data.fecha || '',
+          hora: data.hora || '',
+        };
+      } catch (err) {
+        if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
+        console.warn('Error consultando /eventos/primer-destacado:', err?.message);
+        return null;
+      }
+    },
+    { ttlMs: 60000, staleWhileRevalidate: true }
+  );
 }
 
 export async function getFeaturedEvents({ page = 0, size = 10, sort } = {}) {
-  try {
-    const params = { page, size };
-    if (sort) params.sort = sort;
-    const data = await httpClient.get('/eventos/destacados', params);
-    const content = Array.isArray(data)
-      ? data
-      : Array.isArray(data?.data?.content)
-        ? data.data.content
-        : Array.isArray(data?.data)
-          ? data.data
-          : Array.isArray(data?.content)
-            ? data.content
-            : [];
-    return content.map(normalizeEvent);
-  } catch (err) {
-    if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
-    console.warn('Error consultando /eventos/destacados:', err?.message);
-    return [];
-  }
+  const cacheKey = `featured_events_${page}_${size}_${sort || ''}`;
+  return apiCache.fetchWithCache(
+    cacheKey,
+    async () => {
+      try {
+        const params = { page, size };
+        if (sort) params.sort = sort;
+        const data = await httpClient.get('/eventos/destacados', params);
+        const content = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data?.content)
+            ? data.data.content
+            : Array.isArray(data?.data)
+              ? data.data
+              : Array.isArray(data?.content)
+                ? data.content
+                : [];
+        return content.map(normalizeEvent);
+      } catch (err) {
+        if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
+        console.warn('Error consultando /eventos/destacados:', err?.message);
+        return [];
+      }
+    },
+    { ttlMs: 60000, staleWhileRevalidate: true }
+  );
 }
 
 /**
@@ -282,17 +296,24 @@ export async function getFeaturedEvents({ page = 0, size = 10, sort } = {}) {
  * No se reorganizan ni priorizan eventos promocionados ni premium.
  */
 export async function getUpcomingEvents({ page = 0, size = 8 } = {}) {
-  const proximosData = await httpClient.get('/eventos/proximos', { page, size });
-  const content = Array.isArray(proximosData)
-    ? proximosData
-    : Array.isArray(proximosData?.data?.content)
-      ? proximosData.data.content
-      : Array.isArray(proximosData?.data)
-        ? proximosData.data
-        : Array.isArray(proximosData?.content)
-          ? proximosData.content
-          : [];
-  return content.map(normalizeEvent);
+  const cacheKey = `upcoming_events_${page}_${size}`;
+  return apiCache.fetchWithCache(
+    cacheKey,
+    async () => {
+      const proximosData = await httpClient.get('/eventos/proximos', { page, size });
+      const content = Array.isArray(proximosData)
+        ? proximosData
+        : Array.isArray(proximosData?.data?.content)
+          ? proximosData.data.content
+          : Array.isArray(proximosData?.data)
+            ? proximosData.data
+            : Array.isArray(proximosData?.content)
+              ? proximosData.content
+              : [];
+      return content.map(normalizeEvent);
+    },
+    { ttlMs: 60000, staleWhileRevalidate: true }
+  );
 }
 
 /**
@@ -302,33 +323,40 @@ export async function getUpcomingEvents({ page = 0, size = 8 } = {}) {
  * se envía su identificador para que el backend calcule la afinidad.
  */
 export async function getRecomendacionesParaTi({ usuarioId, id, size = 12 } = {}) {
-  try {
-    const user = typeof session !== 'undefined' && session?.getUser ? session.getUser() : null;
-    const resolvedUserId = usuarioId ?? id ?? user?.id ?? user?.usuarioId ?? null;
+  const user = typeof session !== 'undefined' && session?.getUser ? session.getUser() : null;
+  const resolvedUserId = usuarioId ?? id ?? user?.id ?? user?.usuarioId ?? null;
+  const cacheKey = `recommendations_${resolvedUserId || 'anon'}_${size}`;
 
-    const params = { size };
-    if (resolvedUserId) {
-      params.usuarioId = resolvedUserId;
-      params.usuario_id = resolvedUserId;
-      params.id = resolvedUserId;
-    }
+  return apiCache.fetchWithCache(
+    cacheKey,
+    async () => {
+      try {
+        const params = { size };
+        if (resolvedUserId) {
+          params.usuarioId = resolvedUserId;
+          params.usuario_id = resolvedUserId;
+          params.id = resolvedUserId;
+        }
 
-    const res = await httpClient.get('/eventos/recomendaciones-para-ti', params);
-    const content = Array.isArray(res)
-      ? res
-      : Array.isArray(res?.content)
-      ? res.content
-      : Array.isArray(res?.data?.content)
-      ? res.data.content
-      : Array.isArray(res?.data)
-      ? res.data
-      : [];
+        const res = await httpClient.get('/eventos/recomendaciones-para-ti', params);
+        const content = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.content)
+          ? res.content
+          : Array.isArray(res?.data?.content)
+          ? res.data.content
+          : Array.isArray(res?.data)
+          ? res.data
+          : [];
 
-    return content.map(normalizeEvent);
-  } catch (err) {
-    console.warn('Error consultando /eventos/recomendaciones-para-ti:', err?.message);
-    return [];
-  }
+        return content.map(normalizeEvent);
+      } catch (err) {
+        console.warn('Error consultando /eventos/recomendaciones-para-ti:', err?.message);
+        return [];
+      }
+    },
+    { ttlMs: 60000, staleWhileRevalidate: true }
+  );
 }
 
 
@@ -471,8 +499,15 @@ export async function getDemandHeatmap({ categoriaId, lat, lng, radioKm, ventana
  * Detalle público de un evento (GET /api/eventos/{id}).
  */
 export async function getEventById(eventId) {
-  const data = await httpClient.get(`/eventos/${getEventPathId(eventId)}`);
-  return data ? normalizeEvent(data) : null;
+  const cleanId = getEventPathId(eventId);
+  return apiCache.fetchWithCache(
+    `event_detail_${cleanId}`,
+    async () => {
+      const data = await httpClient.get(`/eventos/${cleanId}`);
+      return data ? normalizeEvent(data) : null;
+    },
+    { ttlMs: 60000, staleWhileRevalidate: true }
+  );
 }
 
 /**

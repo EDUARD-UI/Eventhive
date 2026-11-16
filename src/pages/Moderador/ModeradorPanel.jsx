@@ -7,7 +7,6 @@ import ModeradorPendientesView from './ModeradorPendientesView.jsx';
 import ModeradorHistorialView from './ModeradorHistorialView.jsx';
 import ModeradorPerfilView from './ModeradorPerfilView.jsx';
 import ModeradorPalabrasProhibidasView from './ModeradorPalabrasProhibidasView.jsx';
-import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
 
 import ModalDetalleEventoModeracion from './ModalDetalleEventoModeracion.jsx';
 import ModalAccionModeracion from './ModalAccionModeracion.jsx';
@@ -227,17 +226,6 @@ export default function ModeradorPanel() {
   };
 
   const activeHeaderInfo = titlesByTab[currentTab] || titlesByTab.resumen;
-
-  // Pantalla de carga con abejas oficial (HiveBeeLoader)
-  if (pageLoading) {
-    return (
-      <HiveBeeLoader
-        text="Cargando..."
-        subtext="Panel de Moderación"
-        fullScreen={true}
-      />
-    );
-  }
 
   return (
     <ModeradorLayout

@@ -2,17 +2,19 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import ScrollToTop from './ScrollToTop.jsx';
 import Home from '../pages/Home.jsx';
-import EventDetailPage from '../pages/EventDetailPage.jsx';
-import BuscarEventosPage from '../pages/BuscarEventosPage.jsx';
-import OrganizadoresPage from '../pages/OrganizadoresPage.jsx';
-import PerfilOrganizacionPublicoPage from '../pages/PerfilOrganizacionPublicoPage.jsx';
-import InicioSesion from '../pages/InicioSesion.jsx';
-import Registro from '../pages/Registro.jsx';
 import RutaProtegida from './RutaProtegida.jsx';
-import NotFoundPage from '../pages/NotFoundPage.jsx';
 import { session, normalizeRole, getDashboardPathForRole, isTokenExpired } from '../services/session.js';
 
-// Lazy loading de paneles y rutas secundarias para acelerar la carga inicial
+// Lazy loading de rutas públicas secundarias y formularios
+const EventDetailPage = lazy(() => import('../pages/EventDetailPage.jsx'));
+const BuscarEventosPage = lazy(() => import('../pages/BuscarEventosPage.jsx'));
+const OrganizadoresPage = lazy(() => import('../pages/OrganizadoresPage.jsx'));
+const PerfilOrganizacionPublicoPage = lazy(() => import('../pages/PerfilOrganizacionPublicoPage.jsx'));
+const InicioSesion = lazy(() => import('../pages/InicioSesion.jsx'));
+const Registro = lazy(() => import('../pages/Registro.jsx'));
+const NotFoundPage = lazy(() => import('../pages/NotFoundPage.jsx'));
+
+// Lazy loading de paneles y rutas especializadas
 const AdminPanel = lazy(() => import('../pages/Administrador/AdminPanel.jsx'));
 const ModeradorPanel = lazy(() => import('../pages/Moderador/ModeradorPanel.jsx'));
 const OrganizadorIndex = lazy(() => import('../pages/Organizador/organizadorIndex.jsx'));
@@ -144,6 +146,8 @@ export default function AppRouter() {
               </GuestOnlyRoute>
             }
           />
+          <Route path="/login" element={<Navigate to="/iniciosesion" replace />} />
+          <Route path="/iniciar-sesion" element={<Navigate to="/iniciosesion" replace />} />
           <Route
             path="/registro"
             element={
@@ -152,6 +156,7 @@ export default function AppRouter() {
               </GuestOnlyRoute>
             }
           />
+          <Route path="/register" element={<Navigate to="/registro" replace />} />
 
           {/* Perfil personal compartido por clientes y operadores */}
           <Route

@@ -7,14 +7,14 @@ import {
   FiUsers,
   FiStar,
   FiMapPin,
-  FiInstagram,
 } from 'react-icons/fi';
 import Navbar from '../components/usersComponets/Navbar.jsx';
-import HiveBeeLoader from '../components/common/HiveBeeLoader.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import FavoriteButton from '../components/FavoriteButton.jsx';
+import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
+import ModalValoracionOrganizacion from '../components/organizacion/ModalValoracionOrganizacion.jsx';
 import { organizationService } from '../services/organizerService.js';
 import { session } from '../services/session.js';
 import { showErrorAlert, showLoginAlert } from '../utils/alertUtils.js';
@@ -22,6 +22,7 @@ import followService from '../services/followService.js';
 import Pagination from '../components/Shared/Pagination.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 import { useLanguage } from '../context/LanguageContext.jsx';
+import { apiCache } from '../services/cacheService.js';
 
 const EVENTS_PAGE_SIZE = 6;
 
@@ -33,13 +34,14 @@ export default function PerfilOrganizacionPublicoPage() {
   const user = session.getUser();
   const userId = user?.id ?? user?.usuarioId;
 
-  const [organization, setOrganization] = useState(null);
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [organization, setOrganization] = useState(() => apiCache.get(`org_detail_${id}`) || null);
+  const [events, setEvents] = useState(() => apiCache.get(`org_events_${id}`) || []);
+  const [loading, setLoading] = useState(() => !apiCache.has(`org_detail_${id}`));
   const [isFollowing, setIsFollowing] = useState(() => followService.isFollowing(id, userId));
   const [isFollowingBusy, setIsFollowingBusy] = useState(false);
-  const [followersCount, setFollowersCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(() => apiCache.get(`org_detail_${id}`)?.followers || 0);
   const [eventsPage, setEventsPage] = useState(1);
+  const [showRatingModal, setShowRatingModal] = useState(false);
   const userOrganizationId =
     user?.organizacionId ?? user?.organizationId ?? user?.organizacion?.id ?? user?.organization?.id;
   const representativeId =
@@ -51,6 +53,29 @@ export default function PerfilOrganizacionPublicoPage() {
       ((userOrganizationId && String(userOrganizationId) === String(id)) ||
         (userId && representativeId && String(userId) === String(representativeId)))
   );
+
+  const handleValoracionGuardada = (nuevaValoracion) => {
+    if (nuevaValoracion && organization) {
+      setOrganization((prev) => {
+        if (!prev) return prev;
+        const currentCount = Number(prev.totalValoraciones || 0);
+        const currentRating = Number(prev.rating || 4.5);
+        const newScore = Number(nuevaValoracion.calificacion || 5);
+        const newCount = currentCount + 1;
+        const updatedRating =
+          currentCount > 0
+            ? ((currentRating * currentCount + newScore) / newCount).toFixed(1)
+            : newScore.toFixed(1);
+        const updated = {
+          ...prev,
+          rating: updatedRating,
+          totalValoraciones: newCount,
+        };
+        apiCache.set(`org_detail_${id}`, updated, 120000);
+        return updated;
+      });
+    }
+  };
 
   // Sincronizar estado de seguimiento en tiempo real y con backend
   useEffect(() => {
@@ -74,12 +99,25 @@ export default function PerfilOrganizacionPublicoPage() {
 
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
     setEventsPage(1);
 
+    const cacheKeyOrg = `org_detail_${id}`;
+    const cacheKeyEvents = `org_events_${id}`;
+
+    // Si no teníamos datos en memoria, marcar cargando
+    if (!apiCache.has(cacheKeyOrg)) {
+      setLoading(true);
+    }
+
     Promise.all([
-      organizationService.getOrganizationById(id),
-      organizationService.getOrganizationEvents(id),
+      apiCache.fetchWithCache(cacheKeyOrg, () => organizationService.getOrganizationById(id), {
+        ttlMs: 90000,
+        staleWhileRevalidate: true,
+      }),
+      apiCache.fetchWithCache(cacheKeyEvents, () => organizationService.getOrganizationEvents(id), {
+        ttlMs: 90000,
+        staleWhileRevalidate: true,
+      }),
     ])
       .then(([orgData, orgEvents]) => {
         if (!isMounted) return;
@@ -171,11 +209,60 @@ export default function PerfilOrganizacionPublicoPage() {
 
   if (loading) {
     return (
-      <HiveBeeLoader
-        text="Cargando..."
-        subtext="Perfil de la organización"
-        fullScreen={true}
-      />
+      <div className="w-full min-h-screen bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between selection:bg-amber-400 selection:text-slate-950 relative transition-colors duration-200">
+        <FloatingDotsBackground />
+        <Navbar />
+
+        <main className="flex-1 relative z-10 animate-pulse">
+          {/* Header Skeleton */}
+          <section className="w-full bg-gradient-to-b from-[#04499E] via-[#0A2652] to-[#0B132B] text-white pt-6 pb-8 sm:pb-10 px-4 sm:px-8 lg:px-12 border-b border-white/10 relative overflow-hidden">
+            <div className="max-w-6xl mx-auto">
+              <div className="h-4 w-32 bg-white/20 rounded-md mb-6" />
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <div className="h-3 w-40 bg-amber-400/30 rounded-md mb-2" />
+                  <div className="h-8 w-64 sm:w-96 bg-white/20 rounded-xl" />
+                </div>
+                <div className="h-6 w-24 bg-white/10 rounded-full" />
+              </div>
+            </div>
+          </section>
+
+          {/* Body Skeleton */}
+          <section className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 py-10 sm:py-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Sidebar Skeleton */}
+              <div className="lg:col-span-4 rounded-3xl bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col items-center">
+                <div className="w-24 h-24 rounded-full bg-slate-200 dark:bg-slate-800 mb-4" />
+                <div className="h-5 w-44 bg-slate-200 dark:bg-slate-800 rounded-md mb-2" />
+                <div className="h-4 w-28 bg-emerald-500/20 rounded-full mb-6" />
+                <div className="w-full grid grid-cols-3 gap-2 border-y border-slate-100 dark:border-slate-800 py-4 mb-6">
+                  <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                  <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                  <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                </div>
+                <div className="w-full h-10 bg-amber-500/40 rounded-full" />
+              </div>
+
+              {/* Events Grid Skeleton */}
+              <div className="lg:col-span-8 space-y-6">
+                <div className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  <EventCardSkeleton />
+                  <EventCardSkeleton />
+                  <EventCardSkeleton />
+                  <EventCardSkeleton />
+                  <EventCardSkeleton />
+                  <EventCardSkeleton />
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <CityRhythmPreFooter />
+        <Footer />
+      </div>
     );
   }
 
@@ -206,12 +293,6 @@ export default function PerfilOrganizacionPublicoPage() {
       </div>
     );
   }
-
-  const socialInstagram =
-    organization.instagram ||
-    organization.redesSociales?.instagram ||
-    organization.socialLinks?.instagram ||
-    null;
 
   return (
     <div className="w-full min-h-screen bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between selection:bg-amber-400 selection:text-slate-950 relative transition-colors duration-200">
@@ -304,15 +385,32 @@ export default function PerfilOrganizacionPublicoPage() {
                   </div>
 
                   {/* Ratings */}
-                  <div className="px-1.5 flex flex-col items-center justify-center">
-                    <FiStar className="text-amber-500 dark:text-amber-400 mb-1.5" size={15} />
-                    <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight">
-                      {organization.rating ? Number(organization.rating).toFixed(1) : '4.5'} / 5.0
-                    </span>
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
-                      RATINGS
-                    </span>
-                  </div>
+                  {!isOwnOrganization ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowRatingModal(true)}
+                      title="Calificar a esta organización"
+                      className="px-1.5 flex flex-col items-center justify-center hover:opacity-85 transition-opacity cursor-pointer group"
+                    >
+                      <FiStar className="text-amber-500 dark:text-amber-400 mb-1.5 group-hover:scale-110 transition-transform fill-amber-400/20" size={15} />
+                      <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight group-hover:text-amber-500 transition-colors">
+                        {organization.rating ? Number(organization.rating).toFixed(1) : '4.5'} / 5.0
+                      </span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5 underline decoration-dotted decoration-amber-500/50">
+                        RATINGS
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="px-1.5 flex flex-col items-center justify-center">
+                      <FiStar className="text-amber-500 dark:text-amber-400 mb-1.5" size={15} />
+                      <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight">
+                        {organization.rating ? Number(organization.rating).toFixed(1) : '4.5'} / 5.0
+                      </span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
+                        RATINGS
+                      </span>
+                    </div>
+                  )}
 
                   {/* Eventos Activos */}
                   <div className="px-1.5 flex flex-col items-center justify-center">
@@ -333,40 +431,32 @@ export default function PerfilOrganizacionPublicoPage() {
                 </p>
 
                 {/* Botón principal de acción destacado en amarillo/dorado corporativo: SEGUIR */}
-                {!isOwnOrganization && <button
-                  type="button"
-                  onClick={handleToggleFollow}
-                  disabled={isFollowingBusy}
-                  className={`w-full py-3 px-6 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-200 shadow-md active:scale-95 cursor-pointer ${
-                    isFollowing
-                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
-                      : 'bg-[#F5A60B] hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
-                  }`}
-                >
-                  {isFollowing ? t('SIGUIENDO') : t('SEGUIR')}
-                </button>}
+                {!isOwnOrganization && (
+                  <button
+                    type="button"
+                    onClick={handleToggleFollow}
+                    disabled={isFollowingBusy}
+                    className={`w-full py-3 px-6 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-200 shadow-md active:scale-95 cursor-pointer ${
+                      isFollowing
+                        ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
+                        : 'bg-[#F5A60B] hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
+                    }`}
+                  >
+                    {isFollowing ? t('SIGUIENDO') : t('SEGUIR')}
+                  </button>
+                )}
 
-                {/* Icono de redes sociales en la parte inferior (solo Instagram) */}
-                <div className="mt-7 pt-1 flex items-center justify-center">
-                  {socialInstagram ? (
-                    <a
-                      href={socialInstagram}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="Instagram de la organización"
-                      className="text-amber-600/80 dark:text-amber-400/75 hover:text-amber-500 dark:hover:text-amber-300 transition-colors p-1.5"
-                    >
-                      <FiInstagram size={18} />
-                    </a>
-                  ) : (
-                    <span
-                      aria-label="Instagram"
-                      className="text-amber-600/80 dark:text-amber-400/75 hover:text-amber-500 dark:hover:text-amber-300 transition-colors p-1.5 cursor-pointer"
-                    >
-                      <FiInstagram size={18} />
-                    </span>
-                  )}
-                </div>
+                {/* Botón para abrir modal de valoraciones */}
+                {!isOwnOrganization && (
+                  <button
+                    type="button"
+                    onClick={() => setShowRatingModal(true)}
+                    className="w-full mt-2.5 py-2.5 px-5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 border border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <FiStar size={13} className="text-amber-500" />
+                    <span>Valorar Organización</span>
+                  </button>
+                )}
               </div>
             </aside>
 
@@ -506,6 +596,15 @@ export default function PerfilOrganizacionPublicoPage() {
           </div>
         </section>
       </main>
+
+      {/* Modal exclusivo para emitir valoración a la organización */}
+      <ModalValoracionOrganizacion
+        isOpen={showRatingModal}
+        onClose={() => setShowRatingModal(false)}
+        organization={organization}
+        organizacionId={id}
+        onValoracionGuardada={handleValoracionGuardada}
+      />
 
       {/* Componente pre-footer compartido */}
       <CityRhythmPreFooter />

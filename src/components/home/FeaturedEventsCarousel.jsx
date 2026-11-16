@@ -131,10 +131,10 @@ export default function FeaturedEventsCarousel({ events = [] }) {
               Carrusel Principal
             </span>
             <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
-              Espacio para banners destacados
+              El espacio principal espera protagonista.
             </h3>
             <p className="text-xs sm:text-sm text-slate-400 max-w-sm mx-auto">
-              Aún no hay imágenes asignadas por marketing para este carrusel.
+              Aún no hay funciones destacadas en cartelera. Muy pronto anunciaremos los próximos eventos principales.
             </p>
           </div>
         </div>

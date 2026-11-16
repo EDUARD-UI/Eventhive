@@ -51,9 +51,15 @@ export default function AdminReportesView({
         }
 
         if (eventsRes.status === 'fulfilled' && eventsRes.value?.data) {
-          // Mostrar únicamente eventos publicados devueltos por el backend
-          const list = eventsRes.value.data;
-          setTopEventos(Array.isArray(list) ? list.slice(0, 5) : []);
+          const raw = eventsRes.value.data;
+          const list = Array.isArray(raw)
+            ? raw
+            : Array.isArray(raw?.content)
+              ? raw.content
+              : Array.isArray(raw?.data)
+                ? raw.data
+                : [];
+          setTopEventos(list.slice(0, 5));
         } else if (commercialMetrics?.topEventos) {
           setTopEventos(commercialMetrics.topEventos.slice(0, 5));
         }

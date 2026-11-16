@@ -56,7 +56,14 @@ export const adminService = {
   async getTopEventosVentas() {
     try {
       const data = await httpClient.get('/admin/estadisticas/top-eventos-ventas');
-      return { success: true, data: Array.isArray(data) ? data : [] };
+      const items = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.content)
+          ? data.content
+          : Array.isArray(data?.data)
+            ? data.data
+            : [];
+      return { success: true, data: items };
     } catch (err) {
       if (err?.isNetworkError || (err?.status && err.status >= 500)) throw err;
       console.warn('Endpoint /admin/estadisticas/top-eventos-ventas fallback:', err);

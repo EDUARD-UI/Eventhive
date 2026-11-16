@@ -14,7 +14,6 @@ import {
   FiZap,
 } from 'react-icons/fi';
 import Navbar from '../components/usersComponets/Navbar.jsx';
-import HiveBeeLoader from '../components/common/HiveBeeLoader.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import { organizationService } from '../services/organizerService.js';
 import { session, normalizeRole } from '../services/session.js';

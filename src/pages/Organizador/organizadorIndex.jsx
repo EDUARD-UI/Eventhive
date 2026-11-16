@@ -593,8 +593,8 @@ export default function OrganizadorIndex() {
                     {carteleraEvents.length === 0 ? (
                       <tr>
                         <td colSpan={4} className="py-12 text-center text-slate-400">
-                          <p className="font-semibold text-slate-700">El escenario está vacío.</p>
-                          <p className="text-xs text-slate-400 mt-1">Es hora de preparar el próximo gran evento cultural.</p>
+                          <p className="font-semibold text-slate-700">El escenario está a oscuras.</p>
+                          <p className="text-xs text-slate-400 mt-1">Aún no hay funciones en cartelera. Enciende las luces y publica tu primer evento.</p>
                         </td>
                       </tr>
                     ) : (
@@ -688,9 +688,9 @@ export default function OrganizadorIndex() {
             <FiCheck size={14} />
           </span>
           <div className="flex-1">
-            <p className="text-xs font-bold text-slate-900">Evento registrado exitosamente</p>
+            <p className="text-xs font-bold text-slate-900">¡Arriba el telón!</p>
             <p className="mt-0.5 text-[11px] text-slate-600">
-              Tu evento fue guardado correctamente y ya se encuentra visible en tu cartelera.
+              Tu evento ya está en cartelera y la taquilla digital quedó abierta.
             </p>
           </div>
           <button

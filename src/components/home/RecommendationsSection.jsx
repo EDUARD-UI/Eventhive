@@ -236,10 +236,10 @@ export default function RecommendationsSection() {
           </div>
         ) : !events || events.length === 0 ? (
           <HiveEmptyState
-            title={t('home.emptyRecommendationsTitle') || 'Recomendaciones para ti'}
+            title={t('home.emptyRecommendationsTitle') || 'Sin sugerencias por ahora.'}
             subtitle={
               t('home.emptyRecommendationsSubtitle') ||
-              'Estamos preparando las mejores experiencias recomendadas según tus preferencias culturales. Vuelve pronto para descubrirlas.'
+              'Aún estamos afinando el radar para tu perfil. Explora la cartelera general para ver qué se está moviendo.'
             }
             showAction={true}
             actionType="explore"
