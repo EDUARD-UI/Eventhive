@@ -21,6 +21,7 @@ import Navbar from '../components/usersComponets/Navbar.jsx';
 import Footer from '../components/usersComponets/Footer.jsx';
 import ImageWithFallback from '../components/common/ImageWithFallback.jsx';
 import { organizerService } from '../services/organizerService.js';
+import { promotionPlanService } from '../services/promotionPlanService.js';
 import { getEventById } from '../services/eventService.js';
 import { session } from '../services/session.js';
 import { useTheme } from '../context/ThemeContext.jsx';
@@ -49,6 +50,12 @@ export default function PasarelaPagoPage() {
 
   const currentUser = session.getUser();
 
+  // Detección de tipo de operación: compra de boletos vs promoción de evento
+  const isPromocion =
+    location.state?.tipoOperacion === 'PROMOCION_EVENTO' || Boolean(location.state?.plan);
+  const plan = location.state?.plan || null;
+  const pagoId = location.state?.pagoId || null;
+
   // Estado del evento y compra
   const [event, setEvent] = useState(location.state?.event || null);
   const [selectedLocalidad, setSelectedLocalidad] = useState(location.state?.localidad || null);
@@ -57,6 +64,7 @@ export default function PasarelaPagoPage() {
   );
   const [loading, setLoading] = useState(!location.state?.event && Boolean(id));
   const [eventLoadError, setEventLoadError] = useState('');
+  const [paymentPending, setPaymentPending] = useState(false);
 
   // Temporizador digital de seguridad (countdown)
   const [timeLeft, setTimeLeft] = useState(299); // 4 minutos 59 segundos
@@ -129,9 +137,17 @@ export default function PasarelaPagoPage() {
   const cleanCardDigits = cardForm.numero.replace(/\D/g, '');
   const lastFourDigits = cleanCardDigits.slice(-4) || '5678';
 
-  const precioBaseUnitario = Number(selectedLocalidad?.precio || event?.price || 0);
-  const precioBaseTotal = precioBaseUnitario * cantidad;
-  const comisionServicio = Math.round(precioBaseTotal * 0.10); // Comisión del 10% de EventHive
+  const precioBaseUnitario = isPromocion
+    ? Number(plan?.precio || 0)
+    : Number(selectedLocalidad?.precio || event?.price || 0);
+  const precioBaseTotal = isPromocion ? precioBaseUnitario : precioBaseUnitario * cantidad;
+  // Utilizar la comisión real devuelta por el backend para boletos, 0 para promociones (tarifa plana)
+  const rawComision = isPromocion ? 0 : (event?.comisionPorcentaje ?? event?.porcentajeComision);
+  const comisionRate =
+    rawComision != null && !isNaN(Number(rawComision))
+      ? Number(rawComision) / 100
+      : 0;
+  const comisionServicio = isPromocion ? 0 : Math.round(precioBaseTotal * comisionRate);
   const total = precioBaseTotal + comisionServicio;
 
   const eventDateFormatted = event?.fecha ? formatFecha(event.fecha) : (event?.shortDate || 'Fecha por confirmar');
@@ -143,7 +159,7 @@ export default function PasarelaPagoPage() {
     if (!buyerForm.nombre.trim() || !buyerForm.email.trim()) {
       showWarningAlert({
         title: 'Datos requeridos',
-        text: 'Por favor ingresa tu nombre y correo para enviar las entradas oficiales.',
+        text: 'Por favor ingresa tu nombre y correo para enviar el comprobante oficial.',
         badge: 'Información Faltante',
       });
       return;
@@ -161,36 +177,59 @@ export default function PasarelaPagoPage() {
     setProcesando(true);
 
     try {
-      const idempotencyKey = `PAY-CARD-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-      const payload = {
-        idempotencyKey,
-        items: [
-          {
-            localidadId:
-              selectedLocalidad?.id && typeof selectedLocalidad.id === 'number'
-                ? selectedLocalidad.id
-                : undefined,
-            cantidad: Number(cantidad),
-          },
-        ],
-        eventoId: Number(event?.id || id),
-        localidadId:
-          selectedLocalidad?.id && typeof selectedLocalidad.id === 'number'
-            ? selectedLocalidad.id
-            : undefined,
-        cantidad: Number(cantidad),
-      };
+      if (isPromocion) {
+        if (!pagoId) {
+          throw new Error('No se encontró el identificador de orden de la promoción.');
+        }
 
-      const purchase = await organizerService.crearCompra(payload);
-      if (purchase?.id === undefined || purchase?.id === null) {
-        throw new Error('El servidor no devolvió el identificador de la compra confirmada.');
+        // 1. Confirmar pago de posicionamiento
+        await promotionPlanService.confirmarPagoPosicionamiento(pagoId);
+
+        // 2. Verificar estado de la transacción
+        const estadoReal = await promotionPlanService.consultarPagoPosicionamiento(pagoId);
+        const estadoFinal = (estadoReal?.estado || estadoReal?.data?.estado || '').toUpperCase();
+
+        if (estadoFinal === 'CONFIRMADO') {
+          setOrderReference(`PROM-${pagoId}`);
+          setIsSuccess(true);
+        } else if (estadoFinal === 'PENDIENTE') {
+          setOrderReference(`PROM-${pagoId}`);
+          setPaymentPending(true);
+        } else {
+          throw new Error('La transacción no pudo ser aprobada por la entidad de pago.');
+        }
+      } else {
+        const idempotencyKey = `PAY-CARD-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        const payload = {
+          idempotencyKey,
+          items: [
+            {
+              localidadId:
+                selectedLocalidad?.id && typeof selectedLocalidad.id === 'number'
+                  ? selectedLocalidad.id
+                  : undefined,
+              cantidad: Number(cantidad),
+            },
+          ],
+          eventoId: Number(event?.id || id),
+          localidadId:
+            selectedLocalidad?.id && typeof selectedLocalidad.id === 'number'
+              ? selectedLocalidad.id
+              : undefined,
+          cantidad: Number(cantidad),
+        };
+
+        const purchase = await organizerService.crearCompra(payload);
+        if (purchase?.id === undefined || purchase?.id === null) {
+          throw new Error('El servidor no devolvió el identificador de la compra confirmada.');
+        }
+
+        setOrderReference(`EVH-${purchase.id}`);
+        setIsSuccess(true);
       }
-
-      setOrderReference(`EVH-${purchase.id}`);
-      setIsSuccess(true);
     } catch (err) {
       await showErrorAlert({
-        title: 'No se pudo confirmar la compra',
+        title: isPromocion ? 'No se pudo confirmar la promoción' : 'No se pudo confirmar la compra',
         text: err?.message || 'No se registró el pago. Verifica tu conexión e inténtalo nuevamente.',
       });
     } finally {
@@ -236,6 +275,41 @@ export default function PasarelaPagoPage() {
     );
   }
 
+  // Pantalla de Transacción en Proceso / Pendiente
+  if (paymentPending) {
+    return (
+      <div className="w-full min-h-screen bg-slate-50 dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body relative transition-colors duration-200">
+        <Navbar />
+        <main className="flex-1 flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8 py-10 sm:py-16">
+          <div className="bg-white dark:bg-[#0E172A] border border-slate-200 dark:border-white/10 rounded-3xl max-w-xl w-full p-8 sm:p-10 shadow-xl space-y-6 text-center animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center mx-auto shadow-sm">
+              <FiClock size={32} />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-500/10 px-3.5 py-1 rounded-full border border-amber-500/20 inline-block mb-3">
+                TRANSACCIÓN EN PROCESO
+              </span>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white">
+                Validando la Transacción
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                Tu solicitud fue recibida y se encuentra en validación por la entidad de pago. La confirmación se enviará a tu correo tan pronto sea validada por el sistema.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate(isPromocion ? '/organizador' : '/perfil')}
+              className="w-full py-3.5 rounded-xl bg-slate-950 dark:bg-amber-500 text-white dark:text-slate-950 text-xs font-bold uppercase tracking-wider cursor-pointer"
+            >
+              {isPromocion ? 'Volver al Centro de Control' : 'Entendido, volver a mi perfil'}
+            </button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   // Pantalla de Confirmación de Pago Exitoso (100% Adaptada a Modo Claro y Oscuro)
   if (isSuccess) {
     return (
@@ -251,25 +325,39 @@ export default function PasarelaPagoPage() {
 
             <div>
               <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3.5 py-1 rounded-full border border-emerald-500/20 inline-block mb-3">
-                TRANSACCIÓN APROBADA
+                {isPromocion ? 'POSICIONAMIENTO ACTIVADO' : 'TRANSACCIÓN APROBADA'}
               </span>
               <h1 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white tracking-tight">
-                ¡Pago Confirmado con Éxito!
+                {isPromocion ? '¡Plan Contratado con Éxito!' : '¡Pago Confirmado con Éxito!'}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
-                Tu compra fue confirmada y el comprobante se envió al correo asociado a tu cuenta.
+                {isPromocion
+                  ? plan?.premium
+                    ? '¡Tu evento ahora cuenta con Plan Premium! Nuestro equipo de Marketing se pondrá en contacto contigo para coordinar la imagen destacada en el Carrusel Principal.'
+                    : 'Tu producción cultural ahora cuenta con máxima visibilidad en la cartelera principal de EventHive.'
+                  : 'Tu compra fue confirmada y el comprobante se envió al correo asociado a tu cuenta.'}
               </p>
             </div>
 
             {/* Recibo Oficial Digital */}
             <div className="bg-slate-50 dark:bg-[#152238] rounded-2xl border border-slate-200 dark:border-white/10 p-5 sm:p-6 text-xs text-left space-y-3.5 transition-colors">
               <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-white/10">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Concepto</span>
+                <span className="font-bold text-slate-950 dark:text-white">
+                  {isPromocion ? `Plan de Promoción: ${plan?.nombre || 'Posicionamiento'}` : 'Entradas de Evento'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-white/10">
                 <span className="text-slate-500 dark:text-slate-400 font-medium">Referencia de orden</span>
                 <span className="font-mono font-bold text-slate-950 dark:text-white">{orderReference}</span>
               </div>
               <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-white/10">
-                <span className="text-slate-500 dark:text-slate-400 font-medium">Evento</span>
-                <span className="font-bold text-slate-950 dark:text-white truncate max-w-[260px]">{event?.title || 'Entrada Cultural EventHive'}</span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">
+                  {isPromocion ? 'Producción Cultural' : 'Evento'}
+                </span>
+                <span className="font-bold text-slate-950 dark:text-white truncate max-w-[260px]">
+                  {event?.titulo || event?.title || 'Entrada Cultural EventHive'}
+                </span>
               </div>
               <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-white/10">
                 <span className="text-slate-500 dark:text-slate-400 font-medium">Titular</span>
@@ -283,14 +371,27 @@ export default function PasarelaPagoPage() {
                 <span className="text-slate-500 dark:text-slate-400 font-medium">Método</span>
                 <span className="font-mono font-bold text-slate-950 dark:text-white">Tarjeta •••• {lastFourDigits}</span>
               </div>
-              <div className="flex items-center justify-between pb-1 text-slate-600 dark:text-slate-400">
-                <span>Precio base ({cantidad} boleta{cantidad > 1 ? 's' : ''})</span>
-                <span className="font-semibold text-slate-900 dark:text-slate-200">${Number(precioBaseTotal).toLocaleString('es-CO')} COP</span>
-              </div>
-              <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400">
-                <span>Comisión de servicio EventHive (10%)</span>
-                <span className="font-semibold text-slate-900 dark:text-slate-200">${Number(comisionServicio).toLocaleString('es-CO')} COP</span>
-              </div>
+
+              {!isPromocion && (
+                <>
+                  <div className="flex items-center justify-between pb-1 text-slate-600 dark:text-slate-400">
+                    <span>Precio base ({cantidad} boleta{cantidad > 1 ? 's' : ''})</span>
+                    <span className="font-semibold text-slate-900 dark:text-slate-200">${Number(precioBaseTotal).toLocaleString('es-CO')} COP</span>
+                  </div>
+                  <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400">
+                    <span>Comisión de servicio EventHive {comisionRate > 0 ? `(${Math.round(comisionRate * 100)}%)` : ''}</span>
+                    <span className="font-semibold text-slate-900 dark:text-slate-200">${Number(comisionServicio).toLocaleString('es-CO')} COP</span>
+                  </div>
+                </>
+              )}
+
+              {isPromocion && (
+                <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400">
+                  <span>Tarifa del plan de promoción</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-200">${Number(precioBaseTotal).toLocaleString('es-CO')} COP</span>
+                </div>
+              )}
+
               <div className="flex items-center justify-between pt-1">
                 <span className="text-slate-900 dark:text-white font-extrabold text-sm">Total Pagado</span>
                 <span className="font-black text-lg text-slate-950 dark:text-amber-400">${Number(total).toLocaleString('es-CO')} COP</span>
@@ -299,20 +400,32 @@ export default function PasarelaPagoPage() {
 
             {/* Acciones de Navegación */}
             <div className="space-y-3 pt-2">
-              <button
-                type="button"
-                onClick={() => navigate('/perfil?tab=entradas', { state: { activeTab: 'entradas' } })}
-                className="w-full py-3.5 px-6 rounded-2xl bg-slate-950 dark:bg-amber-500 hover:bg-slate-800 dark:hover:bg-amber-400 text-white dark:text-slate-950 text-xs sm:text-sm font-black uppercase tracking-wider transition-all shadow-md cursor-pointer active:scale-98"
-              >
-                Ver mis boletos digitales
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/buscar')}
-                className="w-full py-3 px-6 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111A2E] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
-              >
-                Explorar más eventos
-              </button>
+              {isPromocion ? (
+                <button
+                  type="button"
+                  onClick={() => navigate('/organizador')}
+                  className="w-full py-3.5 px-6 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-black uppercase tracking-wider transition-all shadow-md cursor-pointer active:scale-98"
+                >
+                  Volver al Centro de Control (Backstage)
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/perfil?tab=entradas', { state: { activeTab: 'entradas' } })}
+                    className="w-full py-3.5 px-6 rounded-2xl bg-slate-950 dark:bg-amber-500 hover:bg-slate-800 dark:hover:bg-amber-400 text-white dark:text-slate-950 text-xs sm:text-sm font-black uppercase tracking-wider transition-all shadow-md cursor-pointer active:scale-98"
+                  >
+                    Ver mis boletos digitales
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/buscar')}
+                    className="w-full py-3 px-6 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111A2E] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                  >
+                    Explorar más eventos
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </main>
@@ -327,18 +440,19 @@ export default function PasarelaPagoPage() {
       <Navbar />
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* ENCABEZADO SUPERIOR: Botón Volver + Temporizador Digital (Etiqueta TLS eliminada) */}
+        {/* ENCABEZADO SUPERIOR: Botón Volver + Temporizador Digital */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <button
             type="button"
             onClick={() => {
-              if (event?.id) navigate(`/eventos/${event.id}`);
+              if (isPromocion) navigate('/organizador');
+              else if (event?.id) navigate(`/eventos/${event.id}`);
               else navigate('/buscar');
             }}
             className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors w-fit cursor-pointer"
           >
             <FiArrowLeft size={16} />
-            <span>Volver al evento</span>
+            <span>{isPromocion ? 'Volver al centro de control' : 'Volver al evento'}</span>
           </button>
 
           {/* Temporizador Digital de Reserva */}
@@ -638,60 +752,99 @@ export default function PasarelaPagoPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <span className="inline-block px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider mb-1">
-                    {event?.category || 'Evento'}
+                    {isPromocion ? `Plan ${plan?.nombre || 'Posicionamiento'}` : (event?.category || 'Evento')}
                   </span>
                   <h3 className="font-extrabold text-sm text-slate-950 dark:text-white truncate">
-                    {event?.title || 'Entrada Oficial EventHive'}
+                    {event?.title || event?.titulo || 'Producción EventHive'}
                   </h3>
                   <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
                     <FiMapPin className="text-amber-500 shrink-0" size={12} />
-                    <span className="truncate">{event?.location || 'Cartagena'}</span>
+                    <span className="truncate">{event?.location || event?.lugar || 'Cartagena'}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Detalles de la entrada seleccionada */}
+              {/* Detalles de la entrada o plan seleccionado */}
               <div className="space-y-2.5 text-xs">
-                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                  <span>Fecha</span>
-                  <span className="font-semibold text-slate-900 dark:text-white flex items-center gap-1">
-                    <FiCalendar size={12} className="text-amber-500" />
-                    {eventDateFormatted}
-                  </span>
-                </div>
+                {isPromocion ? (
+                  <>
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                      <span>Concepto</span>
+                      <span className="font-bold text-slate-900 dark:text-white">
+                        Posicionamiento de Producción
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                      <span>Plan contratado</span>
+                      <span className="font-extrabold text-amber-600 dark:text-amber-400">
+                        {plan?.nombre || 'Posicionamiento'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                      <span>Ubicación editorial</span>
+                      <span className="font-semibold text-slate-900 dark:text-white text-right truncate max-w-[200px]">
+                        {plan?.premium ? 'Carrusel Principal + Cartelera' : 'Sección Destacados'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-white/10">
+                      <span>Tarifa del plan</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">
+                        ${Number(precioBaseTotal).toLocaleString('es-CO')} COP
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                      <span>Activación en plataforma</span>
+                      <span className="font-medium text-emerald-600 dark:text-emerald-400">Incluida</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                      <span>Impuestos aplicables (IVA 19%)</span>
+                      <span className="font-medium text-emerald-600 dark:text-emerald-400">Incluido</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                      <span>Fecha</span>
+                      <span className="font-semibold text-slate-900 dark:text-white flex items-center gap-1">
+                        <FiCalendar size={12} className="text-amber-500" />
+                        {eventDateFormatted}
+                      </span>
+                    </div>
 
-                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                  <span>Localidad</span>
-                  <span className="font-bold text-slate-900 dark:text-white">
-                    {selectedLocalidad?.nombre || 'General'}
-                  </span>
-                </div>
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                      <span>Localidad</span>
+                      <span className="font-bold text-slate-900 dark:text-white">
+                        {selectedLocalidad?.nombre || 'General'}
+                      </span>
+                    </div>
 
-                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                  <span>Cantidad de pases</span>
-                  <span className="font-bold text-slate-900 dark:text-white">
-                    {cantidad} entrada{cantidad > 1 ? 's' : ''}
-                  </span>
-                </div>
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                      <span>Cantidad de pases</span>
+                      <span className="font-bold text-slate-900 dark:text-white">
+                        {cantidad} entrada{cantidad > 1 ? 's' : ''}
+                      </span>
+                    </div>
 
-                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-white/10">
-                  <span>Subtotal</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">
-                    ${Number(precioBaseTotal).toLocaleString('es-CO')} COP
-                  </span>
-                </div>
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-white/10">
+                      <span>Subtotal</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">
+                        ${Number(precioBaseTotal).toLocaleString('es-CO')} COP
+                      </span>
+                    </div>
 
-                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                  <span>Tarifa de servicio (10%)</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">
-                    ${Number(comisionServicio).toLocaleString('es-CO')} COP
-                  </span>
-                </div>
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                      <span>Tarifa de servicio {comisionRate > 0 ? `(${Math.round(comisionRate * 100)}%)` : ''}</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">
+                        ${Number(comisionServicio).toLocaleString('es-CO')} COP
+                      </span>
+                    </div>
 
-                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                  <span>Impuestos aplicables (IVA 19%)</span>
-                  <span className="font-medium text-emerald-600 dark:text-emerald-400">Incluido</span>
-                </div>
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                      <span>Impuestos aplicables (IVA 19%)</span>
+                      <span className="font-medium text-emerald-600 dark:text-emerald-400">Incluido</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Total Final */}
@@ -711,11 +864,13 @@ export default function PasarelaPagoPage() {
                 </div>
               </div>
 
-              {/* Garantía de entrada */}
+              {/* Garantía */}
               <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2.5">
                 <FiShield size={16} className="shrink-0 mt-0.5 text-amber-500" />
                 <span className="text-[11.5px] leading-relaxed">
-                  Garantía oficial EventHive: Tus entradas cuentan con un código QR único intransferible vinculado a tu usuario.
+                  {isPromocion
+                    ? 'Garantía oficial EventHive: Tu producción será posicionada en la cartelera principal inmediatamente después de la validación.'
+                    : 'Garantía oficial EventHive: Tus entradas cuentan con un código QR único intransferible vinculado a tu usuario.'}
                 </span>
               </div>
             </div>

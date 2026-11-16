@@ -32,6 +32,7 @@ const BASE_SWAL_CLASSES = {
  */
 const normalizeAlertOptions = (titleOrOptions, maybeText, defaultTitle) => {
   if (typeof titleOrOptions === 'object' && titleOrOptions !== null) {
+    const hasTimer = titleOrOptions.timer !== undefined ? Boolean(titleOrOptions.timer) : true;
     return {
       title: titleOrOptions.title ?? defaultTitle,
       text: titleOrOptions.text ?? '',
@@ -41,24 +42,24 @@ const normalizeAlertOptions = (titleOrOptions, maybeText, defaultTitle) => {
       showConfirmButton:
         titleOrOptions.showConfirmButton !== undefined
           ? titleOrOptions.showConfirmButton
-          : titleOrOptions.timer
-            ? false
-            : true,
+          : (titleOrOptions.timer ? false : false),
       showCancelButton: titleOrOptions.showCancelButton ?? false,
-      timer: titleOrOptions.timer,
+      timer: titleOrOptions.timer !== undefined ? titleOrOptions.timer : 2200,
       ...titleOrOptions,
     };
   }
   return {
     title: titleOrOptions ?? defaultTitle,
     text: maybeText ?? '',
-    showConfirmButton: true,
+    showConfirmButton: false,
     showCancelButton: false,
+    timer: 2200,
   };
 };
 
 /**
  * Alerta de éxito con diseño EventHive adaptado a temas claro y oscuro
+ * Por defecto es informativa: se cierra sola tras timer sin botón de confirmación.
  */
 export const showSuccessAlert = (titleOrOptions = '¡Éxito!', maybeText = '') => {
   const opts = normalizeAlertOptions(titleOrOptions, maybeText, '¡Éxito!');
@@ -66,9 +67,9 @@ export const showSuccessAlert = (titleOrOptions = '¡Éxito!', maybeText = '') =
     icon: 'success',
     title: opts.title,
     confirmButtonText: opts.confirmButtonText || 'Aceptar',
-    showConfirmButton: opts.showConfirmButton,
-    showCancelButton: opts.showCancelButton,
-    timer: opts.timer,
+    showConfirmButton: opts.showConfirmButton ?? false,
+    showCancelButton: opts.showCancelButton ?? false,
+    timer: opts.timer !== undefined ? opts.timer : 2200,
     buttonsStyling: false,
     customClass: BASE_SWAL_CLASSES,
   };
@@ -170,7 +171,8 @@ export const showInfoAlert = (titleOrOptions = 'Información', maybeText = '') =
     title: opts.title,
     text: opts.text,
     confirmButtonText: opts.confirmButtonText || 'Aceptar',
-    timer: opts.timer,
+    showConfirmButton: opts.showConfirmButton !== undefined ? opts.showConfirmButton : (opts.timer ? false : false),
+    timer: opts.timer !== undefined ? opts.timer : 2200,
     buttonsStyling: false,
     customClass: BASE_SWAL_CLASSES,
   });

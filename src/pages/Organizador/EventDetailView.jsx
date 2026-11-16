@@ -18,9 +18,10 @@ import {
 import Badge from '../../components/Shared/Badge.jsx';
 import { organizerService } from '../../services/organizerService.js';
 import moderationService from '../../services/moderationService.js';
+import { session, normalizeRole } from '../../services/session.js';
 import Swal from 'sweetalert2';
 import { showConfirmAlert } from '../../utils/alertUtils.js';
-import { formatFecha, formatHora24, formatFechaHora, formatPrice } from '../../utils/formatters.js';
+import { formatFecha, formatHora12, formatFechaHora12, formatPrice } from '../../utils/formatters.js';
 import L from 'leaflet';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 
@@ -80,6 +81,10 @@ export default function EventDetailView({
     let isMounted = true;
     setLoading(true);
 
+    const currentUser = session.getUser();
+    const userRole = normalizeRole(currentUser?.role || currentUser?.rol);
+    const canViewModeration = ['MODERADOR', 'ADMINISTRADOR'].includes(userRole);
+
     const p1 = organizerService
       .getEventoDetalle(eventId)
       .then((data) => {
@@ -87,15 +92,19 @@ export default function EventDetailView({
       })
       .catch((err) => console.error('Error cargando detalle:', err));
 
-    const p2 = moderationService
-      .getHistorialModeracion(eventId, { page: 0, size: 20 })
-      .then((res) => {
-        if (isMounted) {
-          const items = Array.isArray(res) ? res : res?.content || [];
-          setHistorial(items);
-        }
-      })
-      .catch(() => {});
+    const p2 = canViewModeration
+      ? moderationService
+          .getHistorialModeracion(eventId, { page: 0, size: 20 })
+          .then((res) => {
+            if (isMounted) {
+              const items = Array.isArray(res) ? res : res?.content || [];
+              setHistorial(items);
+            }
+          })
+          .catch((err) => {
+            console.warn('Historial de moderación no disponible para este usuario:', err?.message);
+          })
+      : Promise.resolve();
 
     Promise.allSettled([p1, p2]).finally(() => {
       if (isMounted) setLoading(false);
@@ -142,7 +151,10 @@ export default function EventDetailView({
             onClick={() => !runningAction && onBack()}
             aria-hidden="true"
           />
-          <div className="relative z-50 w-full sm:w-[620px] md:w-[680px] lg:w-[740px] bg-white h-full shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-300">
+          <div
+            data-lenis-prevent="true"
+            className="relative z-50 w-full sm:w-[620px] md:w-[680px] lg:w-[740px] bg-white h-full shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-300"
+          >
             {content}
           </div>
         </div>
@@ -292,7 +304,7 @@ export default function EventDetailView({
             </div>
             <div>
               <p className="text-[10px] uppercase font-extrabold text-slate-400">Hora de Inicio</p>
-              <p className="font-bold text-slate-900 text-xs mt-0.5">{event.hora ? formatHora24(event.hora) : 'Sin hora'}</p>
+              <p className="font-bold text-slate-900 text-xs mt-0.5">{event.hora ? formatHora12(event.hora) : 'Sin hora'}</p>
             </div>
           </div>
         </div>
@@ -438,7 +450,7 @@ export default function EventDetailView({
                         {item.accion || item.estadoResultante || 'REVISIÓN'}
                       </span>
                       <span className="text-[11px] text-slate-500 font-medium">
-                        {item.fecha ? formatFechaHora(item.fecha) : 'Reciente'}
+                        {item.fecha ? formatFechaHora12(item.fecha) : 'Reciente'}
                       </span>
                     </div>
 

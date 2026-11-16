@@ -53,7 +53,7 @@ export default function StandardLayout({
         {/* Contenedor con scroll vertical pegado al borde derecho de la pantalla */}
         <div className="w-full flex-1 min-h-0 overflow-y-auto">
           <main
-            className={`mx-auto w-full ${maxWidthClass} px-4 sm:px-8 pb-12 pt-5 sm:pt-7`}
+            className={`mx-auto w-full ${maxWidthClass} px-4 sm:px-8 pb-12 pt-5 sm:pt-7 animate-stage-entry`}
           >
             {children}
           </main>

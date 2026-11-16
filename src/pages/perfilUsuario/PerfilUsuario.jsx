@@ -18,10 +18,12 @@ import { usePerfilUsuario } from './usePerfilUsuario.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
 import DashboardNotifications from '../../components/common/DashboardNotifications.jsx';
+import { useLenisScroll } from '../../hooks/useLenisScroll.js';
 
 export default function PerfilUsuario() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  useLenisScroll();
 
   const {
     activeTab,
@@ -61,22 +63,12 @@ export default function PerfilUsuario() {
 
   const totalEventosConfirmados = eventosProximos.length + eventosHistorial.length;
 
-  if (loading) {
-    return (
-      <HiveBeeLoader
-        text="Cargando..."
-        subtext="Panel de Usuario"
-        fullScreen={true}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 selection:bg-amber-400 selection:text-slate-950 font-body transition-colors duration-200">
       <Navbar />
 
       {/* Contenedor Flotante Principal Centrado */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 animate-stage-entry">
         {/* Botón Volver: Por fuera del div header, en la esquina superior izquierda */}
         <div className="flex items-center justify-between w-full">
           <button
@@ -90,18 +82,31 @@ export default function PerfilUsuario() {
           <DashboardNotifications />
         </div>
 
-        {/* 1. Tarjeta Superior de Identidad Centrada (Mockup) */}
-        <PerfilHeaderCard
-          usuario={usuario}
-          fileInputRef={fileInputRef}
-          photoPreview={photoPreview}
-          selectedPhotoFile={selectedPhotoFile}
-          isUploadingPhoto={isUploadingPhoto}
-          onPhotoSelect={handlePhotoSelect}
-          onUploadPhoto={handleUploadPhoto}
-          onCancelPhoto={handleCancelPhoto}
-          onOpenEditModal={() => setEditModal(true)}
-        />
+        {/* 1. Tarjeta Superior de Identidad Centrada */}
+        {loading ? (
+          <div className="w-full rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0E1626] p-6 sm:p-8 animate-pulse space-y-4">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+              <div className="w-24 h-24 rounded-full bg-slate-200 dark:bg-slate-800" />
+              <div className="flex-1 space-y-2 text-center sm:text-left">
+                <div className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg mx-auto sm:mx-0" />
+                <div className="h-4 w-32 bg-slate-100 dark:bg-slate-800/60 rounded mx-auto sm:mx-0" />
+                <div className="h-3 w-64 bg-slate-100 dark:bg-slate-800/40 rounded mx-auto sm:mx-0" />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <PerfilHeaderCard
+            usuario={usuario}
+            fileInputRef={fileInputRef}
+            photoPreview={photoPreview}
+            selectedPhotoFile={selectedPhotoFile}
+            isUploadingPhoto={isUploadingPhoto}
+            onPhotoSelect={handlePhotoSelect}
+            onUploadPhoto={handleUploadPhoto}
+            onCancelPhoto={handleCancelPhoto}
+            onOpenEditModal={() => setEditModal(true)}
+          />
+        )}
 
         {/* 2. Fila Superior de Pestañas: Alineada sobre la columna de contenido en desktop */}
         <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 items-start">
@@ -135,11 +140,23 @@ export default function PerfilUsuario() {
           {/* Columna Derecha: Contenido Dinámico de la Pestaña Activa */}
           <section className="flex-1 min-w-0 w-full">
             {loading ? (
-              <div className="bg-white dark:bg-[#0E1626] rounded-3xl border border-slate-200 dark:border-slate-800 p-12 text-center shadow-xs">
-                <div className="w-8 h-8 mx-auto mb-3 border-2 border-slate-900 dark:border-amber-400 border-t-transparent rounded-full animate-spin" />
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  {t('Cargando información del usuario...')}
-                </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0E1626] p-5 animate-pulse space-y-4 shadow-2xs"
+                  >
+                    <div className="h-40 w-full rounded-2xl bg-slate-200 dark:bg-slate-800/80" />
+                    <div className="space-y-2">
+                      <div className="h-4 w-3/4 rounded-lg bg-slate-200 dark:bg-slate-800" />
+                      <div className="h-3 w-1/2 rounded-md bg-slate-100 dark:bg-slate-800/60" />
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/60">
+                      <div className="h-3 w-20 rounded bg-slate-100 dark:bg-slate-800/40" />
+                      <div className="h-4 w-16 rounded bg-amber-400/30 dark:bg-amber-400/20" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <>

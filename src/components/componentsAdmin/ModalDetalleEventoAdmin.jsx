@@ -24,6 +24,7 @@ export default function ModalDetalleEventoAdmin({
 
       {/* Drawer lateral derecho */}
       <div
+        data-lenis-prevent="true"
         className="relative z-50 w-full sm:w-[620px] md:w-[680px] lg:w-[740px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
         onClick={(e) => e.stopPropagation()}
       >
@@ -65,7 +66,7 @@ export default function ModalDetalleEventoAdmin({
               <div>
                 <p className="text-[10px] text-slate-400 font-bold uppercase">Fecha y Hora</p>
                 <p className="font-semibold text-slate-800">
-                  {evento.fecha ? formatFecha(evento.fecha) : '—'} {evento.hora ? `· ${formatHora24(evento.hora)}` : ''}
+                  {evento.fecha ? formatFecha(evento.fecha) : '—'} {evento.hora ? `· ${formatHora12(evento.hora)}` : ''}
                 </p>
               </div>
             </div>

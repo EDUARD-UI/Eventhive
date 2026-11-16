@@ -167,13 +167,15 @@ export const promotionPlanService = {
 
   /**
    * Inicia el registro de pago para posicionar un evento:
-   * POST /api/compras/eventos/{eventoId}/posicionamiento/pagos?planId={planId}
+   * POST /api/compras/eventos/{eventoId}/posicionamiento/pagos
+   * Body: { planId }
    */
   async iniciarPagoPosicionamiento(eventoId, planId) {
+    const numPlanId = Number(planId);
     return httpClient.post(
       `/compras/eventos/${eventoId}/posicionamiento/pagos`,
-      null,
-      { params: { planId } }
+      { planId: numPlanId },
+      { params: { planId: numPlanId } }
     );
   },
 
@@ -186,11 +188,18 @@ export const promotionPlanService = {
   },
 
   /**
-   * Consulta el estado real de la transacción:
+   * Consulta el estado real de la transacción de posicionamiento:
    * GET /api/compras/posicionamiento/pagos/{pagoId}
    */
-  async consultarEstadoPago(pagoId) {
+  async consultarPagoPosicionamiento(pagoId) {
     return httpClient.get(`/compras/posicionamiento/pagos/${pagoId}`);
+  },
+
+  /**
+   * Alias de compatibilidad:
+   */
+  async consultarEstadoPago(pagoId) {
+    return this.consultarPagoPosicionamiento(pagoId);
   },
 };
 

@@ -38,7 +38,7 @@ import { organizerService } from '../../services/organizerService.js';
 import { session } from '../../services/session.js';
 import { formatPrice } from '../../utils/formatters.js';
 import { showInfoAlert } from '../../utils/alertUtils.js';
-import HiveBeeLoader from '../../components/common/HiveBeeLoader.jsx';
+import BackstageHeroSection from '../../components/componentsOrganizador/BackstageHeroSection.jsx';
 
 const menuItems = [
   { id: 'resumen', label: 'Resumen', icon: FiGrid },
@@ -48,203 +48,6 @@ const menuItems = [
   { id: 'entradas', label: 'Entradas', icon: FiCreditCard },
   { id: 'perfil', label: 'Mi perfil', icon: FiUser },
 ];
-
-/**
- * Calendario interactivo del Centro de Operaciones:
- * Muestra el mes actual con días de la semana y resalta los días
- * que tienen eventos agendados para la organización autenticada.
- */
-function OrgEventsCalendar({ events = [], onSelectEvent }) {
-  const [currentDate, setCurrentDate] = useState(() => new Date());
-
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-
-  const daysOfWeek = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-  const monthNames = [
-    'Enero',
-    'Febrero',
-    'Marzo',
-    'Abril',
-    'Mayo',
-    'Junio',
-    'Julio',
-    'Agosto',
-    'Septiembre',
-    'Octubre',
-    'Noviembre',
-    'Diciembre',
-  ];
-
-  const firstDayIndex = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const prevMonthDays = new Date(year, month, 0).getDate();
-
-  const eventsByDate = useMemo(() => {
-    const map = {};
-    events.forEach((ev) => {
-      const rawDate = ev.fecha || ev.fechaInicio || ev.startsAt;
-      if (!rawDate) return;
-      const dateStr = String(rawDate).split('T')[0];
-      if (!map[dateStr]) map[dateStr] = [];
-      map[dateStr].push(ev);
-    });
-    return map;
-  }, [events]);
-
-  const [selectedDayKey, setSelectedDayKey] = useState(() => {
-    const today = new Date();
-    const m = String(today.getMonth() + 1).padStart(2, '0');
-    const d = String(today.getDate()).padStart(2, '0');
-    return `${today.getFullYear()}-${m}-${d}`;
-  });
-
-  const handlePrevMonth = () => {
-    setCurrentDate(new Date(year, month - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentDate(new Date(year, month + 1, 1));
-  };
-
-  const selectedDayEvents = eventsByDate[selectedDayKey] || [];
-
-  return (
-    <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-5 sm:p-6 space-y-4">
-      {/* Encabezado Calendario */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
-            <FiCalendar size={15} />
-          </div>
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
-              Agenda Cultural
-            </span>
-            <h3 className="font-display text-sm sm:text-base font-black text-slate-900 leading-tight">
-              {monthNames[month]} {year}
-            </h3>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={handlePrevMonth}
-            className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
-            title="Mes anterior"
-          >
-            <FiChevronLeft size={16} />
-          </button>
-          <button
-            type="button"
-            onClick={handleNextMonth}
-            className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
-            title="Mes siguiente"
-          >
-            <FiChevronRight size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* Días de la Semana */}
-      <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-        {daysOfWeek.map((d, i) => (
-          <div key={i} className="py-1">
-            {d}
-          </div>
-        ))}
-      </div>
-
-      {/* Días del Mes */}
-      <div className="grid grid-cols-7 gap-1 text-center">
-        {Array.from({ length: firstDayIndex }).map((_, i) => (
-          <div
-            key={`prev-${i}`}
-            className="h-8 flex items-center justify-center text-[11px] text-slate-300 select-none"
-          >
-            {prevMonthDays - firstDayIndex + i + 1}
-          </div>
-        ))}
-
-        {Array.from({ length: daysInMonth }).map((_, i) => {
-          const dayNum = i + 1;
-          const monthStr = String(month + 1).padStart(2, '0');
-          const dayStr = String(dayNum).padStart(2, '0');
-          const dateKey = `${year}-${monthStr}-${dayStr}`;
-
-          const dayEvents = eventsByDate[dateKey] || [];
-          const hasEvents = dayEvents.length > 0;
-          const isSelected = selectedDayKey === dateKey;
-
-          return (
-            <button
-              key={dateKey}
-              type="button"
-              onClick={() => setSelectedDayKey(dateKey)}
-              className={`h-8 w-full rounded-xl text-xs font-bold flex items-center justify-center relative transition-all cursor-pointer ${
-                isSelected
-                  ? 'bg-[#0B1B3D] text-amber-300 shadow-xs ring-1 ring-[#0B1B3D]'
-                  : hasEvents
-                  ? 'bg-amber-100/80 text-amber-950 font-black hover:bg-amber-200'
-                  : 'text-slate-700 hover:bg-slate-100'
-              }`}
-            >
-              <span>{dayNum}</span>
-              {hasEvents && !isSelected && (
-                <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-amber-500" />
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Eventos del día seleccionado */}
-      <div className="pt-3 border-t border-slate-100 space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-            Fecha: {selectedDayKey}
-          </span>
-          {selectedDayEvents.length > 0 && (
-            <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
-              {selectedDayEvents.length} {selectedDayEvents.length === 1 ? 'evento' : 'eventos'}
-            </span>
-          )}
-        </div>
-
-        {selectedDayEvents.length === 0 ? (
-          <div className="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center">
-            <p className="text-xs text-slate-400 font-medium">Sin eventos programados para este día.</p>
-          </div>
-        ) : (
-          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-            {selectedDayEvents.map((ev) => (
-              <div
-                key={ev.id}
-                onClick={() => onSelectEvent && onSelectEvent(ev.id)}
-                className="p-2.5 rounded-2xl border border-amber-200/80 bg-amber-50/50 hover:bg-amber-100/70 transition-all cursor-pointer flex items-center justify-between gap-2 shadow-2xs group"
-              >
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 truncate group-hover:text-amber-700 transition-colors">
-                    {ev.titulo}
-                  </p>
-                  <p className="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                    <FiClock size={10} className="text-amber-600" />
-                    <span>{ev.hora ? formatHora12(ev.hora) : 'Hora por confirmar'}</span>
-                    <span>•</span>
-                    <span className="truncate">{ev.lugar || 'Cartagena'}</span>
-                  </p>
-                </div>
-                <span className="p-1.5 rounded-lg bg-white border border-amber-200 text-amber-700 group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors shrink-0">
-                  <FiArrowRight size={12} />
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export default function OrganizadorIndex() {
   const location = useLocation();
@@ -476,10 +279,37 @@ export default function OrganizadorIndex() {
 
   const activeMenu = menuItems.find((m) => m.id === activeItem);
 
-  const showSuccess = () => {
+  const showSuccess = (savedEvent) => {
     setCreationView(null);
+    setEditingEvent(null);
     setActiveItem('eventos');
     setNotification(true);
+
+    if (savedEvent && (savedEvent.id || savedEvent.eventoId)) {
+      const eventId = savedEvent.id || savedEvent.eventoId;
+      setAllOrgEvents((prev) => {
+        const index = prev.findIndex((e) => (e.id || e.eventoId) === eventId);
+        if (index >= 0) {
+          const updated = [...prev];
+          updated[index] = { ...updated[index], ...savedEvent };
+          return updated;
+        }
+        return [savedEvent, ...prev];
+      });
+
+      setCarteleraEvents((prev) => {
+        const index = prev.findIndex((e) => (e.id || e.eventoId) === eventId);
+        if (index >= 0) {
+          const updated = [...prev];
+          updated[index] = { ...updated[index], ...savedEvent };
+          return updated;
+        }
+        return [savedEvent, ...prev];
+      });
+
+      setCarteleraTotal((prev) => prev + 1);
+    }
+
     loadData();
   };
 
@@ -494,6 +324,13 @@ export default function OrganizadorIndex() {
     return [...allOrgEvents]
       .filter((e) => e.estado === 'PUBLICADO')
       .slice(0, 3);
+  }, [allOrgEvents]);
+
+  // Eventos publicados exclusivamente para la experiencia Backstage y el Calendario
+  const publishedEvents = useMemo(() => {
+    return (allOrgEvents || []).filter(
+      (e) => (e.estado || '').toUpperCase() === 'PUBLICADO'
+    );
   }, [allOrgEvents]);
 
   const totalBoletasVendidasGlobal =
@@ -592,7 +429,7 @@ export default function OrganizadorIndex() {
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/80 text-[10px] font-black uppercase tracking-wider">
                       <FiStar size={11} className="text-amber-600" />
-                      Centro de Gestión Cultural
+                      Centro de Control · Backstage
                     </span>
                     {hasRutUploaded && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
@@ -714,151 +551,85 @@ export default function OrganizadorIndex() {
               </div>
             </div>
 
-            {/* STAGE 2: Próximos Eventos Destacados (Mini-Timeline) */}
-            {upcomingEvents.length > 0 && (
-              <div className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-display text-sm sm:text-base font-black text-slate-900">
-                      Próximas Experiencias en Cartelera
-                    </h3>
-                    <p className="text-xs text-slate-500 font-medium">
-                      Eventos culturales agendados para los próximos días
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setActiveItem('eventos')}
-                    className="text-xs font-bold text-amber-700 hover:text-amber-800 transition-colors inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    <span>Ver todos</span> <FiArrowRight size={12} />
-                  </button>
-                </div>
+            {/* STAGE 2: Experiencia Protagonista Backstage + Calendario Visual (Two-Column Hero) */}
+            <BackstageHeroSection
+              publishedEvents={publishedEvents}
+              onSelectEvent={(id) => setSelectedEventId(id)}
+              onCreateEvent={() => setCreationView('wizard')}
+              isLoading={pageLoading}
+            />
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {upcomingEvents.map((ev) => (
-                    <div
-                      key={ev.id}
-                      onClick={() => setSelectedEventId(ev.id)}
-                      className="group p-4 rounded-2xl border border-slate-200/80 hover:border-amber-400 bg-white hover:bg-amber-50/20 transition-all cursor-pointer flex flex-col justify-between gap-3 shadow-2xs hover:shadow-sm"
-                    >
-                      <div className="flex items-start gap-3">
-                        {ev.foto || ev.imagen ? (
-                          <img
-                            src={ev.foto || ev.imagen}
-                            alt={ev.titulo}
-                            className="w-14 h-14 rounded-xl object-cover border border-slate-200 shrink-0"
-                          />
-                        ) : (
-                          <div className="w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-400 font-bold">
-                            EH
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 block truncate">
-                            {ev.categoria?.nombre || (typeof ev.categoria === 'string' ? ev.categoria : 'Cultura')}
-                          </span>
-                          <h4 className="font-display font-extrabold text-xs text-slate-900 truncate group-hover:text-amber-700 transition-colors">
-                            {ev.titulo}
-                          </h4>
-                          <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-                            <FiClock size={11} className="text-slate-400" />
-                            <span>{ev.fecha ? formatFecha(ev.fecha) : 'Próximamente'}</span>
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                        <span className="text-slate-500 truncate">{ev.lugar || 'Cartagena'}</span>
-                        <span className="font-bold text-amber-700 group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-0.5">
-                          Gestionar <FiArrowRight size={11} />
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+            {/* STAGE 3: Cartelera General Paginada */}
+            <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xs overflow-hidden">
+              <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-base font-black text-slate-900">
+                    Cartelera General de Publicaciones
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium">
+                    Control editorial y estado de las producciones
+                  </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveItem('eventos')}
+                  className="text-xs font-bold text-slate-700 hover:text-amber-700 bg-slate-100 hover:bg-amber-100/70 px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1 cursor-pointer"
+                >
+                  Ver cartelera completa <FiArrowRight size={11} />
+                </button>
               </div>
-            )}
 
-            {/* STAGE 3: Cartelera General Paginada + Calendario Interactivo */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
-              {/* Cartelera General */}
-              <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xs overflow-hidden">
-                <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-display text-base font-black text-slate-900">
-                      Cartelera General de Publicaciones
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                      Control editorial y estado de las producciones
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setActiveItem('eventos')}
-                    className="text-xs font-bold text-slate-700 hover:text-amber-700 bg-slate-100 hover:bg-amber-100/70 px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    Ver cartelera completa <FiArrowRight size={11} />
-                  </button>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead className="bg-slate-50/70 border-b border-slate-200 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead className="bg-slate-50/70 border-b border-slate-200 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                    <tr>
+                      <th className="py-3 px-5">Evento Cultural</th>
+                      <th className="py-3 px-4">Categoría</th>
+                      <th className="py-3 px-4">Estado</th>
+                      <th className="py-3 px-5 text-right">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                    {carteleraEvents.length === 0 ? (
                       <tr>
-                        <th className="py-3 px-5">Evento Cultural</th>
-                        <th className="py-3 px-4">Categoría</th>
-                        <th className="py-3 px-4">Estado</th>
-                        <th className="py-3 px-5 text-right">Acción</th>
+                        <td colSpan={4} className="py-12 text-center text-slate-400">
+                          <p className="font-semibold text-slate-700">El escenario está vacío.</p>
+                          <p className="text-xs text-slate-400 mt-1">Es hora de preparar el próximo gran evento cultural.</p>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                      {carteleraEvents.length === 0 ? (
-                        <tr>
-                          <td colSpan={4} className="py-12 text-center text-slate-400">
-                            No tienes eventos registrados actualmente.
+                    ) : (
+                      carteleraEvents.map((row) => (
+                        <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3 px-5">
+                            {carteleraColumns[0].render(null, row)}
+                          </td>
+                          <td className="py-3 px-4">
+                            {carteleraColumns[1].render(null, row)}
+                          </td>
+                          <td className="py-3 px-4">
+                            {carteleraColumns[2].render(row.estado, row)}
+                          </td>
+                          <td className="py-3 px-5 text-right">
+                            {carteleraColumns[3].render(null, row)}
                           </td>
                         </tr>
-                      ) : (
-                        carteleraEvents.map((row) => (
-                          <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                            <td className="py-3 px-5">
-                              {carteleraColumns[0].render(null, row)}
-                            </td>
-                            <td className="py-3 px-4">
-                              {carteleraColumns[1].render(null, row)}
-                            </td>
-                            <td className="py-3 px-4">
-                              {carteleraColumns[2].render(row.estado, row)}
-                            </td>
-                            <td className="py-3 px-5 text-right">
-                              {carteleraColumns[3].render(null, row)}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {carteleraTotal > carteleraPageSize && (
-                  <div className="p-4 border-t border-slate-100 bg-white">
-                    <Pagination
-                      currentPage={carteleraPage + 1}
-                      totalItems={carteleraTotal}
-                      pageSize={carteleraPageSize}
-                      onPageChange={(p) => fetchCarteleraPage(p - 1)}
-                      pageSizeOptions={[5]}
-                    />
-                  </div>
-                )}
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
 
-              {/* Calendario Cultural Interactivo */}
-              <OrgEventsCalendar
-                events={allOrgEvents}
-                onSelectEvent={(id) => setSelectedEventId(id)}
-              />
+              {carteleraTotal > carteleraPageSize && (
+                <div className="p-4 border-t border-slate-100 bg-white">
+                  <Pagination
+                    currentPage={carteleraPage + 1}
+                    totalItems={carteleraTotal}
+                    pageSize={carteleraPageSize}
+                    onPageChange={(p) => fetchCarteleraPage(p - 1)}
+                    pageSizeOptions={[5]}
+                  />
+                </div>
+              )}
             </div>
           </div>
         );
@@ -883,44 +654,8 @@ export default function OrganizadorIndex() {
   };
 
   const renderContent = () => {
-    if (creationView === 'wizard') {
-      return (
-        <>
-          <div className="lg:hidden">
-            <CreateEventWizard
-              initialEvent={editingEvent}
-              isDrawer={false}
-              canSendEvents={canSendEvents}
-              orgSuspended={isOrgSuspended}
-              onBack={() => {
-                setEditingEvent(null);
-                returnToEvents();
-              }}
-              onSave={() => {
-                setEditingEvent(null);
-                showSuccess();
-              }}
-            />
-          </div>
-          <div className="hidden lg:block">
-            {renderDashboardTab()}
-          </div>
-        </>
-      );
-    }
-
     return renderDashboardTab();
   };
-
-  if (pageLoading) {
-    return (
-      <HiveBeeLoader
-        text="Cargando..."
-        subtext={isOperador ? 'Panel del Operador' : 'Centro de Operaciones'}
-        fullScreen={true}
-      />
-    );
-  }
 
   return (
     <StandardLayout
@@ -987,24 +722,21 @@ export default function OrganizadorIndex() {
         />
       )}
 
-      {/* En pantallas de escritorio (lg+), el wizard se despliega en drawer lateral */}
+      {/* Drawer de Creación y Edición Asistida de Eventos (Inspirado en Luma) */}
       {creationView === 'wizard' && (
-        <div className="hidden lg:block">
-          <CreateEventWizard
-            initialEvent={editingEvent}
-            isDrawer={true}
-            canSendEvents={canSendEvents}
-            orgSuspended={isOrgSuspended}
-            onBack={() => {
-              setEditingEvent(null);
-              returnToEvents();
-            }}
-            onSave={() => {
-              setEditingEvent(null);
-              showSuccess();
-            }}
-          />
-        </div>
+        <CreateEventWizard
+          initialEvent={editingEvent}
+          isDrawer={true}
+          canSendEvents={canSendEvents}
+          orgSuspended={isOrgSuspended}
+          onBack={() => {
+            setEditingEvent(null);
+            returnToEvents();
+          }}
+          onSave={(savedEvent) => {
+            showSuccess(savedEvent);
+          }}
+        />
       )}
     </StandardLayout>
   );

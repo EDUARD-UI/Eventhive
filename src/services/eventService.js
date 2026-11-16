@@ -99,6 +99,12 @@ export const normalizeEvent = (event) => {
     photo: event.imagenPromocional || event.urlImagenDestacado || event.foto || event.fotoUrl || event.imagen || event.imagenUrl || event.banner || null,
     organization: event.organizacion || event.organizador,
     localidades: event.localidades || [],
+    comisionPorcentaje:
+      event.comisionPorcentaje != null
+        ? Number(event.comisionPorcentaje)
+        : event.porcentajeComision != null
+          ? Number(event.porcentajeComision)
+          : null,
   };
 };
 
@@ -329,9 +335,11 @@ export async function getRecomendacionesParaTi({ usuarioId, id, size = 12 } = {}
 /**
  * Listado general de eventos públicos paginados (GET /api/eventos).
  * Soporta filtros opcionales de categoriaId y fecha (yyyy-MM-dd exacto).
+ * Respeta el orden natural del backend (promocionados primero, luego orden temporal) a menos que se especifique sort.
  */
-export async function getEvents({ categoriaId, fecha, page = 0, size = 12, sort = 'fecha,asc' } = {}) {
-  const params = { page, size, sort };
+export async function getEvents({ categoriaId, fecha, page = 0, size = 12, sort } = {}) {
+  const params = { page, size };
+  if (sort) params.sort = sort;
   if (categoriaId) params.categoriaId = categoriaId;
   if (fecha && String(fecha).trim()) params.fecha = String(fecha).trim();
 
@@ -415,6 +423,51 @@ export async function getMapEvents({ categoriaId, lat, lng, limite = 10 } = {}) 
 }
 
 /**
+ * Mapa de calor por demanda de compras recientes (GET /api/eventos/mapa/calor).
+ * Representa zonas geográficas donde se están comprando más entradas para eventos
+ * en tiempo reciente (compras confirmadas, no asistencias ni check-ins).
+ */
+export async function getDemandHeatmap({ categoriaId, lat, lng, radioKm, ventanaHoras = 24 } = {}) {
+  try {
+    const params = { ventanaHoras };
+
+    if (categoriaId != null && categoriaId !== 'all' && categoriaId !== '') {
+      params.categoriaId = categoriaId;
+    }
+
+    const latitude = Number(lat);
+    const longitude = Number(lng);
+    if (
+      lat !== null &&
+      lat !== undefined &&
+      lng !== null &&
+      lng !== undefined &&
+      Number.isFinite(latitude) &&
+      Number.isFinite(longitude)
+    ) {
+      params.lat = latitude;
+      params.lng = longitude;
+    }
+
+    if (radioKm != null && radioKm !== 'all' && radioKm !== '') {
+      const parsedRadio = Number(radioKm);
+      if (Number.isFinite(parsedRadio) && parsedRadio > 0) {
+        params.radioKm = parsedRadio;
+      }
+    }
+
+    const res = await httpClient.get('/eventos/mapa/calor', params);
+    const list = Array.isArray(res) ? res : res?.data || [];
+    return list;
+  } catch (err) {
+    if (err?.isNetworkError || (err?.status && err.status >= 500)) {
+      console.warn('Error consultando /eventos/mapa/calor:', err?.message);
+    }
+    return [];
+  }
+}
+
+/**
  * Detalle público de un evento (GET /api/eventos/{id}).
  */
 export async function getEventById(eventId) {
@@ -458,6 +511,7 @@ export default {
   getEvents,
   getEventsByCategory,
   getMapEvents,
+  getDemandHeatmap,
   getEventById,
   searchEvents,
   normalizeEvent,

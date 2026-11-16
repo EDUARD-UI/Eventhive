@@ -82,6 +82,25 @@ export function formatFechaHora(dateVal, timeVal = null) {
 }
 
 /**
+ * Formatea fecha y hora con estricto formato de 12 horas (ej: "14/10/2026 · 07:30 PM").
+ * Ideal para drawers, modales y visualización para el usuario.
+ */
+export function formatFechaHora12(dateVal, timeVal = null) {
+  if (!dateVal && dateVal !== 0) return '';
+  const dateFormatted = formatFecha(dateVal);
+  let timeStr = '';
+  if (timeVal) {
+    timeStr = formatHora12(timeVal);
+  } else if (typeof dateVal === 'string' && (dateVal.includes('T') || dateVal.includes(' '))) {
+    const rawTime = dateVal.includes('T') ? dateVal.split('T')[1] : dateVal.split(' ')[1];
+    timeStr = formatHora12(rawTime);
+  } else if (dateVal instanceof Date) {
+    timeStr = formatHora12(dateVal);
+  }
+  return timeStr ? `${dateFormatted} · ${timeStr}` : dateFormatted;
+}
+
+/**
  * Formatea cualquier valor de hora o fecha/hora en formato estricto de 12 horas (hh:mm AM/PM).
  * Ejemplos: "08:30 AM", "12:00 PM", "07:45 PM".
  */

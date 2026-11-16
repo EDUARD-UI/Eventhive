@@ -1,9 +1,10 @@
-import { FiCheck, FiArrowRight, FiEdit2, FiStar } from 'react-icons/fi';
+import React from 'react';
+import { FiCheck, FiArrowRight, FiEdit2 } from 'react-icons/fi';
 import { formatPrice } from '../../utils/formatters.js';
 
 /**
- * Tarjeta de Plan de Promoción diseñada con la estética de EventHive
- * inspirada en el layout de precios con tarjetas horizontales (light & dark).
+ * Tarjeta de Plan de Promoción con Identidad Dorado Ámbar
+ * Diseñada para transmitir exclusividad, visibilidad y categoría sin elementos decorativos superfluos.
  */
 export default function PlanCard({
   plan,
@@ -14,100 +15,118 @@ export default function PlanCard({
   mode = 'select', // 'select' | 'manage'
   onEdit,
   className = '',
+  disabled = false,
+  disabledText = '',
 }) {
-  const isDark = isHighlighted || Boolean(plan?.premium);
+  const isPremium = Boolean(plan?.premium);
 
-  // Beneficios derivados si no vienen explícitos
+  // Beneficios derivados si no vienen explícitos del backend
   const features = plan?.beneficios || [
-    'Posicionamiento garantizado en cartelera',
-    plan?.premium ? 'Banner en Carrusel Principal del Home' : 'Inclusión en sección destacados',
-    plan?.pautaRedes ? 'Pauta activa en redes sociales' : 'Visibilidad orgánica en plataforma',
+    'Posicionamiento prioritario en cartelera cultural',
+    isPremium
+      ? 'Espacio exclusivo en Carrusel Principal de Home'
+      : 'Inclusión en sección de Eventos Destacados',
+    plan?.pautaRedes
+      ? 'Pauta activa y difusión en redes sociales'
+      : 'Mayor visibilidad orgánica en búsquedas',
     plan?.comisionPorcentaje !== undefined
-      ? `Comisión reducida del ${plan.comisionPorcentaje}%`
-      : 'Soporte prioritario EventHive',
+      ? `Comisión preferencial reducida al ${plan.comisionPorcentaje}%`
+      : 'Soporte prioritario para organizadores',
   ];
 
   return (
     <div
-      onClick={mode === 'select' ? onSelect : undefined}
-      className={`relative ${className || 'w-[300px] sm:w-[320px] md:w-[340px] shrink-0'} rounded-3xl p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 border select-none ${
-        mode === 'select' ? 'cursor-pointer hover:-translate-y-1' : ''
-      } ${
-        isDark
-          ? 'bg-[#0E1526] text-white border-slate-700 shadow-xl'
-          : 'bg-white text-slate-900 border-slate-200/90 shadow-sm hover:shadow-md'
+      onClick={mode === 'select' && !disabled ? onSelect : undefined}
+      className={`relative ${
+        className || 'w-[300px] sm:w-[320px] md:w-[340px] shrink-0'
+      } rounded-3xl p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 select-none ${
+        mode === 'select' && !disabled ? 'cursor-pointer hover:-translate-y-1.5' : ''
+      } ${disabled ? 'opacity-70 cursor-not-allowed' : ''} ${
+        isPremium
+          ? 'bg-gradient-to-b from-[#181308] via-[#120F0A] to-[#0D111A] text-white border-2 border-amber-500/50 shadow-xl shadow-amber-950/20'
+          : isHighlighted
+          ? 'bg-gradient-to-b from-amber-50/60 to-white text-slate-900 border-2 border-amber-400 shadow-md'
+          : 'bg-white text-slate-900 border border-slate-200/90 shadow-xs hover:border-amber-400/80 hover:shadow-md'
       } ${
         isSelected
-          ? 'ring-3 ring-[#FF5A1F] border-transparent shadow-lg shadow-orange-500/15'
+          ? 'ring-3 ring-amber-500 border-amber-500 shadow-lg shadow-amber-500/20'
           : ''
       }`}
     >
-      {/* Badge Superior / Etiqueta */}
       <div>
+        {/* Cabecera del Plan */}
         <div className="flex items-center justify-between gap-2 mb-4">
           <span
-            className={`font-display font-extrabold text-sm sm:text-base tracking-tight ${
-              isDark ? 'text-white' : 'text-slate-900'
+            className={`font-display font-black text-base sm:text-lg tracking-tight ${
+              isPremium ? 'text-amber-300' : 'text-slate-950'
             }`}
           >
-            {plan?.nombre || 'Plan Estándar'}
+            {plan?.nombre || 'Plan de Posicionamiento'}
           </span>
 
-          {(plan?.premium || isHighlighted) && (
-            <span className="px-3 py-1 rounded-full bg-[#FF5A1F] text-white text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
-              <FiStar size={11} className="fill-white" />
-              <span>Popular</span>
+          {isPremium ? (
+            <span className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-black uppercase tracking-wider">
+              Premium
             </span>
-          )}
-
-          {plan?.codigo && !plan?.premium && !isHighlighted && (
+          ) : isHighlighted ? (
+            <span className="px-3 py-1 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-xs">
+              Destacado
+            </span>
+          ) : plan?.codigo ? (
             <span
               className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-500'
+                isPremium
+                  ? 'bg-amber-950/40 text-amber-400 border border-amber-500/20'
+                  : 'bg-slate-100 text-slate-600'
               }`}
             >
               {plan.codigo}
             </span>
-          )}
+          ) : null}
         </div>
 
-        {/* Precio */}
+        {/* Precio Oficial del Plan */}
         <div className="flex items-baseline gap-2 mb-2">
           <span
             className={`font-display font-black text-2xl sm:text-3xl tracking-tight ${
-              isDark ? 'text-white' : 'text-slate-950'
+              isPremium ? 'text-white' : 'text-slate-950'
             }`}
           >
             {formatPrice(plan?.precio || 0)}
           </span>
-          <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            — / evento
+          <span
+            className={`text-xs font-semibold ${
+              isPremium ? 'text-amber-200/70' : 'text-slate-500'
+            }`}
+          >
+            COP / evento
           </span>
         </div>
 
-        {/* Descripción */}
+        {/* Descripción comercial */}
         <p
-          className={`text-xs leading-relaxed line-clamp-2 min-h-[36px] mb-6 ${
-            isDark ? 'text-slate-300' : 'text-slate-600'
+          className={`text-xs leading-relaxed line-clamp-2 min-h-[34px] mb-6 ${
+            isPremium ? 'text-slate-300' : 'text-slate-600'
           }`}
         >
-          {plan?.detallePublicidad || 'Posicionamiento y difusión oficial para tu evento en EventHive.'}
+          {plan?.detallePublicidad ||
+            'Posicionamiento y difusión oficial para impulsar tu producción en Cartagena.'}
         </p>
 
-        {/* Lista de características con checks */}
-        <div className="space-y-2.5 mb-6 pt-3 border-t border-slate-200/20">
+        {/* Lista de beneficios con checks dorado ámbar */}
+        <div
+          className={`space-y-2.5 mb-6 pt-3 border-t ${
+            isPremium ? 'border-amber-500/20' : 'border-slate-100'
+          }`}
+        >
           {features.map((feat, idx) => (
             <div key={idx} className="flex items-start gap-2.5 text-xs">
-              <span
-                className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                  isDark ? 'text-[#FF5A1F] bg-orange-500/10' : 'text-[#FF5A1F] bg-orange-50'
-                }`}
-              >
+              <span className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-amber-500 bg-amber-500/15 border border-amber-400/30">
                 <FiCheck size={11} strokeWidth={3} />
               </span>
               <span
                 className={`font-medium leading-tight ${
-                  isDark ? 'text-slate-200' : 'text-slate-700'
+                  isPremium ? 'text-slate-200' : 'text-slate-700'
                 }`}
               >
                 {feat}
@@ -117,36 +136,44 @@ export default function PlanCard({
         </div>
       </div>
 
-      {/* Botón de acción inferior (estilo pill con icono circular en el extremo derecho) */}
+      {/* Botón de Acción inferior */}
       <div className="pt-2">
         {mode === 'select' ? (
           <button
             type="button"
+            disabled={disabled}
             onClick={(e) => {
               e.stopPropagation();
-              if (onSelect) onSelect();
+              if (onSelect && !disabled) onSelect();
             }}
-            className={`w-full py-2 px-3 pl-5 rounded-full flex items-center justify-between transition-all duration-300 font-bold text-xs uppercase tracking-wider cursor-pointer active:scale-98 ${
-              isSelected
-                ? 'bg-[#FF5A1F] text-white shadow-md shadow-orange-500/20'
-                : isDark
-                ? 'bg-white text-slate-900 hover:bg-slate-100 shadow-sm'
-                : 'bg-[#0B1B3D] text-white hover:bg-slate-900 shadow-sm'
+            className={`w-full py-2.5 px-3 pl-5 rounded-full flex items-center justify-between transition-all duration-300 font-extrabold text-xs uppercase tracking-wider ${
+              disabled
+                ? 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed opacity-75'
+                : isSelected
+                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 cursor-pointer active:scale-98'
+                : isPremium
+                ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md shadow-amber-500/10 cursor-pointer active:scale-98'
+                : 'bg-slate-950 hover:bg-slate-900 text-white shadow-xs cursor-pointer active:scale-98'
             }`}
           >
-            <span>{isSelected ? 'Plan Seleccionado' : 'Seleccionar Plan'}</span>
+            <span>{disabledText || (isSelected ? 'Plan Seleccionado' : 'Contratar Plan')}</span>
             <span
               className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform ${
-                isSelected
-                  ? 'bg-white text-[#FF5A1F]'
-                  : 'bg-[#FF5A1F] text-white'
+                disabled
+                  ? 'bg-slate-400/30 text-slate-500'
+                  : isSelected || isPremium
+                  ? 'bg-slate-950 text-amber-400'
+                  : 'bg-amber-500 text-slate-950'
               }`}
             >
-              {isSelected ? <FiCheck size={14} strokeWidth={3} /> : <FiArrowRight size={13} strokeWidth={2.5} />}
+              {isSelected ? (
+                <FiCheck size={13} strokeWidth={3} />
+              ) : (
+                <FiArrowRight size={13} strokeWidth={2.5} />
+              )}
             </span>
           </button>
         ) : (
-          /* Modo Gestión (Marketing): Editable */
           <div className="space-y-2">
             <button
               type="button"
@@ -154,14 +181,10 @@ export default function PlanCard({
                 e.stopPropagation();
                 if (onEdit) onEdit();
               }}
-              className={`w-full py-2 px-3 pl-5 rounded-full flex items-center justify-between transition-all duration-300 font-bold text-xs uppercase tracking-wider cursor-pointer active:scale-98 ${
-                isDark
-                  ? 'bg-white text-slate-900 hover:bg-slate-100 shadow-sm'
-                  : 'bg-[#0B1B3D] text-white hover:bg-slate-900 shadow-sm'
-              }`}
+              className="w-full py-2 px-3 pl-5 rounded-full flex items-center justify-between transition-all duration-300 font-bold text-xs uppercase tracking-wider cursor-pointer active:scale-98 bg-slate-950 text-white hover:bg-slate-900 shadow-sm"
             >
               <span>Editar Plan</span>
-              <span className="w-7 h-7 rounded-full bg-[#FF5A1F] text-white flex items-center justify-center shrink-0">
+              <span className="w-7 h-7 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center shrink-0">
                 <FiEdit2 size={13} />
               </span>
             </button>

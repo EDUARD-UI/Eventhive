@@ -67,7 +67,7 @@ En caso de error, la respuesta suele devolver:
 #### `GET /api/auth/me`
 - Recibe: no body, requiere sesión activa.
 - Devuelve: `ApiResponse<UsuarioSesionDTO>`
-- Descripción: devuelve la sesión actual del usuario autenticado.
+- Descripción: devuelve la sesión actual del usuario autenticado, incluido `data.id`. El frontend puede usar este ID para identificar al usuario en su estado de sesión; los endpoints personalizados obtienen la identidad desde el token autenticado.
 - Permisos: autenticado.
 - Ejemplo de respuesta:
 
@@ -332,7 +332,7 @@ En caso de error, la respuesta suele devolver:
 }
 ```
 
-#### `PATCH /api/usuarios/{id}/revocar-marketing`
+#### `PATCH /api/usuarios/{id}/revocar-marketing` (aliases: `POST`, `DELETE` en `/api/usuarios/{id}/expulsar-marketing`)
 - Recibe: `id` del usuario en path.
 - Devuelve: `ApiResponse<Void>`
 - Permisos: ADMINISTRADOR.
@@ -343,6 +343,20 @@ En caso de error, la respuesta suele devolver:
 {
   "success": true,
   "mensaje": "Rol de marketing revocado exitosamente"
+}
+```
+
+#### `PATCH /api/usuarios/{id}/revocar-moderador` (aliases: `POST`, `DELETE` en `/api/usuarios/{id}/expulsar-moderador`)
+- Recibe: `id` del usuario en path.
+- Devuelve: `ApiResponse<Void>`
+- Permisos: ADMINISTRADOR.
+- Descripción: revoca el rol de MODERADOR, dejando al usuario sin permisos de moderación y manteniendo el resto de su cuenta. El backend acepta los verbos `PATCH`, `POST` y `DELETE` y todas las rutas apuntan al mismo flujo.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "Rol de moderador revocado exitosamente"
 }
 ```
 
@@ -447,11 +461,11 @@ En caso de error, la respuesta suele devolver:
 }
 ```
 
-#### `PUT /api/usuarios/perfil/imagen`
-- Recibe: `multipart/form-data` con la parte `imagen` obligatoria (archivo PNG o JPG; máximo 5 MB).
+#### `PUT /api/usuarios/perfil/imagen` (alias: `POST /api/usuarios/perfil/foto` y `POST|PUT` aceptan `imagen`, `foto`, `file` o `avatar`)
+- Recibe: `multipart/form-data` con el archivo de imagen. Los nombres de campo aceptados son `imagen`, `foto`, `file` o `avatar`; cualquiera de ellos puede ser el archivo final, siempre que no venga vacío.
 - Devuelve: `ApiResponse<UsuarioDTO>` con HTTP 200; incluye la URL actualizada en `imagenPerfil` y `urlImagenPerfil`.
 - Permisos: autenticado.
-- Descripción: reemplaza únicamente la imagen de perfil del usuario autenticado y la almacena en Supabase Storage.
+- Descripción: reemplaza únicamente la imagen de perfil del usuario autenticado y la almacena en Supabase Storage. La ruta legacy `/api/usuarios/perfil/foto` sigue funcionando para compatibilidad.
 - Ejemplo de respuesta: misma estructura de `UsuarioDTO` que en `GET /api/usuarios/perfil`.
 
 #### `PUT /api/usuarios/perfil/cambiar-clave`
@@ -622,9 +636,9 @@ En caso de error, la respuesta suele devolver:
 ```
 
 #### `GET /api/eventos/recomendaciones-para-ti`
-- Recibe: paginación (`page`); el tamaño de página siempre es de 4 eventos.
-- Devuelve: `ApiResponse<PagedResponse<EventoDTO>>`, con los mismos campos que `GET /api/eventos/proximos`.
-- Descripción: endpoint público que personaliza la sección según la sesión opcional. Para usuarios autenticados usa hasta 12 eventos publicados próximos asociados al usuario en `recomendacion_envios` cuando hay al menos 5; si no, usa hasta 5 eventos próximos de la categoría con más entradas compradas. Para visitantes combina hasta 6 eventos destacados próximos con hasta 6 eventos próximos de la categoría con más eventos publicados. Si las fuentes principales no alcanzan 6 eventos, completa con otros eventos próximos publicados. Los resultados se deduplican y se muestran en páginas de 4; se devuelven entre 6 y 12 eventos cuando hay suficientes eventos próximos disponibles.
+- Recibe: sin parámetros de paginación.
+- Devuelve: `ApiResponse<List<EventoDTO>>`, con los mismos campos de cada evento que `GET /api/eventos/proximos`.
+- Descripción: devuelve una lista de hasta 12 eventos próximos publicados, sin paginación. Para usuarios autenticados prioriza hasta 3 eventos de su lista de favoritos, luego recomendaciones con estado `ENVIADO` de `recomendacion_envios` ordenadas por fecha de envío más reciente, y completa con la categoría que más eventos publicados tiene y otros próximos publicados. Si no hay favoritos ni recomendaciones válidas, empieza por eventos destacados. Para visitantes empieza por destacados y distribuye el espacio restante entre las dos categorías con más eventos publicados. La identidad se toma de la sesión autenticada y no se aceptan IDs de usuario del cliente. Los eventos se deduplican y las consultas se limitan en la base de datos.
 
 #### `GET /api/eventos/{id}`
 - Recibe: `id` en path.
@@ -657,25 +671,41 @@ En caso de error, la respuesta suele devolver:
       "urlLogo": "https://storage.example/perfilOrganizacion/eventica-logo.jpg",
       "urlImagen": "https://storage.example/perfilOrganizacion/eventica-logo.jpg"
     },
+    "tieneBoletasDisponibles": true,
+    "disponible": true,
+    "agotado": false,
+    "boletasDisponibles": 155,
     "localidades": [
       {
         "id": 1,
         "nombre": "General",
         "precio": 25000,
         "capacidad": 150,
-        "disponibles": 120
+        "disponibles": 120,
+        "disponible": true,
+        "agotado": false,
+        "tieneBoletasDisponibles": true
       },
       {
         "id": 2,
         "nombre": "VIP",
         "precio": 60000,
         "capacidad": 40,
-        "disponibles": 35
+        "disponibles": 35,
+        "disponible": true,
+        "agotado": false,
+        "tieneBoletasDisponibles": true
       }
     ]
   }
 }
 ```
+
+- `tieneBoletasDisponibles` / `disponible` es `true` si al menos una localidad del evento cuenta con boletas disponibles (`disponibles > 0`).
+- `agotado` es `true` solo cuando no quedan boletas en ninguna localidad.
+- `boletasDisponibles` es el total numérico de boletas disponibles en el evento sumando todas las localidades.
+- `localidades[].disponibles` indica cuántas boletas quedan en cada localidad.
+- `localidades[].disponible` (`true`/`false`) y `localidades[].agotado` (`true`/`false`) facilitan la visualización inmediata de cada localidad sin requerir comparaciones manuales en el frontend.
 
 #### `GET /api/eventos/organizacion/{organizacionId}`
 - Alias disponible: `GET /api/organizaciones/{organizacionId}/eventos`
@@ -870,6 +900,33 @@ En caso de error, la respuesta suele devolver:
       "categoriaNombre": "Música",
       "latitud": -33.4489,
       "longitud": -70.6693
+    }
+  ]
+}
+```
+
+#### `GET /api/eventos/mapa/calor`
+- Recibe: `categoriaId`, `lat`, `lng`, `radioKm` opcionales (y `ventanaHoras` opcional por compatibilidad retroactiva).
+- Devuelve: `ApiResponse<List<EventoMapaDemandaDTO>>`
+- Descripción: Devuelve los puntos de demanda para el mapa de calor basándose en **todos los eventos en estado `PUBLICADO`** y sus compras confirmadas a lo largo de todo su tiempo de publicación (sin restricción de ventana de tiempo temporal). Cada punto contiene `id`, `titulo`, `categoriaNombre`, `latitud`, `longitud`, `entradasCompradas`, `totalCompras`, `ultimaCompra` e `intensidad` (escalada logarítmicamente entre 0 y 1 respecto al evento con mayor venta).
+- Permisos: público.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "Demanda de compras para el mapa",
+  "data": [
+    {
+      "id": 12,
+      "titulo": "Concierto de Rock",
+      "categoriaNombre": "Música",
+      "latitud": -34.6037,
+      "longitud": -58.3816,
+      "entradasCompradas": 45,
+      "totalCompras": 18,
+      "ultimaCompra": "2026-11-15T16:30:00",
+      "intensidad": 1.0
     }
   ]
 }
@@ -1182,6 +1239,14 @@ En caso de error, la respuesta suele devolver:
 - Recibe: `eventoId` en path.
 - Devuelve: `ApiResponse<List<LocalidadDTO>>`
 - Permisos: Público (si el evento se encuentra en estado `PUBLICADO`) o usuarios autenticados con rol `MODERADOR`, `ADMINISTRADOR` o `REPRESENTANTE`. Permite a los moderadores examinar las localidades, nombres y capacidades de los eventos a moderar sin generar error 403.
+- Descripción de disponibilidad para el Frontend:
+  - `disponibles`: Cantidad de boletas restantes a la venta para la localidad.
+  - `disponible`: Booleano `true` si `disponibles > 0`, `false` si está agotada.
+  - `agotado`: Booleano `true` si `disponibles <= 0`, `false` si aún hay boletos.
+  - `tieneBoletasDisponibles`: Booleano equivalente a `disponibles > 0`.
+  - Si `disponibles > 0`: La localidad se encuentra **DISPONIBLE** para ser agregada al carrito / compra.
+  - Si `disponibles == 0`: La localidad está **AGOTADA** (`Sold Out`). El frontend debe deshabilitar el selector de cantidad para esta localidad.
+  - A nivel de evento (`GET /api/eventos/{id}` o listados como `GET /api/eventos`, `GET /api/eventos/proximos`, `GET /api/eventos/buscar`), los campos booleanos `tieneBoletasDisponibles` y `disponible` reflejan si al menos una localidad tiene `disponibles > 0`. Si `tieneBoletasDisponibles === false`, el evento completo está agotado (`agotado === true`).
 - Ejemplo de respuesta:
 
 ```json
@@ -1192,9 +1257,22 @@ En caso de error, la respuesta suele devolver:
     {
       "id": 1,
       "nombre": "General",
-      "precio": 25000,
+      "precio": 25000.00,
       "capacidad": 150,
-      "disponibles": 120
+      "disponibles": 120,
+      "disponible": true,
+      "agotado": false,
+      "tieneBoletasDisponibles": true
+    },
+    {
+      "id": 2,
+      "nombre": "VIP",
+      "precio": 60000.00,
+      "capacidad": 40,
+      "disponibles": 0,
+      "disponible": false,
+      "agotado": true,
+      "tieneBoletasDisponibles": false
     }
   ]
 }
@@ -3127,8 +3205,40 @@ descuentos de compra ya no están disponibles ni se aplican al checkout.
 - Recibe filtros opcionales combinables `buscar` o `q` (título y organización), `planCodigo`, `planId`, `estadoPago`, `activo`, y paginación (`page`, `size`, `sort`). El orden predeterminado es por fecha de contratación descendente.
 - `estadoPago` usa los estados existentes de posicionamiento: `PENDIENTE`, `CONFIRMADO` y `CANCELADO`; si se omite, solo muestra `CONFIRMADO`. `activo` indica si la fecha/hora del evento aún no ha pasado, ya que el modelo no registra otra vigencia de campaña.
 - Devuelve: `ApiResponse<PagedResponse<EventoPromocionadoMarketingDTO>>`.
-- Permisos: `MARKETING`.
+- Permisos: `MARKETING`, `ADMINISTRADOR`.
 - Lista eventos y organizaciones con pago confirmado, plan contratado y estado de campaña, garantizando que no existan eventos duplicados (mostrando la contratación más reciente por evento). Indica qué plan pagó el representante y si requiere carga de imagen destacada (en planes premium).
+- Campos del DTO devuelto: `posicionamientoId`, `eventoId`, `titulo`, `fecha`, `hora`, `foto` (o `imagenGeneral`), `lugar`, `estadoEvento`, `organizacionId`, `organizacionNombre`, `organizacionLogo`, `representanteNombre`, `representanteCorreo`, `representanteTelefono`, `planId`, `planNombre`, `planCodigo`, `planPremium`, `planPautaRedes`, `detallePublicidadPlan`, `fechaContratacion`, `estadoPago`, `precioPagado`, `comisionPorcentaje`, `urlImagenDestacado`, `requiereImagenDestacada`, `tieneImagenDestacada`, `campanaActiva`.
+
+#### `GET /api/marketing/eventos/{id}`
+- Recibe: `id` del evento en path.
+- Devuelve: `ApiResponse<EventoDetalleDTO>`
+- Permisos: `MARKETING`, `ADMINISTRADOR`.
+- Descripción: Permite al equipo de marketing consultar el detalle completo de un evento (información general, organización, ubicación, imagen general, banners, categorías y precios de entradas) con la misma vista técnica y de detalle que posee la organización y el administrador.
+- Ejemplo de respuesta:
+
+```json
+{
+  "success": true,
+  "mensaje": "Detalle del evento obtenido para marketing",
+  "data": {
+    "id": 12,
+    "titulo": "Festival de Jazz 2026",
+    "descripcion": "Encuentro musical al aire libre...",
+    "fecha": "2026-12-10",
+    "hora": "19:00:00",
+    "lugar": "Parque Central",
+    "ubicacion": "Parque Central, Santiago",
+    "estado": "PUBLICADO",
+    "foto": "https://storage.supabase.co/eventhive/eventos/jazz.png",
+    "urlImagenDestacado": "https://storage.supabase.co/eventhive/destacados/banner_jazz.png",
+    "organizacion": {
+      "id": 15,
+      "razonSocial": "Ritmo Vivo SpA",
+      "urlLogo": "https://storage.supabase.co/eventhive/logos/ritmo.png"
+    }
+  }
+}
+```
 
 #### Banners del Home
 - `GET /api/banners-home/admin` y las operaciones de creación, edición y eliminación de `/api/banners-home` están restringidas exclusivamente al rol `MARKETING`. Banners soportan posiciones 1 y 2 con carga directa de imágenes mediante `multipart/form-data`.

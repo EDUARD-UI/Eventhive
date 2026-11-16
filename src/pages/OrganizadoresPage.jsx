@@ -130,16 +130,6 @@ export default function OrganizadoresPage() {
     setCurrentPage(1);
   };
 
-  if (initialScreenLoading) {
-    return (
-      <HiveBeeLoader
-        text="Cargando..."
-        subtext="Directorio de Organizaciones de Cartagena"
-        fullScreen={true}
-      />
-    );
-  }
-
   return (
     <div className="w-full min-h-screen bg-[#F8FAFC] dark:bg-[#070D1B] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-body overflow-x-clip max-w-full relative transition-colors duration-200">
       {/* Fondo interactivo de puntitos adaptable a temas */}

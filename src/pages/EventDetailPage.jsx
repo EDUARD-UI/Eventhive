@@ -19,7 +19,9 @@ import EventListCard from '../components/common/EventListCard.jsx';
 import PasarelaPagoSimuladaModal from '../components/common/PasarelaPagoSimuladaModal.jsx';
 import FloatingDotsBackground from '../components/common/FloatingDotsBackground.jsx';
 import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
-import { getCategoryGradient, formatFecha, formatHora24 } from '../utils/formatters.js';
+import { getCategoryGradient, formatFecha, formatHora12 } from '../utils/formatters.js';
+import { isEventSoldOut, getLocalidadDisponibles, isScarcityLocalidad } from '../utils/ticketAvailabilityUtils.js';
+import SoldOutRibbon from '../components/common/SoldOutRibbon.jsx';
 import { useLenisScroll } from '../hooks/useLenisScroll.js';
 import { useLanguage } from '../context/LanguageContext.jsx';
 
@@ -135,9 +137,19 @@ export default function EventDetailPage() {
     return [];
   }, [event]);
 
+  const isSoldOut = useMemo(() => isEventSoldOut(event), [event]);
+  const isSelectedLocSoldOut = useMemo(() => {
+    if (!selectedLocalidad) return false;
+    if (typeof selectedLocalidad.agotado === 'boolean') return selectedLocalidad.agotado;
+    if (typeof selectedLocalidad.disponible === 'boolean') return !selectedLocalidad.disponible;
+    return getLocalidadDisponibles(selectedLocalidad) <= 0;
+  }, [selectedLocalidad]);
+  const isPurchaseDisabled = isSoldOut || isSelectedLocSoldOut || !selectedLocalidad;
+
   useEffect(() => {
     if (!selectedLocalidad && localidades.length > 0) {
-      setSelectedLocalidad(localidades[0]);
+      const firstAvailable = localidades.find((loc) => getLocalidadDisponibles(loc) > 0);
+      setSelectedLocalidad(firstAvailable || localidades[0]);
     }
   }, [localidades, selectedLocalidad]);
 
@@ -355,6 +367,7 @@ export default function EventDetailPage() {
   };
 
   const handlePurchase = () => {
+    if (isPurchaseDisabled) return;
     const user = session.getUser();
     if (!user) {
       showLoginAlert({
@@ -540,6 +553,7 @@ export default function EventDetailPage() {
                   fallbackText={event.title}
                   iconSize={42}
                 />
+                {isSoldOut && <SoldOutRibbon size="lg" />}
               </div>
 
               {/* 3. DEBAJO DE LA IMAGEN: Interacciones e Información sobre el Evento */}
@@ -570,7 +584,7 @@ export default function EventDetailPage() {
                       {event.hora && (
                         <div className="flex items-center gap-2">
                           <FiClock className="text-amber-500 shrink-0" size={17} />
-                          <span>{formatHora24(event.hora)}</span>
+                          <span>{formatHora12(event.hora)}</span>
                         </div>
                       )}
                     </div>
@@ -675,28 +689,57 @@ export default function EventDetailPage() {
                   <div className="space-y-2">
                     {localidades.map((loc) => {
                       const isSelected = selectedLocalidad?.id === loc.id;
+                      const disponibles = getLocalidadDisponibles(loc);
+                      const locSoldOut =
+                        typeof loc.agotado === 'boolean'
+                          ? loc.agotado
+                          : typeof loc.disponible === 'boolean'
+                          ? !loc.disponible
+                          : disponibles <= 0;
+                      const locScarcity = !locSoldOut && disponibles > 0 && disponibles < 25;
+
                       return (
                         <label
                           key={loc.id}
-                          onClick={() => setSelectedLocalidad(loc)}
-                          className={`flex items-center justify-between p-3.5 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${isSelected
-                              ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/30 shadow-xs'
-                              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/60 dark:bg-slate-900/60'
-                            }`}
+                          onClick={() => {
+                            if (!locSoldOut) setSelectedLocalidad(loc);
+                          }}
+                          className={`flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all duration-200 ${
+                            locSoldOut
+                              ? 'opacity-60 bg-slate-100/60 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800 cursor-not-allowed'
+                              : isSelected
+                              ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/30 shadow-xs cursor-pointer'
+                              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/60 dark:bg-slate-900/60 cursor-pointer'
+                          }`}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-start sm:items-center gap-3 min-w-0">
                             <input
                               type="radio"
                               name="localidad"
-                              checked={isSelected}
-                              onChange={() => setSelectedLocalidad(loc)}
-                              className="w-4 h-4 text-amber-500 focus:ring-amber-400 accent-amber-500 cursor-pointer"
+                              disabled={locSoldOut}
+                              checked={isSelected && !locSoldOut}
+                              onChange={() => {
+                                if (!locSoldOut) setSelectedLocalidad(loc);
+                              }}
+                              className="w-4 h-4 text-amber-500 focus:ring-amber-400 accent-amber-500 cursor-pointer mt-0.5 sm:mt-0"
                             />
-                            <span className="text-xs sm:text-sm font-extrabold text-slate-950 dark:text-white">
-                              {loc.nombre}
-                            </span>
+                            <div className="min-w-0">
+                              <span className="text-xs sm:text-sm font-extrabold text-slate-950 dark:text-white block truncate">
+                                {loc.nombre}
+                              </span>
+                              {locScarcity && (
+                                <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-md inline-flex items-center gap-1 mt-1">
+                                  ¡Últimas entradas disponibles! ({disponibles} restantes)
+                                </span>
+                              )}
+                              {locSoldOut && (
+                                <span className="text-[10px] font-black uppercase text-red-600 dark:text-red-400 bg-red-500/10 border border-red-400/20 px-2 py-0.5 rounded-md inline-block mt-1">
+                                  Agotado
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-amber-400">
+                          <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-amber-400 shrink-0 ml-2">
                             ${Number(loc.precio).toLocaleString('es-CO')}
                           </span>
                         </label>
@@ -748,17 +791,35 @@ export default function EventDetailPage() {
                     ${(displayedPrice * ticketQuantity).toLocaleString('es-CO')} COP
                   </span>
                 </div>
+
+                {event?.comisionPorcentaje != null && Number(event.comisionPorcentaje) > 0 && (
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
+                    <span>Comisión de servicio EventHive:</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300">{event.comisionPorcentaje}%</span>
+                  </div>
+                )}
               </div>
 
               {/* Botones de Acción: Comprar, Guardar en Favoritos y Compartir justo debajo */}
               <div className="space-y-3 pt-2">
                 <button
                   type="button"
+                  disabled={isPurchaseDisabled}
                   onClick={handlePurchase}
-                  className="w-full py-4 px-5 rounded-xl bg-slate-950 dark:bg-amber-500 hover:bg-amber-500 dark:hover:bg-amber-400 hover:text-slate-950 text-white dark:text-slate-950 font-black text-xs sm:text-sm tracking-wider uppercase shadow-md transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+                  className={`w-full py-4 px-5 rounded-xl font-black text-xs sm:text-sm tracking-wider uppercase shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${
+                    isPurchaseDisabled
+                      ? 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed shadow-none'
+                      : 'bg-slate-950 dark:bg-amber-500 hover:bg-amber-500 dark:hover:bg-amber-400 hover:text-slate-950 text-white dark:text-slate-950 cursor-pointer active:scale-[0.98]'
+                  }`}
                 >
-                  <Sparkles size={16} className="text-amber-400 dark:text-slate-950 fill-current" />
-                  <span>Comprar Entradas</span>
+                  {!isPurchaseDisabled && <Sparkles size={16} className="text-amber-400 dark:text-slate-950 fill-current" />}
+                  <span>
+                    {isSoldOut
+                      ? 'Entradas Agotadas (Sold Out)'
+                      : isSelectedLocSoldOut
+                      ? 'Localidad Agotada (Sold Out)'
+                      : 'Comprar Entradas'}
+                  </span>
                 </button>
 
                 <button

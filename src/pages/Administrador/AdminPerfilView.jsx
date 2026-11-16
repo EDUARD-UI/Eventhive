@@ -635,6 +635,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast }) {
           />
 
           <div
+            data-lenis-prevent="true"
             className="relative z-50 w-full sm:w-[480px] md:w-[520px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
             onClick={(e) => e.stopPropagation()}
           >

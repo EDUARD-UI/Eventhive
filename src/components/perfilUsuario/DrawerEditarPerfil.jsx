@@ -36,6 +36,7 @@ export default function DrawerEditarPerfil({
 
       {/* Drawer Lateral Derecho */}
       <div
+        data-lenis-prevent="true"
         className="relative z-50 w-full sm:w-[460px] bg-white dark:bg-[#0E1626] h-full shadow-2xl border-l border-slate-200 dark:border-slate-800 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
         onClick={(e) => e.stopPropagation()}
       >

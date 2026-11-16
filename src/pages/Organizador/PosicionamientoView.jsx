@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FiAward,
   FiZap,
@@ -7,11 +8,13 @@ import {
   FiDollarSign,
   FiAlertCircle,
   FiMapPin,
-  FiNavigation,
   FiArrowRight,
   FiLayers,
   FiClock,
   FiCompass,
+  FiShare2,
+  FiArrowLeft,
+  FiInfo,
 } from 'react-icons/fi';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
@@ -28,7 +31,7 @@ import StatCard from '../../components/Shared/StatCard.jsx';
 import Badge from '../../components/Shared/Badge.jsx';
 import PlanCard from '../../components/Shared/PlanCard.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
-import { formatPrice } from '../../utils/formatters.js';
+import { formatPrice, formatFecha, formatHora12 } from '../../utils/formatters.js';
 
 const EVENTOS_POR_PAGINA = 6;
 
@@ -62,7 +65,8 @@ function MapReloader({ center }) {
 }
 
 export default function PosicionamientoView({ onPromotionSuccess }) {
-  const [eventosPublicados, setEventosPublicados] = useState([]);
+  const navigate = useNavigate();
+  const [allEventos, setAllEventos] = useState([]);
   const [loadingEventos, setLoadingEventos] = useState(true);
   const [loadingPlanes, setLoadingPlanes] = useState(true);
   const [selectedEventoId, setSelectedEventoId] = useState('');
@@ -70,7 +74,6 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
   const [planes, setPlanes] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [procesando, setProcesando] = useState(false);
-  const [pagoStatus, setPagoStatus] = useState(null);
 
   // Cargar planes de promoción reales desde el backend (GET /api/promociones/planes)
   useEffect(() => {
@@ -98,36 +101,54 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
     };
   }, []);
 
-  // Cargar exclusivamente los eventos PUBLICADOS de la organización
-  const loadEventosPublicados = async () => {
+  // Cargar todos los eventos del organizador
+  const loadEventos = async () => {
     setLoadingEventos(true);
     try {
       const items = await organizerService.getTodosEventosOrganizador();
-      const publicados = items.filter((ev) => ev.estado === 'PUBLICADO');
-      setEventosPublicados(publicados);
+      setAllEventos(items || []);
       setCurrentPage(1);
-      if (publicados.length > 0 && !selectedEventoId) {
-        setSelectedEventoId(String(publicados[0].id));
+
+      // Eventos elegibles: PUBLICADO y que NO tengan promoción activa
+      const elegibles = (items || []).filter(
+        (ev) =>
+          ev.estado === 'PUBLICADO' &&
+          !ev.promocionado &&
+          !ev.destacado &&
+          !ev.urlImagenDestacado
+      );
+
+      if (elegibles.length > 0 && !selectedEventoId) {
+        setSelectedEventoId(String(elegibles[0].id));
       }
     } catch (err) {
-      console.warn('Error cargando eventos publicados:', err);
-      setEventosPublicados([]);
+      console.warn('Error cargando eventos:', err);
+      setAllEventos([]);
     } finally {
       setLoadingEventos(false);
     }
   };
 
   useEffect(() => {
-    loadEventosPublicados();
+    loadEventos();
   }, []);
 
-  const selectedEvento = eventosPublicados.find(
-    (ev) => String(ev.id) === String(selectedEventoId)
-  );
-  const eventosPublicadosPaginados = useMemo(() => {
-    const start = (currentPage - 1) * EVENTOS_POR_PAGINA;
-    return eventosPublicados.slice(start, start + EVENTOS_POR_PAGINA);
-  }, [eventosPublicados, currentPage]);
+  // Eventos estrictamente PUBLICADOS
+  const eventosPublicados = useMemo(() => {
+    return allEventos.filter((ev) => ev.estado === 'PUBLICADO');
+  }, [allEventos]);
+
+  // Eventos elegibles para contratar promoción (PUBLICADO, no promocionado)
+  const eventosElegibles = useMemo(() => {
+    return eventosPublicados.filter(
+      (ev) =>
+        !ev.promocionado &&
+        !ev.destacado &&
+        !ev.urlImagenDestacado &&
+        !ev.url_imagen_destacado &&
+        !ev.imagenPromocional
+    );
+  }, [eventosPublicados]);
 
   // Eventos actualmente promocionados
   const eventosConPromocion = useMemo(() => {
@@ -141,6 +162,15 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
     );
   }, [eventosPublicados]);
 
+  const selectedEvento = eventosPublicados.find(
+    (ev) => String(ev.id) === String(selectedEventoId)
+  );
+
+  const eventosPublicadosPaginados = useMemo(() => {
+    const start = (currentPage - 1) * EVENTOS_POR_PAGINA;
+    return eventosPublicados.slice(start, start + EVENTOS_POR_PAGINA);
+  }, [eventosPublicados, currentPage]);
+
   // Coordenadas válidas del evento seleccionado
   const eventCoordinates = useMemo(() => {
     if (!selectedEvento) return null;
@@ -152,99 +182,85 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
     return null;
   }, [selectedEvento]);
 
-  // Flujo de contratación y pago con prevención estricta de doble clic
-  const handleContratarPago = async (planToHire) => {
-    const plan = planToHire || selectedPlan;
-    if (procesando) return;
-
+  // Selección directa del plan de promoción y redirección inmediata a PasarelaPagoPage
+  const handleContratarDirecto = async (plan) => {
     if (!selectedEventoId) {
       showWarningAlert({
-        title: 'Selecciona un evento',
+        title: 'Selecciona una producción',
         text: 'Por favor selecciona el evento publicado que deseas promocionar.',
         badge: 'Evento Requerido',
       });
       return;
     }
 
-    if (!plan) {
+    if (!selectedEvento) {
       showWarningAlert({
-        title: 'Selecciona un plan',
-        text: 'Por favor elige un plan de promoción disponible.',
-        badge: 'Plan Requerido',
+        title: 'Evento no encontrado',
+        text: 'El evento seleccionado no está disponible.',
+      });
+      return;
+    }
+
+    // Verificar si ya cuenta con promoción activa
+    const isAlreadyPromoted = Boolean(
+      selectedEvento.promocionado ||
+      selectedEvento.destacado ||
+      selectedEvento.urlImagenDestacado ||
+      selectedEvento.url_imagen_destacado ||
+      selectedEvento.imagenPromocional
+    );
+
+    if (isAlreadyPromoted) {
+      showWarningAlert({
+        title: 'Producción ya promocionada',
+        text: `"${selectedEvento.titulo}" ya cuenta con un plan de posicionamiento activo en la cartelera principal.`,
+        badge: 'Promoción Vigente',
       });
       return;
     }
 
     setSelectedPlan(plan);
-
-    const confirmRes = await showConfirmAlert({
-      title: 'Contratar Posicionamiento',
-      text: `¿Deseas contratar el plan "${plan.nombre}" (${formatPrice(plan.precio)}) para destacar "${selectedEvento?.titulo || ''}" en la cartelera principal?`,
-      badge: 'Confirmación de Promoción',
-      confirmButtonText: 'Continuar al pago',
-      cancelButtonText: 'Cancelar',
-    });
-
-    if (confirmRes !== true) return;
-
     setProcesando(true);
-    setPagoStatus('PROCESANDO');
 
     try {
+      // 1. Registrar la orden pendiente en el servidor
       const inicioRes = await promotionPlanService.iniciarPagoPosicionamiento(
-        selectedEventoId,
+        selectedEvento.id,
         plan.id
       );
+
       const pagoId = inicioRes?.id || inicioRes?.data?.id;
 
       if (!pagoId) {
-        throw new Error('No se pudo generar la orden de pago para la promoción.');
+        throw new Error('No se pudo generar la orden de contratación en el servidor.');
       }
 
-      await promotionPlanService.confirmarPagoPosicionamiento(pagoId);
-      const estadoReal = await promotionPlanService.consultarPagoPosicionamiento(pagoId);
-      const estadoConfirmado = estadoReal?.estado || estadoReal?.data?.estado;
-
-      if (estadoConfirmado === 'CONFIRMADO') {
-        setPagoStatus('CONFIRMADO');
-        await showSuccessAlert({
-          title: '¡Posicionamiento Activo!',
-          text: `El pago de la promoción para "${selectedEvento?.titulo}" ha sido confirmado exitosamente. Tu producción ahora destaca en la cartelera principal.`,
-          badge: 'Promoción Confirmada',
-        });
-        await loadEventosPublicados();
-        if (onPromotionSuccess) onPromotionSuccess();
-      } else if (estadoConfirmado === 'PENDIENTE') {
-        setPagoStatus('PENDIENTE');
-        await showInfoAlert({
-          title: 'Pago en proceso',
-          text: 'La transacción permanece en estado pendiente de aprobación bancaria.',
-          badge: 'En Validación',
-        });
-      } else {
-        setPagoStatus('FALLIDO');
-        await showErrorAlert({
-          title: 'Transacción no completada',
-          text: 'La transacción no pudo ser verificada. Intenta nuevamente.',
-          badge: 'Pago Fallido',
-        });
-      }
+      // 2. Redirigir directamente a la pasarela de pagos existente
+      navigate('/pago', {
+        state: {
+          tipoOperacion: 'PROMOCION_EVENTO',
+          event: selectedEvento,
+          plan,
+          pagoId,
+        },
+      });
     } catch (err) {
-      setPagoStatus('FALLIDO');
-      console.error('Error en contratación de promoción:', err);
+      console.error('Error al iniciar pago de posicionamiento:', err);
+      const errorMsg = err?.message || '';
       const isAlreadyActiveOrPending =
-        err?.message?.toLowerCase().includes('posicionamiento activo') ||
-        err?.message?.toLowerCase().includes('pago pendiente');
+        errorMsg.toLowerCase().includes('posicionamiento activo') ||
+        errorMsg.toLowerCase().includes('pago pendiente') ||
+        errorMsg.toLowerCase().includes('ya cuenta con');
 
       if (isAlreadyActiveOrPending) {
         await showWarningAlert({
-          title: 'Promoción vigente',
-          text: err.message || 'Este evento ya cuenta con un posicionamiento activo o un pago en proceso de validación.',
+          title: 'Promoción existente',
+          text: errorMsg || 'Este evento ya cuenta con un posicionamiento activo o un pago en proceso de validación.',
         });
       } else {
         await showErrorAlert({
-          title: 'Error en la operación',
-          text: err?.message || 'No se pudo completar el flujo de pago de la promoción.',
+          title: 'No se pudo iniciar el proceso de pago',
+          text: errorMsg || 'Ocurrió un inconveniente al conectar con la pasarela. Intenta nuevamente.',
         });
       }
     } finally {
@@ -254,20 +270,20 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
 
   return (
     <div className="space-y-6">
-      {/* 1. Header Editorial */}
+      {/* 1. Header Editorial Backstage */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-700 bg-amber-100/70 border border-amber-200/80 px-2 py-0.5 rounded-md">
-              Visibilidad & Ciudad
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400 bg-amber-100/70 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-700/40 px-2.5 py-0.5 rounded-md">
+              Backstage · Visibilidad & Cartagena
             </span>
           </div>
-          <h2 className="font-display text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1 flex items-center gap-2">
+          <h2 className="font-display text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1 flex items-center gap-2">
             <FiAward className="w-5 h-5 text-amber-500" />
-            <span>Posicionamiento y Promoción Cultural</span>
+            <span>Posicionamiento y Promoción de Producciones</span>
           </h2>
-          <p className="mt-0.5 text-xs text-slate-500 max-w-xl font-medium">
-            Potencia el alcance de tus eventos publicados en Cartagena a través de los planes de posicionamiento destacados de EventHive.
+          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 max-w-xl font-medium">
+            Destaca tus eventos publicados en la cartelera principal y carrusel de EventHive para potenciar la venta de entradas.
           </p>
         </div>
       </div>
@@ -275,22 +291,22 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
       {/* 2. KPIs de Presencia y Posicionamiento */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
-          label="Eventos Publicados Elegibles"
-          value={String(eventosPublicados.length)}
-          change="Producciones en cartelera"
+          label="Producciones Elegibles"
+          value={String(eventosElegibles.length)}
+          change="Publicadas listas para destacar"
           trend="up"
           icon={FiCheckCircle}
-          iconBg="bg-blue-50"
-          iconColor="text-blue-600"
+          iconBg="bg-blue-50 dark:bg-blue-950/40"
+          iconColor="text-blue-600 dark:text-blue-400"
         />
         <StatCard
           label="Promociones Activas"
           value={String(eventosConPromocion.length)}
-          change="Eventos destacados en plataforma"
+          change="Destacadas en cartelera"
           trend="up"
           icon={FiStar}
-          iconBg="bg-amber-50"
-          iconColor="text-amber-600"
+          iconBg="bg-amber-50 dark:bg-amber-950/40"
+          iconColor="text-amber-600 dark:text-amber-400"
         />
         <StatCard
           label="Planes Disponibles"
@@ -298,30 +314,30 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
           change="Opciones oficiales vigentes"
           trend="up"
           icon={FiAward}
-          iconBg="bg-emerald-50"
-          iconColor="text-emerald-600"
+          iconBg="bg-emerald-50 dark:bg-emerald-950/40"
+          iconColor="text-emerald-600 dark:text-emerald-400"
         />
       </div>
 
       {/* 3. PASO 1: Selección del Evento Publicado */}
-      <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+      <div className="bg-white dark:bg-[#0E1626] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
             <span className="w-7 h-7 rounded-xl bg-[#0B1B3D] text-amber-300 font-display font-black text-xs flex items-center justify-center">
               1
             </span>
             <div>
-              <h3 className="font-display text-sm sm:text-base font-black text-slate-900">
+              <h3 className="font-display text-sm sm:text-base font-black text-slate-900 dark:text-white">
                 Selecciona la producción que deseas destacar
               </h3>
-              <p className="text-xs text-slate-500">
-                Solo eventos en estado <strong>PUBLICADO</strong> pueden adquirir planes de promoción
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Solo eventos en estado <strong>PUBLICADO</strong> sin promoción activa pueden contratar posicionamiento
               </p>
             </div>
           </div>
           {eventosPublicados.length > 0 && (
-            <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
-              {eventosPublicados.length} disponibles
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
+              {eventosElegibles.length} disponibles para contratar
             </span>
           )}
         </div>
@@ -329,21 +345,21 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
         {loadingEventos ? (
           <div className="p-8 text-center text-xs text-slate-400">
             <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-            Cargando eventos publicados...
+            Cargando producciones...
           </div>
         ) : eventosPublicados.length === 0 ? (
-          <div className="p-6 text-center text-xs text-slate-600 bg-amber-50/60 border border-amber-200/70 rounded-2xl space-y-1">
-            <FiAlertCircle size={22} className="mx-auto text-amber-600 mb-1" />
-            <p className="font-bold text-slate-900">No tienes eventos publicados en este momento</p>
-            <p className="text-[11px] text-slate-600">
-              Para promocionar un evento, primero debes tenerlo publicado en la cartelera de EventHive.
+          <div className="p-6 text-center text-xs text-slate-600 dark:text-slate-300 bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-700/40 rounded-2xl space-y-1">
+            <FiAlertCircle size={22} className="mx-auto text-amber-600 dark:text-amber-400 mb-1" />
+            <p className="font-bold text-slate-900 dark:text-white">No tienes eventos publicados en este momento</p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400">
+              Para promocionar un evento, primero debe ser aprobado y publicado en la cartelera de EventHive.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {eventosPublicadosPaginados.map((ev) => {
               const isSelected = String(ev.id) === String(selectedEventoId);
-              const isPromocionado = Boolean(ev.promocionado || ev.destacado);
+              const isPromocionado = Boolean(ev.promocionado || ev.destacado || ev.urlImagenDestacado);
 
               return (
                 <div
@@ -351,8 +367,10 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
                   onClick={() => setSelectedEventoId(String(ev.id))}
                   className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-3 ${
                     isSelected
-                      ? 'border-[#0B1B3D] bg-amber-50/20 shadow-xs ring-1 ring-[#0B1B3D]/10'
-                      : 'border-slate-200/90 hover:border-slate-300 bg-white'
+                      ? 'border-[#0B1B3D] dark:border-amber-400 bg-amber-50/30 dark:bg-amber-950/20 shadow-xs ring-1 ring-[#0B1B3D]/10 dark:ring-amber-400/20'
+                      : isPromocionado
+                      ? 'border-amber-200 dark:border-amber-900/40 bg-white dark:bg-[#0B1428] opacity-85'
+                      : 'border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-[#0B1428]'
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -360,37 +378,41 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
                       <img
                         src={ev.foto || ev.imagen}
                         alt={ev.titulo}
-                        className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0"
+                        className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-400 font-bold">
+                      <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 text-slate-400 font-bold">
                         EH
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <h4 className="font-display text-xs font-black text-slate-900 truncate">
+                        <h4 className="font-display text-xs font-black text-slate-900 dark:text-white truncate">
                           {ev.titulo}
                         </h4>
                         {isPromocionado && (
-                          <Badge tone="active">★ Destacado</Badge>
+                          <Badge tone="active">★ Destacado Activo</Badge>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5 truncate flex items-center gap-1">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate flex items-center gap-1">
                         <FiMapPin size={10} className="text-amber-500 shrink-0" />
                         <span className="truncate">{ev.lugar || 'Cartagena'}</span>
                       </p>
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                    <span className="text-slate-400">{ev.fecha}</span>
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-400">{ev.fecha ? formatFecha(ev.fecha) : 'Por definir'}</span>
                     <span
                       className={`font-bold ${
-                        isSelected ? 'text-[#0B1B3D]' : 'text-slate-400'
+                        isSelected
+                          ? 'text-[#0B1B3D] dark:text-amber-400'
+                          : isPromocionado
+                          ? 'text-amber-600 dark:text-amber-400 font-semibold'
+                          : 'text-slate-400'
                       }`}
                     >
-                      {isSelected ? '✓ Seleccionado' : 'Seleccionar'}
+                      {isSelected ? '✓ Seleccionado' : isPromocionado ? 'Promocionado' : 'Seleccionar'}
                     </span>
                   </div>
                 </div>
@@ -411,31 +433,31 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
 
       {/* 4. UBICACIÓN GEOGRÁFICA EN CARTAGENA */}
       {selectedEvento && (
-        <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+        <div className="bg-white dark:bg-[#0E1626] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+              <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
                 <FiCompass size={15} />
               </div>
               <div>
-                <h3 className="font-display text-xs sm:text-sm font-black text-slate-900">
+                <h3 className="font-display text-xs sm:text-sm font-black text-slate-900 dark:text-white">
                   Ubicación de Proyección en Cartagena: {selectedEvento.titulo}
                 </h3>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   {selectedEvento.lugar || 'Ubicación registrada para la producción'}
                 </p>
               </div>
             </div>
 
             {eventCoordinates && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
                 <FiMapPin size={10} /> Coordenadas Activas
               </span>
             )}
           </div>
 
           {eventCoordinates ? (
-            <div className="overflow-hidden rounded-2xl border border-slate-200 h-56 sm:h-64 w-full relative z-0 shadow-2xs">
+            <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 h-56 sm:h-64 w-full relative z-0 shadow-2xs">
               <MapContainer
                 center={eventCoordinates}
                 zoom={15}
@@ -451,31 +473,31 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
               </MapContainer>
             </div>
           ) : (
-            <div className="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-500 italic">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#070D1B] border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500 italic">
               Este evento no tiene coordenadas geográficas registradas para visualizar en el mapa.
             </div>
           )}
         </div>
       )}
 
-      {/* 5. PASO 2: Selección y Contratación de Plan */}
-      <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-7 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+      {/* 5. PASO 2: Selección de Plan Oficial de Posicionamiento */}
+      <div className="bg-white dark:bg-[#0E1626] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-5 sm:p-7 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
             <span className="w-7 h-7 rounded-xl bg-[#0B1B3D] text-amber-300 font-display font-black text-xs flex items-center justify-center">
               2
             </span>
             <div>
-              <h3 className="font-display text-sm sm:text-base font-black text-slate-900">
+              <h3 className="font-display text-sm sm:text-base font-black text-slate-900 dark:text-white">
                 Selecciona tu plan de posicionamiento
               </h3>
-              <p className="text-xs text-slate-500">
-                Compara los niveles de visibilidad para tu evento en la plataforma
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Precios y comisiones oficiales configurados por EventHive
               </p>
             </div>
           </div>
           <span className="text-[11px] font-semibold text-slate-400">
-            Precios oficiales en Pesos Colombianos (COP)
+            Valores oficiales en Pesos Colombianos (COP)
           </span>
         </div>
 
@@ -485,7 +507,7 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
             Cargando planes de promoción...
           </div>
         ) : planes.length === 0 ? (
-          <div className="p-6 text-center text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-2xl">
+          <div className="p-6 text-center text-xs text-slate-500 bg-slate-50 dark:bg-[#070D1B] border border-slate-200 dark:border-slate-800 rounded-2xl">
             No hay planes de promoción activos disponibles en este momento.
           </div>
         ) : (
@@ -493,6 +515,11 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
             {planes.map((plan, index) => {
               const isSelected = selectedPlan?.id === plan.id;
               const isHighlighted = Boolean(plan.premium) || (planes.length >= 3 && index === 1);
+              const isEventAlreadyPromoted = Boolean(
+                selectedEvento?.promocionado ||
+                selectedEvento?.destacado ||
+                selectedEvento?.urlImagenDestacado
+              );
 
               return (
                 <div key={plan.id || plan.codigo || index} className="flex flex-col">
@@ -500,33 +527,17 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
                     plan={plan}
                     isSelected={isSelected}
                     isHighlighted={isHighlighted}
-                    onSelect={() => handleContratarPago(plan)}
+                    onSelect={() => handleContratarDirecto(plan)}
                     mode="select"
+                    disabled={procesando || !selectedEventoId || isEventAlreadyPromoted}
+                    disabledText={
+                      isEventAlreadyPromoted
+                        ? 'Evento ya destacado'
+                        : !selectedEventoId
+                        ? 'Selecciona un evento'
+                        : undefined
+                    }
                   />
-                  <div className="mt-2.5">
-                    <button
-                      type="button"
-                      onClick={() => handleContratarPago(plan)}
-                      disabled={procesando || !selectedEventoId}
-                      className={`w-full py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${
-                        isHighlighted
-                          ? 'bg-[#0B1B3D] hover:bg-slate-900 text-amber-300 shadow-xs'
-                          : 'bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-2xs'
-                      }`}
-                    >
-                      {procesando && isSelected ? (
-                        <>
-                          <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin inline-block" />
-                          <span>Procesando pago...</span>
-                        </>
-                      ) : (
-                        <>
-                          <FiZap size={14} />
-                          <span>Contratar {plan.nombre}</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
                 </div>
               );
             })}

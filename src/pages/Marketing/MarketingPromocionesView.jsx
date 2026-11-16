@@ -4,7 +4,6 @@ import {
   Sparkles,
   Search,
   Eye,
-  Building2,
   RefreshCw,
   Award,
   CheckCircle2,
@@ -619,12 +618,8 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                   <thead className="bg-white border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     <tr>
                       <th className="py-3.5 px-4">Evento</th>
-                      <th className="py-3.5 px-4">Organización</th>
                       <th className="py-3.5 px-4">Plan Contratado</th>
                       <th className="py-3.5 px-4">Beneficios del Plan</th>
-                      <th className="py-3.5 px-4">Monto Pagado</th>
-                      <th className="py-3.5 px-4">Vigencia</th>
-                      <th className="py-3.5 px-4">Estado</th>
                       <th className="py-3.5 px-4 text-right">Acciones</th>
                     </tr>
                   </thead>
@@ -661,14 +656,6 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                             </div>
                           </td>
 
-                          {/* Organización */}
-                          <td className="py-3.5 px-4 font-medium text-slate-700">
-                            <div className="flex items-center gap-1.5">
-                              <Building2 size={13} className="text-slate-400 shrink-0" />
-                              <span className="truncate max-w-[170px]">{p.organizacionNombre}</span>
-                            </div>
-                          </td>
-
                           {/* Plan Contratado */}
                           <td className="py-3.5 px-4 font-semibold text-slate-800">
                             <span>{p.plan}</span>
@@ -693,23 +680,6 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                                 </span>
                               )}
                             </div>
-                          </td>
-
-                          {/* Precio Pagado */}
-                          <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
-                            {formatPrice(p.precio)}
-                          </td>
-
-                          {/* Vigencia Formateada */}
-                          <td className="py-3.5 px-4 text-slate-600 text-[11px]">
-                            {formatFechaHora(p.fechaInicio)}
-                          </td>
-
-                          {/* Estado */}
-                          <td className="py-3.5 px-4">
-                            <Badge variant={isActivo ? 'success' : 'neutral'} size="xs">
-                              {isActivo ? 'ACTIVA' : p.estado}
-                            </Badge>
                           </td>
 
                           {/* Acciones */}
@@ -840,6 +810,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
           />
 
           <div
+            data-lenis-prevent="true"
             className="relative z-50 w-full sm:w-[500px] md:w-[540px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1072,7 +1043,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
         document.body
       )}
 
-      {/* DRAWER MODAL LATERAL DERECHO: ASIGNAR FOTO PARA BANNER (SECCIÓN 13) */}
+      {/* DRAWER MODAL LATERAL DERECHO: ASIGNAR FOTO PARA BANNER */}
       {promoImageModalEvent && (
         <div className="fixed inset-0 z-[9999] flex justify-end">
           <div
@@ -1081,6 +1052,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
           />
 
           <div
+            data-lenis-prevent="true"
             className="relative z-50 w-full sm:w-[500px] md:w-[540px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1093,11 +1065,8 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                   </div>
                   <div>
                     <h3 className="font-display font-bold text-white text-base leading-tight">
-                      Foto para Banner del Carrusel
+                      Imagen Destacada
                     </h3>
-                    <p className="text-xs text-slate-300 mt-0.5">
-                      Solo eventos con plan Premium pagado y activo
-                    </p>
                   </div>
                 </div>
                 <button
@@ -1109,8 +1078,8 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                 </button>
               </div>
 
-              {/* Contenido */}
-              <div className="p-6 space-y-5">
+              {/* Contenido: Solo título del evento e input de la imagen */}
+              <div className="p-6 space-y-6">
                 {promoImageError && (
                   <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-800 flex items-center gap-2">
                     <AlertCircle size={16} className="text-rose-600 shrink-0" />
@@ -1118,109 +1087,66 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                   </div>
                 )}
 
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-600">
-                    Evento Elegible
+                {/* Título del evento */}
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">
+                    Evento
                   </span>
-                  <h4 className="font-bold text-sm text-slate-900">
-                    {promoImageModalEvent.eventoNombre}
+                  <h4 className="font-display font-black text-lg text-slate-900 leading-snug">
+                    {promoImageModalEvent.eventoNombre || promoImageModalEvent.titulo}
                   </h4>
-                  <p className="text-xs text-slate-500">
-                    Organización: <strong className="text-slate-800">{promoImageModalEvent.organizacionNombre}</strong> · Plan: <strong className="text-slate-800">{promoImageModalEvent.plan}</strong>
-                  </p>
                 </div>
 
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                      Subir archivo de imagen (Directo al Servidor)
-                    </label>
-                    <input
-                      ref={promoFileInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={handlePromoFileUpload}
-                      className="hidden"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => promoFileInputRef.current?.click()}
-                      disabled={uploadingPromoFile}
-                      className="w-full flex items-center justify-center gap-2 py-3 px-4 border-2 border-dashed border-slate-300 hover:border-slate-800 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all cursor-pointer disabled:opacity-60"
-                    >
-                      {uploadingPromoFile ? (
-                        <>
-                          <Loader2 size={16} className="animate-spin text-amber-500" />
-                          <span>Subiendo imagen al servidor...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Upload size={16} className="text-amber-600" />
-                          <span>Seleccionar archivo (JPG, PNG o WEBP - máx. 5 MB)</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="relative flex items-center justify-center my-2">
-                    <span className="bg-white px-2 text-[10px] uppercase font-bold text-slate-400">
-                      o ingresa la URL directamente
-                    </span>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                      URL de la Imagen para Banner Destacado <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="url"
-                      value={inputPromoImage}
-                      onChange={(e) => setInputPromoImage(e.target.value)}
-                      placeholder="https://..."
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 transition-all outline-none"
-                    />
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      Esta imagen se asignará a <code>url_imagen_destacado</code> y se utilizará en el carrusel principal.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Previsualización del Banner */}
-                <div className="space-y-2">
-                  <span className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                    Vista previa de banner horizontal:
-                  </span>
-                  <div className="relative aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 flex items-center justify-center">
-                    {inputPromoImage.trim() ? (
+                {/* Input para la imagen */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                    Seleccionar Imagen (16:9)
+                  </label>
+                  <input
+                    ref={promoFileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handlePromoFileUpload}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => promoFileInputRef.current?.click()}
+                    disabled={uploadingPromoFile}
+                    className="w-full flex flex-col items-center justify-center gap-2 py-8 px-4 border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-2xl bg-slate-50 hover:bg-amber-50/30 text-slate-700 text-xs font-bold transition-all cursor-pointer disabled:opacity-60"
+                  >
+                    {uploadingPromoFile ? (
                       <>
-                        <img
-                          src={inputPromoImage}
-                          alt="Banner Preview"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
-                        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow-md border border-amber-300 flex items-center gap-1">
-                          <span>★</span> BANNER PREMIUM
-                        </span>
-                        <div className="absolute bottom-3 left-3 right-3 text-white">
-                          <p className="font-black text-sm drop-shadow-sm line-clamp-1">
-                            {promoImageModalEvent.eventoNombre}
-                          </p>
-                          <p className="text-[11px] text-amber-300 font-medium drop-shadow-sm">
-                            {promoImageModalEvent.organizacionNombre}
-                          </p>
-                        </div>
+                        <Loader2 size={24} className="animate-spin text-amber-500" />
+                        <span>Subiendo imagen al servidor...</span>
                       </>
                     ) : (
-                      <div className="text-center p-6 text-slate-400 text-xs">
-                        Ingresa una URL de imagen válida para previsualizar el banner.
-                      </div>
+                      <>
+                        <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-1">
+                          <Upload size={20} />
+                        </div>
+                        <span className="text-sm font-extrabold text-slate-900">Haz clic para elegir la imagen</span>
+                        <span className="text-[11px] text-slate-400 font-normal">JPG, PNG o WEBP (máx. 5 MB)</span>
+                      </>
                     )}
-                  </div>
+                  </button>
                 </div>
+
+                {/* Preview limpio si ya hay imagen cargada */}
+                {inputPromoImage.trim() && (
+                  <div className="space-y-2">
+                    <span className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Imagen seleccionada:
+                    </span>
+                    <div className="relative aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+                      <img
+                        src={inputPromoImage}
+                        alt="Banner Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1248,7 +1174,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                 ) : (
                   <>
                     <Check size={14} />
-                    <span>Guardar Foto para Banner</span>
+                    <span>Guardar Imagen</span>
                   </>
                 )}
               </button>

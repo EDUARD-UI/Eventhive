@@ -163,6 +163,7 @@ async function request(
     path.startsWith('/chatbot/');
 
   const omitirAutenticacion = skipAuth || rutasAuthPublicas.has(path);
+  const requiereAutenticacion = !omitirAutenticacion && !esRutaPublica;
 
   let token = session.getToken();
 

@@ -161,6 +161,7 @@ export default function ModalDetalleEventoModeracion({
 
       {/* Drawer lateral derecho */}
       <div
+        data-lenis-prevent="true"
         className="relative z-50 w-full sm:w-[620px] md:w-[680px] lg:w-[740px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -235,7 +236,7 @@ export default function ModalDetalleEventoModeracion({
               </div>
               <div>
                 <p className="text-[10px] uppercase font-bold text-slate-400">Hora</p>
-                <p className="font-semibold text-slate-800">{evento.hora ? formatHora24(evento.hora) : 'Sin hora'}</p>
+                <p className="font-semibold text-slate-800">{evento.hora ? formatHora12(evento.hora) : 'Sin hora'}</p>
               </div>
             </div>
           </div>

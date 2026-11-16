@@ -23,8 +23,7 @@ import CityRhythmPreFooter from '../components/home/CityRhythmPreFooter.jsx';
 import Scroll3DReveal from '../components/home/Scroll3DReveal.jsx';
 import UpcomingEventsScrollShowcase from '../components/home/UpcomingEventsScrollShowcase.jsx';
 import MapDynamicBackground from '../components/home/MapDynamicBackground.jsx';
-import EventAttendanceHeatmap from '../components/common/EventAttendanceHeatmap.jsx';
-import { generateCityEventsHeatPoints } from '../utils/heatmapUtils.js';
+import EventDemandHeatmap from '../components/common/EventDemandHeatmap.jsx';
 import { Flame } from 'lucide-react';
 import Footer from '../components/usersComponets/Footer.jsx';
 import Navbar from '../components/usersComponets/Navbar.jsx';
@@ -32,7 +31,7 @@ import CustomSelect from '../components/common/CustomSelect.jsx';
 import EventListCard from '../components/common/EventListCard.jsx';
 import EventCardSkeleton from '../components/common/EventCardSkeleton.jsx';
 import RecommendationsSection from '../components/home/RecommendationsSection.jsx';
-import { getCarouselEvents, getFeaturedEvents, getMapEvents, getUpcomingEvents } from '../services/eventService.js';
+import { getCarouselEvents, getDemandHeatmap, getFeaturedEvents, getMapEvents, getUpcomingEvents } from '../services/eventService.js';
 import { getCategoryNames } from '../services/categoryService.js';
 import { formatPrice } from '../utils/formatters.js';
 import { useTheme } from '../context/ThemeContext.jsx';
@@ -40,6 +39,22 @@ import { useLanguage } from '../context/LanguageContext.jsx';
 import { useLenisScroll } from '../hooks/useLenisScroll.js';
 
 const toRad = (value) => (value * Math.PI) / 180;
+
+const formatUltimaCompra = (isoDate) => {
+  if (!isoDate) return null;
+  try {
+    const d = new Date(isoDate);
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleString('es-CO', {
+      hour: '2-digit',
+      minute: '2-digit',
+      day: 'numeric',
+      month: 'short',
+    });
+  } catch {
+    return null;
+  }
+};
 
 const getEventPriceDisplay = (event) => {
   if (!event) return 'Boletería disponible';
@@ -368,10 +383,67 @@ export default function Home() {
     [userLocation]
   );
 
-  const cityHeatPoints = useMemo(() => {
-    if (!showHeatmap || !filteredMapEvents || !filteredMapEvents.length) return [];
-    return generateCityEventsHeatPoints(filteredMapEvents);
-  }, [showHeatmap, filteredMapEvents]);
+  const [timeWindow, setTimeWindow] = useState(24);
+
+  const timeWindowOptions = useMemo(
+    () => [
+      { value: '6', label: 'Últimas 6 horas' },
+      { value: '24', label: 'Últimas 24 horas' },
+      { value: '168', label: 'Últimos 7 días' },
+    ],
+    []
+  );
+
+  const {
+    data: demandPoints = [],
+    isLoading: isLoadingDemand,
+    isFetching: isFetchingDemand,
+  } = useQuery({
+    queryKey: ['home-demand-heatmap', selectedCategory, userLocation, selectedDistance, timeWindow],
+    queryFn: () =>
+      getDemandHeatmap({
+        categoriaId: selectedCategory === 'all' ? undefined : selectedCategory,
+        lat: userLocation?.lat,
+        lng: userLocation?.lng,
+        radioKm: selectedDistance === 'all' ? undefined : selectedDistance,
+        ventanaHoras: Number(timeWindow),
+      }),
+    enabled: showHeatmap,
+    refetchInterval: showHeatmap ? 45000 : false,
+    staleTime: 30000,
+  });
+
+  const heatmapLayerPoints = useMemo(() => {
+    if (!showHeatmap || !demandPoints || !demandPoints.length) return [];
+    return demandPoints
+      .filter((item) => {
+        const lat = Number(item.latitud ?? item.lat);
+        const lng = Number(item.longitud ?? item.lng);
+        return Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0;
+      })
+      .map((item) => {
+        const lat = Number(item.latitud ?? item.lat);
+        const lng = Number(item.longitud ?? item.lng);
+        const rawIntensity = item.intensidad;
+        const intensity =
+          typeof rawIntensity === 'number' && Number.isFinite(rawIntensity)
+            ? Math.max(0.1, Math.min(1.0, rawIntensity))
+            : 0.5;
+        return [lat, lng, intensity];
+      });
+  }, [showHeatmap, demandPoints]);
+
+  const demandByEventId = useMemo(() => {
+    const map = new Map();
+    if (Array.isArray(demandPoints)) {
+      demandPoints.forEach((dp) => {
+        if (dp?.id != null) {
+          map.set(String(dp.id), dp);
+        }
+      });
+    }
+    return map;
+  }, [demandPoints]);
 
   const categoryOptions = useMemo(() => [
     { value: 'all', label: t('home.allCategories') },
@@ -610,11 +682,24 @@ export default function Home() {
                       ? 'border-amber-400 bg-amber-500 text-slate-950 shadow-amber-500/25 ring-2 ring-amber-400/40'
                       : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-400'
                     }`}
-                  title={showHeatmap ? 'Ocultar mapa de calor' : 'Ver mapa de calor de asistencia'}
+                  title={showHeatmap ? 'Desactivar Modo Movida' : 'Activar Modo Movida'}
                 >
                   <Flame size={15} className={showHeatmap ? 'text-slate-950 fill-slate-950 animate-pulse' : 'text-slate-400'} />
                   <span>{showHeatmap ? 'Modo Movida: Activo' : 'Ver Mapa de Calor'}</span>
                 </button>
+
+                {/* Selector de periodo para demanda comercial (Modo Movida) */}
+                {showHeatmap && (
+                  <div className="w-44 sm:w-48 relative z-30">
+                    <CustomSelect
+                      value={String(timeWindow)}
+                      onChange={(event) => setTimeWindow(Number(event.target.value))}
+                      options={timeWindowOptions}
+                      placeholder="Periodo"
+                      variant={isDark ? 'dark' : 'light'}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </Scroll3DReveal>
@@ -634,13 +719,17 @@ export default function Home() {
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/80 to-transparent z-20"
               />
-              {/* Leyenda flotante del mapa de calor si está activo */}
+              {/* Leyenda flotante del mapa de calor de compras recientes si está activo */}
               {showHeatmap && (
                 <div className="hidden sm:flex items-center gap-2 absolute top-4 right-6 z-30 px-3.5 py-1.5 rounded-2xl bg-slate-900/90 text-white border border-amber-400/30 shadow-lg text-[11px] font-bold backdrop-blur-xs pointer-events-none">
-                  <Flame size={13} className="text-amber-400 animate-pulse" />
-                  <span className="text-slate-300">Asistencia:</span>
-                  <span>Baja</span>
-                  <div className="w-16 h-2 rounded-full bg-gradient-to-r from-[#007BFF] via-[#FFC107] to-[#EF4444]" />
+                  {isFetchingDemand ? (
+                    <span className="w-2.5 h-2.5 rounded-full border-2 border-amber-400 border-t-transparent animate-spin shrink-0" />
+                  ) : (
+                    <Flame size={13} className="text-amber-400 animate-pulse shrink-0" />
+                  )}
+                  <span className="text-slate-300 font-extrabold uppercase tracking-wide">Compras Recientes:</span>
+                  <span className="text-slate-300 font-medium">Baja</span>
+                  <div className="w-16 h-2 rounded-full bg-gradient-to-r from-[#007BFF] via-[#00D2FF] via-[#FFC107] via-[#FF7A00] to-[#EF4444]" />
                   <span className="text-amber-400 font-extrabold">Alta 🔥</span>
                 </div>
               )}
@@ -663,9 +752,9 @@ export default function Home() {
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
 
-                {/* Capa de calor con las manchas de asistencia y popularidad */}
-                {showHeatmap && cityHeatPoints.length > 0 && (
-                  <EventAttendanceHeatmap points={cityHeatPoints} />
+                {/* Capa de calor por demanda de compras recientes (Modo Movida) */}
+                {showHeatmap && heatmapLayerPoints.length > 0 && (
+                  <EventDemandHeatmap points={heatmapLayerPoints} />
                 )}
 
                 <MapInteractiveController
@@ -703,6 +792,7 @@ export default function Home() {
                       : null;
 
                   const priceDisplay = getEventPriceDisplay(event);
+                  const demandInfo = demandByEventId.get(String(event.id));
 
                   return (
                     <Marker
@@ -754,6 +844,43 @@ export default function Home() {
                             <h4 className="text-xs sm:text-sm font-extrabold text-white leading-snug line-clamp-2">
                               {event.title}
                             </h4>
+
+                            {/* Información de Demanda Comercial (compras recientes confirmadas) */}
+                            {showHeatmap && demandInfo && (
+                              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-400/25 text-[11px] space-y-1.5">
+                                <div className="flex items-center justify-between font-extrabold text-amber-400">
+                                  <span className="flex items-center gap-1.5">
+                                    <Flame size={12} className="animate-pulse text-amber-400" />
+                                    <span>Demanda comercial</span>
+                                  </span>
+                                  <span className="text-[10px] font-semibold text-amber-300 bg-amber-400/15 px-1.5 py-0.5 rounded-md">
+                                    {timeWindow === 6 ? 'Últimas 6h' : timeWindow === 168 ? 'Últimos 7d' : 'Últimas 24h'}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-slate-300 pt-0.5">
+                                  <div className="bg-slate-950/40 p-1.5 rounded-lg border border-white/5">
+                                    <span className="text-[10px] text-slate-400 block font-medium">Entradas:</span>
+                                    <span className="text-xs font-black text-amber-300">
+                                      {Number(demandInfo.entradasCompradas ?? 0).toLocaleString('es-CO')}
+                                    </span>
+                                  </div>
+                                  <div className="bg-slate-950/40 p-1.5 rounded-lg border border-white/5">
+                                    <span className="text-[10px] text-slate-400 block font-medium">Compras:</span>
+                                    <span className="text-xs font-black text-white">
+                                      {Number(demandInfo.totalCompras ?? 0).toLocaleString('es-CO')}
+                                    </span>
+                                  </div>
+                                </div>
+                                {demandInfo.ultimaCompra && (
+                                  <div className="text-[10px] text-slate-400 pt-1 border-t border-amber-400/15 flex items-center justify-between">
+                                    <span>Última compra:</span>
+                                    <span className="font-semibold text-slate-200">
+                                      {formatUltimaCompra(demandInfo.ultimaCompra) || demandInfo.ultimaCompra}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
 
                             {/* Metadatos con micro-iconos */}
                             <div className="space-y-1.5 pt-1 text-[11px] text-slate-300 border-t border-slate-800">

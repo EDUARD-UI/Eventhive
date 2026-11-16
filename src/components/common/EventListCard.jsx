@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiMapPin, FiEye, FiCalendar, FiClock, FiStar } from 'react-icons/fi';
 import ImageWithFallback from './ImageWithFallback.jsx';
+import SoldOutRibbon from './SoldOutRibbon.jsx';
 import { formatHora12 } from '../../utils/formatters.js';
+import { isEventSoldOut } from '../../utils/ticketAvailabilityUtils.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 
 /**
@@ -39,6 +41,7 @@ export default function EventListCard({
   } = event;
 
   const isGolden = Boolean(promocionado) || featured;
+  const isSoldOut = isEventSoldOut(event);
   const displayDate = shortDate || date || t('eventCard.dateTbd');
   const displayTime = formattedTime ? formatHora12(formattedTime) : (event.hora ? formatHora12(event.hora) : null);
 
@@ -101,10 +104,20 @@ export default function EventListCard({
             />
           </Link>
 
+          {/* Cinta Diagonal SOLD OUT */}
+          {isSoldOut && <SoldOutRibbon />}
+
           {/* Categoría Badge */}
-          {category && (
+          {category && !isSoldOut && (
             <span
               className="absolute top-2.5 left-2.5 bg-slate-950/85 text-amber-400 border border-slate-700/80 backdrop-blur-xs text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs font-semibold z-10"
+            >
+              {category}
+            </span>
+          )}
+          {category && isSoldOut && (
+            <span
+              className="absolute bottom-2.5 left-2.5 bg-slate-950/85 text-amber-400 border border-slate-700/80 backdrop-blur-xs text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs font-semibold z-10"
             >
               {category}
             </span>
