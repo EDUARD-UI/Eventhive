@@ -30,6 +30,9 @@ export default function AdminSolicitudesView({
   onSolicitarCorreccion,
   onVerDetalle,
 }) {
+  const solicitudesPendientes = (solicitudes || []).filter(
+    (s) => s.estado !== 'APROBADA' && s.estadoOrganizacion !== 'APROBADA'
+  );
   const [modalAccion, setModalAccion] = useState(null);
   const [viewingRutId, setViewingRutId] = useState(null); // { solicitud, tipo: 'aprobar' | 'correccion' | 'rechazar' }
   const [motivo, setMotivo] = useState('');
@@ -84,7 +87,7 @@ export default function AdminSolicitudesView({
                     Solicitudes de Verificación Pendientes
                   </h3>
                   <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
-                    {solicitudes.length} en cola
+                    {solicitudesPendientes.length} en cola
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -104,7 +107,7 @@ export default function AdminSolicitudesView({
               />
             ))}
           </div>
-        ) : solicitudes.length === 0 ? (
+        ) : solicitudesPendientes.length === 0 ? (
           <div className="p-12 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 text-center">
             <CheckCircle2 className="mx-auto text-emerald-500 mb-2.5" size={36} />
             <h4 className="font-display text-sm font-bold text-slate-800">
@@ -116,7 +119,7 @@ export default function AdminSolicitudesView({
           </div>
         ) : (
           <div className="space-y-4">
-            {solicitudes.map((sol) => (
+            {solicitudesPendientes.map((sol) => (
               <div
                 key={sol.id}
                 className="p-5 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs transition-all flex flex-col xl:flex-row items-start xl:items-center justify-between gap-5"

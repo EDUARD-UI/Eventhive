@@ -247,10 +247,11 @@ export const adminService = {
   async getSolicitudesVerificacion({ page = 0, size = 50 } = {}) {
     const res = await httpClient.get('/verificacion/pendientes', { page, size });
     const content = res?.content || (Array.isArray(res) ? res : []);
+    const pendientes = content.filter((s) => s.estado !== 'APROBADA' && s.estadoOrganizacion !== 'APROBADA');
     return {
       success: true,
-      data: content,
-      total: res?.totalElements ?? content.length,
+      data: pendientes,
+      total: res?.totalElements ?? pendientes.length,
     };
   },
 

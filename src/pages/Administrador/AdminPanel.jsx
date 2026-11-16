@@ -170,7 +170,10 @@ export default function AdminPanel() {
           setOrganizaciones(orgsRes.value.data);
         }
         if (verifRes.status === 'fulfilled' && verifRes.value?.data) {
-          setSolicitudesVerificacion(verifRes.value.data);
+          const pendientes = (verifRes.value.data || []).filter(
+            (s) => s.estado !== 'APROBADA' && s.estadoOrganizacion !== 'APROBADA'
+          );
+          setSolicitudesVerificacion(pendientes);
         }
         if (eventsRes.status === 'fulfilled' && eventsRes.value?.data) {
           setEventos(eventsRes.value.data);
@@ -252,7 +255,10 @@ export default function AdminPanel() {
         adminService.getDashboardMetrics(),
       ]);
       if (verifRes.status === 'fulfilled' && verifRes.value?.data) {
-        setSolicitudesVerificacion(verifRes.value.data);
+        const pendientes = (verifRes.value.data || []).filter(
+          (s) => s.estado !== 'APROBADA' && s.estadoOrganizacion !== 'APROBADA'
+        );
+        setSolicitudesVerificacion(pendientes);
       }
       if (orgsRes.status === 'fulfilled' && orgsRes.value?.data) {
         setOrganizaciones(orgsRes.value.data);
@@ -273,7 +279,12 @@ export default function AdminPanel() {
       await adminService.rechazarSolicitudVerificacion(solicitudId, motivo);
       showToast('Solicitud de verificación rechazada.', 'info');
       const verifRes = await adminService.getSolicitudesVerificacion();
-      if (verifRes?.data) setSolicitudesVerificacion(verifRes.data);
+      if (verifRes?.data) {
+        const pendientes = (verifRes.data || []).filter(
+          (s) => s.estado !== 'APROBADA' && s.estadoOrganizacion !== 'APROBADA'
+        );
+        setSolicitudesVerificacion(pendientes);
+      }
     } catch (err) {
       showToast(err.message || 'Error al rechazar solicitud.', 'error');
     } finally {
@@ -287,7 +298,12 @@ export default function AdminPanel() {
       await adminService.solicitarCorreccionVerificacion(solicitudId, motivo);
       showToast('Se solicitaron correcciones a la organización.', 'info');
       const verifRes = await adminService.getSolicitudesVerificacion();
-      if (verifRes?.data) setSolicitudesVerificacion(verifRes.data);
+      if (verifRes?.data) {
+        const pendientes = (verifRes.data || []).filter(
+          (s) => s.estado !== 'APROBADA' && s.estadoOrganizacion !== 'APROBADA'
+        );
+        setSolicitudesVerificacion(pendientes);
+      }
     } catch (err) {
       showToast(err.message || 'Error al solicitar corrección.', 'error');
     } finally {
