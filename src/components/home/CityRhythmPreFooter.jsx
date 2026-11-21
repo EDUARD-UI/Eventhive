@@ -1,58 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FiArrowRight } from 'react-icons/fi';
+import React from 'react';
 import fuerteImg from '../../assets/fuerte.jpg';
 import torreRelojImg from '../../assets/torre-reloj.png';
 import colombiaImg from '../../assets/Colombia.jpg';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 
-const RHYTHM_WORDS = ['el picó', 'tu parche', 'conciertos', 'el vacile', 'tu cultura'];
-
-function useTypewriter(words, { typingSpeed = 90, deletingSpeed = 45, pauseDuration = 1600 } = {}) {
-  const [index, setIndex] = useState(0);
-  const [subIndex, setSubIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    if (!words || words.length === 0) return;
-
-    const currentWord = words[index % words.length];
-
-    if (!isDeleting && subIndex === currentWord.length) {
-      const pause = setTimeout(() => setIsDeleting(true), pauseDuration);
-      return () => clearTimeout(pause);
-    }
-
-    if (isDeleting && subIndex === 0) {
-      setIsDeleting(false);
-      setIndex((prev) => (prev + 1) % words.length);
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      setSubIndex((prev) => prev + (isDeleting ? -1 : 1));
-    }, isDeleting ? deletingSpeed : typingSpeed);
-
-    return () => clearTimeout(timeout);
-  }, [subIndex, isDeleting, index, words, typingSpeed, deletingSpeed, pauseDuration]);
-
-  const currentWord = words[index % words.length];
-  return currentWord.substring(0, subIndex);
-}
-
 export default function CityRhythmPreFooter() {
   const { t } = useLanguage();
-  const typedWord = useTypewriter(RHYTHM_WORDS);
 
   return (
     <div className="w-full relative select-none my-8 sm:my-12">
-      <section className="w-full bg-gradient-to-b from-[#E08500] via-[#D97706] to-[#C86A00] text-slate-950 pt-12 sm:pt-16 lg:pt-20 pb-12 sm:pb-16 lg:pb-20 px-6 sm:px-10 lg:px-16 relative overflow-visible shadow-2xl min-h-[440px] sm:min-h-[480px] flex items-center">
+      <section className="w-full bg-gradient-to-b from-[#E08500] via-[#D97706] to-[#C86A00] text-slate-950 pt-14 sm:pt-16 lg:pt-20 pb-14 sm:pb-16 lg:pb-20 px-6 sm:px-10 lg:px-16 relative overflow-visible shadow-2xl min-h-[440px] sm:min-h-[480px] flex items-center">
 
         {/* Resplandores ambientales cálidos */}
         <div className="absolute top-0 right-1/4 w-96 h-96 rounded-full bg-amber-300/25 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 w-80 h-80 rounded-full bg-yellow-200/20 blur-3xl pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
+        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center relative z-10">
 
           {/* Columna Izquierda: Cartas con su animación y perspectiva original completa */}
           <div className="lg:col-span-5 flex items-center justify-center relative py-4 sm:py-6 z-20">
@@ -139,49 +102,58 @@ export default function CityRhythmPreFooter() {
             </div>
           </div>
 
-          {/* Columna Derecha: Typewriter + Subtítulo del Hero + CTA agrandados para tomar todo el espacio */}
-          <div className="lg:col-span-7 flex flex-col items-center text-center lg:items-start lg:text-left space-y-4 sm:space-y-5 lg:pl-6 relative z-10">
-            {/* Titular Typewriter grande y llamativo */}
-            <h2 className="font-display font-black text-2xl sm:text-3xl md:text-4xl lg:text-[40px] xl:text-[46px] 2xl:text-[50px] tracking-tight text-slate-950 uppercase leading-[1.12] max-w-2xl drop-shadow-2xs">
-              <span className="block sm:whitespace-nowrap">VIVE CARTAGENA AL RITMO</span>
-              <span className="block whitespace-nowrap mt-1 sm:mt-1.5 min-h-[1.25em]">
-                <span>DE </span>
-                <span className="text-white drop-shadow-xs inline-flex items-baseline">
-                  <span>{typedWord || '\u00A0'}</span>
-                  <span className="inline-block w-1 sm:w-1.5 h-[0.8em] bg-slate-950 ml-1.5 align-middle animate-pulse" aria-hidden="true" />
-                </span>
-              </span>
-            </h2>
+          {/* Columna Derecha: Composición editorial inspirada en diseño de cartelería y arquitectura urbana */}
+          <div className="lg:col-span-7 flex flex-col justify-center w-full relative z-10 select-none py-2 lg:py-4">
+            
+            {/* Kicker superior editorial (estilo cartel / arquitectura urbana) */}
+            <div className="flex items-center gap-2 mb-2 sm:mb-3 text-slate-950/65 font-mono text-[10px] sm:text-xs tracking-[0.25em] uppercase font-bold">
+              <span className="w-6 sm:w-10 h-px bg-slate-950/40" />
+              <span>CARTAGENA DE INDIAS • RITMO & CULTURA</span>
+              <span className="w-6 sm:w-10 h-px bg-slate-950/40" />
+            </div>
 
-            {/* Subtítulo idéntico al Hero en tamaño generoso */}
-            <p className="text-sm sm:text-base md:text-lg lg:text-[17px] font-medium text-slate-950/95 leading-relaxed max-w-xl">
-              {t(
-                'hero.subtitle',
-                'Descubre festivales, conciertos, arte, gastronomía y vida nocturna en la mágica Cartagena de Indias. Vive cada momento al máximo.'
-              )}
-            </p>
-
-            {/* Botón CTA */}
-            <div className="pt-2 w-full flex justify-center lg:justify-start">
-              <Link
-                to="/buscar"
-                className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-slate-950 hover:bg-slate-900 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
-              >
-                <span>{t('home.preFooterCta')}</span>
-                <span className="w-7 h-7 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center shadow-xs">
-                  <FiArrowRight size={14} strokeWidth={2.8} />
+            <div className="w-full flex flex-col space-y-1 sm:space-y-1.5 lg:space-y-2">
+              {/* Frase 1: Estilo opaco / delineado (outline ghost), alineada a la izquierda */}
+              <div className="w-full flex justify-start">
+                <span
+                  className="font-display font-black text-2xl sm:text-4xl md:text-5xl lg:text-[48px] xl:text-[58px] 2xl:text-[66px] tracking-tight uppercase leading-[0.92] select-none transition-all duration-300 hover:opacity-85"
+                  style={{
+                    WebkitTextStroke: '1.5px rgba(15, 23, 42, 0.45)',
+                    color: 'rgba(15, 23, 42, 0.15)',
+                  }}
+                >
+                  {t('home.preFooterFaint1', 'EXPERIENCIAS ÚNICAS')}
                 </span>
-              </Link>
+              </div>
+
+              {/* Frase 2 (Central): Protagonista negro puro de alto impacto, desplazado marcadamente a la derecha */}
+              <div className="w-full flex justify-end pr-1 sm:pr-4 lg:pr-8 xl:pr-10">
+                <h2
+                  className="font-display font-black text-5xl sm:text-7xl md:text-8xl lg:text-[84px] xl:text-[102px] 2xl:text-[114px] tracking-tighter text-slate-950 uppercase leading-[0.88] drop-shadow-sm select-none py-0.5 sm:py-1 transition-transform duration-300 hover:scale-[1.01]"
+                >
+                  EVENTHIVE
+                </h2>
+              </div>
+
+              {/* Frase 3: Estilo opaco / delineado (outline ghost), alineada hacia la izquierda con sutil sangría */}
+              <div className="w-full flex justify-start pl-2 sm:pl-6 lg:pl-8">
+                <span
+                  className="font-display font-black text-2xl sm:text-4xl md:text-5xl lg:text-[48px] xl:text-[58px] 2xl:text-[66px] tracking-tight uppercase leading-[0.92] select-none transition-all duration-300 hover:opacity-85"
+                  style={{
+                    WebkitTextStroke: '1.5px rgba(15, 23, 42, 0.45)',
+                    color: 'rgba(15, 23, 42, 0.15)',
+                  }}
+                >
+                  {t('home.preFooterFaint2', 'QUÉ VACILE')}
+                </span>
+              </div>
             </div>
           </div>
 
         </div>
       </section>
 
-      {/* =========================================================================
-          Divisor de Ondas Fluidas (Waves) en dorado ámbar (#C86A00)
-          hacia el Footer, para un final fluido y continuo.
-         ========================================================================= */}
+      {/* Divisor de Ondas Fluidas (Waves) en dorado ámbar (#C86A00) */}
       <div className="w-full overflow-hidden leading-none -mt-px pointer-events-none">
         <svg
           xmlns="http://www.w3.org/2000/svg"

@@ -5,18 +5,20 @@ import {
   FiLogOut,
   FiMenu,
   FiUser,
+  FiBell,
 } from 'react-icons/fi';
 import { session, extractPhotoUrl } from '../../services/session.js';
 import userService from '../../services/userService.js';
 import DashboardNotifications from '../common/DashboardNotifications.jsx';
 
 /**
- * OrganizationHeader
- * Barra superior contemporánea para el Centro de Operaciones del Organizador.
- * Integra título editorial, estado de producción, notificaciones asíncronas en tiempo real y menú de usuario.
+ * OrganizationHeader — Editorial
+ * Topbar arquitectónico de 64px alto, fondo #FFFFFF y borde inferior 1px solid #E2E8F0.
+ * Breadcrumb editorial limpio: únicamente el nombre de la sección actual en monoespaciado.
+ * Selector de organización compacto con avatar a todo color natural.
  */
 export default function OrganizationHeader({
-  title = 'Centro de Operaciones',
+  title = 'Resumen',
   subtitle,
   userName = 'Organización',
   userInitials = 'EH',
@@ -56,7 +58,6 @@ export default function OrganizationHeader({
     setPhotoError(false);
   }, [displayPhoto]);
 
-  // Cerrar dropdown al hacer clic fuera o con Escape
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -85,116 +86,102 @@ export default function OrganizationHeader({
 
   const showValidPhoto = Boolean(displayPhoto && !photoError);
 
+  const cleanTitle = (title || 'Resumen').toUpperCase();
+
   return (
-    <header className="sticky top-0 z-30 h-[72px] w-full border-b border-slate-200/90 bg-white/95 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between gap-4">
-      {/* Lado izquierdo: Botón Menú Móvil + Jerarquía Editorial */}
+    <header className="sticky top-0 z-30 h-[64px] w-full border-b border-[#E2E8F0] bg-[#FFFFFF] px-4 sm:px-8 flex items-center justify-between gap-4 select-none">
+      {/* Lado izquierdo: Botón Menú Móvil + Nombre de Sección en Monospace Limpio */}
       <div className="flex items-center gap-3 min-w-0">
         <button
           type="button"
           onClick={onMenuToggle}
           aria-label="Abrir menú de navegación"
-          className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 md:hidden transition-colors cursor-pointer"
+          className="p-2 rounded-[2px] text-[#64748B] hover:text-[#0F2342] hover:bg-[#F8F9FA] md:hidden transition-colors cursor-pointer"
         >
-          <FiMenu size={20} />
+          <FiMenu size={18} strokeWidth={1.5} />
         </button>
 
-        <div className="flex flex-col min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="hidden sm:inline-block text-[10px] font-black uppercase tracking-widest text-amber-700 bg-amber-100/70 border border-amber-200/80 px-2 py-0.5 rounded-md">
-              Cartagena Cultural HQ
-            </span>
-            <span className="hidden sm:inline-block text-slate-300">•</span>
-            <h1 className="font-display text-sm sm:text-base font-extrabold text-slate-900 truncate tracking-tight">
-              {title}
-            </h1>
-          </div>
-          {subtitle && (
-            <p className="text-[11px] text-slate-500 truncate hidden sm:block">
-              {subtitle}
-            </p>
-          )}
+        {/* Nombre de la sección actual en fuente monoespaciada con punto dorado de estado */}
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#F5B800] shrink-0" aria-hidden="true" />
+          <span className="font-mono text-xs font-bold tracking-widest text-[#0F2342] uppercase truncate">
+            {cleanTitle}
+          </span>
         </div>
       </div>
 
-      {/* Lado derecho: Notificaciones Asíncronas Estándar + Perfil */}
-      <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-        {/* Notificaciones Asíncronas Estandarizadas */}
-        <DashboardNotifications />
+      {/* Lado derecho: Notificación Minimalista + Selector de Organización */}
+      <div className="flex items-center gap-4 sm:gap-6 shrink-0">
+        {/* Notificación Minimalista con punto ámbar (#F5B800) */}
+        <div className="relative flex items-center">
+          <DashboardNotifications />
+        </div>
 
-        {/* Separador */}
-        <div className="h-6 w-px bg-slate-200" />
+        {/* Separador sutil de 1px */}
+        <div className="h-5 w-px bg-[#E2E8F0]" />
 
-        {/* Dropdown de Organización y Perfil */}
+        {/* Selector de Organización Compacto */}
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
             onClick={() => setDropdownOpen((prev) => !prev)}
             aria-expanded={dropdownOpen}
-            className="flex items-center gap-2 p-1 pl-1.5 rounded-xl border border-slate-200/90 hover:border-slate-300 bg-white hover:bg-slate-50 transition-all cursor-pointer shadow-2xs group"
+            className="flex items-center gap-2.5 py-1 px-1.5 rounded-[2px] hover:bg-[#F8F9FA] transition-all cursor-pointer group"
           >
             {showValidPhoto ? (
               <img
                 key={displayPhoto}
                 src={displayPhoto}
                 alt={userName}
-                className="w-8 h-8 rounded-lg object-cover border border-slate-200 shrink-0"
+                className="w-8 h-8 rounded-full object-cover border border-[#F5B800]/40 shrink-0"
                 onError={() => setPhotoError(true)}
               />
             ) : (
-              <div className="w-8 h-8 rounded-lg bg-[#0B1B3D] text-amber-300 font-display font-black text-xs flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[#0F2342] text-[#F5B800] font-mono font-bold text-xs flex items-center justify-center shrink-0 border border-[#F5B800]/40">
                 {userInitials}
               </div>
             )}
-            <div className="hidden md:flex flex-col text-left min-w-0 pr-1">
-              <span className="text-xs font-bold text-slate-900 truncate max-w-[130px] leading-tight">
+            <div className="hidden md:flex flex-col text-left min-w-0 max-w-[140px]">
+              <span className="text-xs font-bold text-[#0F2342] truncate leading-tight font-sans">
                 {userName}
               </span>
-              <span className="text-[10px] font-medium text-slate-500 leading-none">
+              <span className="font-mono text-[10px] text-[#64748B] truncate leading-tight">
                 Organizador
               </span>
             </div>
-            <FiChevronDown
-              size={14}
-              className={`text-slate-400 group-hover:text-slate-700 transition-transform hidden sm:block ${
-                dropdownOpen ? 'rotate-180' : ''
-              }`}
-            />
+            <FiChevronDown size={14} strokeWidth={1.5} className="text-[#64748B] group-hover:text-[#0F2342] transition-colors" />
           </button>
 
-          {/* Menú Flotante de Perfil */}
+          {/* Menú desplegable */}
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100">
-              <div className="px-4 py-2.5">
-                <p className="text-xs font-extrabold text-slate-900 truncate">{userName}</p>
-                <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                  {session.getUser()?.email || 'Cuenta de Organización'}
-                </p>
+            <div className="absolute right-0 mt-2 w-52 rounded-[2px] bg-[#FFFFFF] border border-[#E2E8F0] shadow-[0_10px_25px_rgba(0,0,0,0.08)] py-1.5 z-50 animate-in fade-in duration-100">
+              <div className="px-4 py-2 border-b border-[#F1F5F9]">
+                <p className="text-xs font-bold text-[#0F2342] truncate">{userName}</p>
+                <p className="font-mono text-[10px] text-[#64748B] truncate mt-0.5">{sessionUser?.email || ''}</p>
               </div>
 
-              <div className="py-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDropdownOpen(false);
-                    if (onProfileClick) onProfileClick();
-                  }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-slate-50 transition-colors cursor-pointer"
-                >
-                  <FiUser size={14} className="text-slate-400" />
-                  <span>Mi perfil de organización</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setDropdownOpen(false);
+                  if (onProfileClick) onProfileClick();
+                }}
+                className="w-full flex items-center gap-2 px-4 py-2 text-xs text-[#0F2342] hover:bg-[#F8F9FA] font-mono uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                <FiUser size={14} strokeWidth={1.5} className="text-[#64748B]" />
+                <span>Perfil de Organización</span>
+              </button>
 
-              <div className="py-1">
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer"
-                >
-                  <FiLogOut size={14} />
-                  <span>Cerrar sesión</span>
-                </button>
-              </div>
+              <div className="my-1 border-t border-[#F1F5F9]" />
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 font-mono uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                <FiLogOut size={14} strokeWidth={1.5} />
+                <span>Cerrar Sesión</span>
+              </button>
             </div>
           )}
         </div>

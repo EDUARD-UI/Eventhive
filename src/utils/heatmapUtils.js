@@ -3,14 +3,15 @@
  * según la Opción 1 (Densidad de Asistencia / Popularidad) de Eventhive.
  */
 
-// Paleta de calor oficial alineada a la identidad visual de Eventhive:
-// Azul suave en los bordes -> Cyan -> Ámbar dorado -> Naranja -> Rojo fuego en el núcleo
+// Paleta de calor oficial calibrada de alta intensidad visual (EventHive):
+// Azul vivo en bordes -> Cyan luminoso -> Ámbar dorado potente -> Naranja fuego -> Rojo volcánico
 export const EVENTHIVE_HEAT_GRADIENT = {
-  0.2: '#007BFF', // Azul Brand Eventhive (Halo exterior / afluencia inicial)
-  0.45: '#00D2FF', // Cyan eléctrico translúcido
-  0.65: '#FFC107', // Ámbar / Oro Colmena Eventhive (Ambiente concurrido)
-  0.85: '#FF7A00', // Naranja cálido
-  1.0: '#EF4444',  // Fuego Colmena (Epicentro / Lleno total)
+  0.15: '#0284C7', // Azul brillante vivo (Halo exterior de afluencia)
+  0.35: '#00D2FF', // Cyan eléctrico luminoso
+  0.55: '#F59E0B', // Ámbar dorado potente EventHive
+  0.72: '#EA580C', // Naranja fuego intenso
+  0.88: '#DC2626', // Rojo pasión intenso
+  1.0: '#991B1B',  // Rojo volcánico profundo / máxima popularidad
 };
 
 /**

@@ -341,6 +341,79 @@ export const showLocationPromptAlert = ({
   });
 };
 
+/**
+ * Alerta de Logro: Evento Creado exitosamente
+ */
+export const showEventCreatedSuccess = ({ eventTitle = '', onViewCartelera = null } = {}) => {
+  const safeName = escapeHtml(eventTitle) || 'tu evento';
+  return Swal.fire({
+    icon: 'success',
+    title: '¡Producción en marcha!',
+    text: `Tu evento ${safeName} ya está registrado en la cartelera de Event Hive y listo para revisión.`,
+    confirmButtonText: 'VER EN CARTELERA',
+    showConfirmButton: true,
+    buttonsStyling: false,
+    customClass: BASE_SWAL_CLASSES,
+  }).then((res) => {
+    if (res.isConfirmed && typeof onViewCartelera === 'function') {
+      onViewCartelera();
+    }
+    return res;
+  });
+};
+
+/**
+ * Alerta de Logro: Promoción Activada
+ */
+export const showPromotionSuccess = ({ planName = '', eventTitle = '' } = {}) => {
+  const safePlan = escapeHtml(planName) || 'seleccionado';
+  const safeEvent = escapeHtml(eventTitle) || 'tu evento';
+  return Swal.fire({
+    icon: 'success',
+    title: '¡Amplificación activada!',
+    text: `El plan ${safePlan} ya está impulsando ${safeEvent} en Cartagena.`,
+    confirmButtonText: 'Aceptar',
+    showConfirmButton: true,
+    buttonsStyling: false,
+    customClass: BASE_SWAL_CLASSES,
+  });
+};
+
+/**
+ * Instancia Toast de Consola Editorial (3000ms, bottom-end)
+ */
+const EditorialToast = Swal.mixin({
+  toast: true,
+  position: 'bottom-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  customClass: {
+    popup: 'eventhive-swal-toast',
+  },
+});
+
+export const showProfileUpdatedToast = () => {
+  return EditorialToast.fire({
+    icon: 'success',
+    title: 'Ficha de producción actualizada.',
+  });
+};
+
+export const showInviteSentToast = (correo) => {
+  return EditorialToast.fire({
+    icon: 'success',
+    title: `Acreditación enviada a ${escapeHtml(correo)}.`,
+  });
+};
+
+export const showNotificationReadToast = () => {
+  return EditorialToast.fire({
+    icon: 'success',
+    title: 'Bitácora al día.',
+  });
+};
+
 export default {
   showAlert: Swal.fire,
   showSuccessAlert,
@@ -352,4 +425,9 @@ export default {
   showPendingRutAlert,
   showLoginAlert,
   showLocationPromptAlert,
+  showEventCreatedSuccess,
+  showPromotionSuccess,
+  showProfileUpdatedToast,
+  showInviteSentToast,
+  showNotificationReadToast,
 };

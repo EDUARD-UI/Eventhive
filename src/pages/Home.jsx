@@ -232,7 +232,7 @@ export default function Home() {
 
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDistance, setSelectedDistance] = useState('all');
-  const [showHeatmap, setShowHeatmap] = useState(true);
+  const [showHeatmap, setShowHeatmap] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
   const [mapRevealed, setMapRevealed] = useState(false);
@@ -374,13 +374,10 @@ export default function Home() {
     isLoading: isLoadingDemand,
     isFetching: isFetchingDemand,
   } = useQuery({
-    queryKey: ['home-demand-heatmap', selectedCategory, userLocation, selectedDistance, timeWindow],
+    queryKey: ['home-demand-heatmap', selectedCategory, timeWindow],
     queryFn: () =>
       getDemandHeatmap({
         categoriaId: selectedCategory === 'all' ? undefined : selectedCategory,
-        lat: userLocation?.lat,
-        lng: userLocation?.lng,
-        radioKm: selectedDistance === 'all' ? undefined : selectedDistance,
         ventanaHoras: Number(timeWindow),
       }),
     enabled: showHeatmap,
@@ -389,24 +386,36 @@ export default function Home() {
   });
 
   const heatmapLayerPoints = useMemo(() => {
-    if (!showHeatmap || !demandPoints || !demandPoints.length) return [];
-    return demandPoints
-      .filter((item) => {
+    if (!showHeatmap) return [];
+    const validDemand = (demandPoints || []).filter((item) => {
+      const lat = Number(item.latitud ?? item.lat);
+      const lng = Number(item.longitud ?? item.lng);
+      return Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0;
+    });
+
+    if (validDemand.length > 0) {
+      return validDemand.map((item) => {
         const lat = Number(item.latitud ?? item.lat);
         const lng = Number(item.longitud ?? item.lng);
-        return Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0;
-      })
-      .map((item) => {
-        const lat = Number(item.latitud ?? item.lat);
-        const lng = Number(item.longitud ?? item.lng);
-        const rawIntensity = item.intensidad;
+        const rawIntensity = Number(item.intensidad);
         const intensity =
-          typeof rawIntensity === 'number' && Number.isFinite(rawIntensity)
-            ? Math.max(0.1, Math.min(1.0, rawIntensity))
-            : 0.5;
+          Number.isFinite(rawIntensity) && rawIntensity > 0
+            ? Math.min(0.85, Math.max(0.42, rawIntensity * 1.2))
+            : 0.65;
         return [lat, lng, intensity];
       });
-  }, [showHeatmap, demandPoints]);
+    }
+
+    // Si el backend no envía puntos de demanda o están vacíos,
+    // usamos las coordenadas de los eventos del mapa para garantizar que el calor siempre se mantenga visible
+    if (Array.isArray(mapEvents) && mapEvents.length > 0) {
+      return mapEvents
+        .filter((e) => Number.isFinite(Number(e.lat)) && Number.isFinite(Number(e.lng)))
+        .map((e) => [Number(e.lat), Number(e.lng), 0.72]);
+    }
+
+    return [];
+  }, [showHeatmap, demandPoints, mapEvents]);
 
   const demandByEventId = useMemo(() => {
     const map = new Map();
@@ -488,24 +497,22 @@ export default function Home() {
       {/* Hero Principal con Buscador Integrado */}
       <Hero />
 
-      {/* 2. Carrusel Principal de Eventos Premium con Animación 3D Scroll Stage */}
+      {/* 2. Carrusel Principal de Eventos Premium */}
       <section
         id="carousel-section"
         ref={carouselSectionRef}
         className="w-full px-4 sm:px-6 md:px-8 lg:px-12 pt-6 pb-8 sm:pt-10 sm:pb-12 max-w-[1850px] mx-auto relative z-10 scroll-mt-20"
       >
-        <Scroll3DReveal variant="tilt-up" duration={1050} glowAccent={true}>
-          {isLoadingEvents ? (
-            <div className="w-full rounded-2xl sm:rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[260px] sm:min-h-[320px] md:min-h-[360px] max-h-[480px] bg-slate-200 dark:bg-slate-800/80 border border-slate-300/40 dark:border-slate-700/60 animate-pulse relative overflow-hidden flex flex-col justify-end p-5 sm:p-10 shadow-sm">
-              <div className="w-24 sm:w-28 h-5 sm:h-6 bg-slate-300 dark:bg-slate-700 rounded-md mb-3" />
-              <div className="w-3/4 sm:w-2/3 h-6 sm:h-9 bg-slate-300 dark:bg-slate-700 rounded-lg mb-2.5" />
-              <div className="w-1/2 h-4 bg-slate-300 dark:bg-slate-700/80 rounded mb-4 hidden sm:block" />
-              <div className="w-28 sm:w-36 h-8 sm:h-10 bg-slate-300 dark:bg-slate-700 rounded-xl" />
-            </div>
-          ) : (
-            <FeaturedEventsCarousel events={carouselEvents} />
-          )}
-        </Scroll3DReveal>
+        {isLoadingEvents ? (
+          <div className="w-full rounded-2xl sm:rounded-3xl aspect-[16/9] sm:aspect-[21/9] min-h-[260px] sm:min-h-[320px] md:min-h-[360px] max-h-[480px] bg-slate-200 dark:bg-slate-800/80 border border-slate-300/40 dark:border-slate-700/60 animate-pulse relative overflow-hidden flex flex-col justify-end p-5 sm:p-10 shadow-sm">
+            <div className="w-24 sm:w-28 h-5 sm:h-6 bg-slate-300 dark:bg-slate-700 rounded-md mb-3" />
+            <div className="w-3/4 sm:w-2/3 h-6 sm:h-9 bg-slate-300 dark:bg-slate-700 rounded-lg mb-2.5" />
+            <div className="w-1/2 h-4 bg-slate-300 dark:bg-slate-700/80 rounded mb-4 hidden sm:block" />
+            <div className="w-28 sm:w-36 h-8 sm:h-10 bg-slate-300 dark:bg-slate-700 rounded-xl" />
+          </div>
+        ) : (
+          <FeaturedEventsCarousel events={carouselEvents} />
+        )}
       </section>
 
       {/* Cintas Cruzadas entre el Carrusel Principal y los Eventos Próximos */}
@@ -691,7 +698,7 @@ export default function Home() {
                   )}
                   <span className="text-slate-300 font-extrabold uppercase tracking-wide">Popularidad en compras:</span>
                   <span className="text-slate-300 font-medium">Baja</span>
-                  <div className="w-16 h-2 rounded-full bg-gradient-to-r from-[#007BFF] via-[#00D2FF] via-[#FFC107] via-[#FF7A00] to-[#EF4444]" />
+                  <div className="w-16 h-2 rounded-full bg-gradient-to-r from-[#0284C7] via-[#00D2FF] via-[#F59E0B] via-[#EA580C] to-[#DC2626]" />
                   <span className="text-amber-400 font-extrabold">Alta 🔥</span>
                 </div>
               )}
@@ -850,15 +857,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Carrusel de Categorías con Fondo Animado de Partículas, Cinta Cinética y Ticker 3D */}
+      {/* 5. Carrusel de Categorías con Fondo Animado de Partículas, Cinta Cinética y Ticker */}
       <section className="relative w-full py-10 sm:py-14 bg-transparent transition-colors duration-200 overflow-hidden isolate">
         <MapDynamicBackground className="opacity-70" />
-        <Scroll3DReveal variant="ribbon-depth" duration={950} glowAccent={true} className="relative z-10">
+        <div className="relative z-10">
           <CategoryRibbonBanner />
-        </Scroll3DReveal>
-        <Scroll3DReveal variant="tilt-up" delay={140} duration={1000} className="relative z-10">
+        </div>
+        <div className="relative z-10">
           <CategoryTickerCarousel />
-        </Scroll3DReveal>
+        </div>
       </section>
 
       {/* Sección: Recomendaciones para ti (después de categorías y antes de banners) */}

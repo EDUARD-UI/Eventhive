@@ -1,50 +1,21 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   FiCalendar,
-  FiCheckCircle,
-  FiClock,
-  FiEdit3,
+  FiChevronLeft,
+  FiChevronRight,
   FiEye,
-  FiGrid,
-  FiList,
   FiMapPin,
   FiPlus,
   FiSearch,
-  FiTag,
   FiTrash2,
   FiX,
-  FiLayers,
-  FiAlertCircle,
+  FiClock,
 } from 'react-icons/fi';
-import Badge from '../../components/Shared/Badge.jsx';
-import StatCard from '../../components/Shared/StatCard.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import { organizerService } from '../../services/organizerService.js';
 import { getCategoryNames } from '../../services/categoryService.js';
-import { formatHora12, formatFecha, formatHora24 } from '../../utils/formatters.js';
+import { formatHora12, formatFecha } from '../../utils/formatters.js';
 import Swal from 'sweetalert2';
-
-const toneMap = {
-  PUBLICADO: 'active',
-  FINALIZADO: 'neutral',
-  BORRADOR: 'warning',
-  CANCELADO: 'danger',
-  SUSPENDIDO: 'danger',
-  PENDIENTE_REVISION: 'warning',
-  EN_CORRECCION: 'warning',
-  RECHAZADO: 'danger',
-};
-
-const labelMap = {
-  PUBLICADO: 'Activo',
-  FINALIZADO: 'Finalizado',
-  BORRADOR: 'Borrador',
-  CANCELADO: 'Cancelado',
-  SUSPENDIDO: 'Suspendido',
-  PENDIENTE_REVISION: 'En revisión',
-  EN_CORRECCION: 'En corrección',
-  RECHAZADO: 'Rechazado',
-};
 
 const normalizeOrganizerEvent = (e) => ({
   ...e,
@@ -55,20 +26,34 @@ const normalizeOrganizerEvent = (e) => ({
   category:
     typeof e.categoria === 'string'
       ? e.categoria
-      : e.categoria?.nombre || e.nombreCategoria || e.categoriaNombre || 'Evento Cultural',
+      : e.categoria?.nombre || e.nombreCategoria || e.categoriaNombre || 'General',
   date: e.fecha || e.date || 'Próximamente',
   fecha: e.fecha || e.date || 'Próximamente',
-  time: formatHora12(e.hora || e.time) || 'Hora por confirmar',
-  hora: formatHora12(e.hora || e.time) || 'Hora por confirmar',
+  time: formatHora12(e.hora || e.time) || '',
+  hora: formatHora12(e.hora || e.time) || '',
   location: e.lugar || e.ubicacion || e.location || 'Cartagena',
   lugar: e.lugar || e.ubicacion || e.location || 'Cartagena',
   status: e.estado || e.rawStatus || 'BORRADOR',
   rawStatus: e.estado || e.rawStatus || 'BORRADOR',
   estado: e.estado || e.rawStatus || 'BORRADOR',
-  tone: toneMap[e.estado || e.rawStatus] || 'warning',
   photo: e.foto || e.imagen || e.imagenUrl || null,
   localidades: Array.isArray(e.localidades) ? e.localidades : [],
 });
+
+function formatPosterMeta(dateStr, timeStr) {
+  if (!dateStr) return 'POR CONFIRMAR';
+  try {
+    const parts = String(dateStr).split('T')[0].split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      const months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+      const monthName = months[parseInt(month, 10) - 1] || 'MES';
+      const timeClean = timeStr ? ` • ${timeStr}` : '';
+      return `${parseInt(day, 10)} ${monthName} ${year}${timeClean}`;
+    }
+  } catch {}
+  return `${dateStr}${timeStr ? ` • ${timeStr}` : ''}`;
+}
 
 export default function MiEvento({
   onCreate,
@@ -88,14 +73,15 @@ export default function MiEvento({
     () => !(Array.isArray(initialEvents) && initialEvents.length > 0)
   );
   const [category, setCategory] = useState('Todos');
-  const [statusFilter, setStatusFilter] = useState('Todos');
+  const [statusFilter, setStatusFilter] = useState('todos'); // 'todos' | 'en_venta' | 'borradores' | 'archivo'
   const [localSearch, setLocalSearch] = useState('');
-  const [viewMode, setViewMode] = useState('posters'); // 'posters' | 'list'
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(9); // 9 para cuadrícula de 3x3, 10 para lista
-
-  // Protección de operaciones asíncronas y doble clic
+  const pageSize = 6; // Grid 2x3 o 3x2 en el 75%
   const [deletingId, setDeletingId] = useState(null);
+
+  // Estado del calendario de gira (Agenda de Gira)
+  const [calendarDate, setCalendarDate] = useState(() => new Date());
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
 
   const fetchEvents = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -129,7 +115,6 @@ export default function MiEvento({
     }
   }, [initialEvents]);
 
-  // Escuchar evento global cuando se crea/edita un evento en cualquier modal o wizard
   useEffect(() => {
     const handleEventsUpdated = (e) => {
       const saved = e.detail;
@@ -159,46 +144,72 @@ export default function MiEvento({
     return organizerEvents.filter((event) => {
       const matchesCategory =
         category === 'Todos' ||
-        event.category === category ||
-        (event.categoria &&
-          (event.categoria === category || event.categoria?.nombre === category));
-      const matchesStatus =
-        statusFilter === 'Todos' ||
-        event.rawStatus === statusFilter ||
-        event.estado === statusFilter;
-      const term = effectiveSearch.toLowerCase().trim();
+        event.category?.toLowerCase() === category.toLowerCase();
+
+      const st = String(event.status || event.rawStatus || '').toUpperCase();
+      let matchesStatus = true;
+      if (statusFilter === 'en_venta') matchesStatus = st === 'PUBLICADO';
+      else if (statusFilter === 'borradores') matchesStatus = st === 'BORRADOR' || st === 'EN_CORRECCION' || st === 'PENDIENTE_REVISION';
+      else if (statusFilter === 'archivo') matchesStatus = st === 'FINALIZADO' || st === 'CANCELADO' || st === 'SUSPENDIDO';
+
       const matchesSearch =
-        !term ||
-        event.title.toLowerCase().includes(term) ||
-        (event.location && event.location.toLowerCase().includes(term)) ||
-        event.category.toLowerCase().includes(term);
+        !effectiveSearch ||
+        event.title.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
+        event.location.toLowerCase().includes(effectiveSearch.toLowerCase());
 
-      return matchesCategory && matchesStatus && matchesSearch;
+      let matchesDate = true;
+      if (selectedCalendarDate) {
+        const evDate = String(event.date || '').split('T')[0];
+        matchesDate = evDate === selectedCalendarDate;
+      }
+
+      return matchesCategory && matchesStatus && matchesSearch && matchesDate;
     });
-  }, [organizerEvents, category, statusFilter, effectiveSearch]);
+  }, [organizerEvents, category, statusFilter, effectiveSearch, selectedCalendarDate]);
 
-  // Reset de página al cambiar filtros
   useEffect(() => {
     setCurrentPage(1);
-  }, [category, statusFilter, effectiveSearch, viewMode]);
+  }, [category, statusFilter, effectiveSearch, selectedCalendarDate]);
 
-  // Paginación en cliente
   const paginatedEvents = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredEvents.slice(start, start + pageSize);
   }, [filteredEvents, currentPage, pageSize]);
 
-  // Métricas calculadas dinámicamente
-  const activeCount = organizerEvents.filter((e) => e.rawStatus === 'PUBLICADO').length;
-  const draftCount = organizerEvents.filter(
-    (e) => e.rawStatus === 'BORRADOR' || e.rawStatus === 'EN_CORRECCION'
-  ).length;
-  const finishedCount = organizerEvents.filter((e) => e.rawStatus === 'FINALIZADO').length;
+  // Mapa de eventos por fecha para el calendario
+  const eventsByDate = useMemo(() => {
+    const map = {};
+    organizerEvents.forEach((ev) => {
+      const rawDate = ev.date || ev.fecha;
+      if (!rawDate) return;
+      const dateStr = String(rawDate).split('T')[0];
+      if (!map[dateStr]) map[dateStr] = [];
+      map[dateStr].push(ev);
+    });
+    return map;
+  }, [organizerEvents]);
 
-  // Eliminar evento con protección de doble clic y feedback de loading
+  // Datos del mes del calendario
+  const calYear = calendarDate.getFullYear();
+  const calMonth = calendarDate.getMonth();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const firstDayIndex = new Date(calYear, calMonth, 1).getDay(); // 0 = Domingo
+  const monthNames = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+
+  const handlePrevMonth = () => {
+    setCalendarDate((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCalendarDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  };
+
   const handleDelete = async (eventId, rawStatus) => {
     if (rawStatus === 'FINALIZADO') return;
-    if (deletingId) return; // Evitar peticiones concurrentes
+    if (deletingId) return;
 
     const confirmRes = await Swal.fire({
       icon: 'warning',
@@ -236,458 +247,223 @@ export default function MiEvento({
   };
 
   return (
-    <div className="space-y-6">
-      {/* 1. Header Editorial con Botón Principal */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-700 bg-amber-100/70 border border-amber-200/80 px-2 py-0.5 rounded-md">
-              Cartelera de Producciones
-            </span>
-          </div>
-          <h2 className="font-display text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1">
-            Gestión de Mis Eventos
-          </h2>
-          <p className="mt-0.5 text-xs text-slate-500 max-w-xl font-medium">
-            Supervisa tus carteles de eventos, controla el aforo de localidades y gestiona el ciclo de vida de tus publicaciones culturales.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={onCreate}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0B1B3D] hover:bg-slate-900 px-4 py-2.5 text-xs font-bold text-amber-300 shadow-xs transition-all active:scale-95 shrink-0 cursor-pointer"
-        >
-          <FiPlus size={16} />
-          <span>Crear nuevo evento</span>
-        </button>
-      </div>
-
-      {/* 2. KPIs de Cartelera */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          label="Eventos Activos"
-          value={String(activeCount)}
-          change="En cartelera activa en Cartagena"
-          trend="up"
-          icon={FiCheckCircle}
-          iconBg="bg-emerald-50"
-          iconColor="text-emerald-600"
-        />
-        <StatCard
-          label="Eventos en Borrador"
-          value={String(draftCount)}
-          change="Pendientes de moderación"
-          trend="neutral"
-          icon={FiEdit3}
-          iconBg="bg-amber-50"
-          iconColor="text-amber-600"
-        />
-        <StatCard
-          label="Eventos Finalizados"
-          value={String(finishedCount)}
-          change="Histórico completado"
-          trend="neutral"
-          icon={FiCalendar}
-          iconBg="bg-blue-50"
-          iconColor="text-blue-600"
-        />
-      </div>
-
-      {/* 3. Barra de Filtros, Búsqueda y Selector de Vista */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-xs">
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Filtro por Categoría */}
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs">
-            <span className="text-slate-400 font-medium">Categoría:</span>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="bg-transparent font-bold text-slate-800 outline-none cursor-pointer"
-            >
-              <option value="Todos">Todas las categorías</option>
-              {categoryOptions.map((c) => (
-                <option key={c.id || c.nombre} value={c.nombre}>
-                  {c.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Filtro por Estado */}
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs">
-            <span className="text-slate-400 font-medium">Estado:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-transparent font-bold text-slate-800 outline-none cursor-pointer"
-            >
-              <option value="Todos">Todos los estados</option>
-              <option value="PUBLICADO">Publicados (Activos)</option>
-              <option value="BORRADOR">Borrador</option>
-              <option value="PENDIENTE_REVISION">Pendiente de revisión</option>
-              <option value="EN_CORRECCION">En corrección</option>
-              <option value="RECHAZADO">Rechazados</option>
-              <option value="CANCELADO">Cancelados</option>
-              <option value="FINALIZADO">Finalizados</option>
-              <option value="SUSPENDIDO">Suspendidos</option>
-            </select>
-          </div>
-
-          {/* Botón para limpiar filtros */}
-          {(category !== 'Todos' || statusFilter !== 'Todos' || effectiveSearch) && (
-            <button
-              type="button"
-              onClick={() => {
-                setCategory('Todos');
-                setStatusFilter('Todos');
-                setLocalSearch('');
-              }}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
-            >
-              <FiX size={12} /> Limpiar filtros
-            </button>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between lg:justify-end gap-3">
-          {/* Buscador interno */}
-          {!externalSearch && (
-            <div className="relative flex-1 sm:w-64">
-              <FiSearch
-                size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-              />
-              <input
-                type="text"
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-                placeholder="Buscar por título o lugar..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-3 text-xs text-slate-800 outline-none focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 transition-all"
-              />
-            </div>
-          )}
-
-          {/* Selector de modo de vista: Cartelera vs Lista */}
-          <div className="flex items-center p-0.5 rounded-xl bg-slate-100 border border-slate-200 shrink-0">
-            <button
-              type="button"
-              onClick={() => {
-                setViewMode('posters');
-                setPageSize(9);
-              }}
-              title="Vista Cartelera (Portadas)"
-              aria-label="Vista Cartelera de Portadas"
-              className={`p-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
-                viewMode === 'posters'
-                  ? 'bg-white text-slate-900 shadow-2xs font-bold'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              <FiGrid size={15} />
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setViewMode('list');
-                setPageSize(10);
-              }}
-              title="Vista Lista Detallada"
-              aria-label="Vista Lista Detallada"
-              className={`p-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
-                viewMode === 'list'
-                  ? 'bg-white text-slate-900 shadow-2xs font-bold'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              <FiList size={15} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Contenido de Eventos */}
-      {loading ? (
-        <div className="rounded-3xl border border-slate-200 bg-white p-16 text-center shadow-xs">
-          <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-xs text-slate-500 font-medium">Cargando producciones de tu organización...</p>
-        </div>
-      ) : filteredEvents.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-12 text-center shadow-xs space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto font-bold">
-            <FiCalendar size={22} />
-          </div>
+    <div className="space-y-8 select-none">
+      {/* 1. Cabecera Minimalista: Título, Filtros Tipográficos y Botón Primario */}
+      <div className="border-b border-[#E2E8F0] pb-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <h4 className="font-display font-black text-sm text-slate-900">
-              No se encontraron producciones
-            </h4>
-            <p className="text-xs text-slate-500 mt-0.5 max-w-sm mx-auto">
-              {organizerEvents.length === 0
-                ? 'Aún no tienes eventos registrados en tu organización. ¡Comienza publicando tu primera experiencia cultural!'
-                : 'Ningún evento coincide con los filtros aplicados. Intenta ajustar la búsqueda o la categoría seleccionada.'}
-            </p>
+            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
+              Mesa de Producción · Cartagena
+            </span>
+            <h1 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-[#0F2342] tracking-tight uppercase leading-none">
+              Cartelera Completa
+            </h1>
           </div>
-          {organizerEvents.length === 0 ? (
-            <button
-              type="button"
-              onClick={onCreate}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#0B1B3D] text-amber-300 px-4 py-2 text-xs font-bold hover:bg-slate-900 transition-colors cursor-pointer"
-            >
-              <FiPlus size={14} /> Crear primer evento
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                setCategory('Todos');
-                setStatusFilter('Todos');
-                setLocalSearch('');
-              }}
-              className="px-3.5 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
-            >
-              Restablecer filtros
-            </button>
-          )}
+
+          <button
+            type="button"
+            onClick={onCreate}
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-[2px] bg-[#0F2342] hover:bg-[#F5B800] text-[#FFFFFF] hover:text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-all duration-150 cursor-pointer shadow-xs active:scale-98 shrink-0"
+          >
+            <FiPlus size={14} strokeWidth={2.5} />
+            <span>Nuevo Evento</span>
+          </button>
         </div>
-      ) : viewMode === 'posters' ? (
-        /* VISTA 1: CUADRÍCULA DE CARTELES / POSTERS DE EVENTOS */
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {paginatedEvents.map((event) => {
-              const isDeleting = deletingId === event.id;
 
-              // Calcular aforo si hay localidades
-              let totalCapacidad = 0;
-              let totalVendidas = 0;
-              if (Array.isArray(event.localidades)) {
-                event.localidades.forEach((loc) => {
-                  totalCapacidad += Number(loc.capacidad || 0);
-                  totalVendidas += Math.max(0, (loc.capacidad || 0) - (loc.disponibles || 0));
-                });
-              }
-              const pctVenta =
-                totalCapacidad > 0 ? Math.round((totalVendidas / totalCapacidad) * 100) : 0;
-
+        {/* Filtros tipográficos y buscador */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+          {/* Tabs con subrayado de 2px en #F5B800 */}
+          <div className="flex items-center gap-6 sm:gap-8 overflow-x-auto scrollbar-none">
+            {[
+              { id: 'todos', label: 'Todos' },
+              { id: 'en_venta', label: 'En Venta' },
+              { id: 'borradores', label: 'Borradores' },
+              { id: 'archivo', label: 'Archivo' },
+            ].map((tab) => {
+              const isActive = statusFilter === tab.id;
               return (
-                <article
-                  key={event.id}
-                  className="group rounded-3xl border border-slate-200/90 hover:border-amber-400 bg-white overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setStatusFilter(tab.id)}
+                  className={`font-mono text-xs uppercase tracking-wider transition-all cursor-pointer pb-2 relative shrink-0 ${
+                    isActive
+                      ? 'text-[#0F2342] font-bold'
+                      : 'text-[#64748B] hover:text-[#0F2342] font-medium'
+                  }`}
                 >
-                  {/* Portada del Evento con badges */}
-                  <div className="relative aspect-[16/10] bg-slate-900 overflow-hidden">
-                    {event.photo ? (
-                      <img
-                        src={event.photo}
-                        alt={event.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center text-slate-400 font-bold">
-                        <FiCalendar size={32} />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
-
-                    {/* Badge de Categoría */}
-                    <div className="absolute top-3 left-3 z-10">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-white/95 backdrop-blur-md text-slate-900 shadow-xs">
-                        {event.category}
-                      </span>
-                    </div>
-
-                    {/* Badge de Estado */}
-                    <div className="absolute top-3 right-3 z-10">
-                      <Badge tone={event.tone}>{event.status}</Badge>
-                    </div>
-
-                    {/* Fecha sobre la portada */}
-                    <div className="absolute bottom-3 left-3 right-3 z-10 flex items-center justify-between text-white text-xs">
-                      <span className="font-bold flex items-center gap-1.5 drop-shadow-sm">
-                        <FiClock size={12} className="text-amber-400" />
-                        <span>{event.time}</span>
-                      </span>
-                      <span className="font-extrabold px-2 py-0.5 rounded-lg bg-slate-900/80 backdrop-blur-xs text-amber-300 text-[11px]">
-                        {event.date ? formatFecha(event.date) : 'Por confirmar'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Cuerpo de Información */}
-                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
-                    <div>
-                      <h3 className="font-display font-black text-sm sm:text-base text-slate-900 leading-snug line-clamp-2 group-hover:text-amber-700 transition-colors">
-                        {event.title}
-                      </h3>
-                      <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
-                        <FiMapPin size={12} className="text-amber-500 shrink-0" />
-                        <span className="truncate">{event.location}</span>
-                      </p>
-                    </div>
-
-                    {/* Indicador de Capacidad y Boletaje */}
-                    {totalCapacidad > 0 && (
-                      <div className="pt-2 border-t border-slate-100 space-y-1">
-                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
-                          <span className="flex items-center gap-1">
-                            <FiLayers size={11} className="text-amber-500" />
-                            <span>Aforo: {totalCapacidad} cupos</span>
-                          </span>
-                          <span className="text-amber-700 font-black">{pctVenta}% vendido</span>
-                        </div>
-                        <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-amber-500 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(100, pctVenta)}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Barra de Acciones */}
-                  <div className="p-3.5 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between gap-2">
-                    <button
-                      type="button"
-                      onClick={() => onViewDetail && onViewDetail(event.id)}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800 transition-colors shadow-2xs cursor-pointer"
-                    >
-                      <FiEye size={13} className="text-slate-500" />
-                      <span>Ver detalle</span>
-                    </button>
-
-                    {event.rawStatus !== 'FINALIZADO' && (
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(event.id, event.rawStatus)}
-                        disabled={isDeleting || Boolean(deletingId)}
-                        title="Eliminar evento"
-                        aria-label={`Eliminar evento ${event.title}`}
-                        className="p-2 rounded-xl border border-slate-200 bg-white text-slate-400 hover:text-rose-600 hover:border-rose-300 hover:bg-rose-50/50 transition-colors disabled:opacity-50 cursor-pointer shrink-0"
-                      >
-                        {isDeleting ? (
-                          <span className="w-3.5 h-3.5 border-2 border-rose-500 border-t-transparent rounded-full animate-spin inline-block" />
-                        ) : (
-                          <FiTrash2 size={14} />
-                        )}
-                      </button>
-                    )}
-                  </div>
-                </article>
+                  <span>{tab.label}</span>
+                  {isActive && (
+                    <span
+                      className="absolute bottom-0 inset-x-0 h-[2px] bg-[#F5B800] transition-all"
+                      aria-hidden="true"
+                    />
+                  )}
+                </button>
               );
             })}
           </div>
 
-          {/* Paginación */}
-          {filteredEvents.length > pageSize && (
-            <div className="pt-2 flex justify-center">
-              <Pagination
-                currentPage={currentPage}
-                totalItems={filteredEvents.length}
-                pageSize={pageSize}
-                onPageChange={setCurrentPage}
-                showPageSize={false}
-              />
+          {/* Buscador interno limpio */}
+          <div className="relative w-full md:w-64 shrink-0">
+            <FiSearch
+              size={13}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none"
+            />
+            <input
+              type="text"
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+              placeholder="BUSCAR POR NOMBRE O LUGAR..."
+              className="w-full rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] py-2 pl-8 pr-3 font-mono text-[11px] text-[#0F2342] placeholder:text-[#94A3B8] uppercase outline-none focus:border-[#0F2342] transition-colors"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Layout Asimétrico: 75% Grilla de Pósters + 25% Agenda de Gira (Tour Calendar) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+        {/* =========================================================================
+            COLUMNA IZQUIERDA (~75% del ancho): Grilla de Pósters a Todo Color
+           ========================================================================= */}
+        <section className="lg:col-span-8 xl:col-span-9 w-full space-y-6">
+          {selectedCalendarDate && (
+            <div className="flex items-center justify-between p-3 bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] text-xs font-mono">
+              <span className="text-[#64748B]">
+                Filtrando producciones del <strong className="text-[#0F2342]">{selectedCalendarDate}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedCalendarDate(null)}
+                className="text-[#B45309] hover:underline font-bold cursor-pointer"
+              >
+                Ver todas las fechas
+              </button>
             </div>
           )}
-        </div>
-      ) : (
-        /* VISTA 2: LISTA DETALLADA / TABLA EDITORIAL */
-        <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-slate-50/70 border-b border-slate-200 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-                <tr>
-                  <th className="py-3.5 px-5">Producción Cultural</th>
-                  <th className="py-3.5 px-4">Categoría</th>
-                  <th className="py-3.5 px-4">Fecha y Hora</th>
-                  <th className="py-3.5 px-4">Estado</th>
-                  <th className="py-3.5 px-5 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {paginatedEvents.map((row) => {
-                  const isDeleting = deletingId === row.id;
 
-                  return (
-                    <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3.5 px-5">
-                        <div className="flex items-center gap-3">
-                          {row.photo ? (
-                            <img
-                              src={row.photo}
-                              alt={row.title}
-                              className="w-12 h-10 rounded-xl object-cover border border-slate-200 shrink-0 shadow-2xs"
-                            />
-                          ) : (
-                            <div className="w-12 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-400">
-                              <FiCalendar size={16} />
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <p className="font-display font-black text-slate-900 text-xs truncate">
-                              {row.title}
-                            </p>
-                            <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5 truncate">
-                              <FiMapPin size={10} className="text-amber-500 shrink-0" />
-                              <span className="truncate">{row.location}</span>
-                            </p>
-                          </div>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] animate-pulse overflow-hidden">
+                  <div className="aspect-[4/5] bg-[#F1F5F9]" />
+                  <div className="p-4 space-y-2">
+                    <div className="h-3 bg-[#E2E8F0] w-1/2 rounded-[1px]" />
+                    <div className="h-4 bg-[#E2E8F0] w-3/4 rounded-[1px]" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredEvents.length === 0 ? (
+            <div className="rounded-[2px] border border-dashed border-[#CBD5E1] bg-[#FFFFFF] p-12 text-center space-y-3">
+              <span className="font-mono text-xs uppercase tracking-widest text-[#64748B] block">
+                Escenario en Silencio
+              </span>
+              <h3 className="font-display font-black text-xl text-[#0F2342] uppercase tracking-tight">
+                No hay producciones registradas
+              </h3>
+              <p className="text-xs text-[#64748B] max-w-sm mx-auto">
+                No se encontraron eventos con los filtros aplicados.
+              </p>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={onCreate}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-[2px] bg-[#0F2342] hover:bg-[#F5B800] text-white hover:text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer"
+                >
+                  <FiPlus size={13} />
+                  <span>Crear Producción</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              {paginatedEvents.map((event) => {
+                const isDeleting = deletingId === event.id;
+                const posterDate = formatPosterMeta(event.date, event.time);
+
+                return (
+                  <article
+                    key={event.id}
+                    className="group rounded-[2px] border border-[#E2E8F0] hover:border-[#0F2342] bg-[#FFFFFF] overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(0,0,0,0.06)] flex flex-col justify-between"
+                  >
+                    {/* Póster a Todo Color Natural sin Badges ni Pills Flotantes */}
+                    <div
+                      className="relative aspect-[4/5] bg-[#F8F9FA] overflow-hidden cursor-pointer"
+                      onClick={() => onViewDetail && onViewDetail(event.id)}
+                    >
+                      {event.photo ? (
+                        <img
+                          src={event.photo}
+                          alt={event.title}
+                          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-[#0F2342] text-white p-4">
+                          <span className="font-mono text-xs uppercase tracking-widest text-[#F5B800]">PÓSTER</span>
+                          <span className="font-display font-black text-2xl mt-2 text-center line-clamp-2">
+                            {event.title}
+                          </span>
                         </div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[11px]">
-                          <FiTag size={10} className="text-amber-500" />
-                          {row.category}
+                      )}
+                    </div>
+
+                    {/* Ficha Editorial Inferior sobre Fondo Blanco Limpio */}
+                    <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3 bg-[#FFFFFF]">
+                      <div>
+                        {/* Fecha en Monospace 11px */}
+                        <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B] block truncate">
+                          {posterDate}
                         </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-600">
-                        <div className="font-bold text-slate-800">
-                          {row.date ? formatFecha(row.date) : 'Por confirmar'}
-                        </div>
-                        <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                          <FiClock size={10} />
-                          <span>{row.time}</span>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <Badge tone={row.tone}>{row.status}</Badge>
-                      </td>
-                      <td className="py-3.5 px-5 text-right">
-                        <div className="inline-flex items-center gap-1.5 justify-end">
+
+                        {/* Título en Tipografía Display */}
+                        <h3
+                          onClick={() => onViewDetail && onViewDetail(event.id)}
+                          className="font-display font-black text-base sm:text-lg text-[#0F2342] uppercase tracking-tight leading-tight line-clamp-2 mt-1 cursor-pointer group-hover:text-[#B45309] transition-colors"
+                        >
+                          {event.title}
+                        </h3>
+
+                        {/* Recinto / Ubicación */}
+                        <p className="text-xs text-[#64748B] mt-1 truncate">
+                          {event.location}
+                        </p>
+                      </div>
+
+                      {/* Filete Divisor Fino de 1px con Acciones Tipográficas */}
+                      <div className="pt-3 border-t border-[#F1F5F9] flex items-center justify-between text-xs">
+                        <button
+                          type="button"
+                          onClick={() => onViewDetail && onViewDetail(event.id)}
+                          className="font-mono text-xs font-bold text-[#0F2342] hover:text-[#B45309] border-b border-transparent hover:border-[#F5B800] transition-all cursor-pointer py-0.5"
+                        >
+                          Ver detalle →
+                        </button>
+
+                        {event.rawStatus !== 'FINALIZADO' && (
                           <button
                             type="button"
-                            onClick={() => onViewDetail && onViewDetail(row.id)}
-                            className="p-2 rounded-xl text-slate-700 hover:text-amber-700 hover:bg-amber-50 transition-colors cursor-pointer"
-                            title="Ver detalle del evento"
+                            onClick={() => handleDelete(event.id, event.rawStatus)}
+                            disabled={isDeleting || Boolean(deletingId)}
+                            title="Eliminar producción"
+                            className="text-[#94A3B8] hover:text-rose-600 font-mono text-[11px] transition-colors cursor-pointer disabled:opacity-40"
                           >
-                            <FiEye size={15} />
+                            {isDeleting ? 'Eliminando...' : 'Eliminar'}
                           </button>
-                          {row.rawStatus !== 'FINALIZADO' && (
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(row.id, row.rawStatus)}
-                              disabled={isDeleting || Boolean(deletingId)}
-                              className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-50 cursor-pointer"
-                              title="Eliminar evento"
-                            >
-                              {isDeleting ? (
-                                <span className="w-3.5 h-3.5 border-2 border-rose-500 border-t-transparent rounded-full animate-spin inline-block" />
-                              ) : (
-                                <FiTrash2 size={15} />
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
 
+          {/* Paginación */}
           {filteredEvents.length > pageSize && (
-            <div className="p-4 border-t border-slate-100 bg-white flex justify-center">
+            <div className="pt-4 flex justify-center">
               <Pagination
                 currentPage={currentPage}
                 totalItems={filteredEvents.length}
@@ -697,8 +473,146 @@ export default function MiEvento({
               />
             </div>
           )}
-        </div>
-      )}
+        </section>
+
+        {/* =========================================================================
+            COLUMNA DERECHA (~25% del ancho): Agenda de Gira (Tour Calendar)
+           ========================================================================= */}
+        <aside className="lg:col-span-4 xl:col-span-3 w-full space-y-6 lg:sticky lg:top-24">
+          <div className="rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] p-5 space-y-5">
+            {/* Cabecera del Calendario */}
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
+              <div>
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#64748B] block">
+                  AGENDA DE GIRA
+                </span>
+                <h4 className="font-display font-black text-base text-[#0F2342] uppercase tracking-tight mt-0.5">
+                  {monthNames[calMonth]} {calYear}
+                </h4>
+              </div>
+
+              {/* Controles de Navegación del Mes */}
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={handlePrevMonth}
+                  aria-label="Mes anterior"
+                  className="p-1 rounded-[2px] text-[#64748B] hover:text-[#0F2342] hover:bg-[#F8F9FA] transition-colors cursor-pointer"
+                >
+                  <FiChevronLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextMonth}
+                  aria-label="Mes siguiente"
+                  className="p-1 rounded-[2px] text-[#64748B] hover:text-[#0F2342] hover:bg-[#F8F9FA] transition-colors cursor-pointer"
+                >
+                  <FiChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Días de la Semana */}
+            <div className="grid grid-cols-7 gap-1 text-center font-mono text-[10px] uppercase tracking-wider text-[#94A3B8]">
+              {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, i) => (
+                <div key={i} className="py-1">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Grilla de Días del Mes */}
+            <div className="grid grid-cols-7 gap-1 text-center font-mono text-xs">
+              {/* Espacios vacíos antes del primer día */}
+              {Array.from({ length: firstDayIndex }).map((_, i) => (
+                <div key={`empty-${i}`} className="h-8" />
+              ))}
+
+              {/* Días del mes */}
+              {Array.from({ length: daysInMonth }).map((_, i) => {
+                const dayNum = i + 1;
+                const dayString = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                const hasEvent = Boolean(eventsByDate[dayString]?.length);
+                const isSelected = selectedCalendarDate === dayString;
+
+                return (
+                  <button
+                    key={dayNum}
+                    type="button"
+                    onClick={() => {
+                      if (hasEvent) {
+                        setSelectedCalendarDate(isSelected ? null : dayString);
+                      }
+                    }}
+                    disabled={!hasEvent}
+                    className={`h-8 rounded-[2px] flex flex-col items-center justify-center transition-all relative ${
+                      hasEvent ? 'cursor-pointer' : 'cursor-default'
+                    } ${
+                      isSelected
+                        ? 'bg-[#F5B800] text-[#0F2342] font-bold shadow-xs'
+                        : hasEvent
+                        ? 'bg-[#0F2342] text-white font-bold hover:bg-[#1E293B]'
+                        : 'text-[#64748B] hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>{dayNum}</span>
+                    {hasEvent && !isSelected && (
+                      <span className="w-1 h-1 rounded-full bg-[#F5B800] mt-0.5" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Lista de Próximas Fechas en la Agenda */}
+            <div className="border-t border-[#E2E8F0] pt-4 space-y-3">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748B] block">
+                Próximas Fechas
+              </span>
+
+              {organizerEvents.slice(0, 4).map((ev) => {
+                const rawDate = ev.date || ev.fecha;
+                let day = '—';
+                let month = 'MES';
+                try {
+                  const parts = String(rawDate).split('T')[0].split('-');
+                  if (parts.length === 3) {
+                    day = parseInt(parts[2], 10);
+                    const months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+                    month = months[parseInt(parts[1], 10) - 1] || 'MES';
+                  }
+                } catch {}
+
+                return (
+                  <div
+                    key={ev.id}
+                    onClick={() => onViewDetail && onViewDetail(ev.id)}
+                    className="flex items-center gap-3 p-2 rounded-[2px] hover:bg-[#F8F9FA] transition-colors cursor-pointer group"
+                  >
+                    <div className="w-10 h-10 rounded-[2px] bg-[#F1F5F9] border border-[#E2E8F0] flex flex-col items-center justify-center shrink-0">
+                      <span className="font-display font-black text-xs text-[#0F2342] leading-none">
+                        {day}
+                      </span>
+                      <span className="font-mono text-[8px] text-[#64748B] uppercase">
+                        {month}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-display font-bold text-xs text-[#0F2342] group-hover:text-[#B45309] truncate uppercase">
+                        {ev.title}
+                      </p>
+                      <p className="font-mono text-[10px] text-[#64748B] truncate">
+                        {ev.location}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </aside>
+
+      </div>
     </div>
   );
 }

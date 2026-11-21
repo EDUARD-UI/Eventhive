@@ -24,11 +24,32 @@ import {
   showWarningAlert,
   showInfoAlert,
   showPendingRutAlert,
+  showEventCreatedSuccess,
+  showConfirmAlert,
 } from '../../utils/alertUtils.js';
 import { organizerService } from '../../services/organizerService.js';
-import { formatPrice, formatHora23, formatFechaHora12 } from '../../utils/formatters.js';
+import { formatPrice, formatHora23, formatHora12, formatFechaHora12, formatFecha } from '../../utils/formatters.js';
 import StyledDatePicker from '../common/StyledDatePicker.jsx';
 import { apiCache } from '../../services/cacheService.js';
+
+const parseTourDate = (dateStr) => {
+  const currentYear = new Date().getFullYear().toString();
+  if (!dateStr) return { dayMonth: 'TBD', year: currentYear };
+  try {
+    const parts = dateStr.includes('T') ? dateStr.split('T')[0].split('-') : dateStr.split('-');
+    if (parts.length === 3) {
+      const year = parts[0];
+      const monthIdx = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+      const monthName = months[monthIdx] || 'MES';
+      return { dayMonth: `${day} ${monthName}`, year };
+    }
+  } catch (e) {
+    // fallback
+  }
+  return { dayMonth: 'TBD', year: currentYear };
+};
 
 // Pin temático ámbar colmena para Leaflet
 const amberHivePinIcon = () =>
@@ -79,11 +100,11 @@ function MapLocationPicker({ position, onSelectLocation }) {
 }
 
 const STEPS = [
-  { id: 1, label: 'Información básica' },
-  { id: 2, label: 'Ubicación y mapa' },
-  { id: 3, label: 'Localidades' },
-  { id: 4, label: 'Imagen de portada' },
-  { id: 5, label: 'Revisión y creación' },
+  { id: 1, label: '01 INFORMACIÓN' },
+  { id: 2, label: '02 UBICACIÓN' },
+  { id: 3, label: '03 LOCALIDADES' },
+  { id: 4, label: '04 PORTADA' },
+  { id: 5, label: '05 REVISIÓN' },
 ];
 
 export default function CreateEventWizard({
@@ -269,21 +290,18 @@ export default function CreateEventWizard({
     );
   }, [form, fotoFile, localidades, initialEvent]);
 
-  // Manejo de salida con advertencia si hay cambios sin guardar
+  // Manejo de salida con advertencia SweetAlert para no perder el proceso
   const handleSafeBack = async () => {
-    if (isDirty) {
-      const res = await Swal.fire({
-        icon: 'warning',
-        title: '¿Abandonar creación de evento?',
-        text: 'Tienes datos sin guardar en el formulario. Si sales ahora, se perderán los cambios.',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, salir',
-        cancelButtonText: 'Continuar editando',
-        confirmButtonColor: '#e11d48',
-      });
-      if (!res.isConfirmed) return;
+    const confirmed = await showConfirmAlert({
+      title: '¿Descartar proceso de creación?',
+      text: '¿Estás seguro de que deseas salir de la mesa de montaje? Se perderá el proceso del evento y los datos no guardados.',
+      confirmButtonText: 'Sí, salir',
+      cancelButtonText: 'Continuar editando',
+      isDanger: true,
+    });
+    if (confirmed) {
+      onBack();
     }
-    onBack();
   };
 
   // Manejo de selección de archivo de imagen
@@ -518,9 +536,8 @@ export default function CreateEventWizard({
               ...(reviewResult && typeof reviewResult === 'object' ? reviewResult : {}),
               estado: reviewResult?.estado || 'PENDIENTE_REVISION',
             };
-            await showInfoAlert({
-              title: '¡Arriba el telón!',
-              text: 'Tu evento ya está en cartelera y la taquilla digital quedó abierta.',
+            await showEventCreatedSuccess({
+              eventTitle: form.titulo,
             });
           } catch (error) {
             await showErrorAlert({
@@ -529,9 +546,8 @@ export default function CreateEventWizard({
             });
           }
         } else {
-          await showErrorAlert({
-            title: 'Evento creado como borrador',
-            text: 'No se recibió el identificador del evento, por lo que no fue posible enviarlo a revisión. Actualiza Mis eventos para continuar.',
+          await showEventCreatedSuccess({
+            eventTitle: form.titulo,
           });
         }
       }
@@ -593,18 +609,19 @@ export default function CreateEventWizard({
     return localidades.reduce((acc, l) => acc + (Number(l.capacidad) || 0), 0);
   }, [localidades]);
 
+  const tourDate = useMemo(() => parseTourDate(form.fecha), [form.fecha]);
+
   const wizardContent = (
     <div className={`space-y-6 ${isDrawer ? 'p-6 sm:p-7' : ''}`}>
-      {/* 1. Header con botón seguro para volver */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* 1. Header Minimalista */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
         <div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-amber-900 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-md inline-block mb-1">
-            CREACIÓN ASISTIDA
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#64748B] block mb-0.5">
+            Mesa de Montaje Editorial
           </span>
-          <h2 className="text-xl sm:text-2xl font-black text-[#0B1B3D] tracking-tight">
-            Publicar Nuevo Evento Cultural
+          <h2 className="font-display font-black text-xl sm:text-2xl text-[#0F2342] tracking-tight uppercase">
+            {initialEvent ? 'Edición de Producción' : 'Nueva Producción Cultural'}
           </h2>
-          
         </div>
 
         <button
@@ -612,180 +629,157 @@ export default function CreateEventWizard({
           onClick={handleSafeBack}
           aria-label="Cerrar"
           title="Cerrar"
-          className="w-10 h-10 rounded-2xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-950 flex items-center justify-center transition-colors shadow-2xs self-start sm:self-auto cursor-pointer shrink-0"
+          className="w-8 h-8 rounded-[2px] border border-[#E2E8F0] bg-white hover:bg-slate-100 text-[#0F2342] flex items-center justify-center transition-colors shadow-2xs self-start sm:self-auto cursor-pointer shrink-0"
         >
-          <FiX size={18} />
+          <FiX size={16} />
         </button>
       </div>
 
-      
-
-      {/* 3. Stepper de Progreso */}
-      <div ref={stepperRef} className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs scroll-mt-4">
-        <div className="flex items-center justify-between overflow-x-auto scrollbar-none gap-2">
+      {/* 2. Stepper Arquitectónico de 5 Segmentos Iguales (Verde al completar, Dorado en activo) */}
+      <div ref={stepperRef} className="border-b border-[#E2E8F0] pb-2 bg-white scroll-mt-4">
+        <div className="grid grid-cols-5 gap-2 sm:gap-4">
           {STEPS.map((s) => {
             const isCompleted = s.id < currentStep;
             const isCurrent = s.id === currentStep;
             return (
-              <div key={s.id} className="flex items-center gap-2 shrink-0">
-                <span
-                  className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black transition-all ${
-                    isCurrent
-                      ? 'bg-[#0B1B3D] text-amber-300 shadow-sm'
-                      : isCompleted
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-slate-100 text-slate-400'
-                  }`}
-                >
-                  {isCompleted ? <FiCheck size={13} /> : s.id}
-                </span>
-                <span
-                  className={`text-xs font-bold uppercase tracking-wider ${
-                    isCurrent ? 'text-slate-900' : 'text-slate-400'
-                  }`}
-                >
-                  {s.label}
-                </span>
-                {s.id < STEPS.length && (
-                  <span className="w-6 h-0.5 bg-slate-200 mx-1 hidden md:block" />
-                )}
+              <div
+                key={s.id}
+                className={`pb-2.5 transition-all text-center sm:text-left ${
+                  isCurrent
+                    ? 'border-b-[3px] border-[#F5B800]'
+                    : isCompleted
+                    ? 'border-b-[3px] border-emerald-500'
+                    : 'border-b-[3px] border-transparent'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 justify-center sm:justify-start">
+                  {isCompleted && (
+                    <FiCheck size={12} className="text-emerald-600 shrink-0" />
+                  )}
+                  {isCurrent && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#F5B800] shrink-0" />
+                  )}
+                  <span
+                    className={`font-mono text-[10px] sm:text-xs uppercase tracking-wider block font-bold truncate ${
+                      isCurrent
+                        ? 'text-[#0F2342]'
+                        : isCompleted
+                        ? 'text-emerald-700'
+                        : 'text-[#94A3B8]'
+                    }`}
+                  >
+                    {s.label}
+                  </span>
+                </div>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* 4. Split Layout (Luma Style): Preview Izquierda + Wizard Formulario Derecha */}
+      {/* 3. Split Layout: Preview Boleto Físico Izquierda + Formulario Derecha */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-8 items-start">
-        {/* COLUMNA IZQUIERDA: Vista Previa en Vivo (Estilo Luma / Card Home) */}
+        {/* COLUMNA IZQUIERDA: Vista Previa en Vivo (Boleto Coleccionable) */}
         <div className="lg:col-span-5 xl:col-span-5 lg:sticky lg:top-4 z-10 space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-              <span>Vista previa en el Home</span>
+          <div className="flex items-center justify-between px-1 border-b border-[#E2E8F0] pb-2">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-[#0F2342] font-bold">
+              Boleto Coleccionable
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              En vivo
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#F5B800]" />
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748B]">
+                En vivo
+              </span>
+            </div>
           </div>
 
-          {/* Tarjeta Visual de Evento idéntica a HiveEventCard del Home */}
-          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-md flex flex-col justify-between text-slate-900 transition-all hover:shadow-lg">
-            <div>
-              {/* Imagen de Portada con badge de categoría y botón de carga rápida */}
-              <div className="relative aspect-[16/10] overflow-hidden bg-slate-900 group">
+          {/* Tarjeta Boleto Coleccionable Horizontal idéntica a Cartelera */}
+          <article className="group relative rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] shadow-sm overflow-hidden flex flex-col items-stretch select-none">
+            {/* Sección Superior: Póster Oficial a Color (110px x 130px) + Metadatos */}
+            <div className="flex flex-col sm:flex-row items-stretch border-b border-[#E2E8F0]">
+              <div className="w-full sm:w-[110px] h-36 sm:h-[130px] shrink-0 bg-[#0F2342] overflow-hidden relative group/img border-b sm:border-b-0 sm:border-r border-[#E2E8F0]">
                 {fotoPreview ? (
                   <img
                     src={fotoPreview}
                     alt={form.titulo || 'Portada del evento'}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0B1B3D] via-[#102754] to-slate-900 text-slate-300 p-4">
-                    <FiImage size={34} className="text-amber-400 mb-2 opacity-80" />
-                    <span className="text-xs font-bold text-amber-200 uppercase tracking-wider text-center">
-                      {selectedCategoryName || 'Evento Cultural'}
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-[#0F2342] text-white p-2">
+                    <span className="font-mono text-[9px] uppercase tracking-widest text-[#F5B800]">PASS</span>
+                    <span className="font-display font-black text-xl mt-0.5">
+                      {(form.titulo?.trim() || 'EV').slice(0, 2).toUpperCase()}
                     </span>
-                    <span className="text-[10px] text-slate-400 mt-0.5">Portada del evento</span>
                   </div>
                 )}
+                {/* Botón rápido para subir/cambiar foto */}
+                <button
+                  type="button"
+                  onClick={() => photoInputRef.current?.click()}
+                  title="Subir imagen"
+                  className="absolute inset-0 bg-[#0F2342]/75 text-white font-mono text-[10px] uppercase font-bold flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer"
+                >
+                  {fotoPreview ? 'Cambiar Foto' : 'Subir Foto'}
+                </button>
+              </div>
 
-                {/* Gradiente estilo Home */}
-                <div
-                  className="absolute inset-0 pointer-events-none opacity-40 group-hover:opacity-50 transition-opacity"
-                  style={{
-                    background: 'linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.85) 100%)',
-                  }}
-                />
-
-                {/* Badge de Categoría */}
-                <div className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-white/95 text-amber-800 border border-slate-200 shadow-xs flex items-center gap-1 backdrop-blur-sm">
-                    <span>⬡</span>
-                    <span>{selectedCategoryName}</span>
+              {/* Sección Central: Metadatos Editoriales y Título */}
+              <div className="flex-1 p-3.5 sm:p-4 flex flex-col justify-between min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748B] font-medium truncate">
+                    {(form.lugar?.trim() || 'CARTAGENA').toUpperCase()} • {selectedCategoryName.toUpperCase()}
+                  </span>
+                  <span className="font-mono text-[9px] tracking-wider text-[#94A3B8] uppercase">
+                    BORRADOR
                   </span>
                 </div>
 
-                {/* Botón flotante para subir/cambiar foto (Estilo Luma) */}
-                <div className="absolute right-3 bottom-3 z-10">
-                  <input
-                    ref={photoInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoSelect}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => photoInputRef.current?.click()}
-                    title="Subir o cambiar imagen de portada"
-                    className="px-2.5 py-1.5 rounded-xl bg-black/75 hover:bg-black text-white text-[11px] font-bold uppercase tracking-wider border border-white/20 shadow-md flex items-center gap-1.5 cursor-pointer backdrop-blur-sm transition-all hover:scale-105"
-                  >
-                    <FiUpload size={12} className="text-amber-300" />
-                    <span>{fotoPreview ? 'Cambiar Foto' : 'Subir Foto'}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Contenido de la Tarjeta */}
-              <div className="p-4 sm:p-5">
-                <h3 className="font-extrabold text-[15px] sm:text-[16px] leading-snug mb-2.5 text-slate-900 uppercase tracking-tight line-clamp-2 min-h-[2.5rem]">
-                  {form.titulo?.trim() || 'Nombre del evento'}
+                <h3 className="font-display font-black text-base sm:text-lg text-[#0F2342] uppercase tracking-tight line-clamp-2 leading-tight my-1">
+                  {form.titulo?.trim() || 'NOMBRE DEL EVENTO'}
                 </h3>
 
-                <div className="space-y-1.5 text-xs text-slate-600">
-                  <div className="flex items-center gap-2">
-                    <FiCalendar className="text-amber-600 shrink-0" size={13.5} />
-                    <span className="truncate">
-                      {form.fecha ? formatFechaHora12(form.fecha, form.hora) : 'Fecha y hora por definir'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FiMapPin className="text-amber-600 shrink-0" size={13.5} />
-                    <span className="truncate">
-                      {form.lugar?.trim() || 'Ubicación del evento'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Precios y Cupos */}
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Entradas</span>
-                    <span className="font-extrabold text-slate-900 text-sm">
-                      {minPrice !== null ? `Desde ${formatPrice(minPrice)}` : 'Precio a definir'}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Capacidad</span>
-                    <span className="font-semibold text-slate-600 text-xs">
-                      {totalCapacidad > 0 ? `${totalCapacidad} cupos` : 'Por configurar'}
-                    </span>
-                  </div>
+                <div className="flex items-center justify-between text-[11px] font-mono text-[#64748B] pt-1.5 border-t border-[#F1F5F9]">
+                  <span>{minPrice !== null ? `Desde ${formatPrice(minPrice)}` : 'Precio a definir'}</span>
+                  <span>{totalCapacidad > 0 ? `${totalCapacidad} cupos` : 'Sin cupos'}</span>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Caja explicativa interactiva (Inspirada en Luma) */}
-          <div className="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200/70 text-[11px] text-amber-950 space-y-1">
-            <div className="flex items-center justify-between font-bold">
-              <span className="flex items-center gap-1.5">
-                <FiInfo size={13} className="text-amber-600 shrink-0" />
-                <span>Vista en Cartelera</span>
-              </span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-200/80 text-amber-900 font-extrabold uppercase">
-                {localidades.length} {localidades.length === 1 ? 'localidad' : 'localidades'}
-              </span>
+            {/* Perforación de corte y stub inferior */}
+            <div className="p-3 bg-[#FAFAFA] flex items-center justify-between font-mono text-xs text-[#0F2342]">
+              <div className="flex items-center gap-2">
+                <div className="font-display font-black text-sm uppercase">
+                  {tourDate.dayMonth}
+                </div>
+                <div className="text-[10px] text-[#64748B]">
+                  {tourDate.year} {form.hora ? `• ${formatHora12(form.hora)}` : ''}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#F5B800]" />
+                <span className="text-[10px] uppercase tracking-wider font-bold">
+                  {localidades.length > 0 ? `${localidades.length} LOCALIDADES` : '0 LOCALIDADES'}
+                </span>
+              </div>
             </div>
-            <p className="text-amber-800 text-[11px] leading-relaxed">
-              Los cambios en el título, categoría, fecha, lugar, precio y portada se reflejan de inmediato.
-            </p>
+          </article>
+
+          {/* Resumen tipográfico editorial */}
+          <div className="p-3 border border-[#E2E8F0] rounded-[2px] bg-white text-xs font-mono text-[#64748B] space-y-1">
+            <div className="flex justify-between text-[10px] uppercase">
+              <span>Coordenadas GPS</span>
+              <span className="text-[#0F2342]">{form.latitud.toFixed(4)}, {form.longitud.toFixed(4)}</span>
+            </div>
+            <div className="flex justify-between text-[10px] uppercase border-t border-[#F1F5F9] pt-1">
+              <span>Fecha Límite</span>
+              <span className="text-[#0F2342]">{form.fecha ? formatFecha(form.fecha) : 'Por definir'}</span>
+            </div>
           </div>
         </div>
 
         {/* COLUMNA DERECHA: Pasos del Formulario */}
-        <div className="lg:col-span-7 xl:col-span-7 bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-sm">
+        <div className="lg:col-span-7 xl:col-span-7 bg-white rounded-[2px] border border-[#E2E8F0] p-6 sm:p-7 shadow-xs">
         {/* PASO 1: Información Básica */}
         {currentStep === 1 && (
           <div className="space-y-5 animate-in fade-in duration-200">
@@ -798,7 +792,7 @@ export default function CreateEventWizard({
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 font-mono">
                   Nombre del Evento *
                 </label>
                 <input
@@ -806,20 +800,20 @@ export default function CreateEventWizard({
                   value={form.titulo}
                   onChange={(e) => updateForm('titulo', e.target.value)}
                   placeholder="Ej: Festival Internacional de Música de Cartagena"
-                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
+                  className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-white outline-none focus:border-[#F5B800] focus:ring-2 focus:ring-[#F5B800]/25 transition-all"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 font-mono">
                     Categoría *
                   </label>
                   <select
                     value={form.categoriaId}
                     onChange={(e) => updateForm('categoriaId', e.target.value)}
-                    className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
+                    className="w-full text-xs font-semibold px-4 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-white outline-none focus:border-[#F5B800] focus:ring-2 focus:ring-[#F5B800]/25 transition-all cursor-pointer"
                   >
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
@@ -844,7 +838,7 @@ export default function CreateEventWizard({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 font-mono">
                     Hora de Inicio *
                   </label>
                   <input
@@ -853,7 +847,7 @@ export default function CreateEventWizard({
                     value={form.hora}
                     onChange={(e) => updateForm('hora', e.target.value)}
                     step="60"
-                    className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
+                    className="w-full text-xs font-semibold px-3 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-white text-slate-800 outline-none focus:border-[#F5B800] focus:ring-2 focus:ring-[#F5B800]/25 transition-all cursor-pointer"
                     style={{ colorScheme: 'light' }}
                     required
                   />
@@ -861,7 +855,7 @@ export default function CreateEventWizard({
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 font-mono">
                   Descripción del Evento *
                 </label>
                 <textarea
@@ -869,7 +863,7 @@ export default function CreateEventWizard({
                   value={form.descripcion}
                   onChange={(e) => updateForm('descripcion', e.target.value)}
                   placeholder="Detalla los artistas participantes, la agenda cultural, recomendaciones de acceso y requisitos de ingreso."
-                  className="w-full text-xs font-medium px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all resize-none leading-relaxed"
+                  className="w-full text-xs font-medium px-4 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-white outline-none focus:border-[#F5B800] focus:ring-2 focus:ring-[#F5B800]/25 transition-all resize-none leading-relaxed"
                   required
                 />
               </div>
@@ -887,9 +881,9 @@ export default function CreateEventWizard({
               
             </div>
 
-            {/* Campo Manual: Nombre del Lugar (Requerimiento 4) */}
+            {/* Campo Manual: Nombre del Lugar */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 font-mono">
                 Nombre del Lugar *
               </label>
               <input
@@ -897,16 +891,13 @@ export default function CreateEventWizard({
                 value={form.lugar}
                 onChange={(e) => updateForm('lugar', e.target.value)}
                 placeholder="Ej: Plaza de la Aduana, Centro Histórico / Teatro Adolfo Mejía"
-                className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
+                className="w-full text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-white outline-none focus:border-[#F5B800] focus:ring-2 focus:ring-[#F5B800]/25 transition-all"
                 required
               />
-              
             </div>
 
-            
-
             {/* Contenedor del Mapa Leaflet */}
-            <div className="h-80 w-full rounded-2xl overflow-hidden border-2 border-slate-200 relative shadow-inner z-0">
+            <div className="h-80 w-full rounded-[2px] overflow-hidden border border-[#E2E8F0] relative shadow-inner z-0">
               <MapContainer
                 center={[form.latitud, form.longitud]}
                 zoom={14}
@@ -933,36 +924,38 @@ export default function CreateEventWizard({
         {/* PASO 3: Localidades */}
         {currentStep === 3 && (
           <div className="space-y-5 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
               <div>
-                <h3 className="text-base font-black text-[#0B1B3D] uppercase tracking-wider">
-                  3. Localidades y Aforos
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#64748B] block mb-0.5">
+                  Boletaje y Capacidad
+                </span>
+                <h3 className="text-base font-black text-[#0F2342] uppercase tracking-wider font-display">
+                  03. Localidades y Aforos
                 </h3>
-                
               </div>
               <button
                 type="button"
                 onClick={handleAddLocalidad}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[2px] bg-[#0F2342] hover:bg-[#1B365D] text-white hover:text-[#F5B800] font-mono text-xs font-bold uppercase tracking-wider shadow-xs transition-all cursor-pointer"
               >
-                <FiPlus size={13} />
+                <FiPlus size={13} className="text-[#F5B800]" />
                 <span>Agregar Zona</span>
               </button>
             </div>
 
             <div className="space-y-3">
               {localidades.length === 0 && (
-                <p className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-xs font-medium text-slate-500">
-                  No hay localidades preconfiguradas. Agrega únicamente las zonas que quieras ofrecer.
+                <p className="rounded-[2px] border border-dashed border-[#CBD5E1] bg-[#FAFAFA] px-4 py-8 text-center text-xs font-mono text-[#64748B]">
+                  No hay localidades preconfiguradas. Agrega únicamente las zonas que quieras ofrecer en cartelera.
                 </p>
               )}
               {localidades.map((loc, idx) => (
                 <div
                   key={idx}
-                  className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-3"
+                  className="p-4 bg-[#FAFAFA] border border-[#E2E8F0] rounded-[2px] flex flex-col sm:flex-row items-start sm:items-center gap-3"
                 >
                   <div className="flex-1 w-full sm:w-auto">
-                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                    <label className="block text-[10px] font-bold uppercase font-mono text-slate-500 mb-1">
                       Nombre de la Localidad
                     </label>
                     <input
@@ -970,12 +963,12 @@ export default function CreateEventWizard({
                       value={loc.nombre}
                       onChange={(e) => handleUpdateLocalidad(idx, 'nombre', e.target.value)}
                       placeholder="Ej: General / VIP / Balcón"
-                      className="w-full text-xs font-semibold px-3 py-2 rounded-lg border border-slate-200 bg-white outline-none focus:border-brand"
+                      className="w-full text-xs font-semibold px-3 py-2 rounded-[2px] border border-[#E2E8F0] bg-white outline-none focus:border-[#F5B800] focus:ring-2 focus:ring-[#F5B800]/25"
                     />
                   </div>
 
                   <div className="w-full sm:w-36">
-                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                    <label className="block text-[10px] font-bold uppercase font-mono text-slate-500 mb-1">
                       Precio (COP)
                     </label>
                     <input
@@ -985,12 +978,12 @@ export default function CreateEventWizard({
                       value={loc.precio}
                       onChange={(e) => handleUpdateLocalidad(idx, 'precio', e.target.value)}
                       placeholder="50000"
-                      className="w-full text-xs font-semibold px-3 py-2 rounded-lg border border-slate-200 bg-white outline-none focus:border-brand"
+                      className="w-full text-xs font-semibold px-3 py-2 rounded-[2px] border border-[#E2E8F0] bg-white outline-none focus:border-[#F5B800] focus:ring-2 focus:ring-[#F5B800]/25 text-[#0F2342] font-bold"
                     />
                   </div>
 
                   <div className="w-full sm:w-28">
-                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                    <label className="block text-[10px] font-bold uppercase font-mono text-slate-500 mb-1">
                       Capacidad
                     </label>
                     <input
@@ -999,7 +992,7 @@ export default function CreateEventWizard({
                       value={loc.capacidad}
                       onChange={(e) => handleUpdateLocalidad(idx, 'capacidad', e.target.value)}
                       placeholder="100"
-                      className="w-full text-xs font-semibold px-3 py-2 rounded-lg border border-slate-200 bg-white outline-none focus:border-brand"
+                      className="w-full text-xs font-semibold px-3 py-2 rounded-[2px] border border-[#E2E8F0] bg-white outline-none focus:border-[#F5B800] focus:ring-2 focus:ring-[#F5B800]/25"
                     />
                   </div>
 
@@ -1008,7 +1001,7 @@ export default function CreateEventWizard({
                       type="button"
                       onClick={() => handleRemoveLocalidad(idx)}
                       title="Eliminar localidad"
-                      className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-[2px] transition-colors cursor-pointer"
                     >
                       <FiTrash2 size={16} />
                     </button>
@@ -1023,38 +1016,40 @@ export default function CreateEventWizard({
         {currentStep === 4 && (
           <div className="space-y-5 animate-in fade-in duration-200">
             <div>
-              <h3 className="text-base font-black text-[#0B1B3D] uppercase tracking-wider">
-                4. Imagen Oficial del Evento
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#64748B] block mb-0.5">
+                Cartel Oficial
+              </span>
+              <h3 className="text-base font-black text-[#0F2342] uppercase tracking-wider font-display">
+                04. Imagen Oficial del Evento
               </h3>
-              
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
               <div>
-                <label className="border-2 border-dashed border-slate-300 hover:border-brand rounded-3xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-slate-50/50 hover:bg-slate-50 block">
+                <label className="border-2 border-dashed border-[#CBD5E1] hover:border-[#F5B800] rounded-[2px] p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-[#FAFAFA] hover:bg-[#FFFFFF] block">
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handlePhotoSelect}
                     className="hidden"
                   />
-                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
-                    <FiUpload size={22} />
+                  <div className="w-12 h-12 rounded-[2px] bg-amber-50 text-amber-600 flex items-center justify-center mb-3 border border-amber-200">
+                    <FiUpload size={22} className="text-[#F5B800]" />
                   </div>
-                  <h4 className="font-bold text-xs text-slate-900 mb-1">
+                  <h4 className="font-bold text-xs text-[#0F2342] mb-1 font-mono uppercase tracking-wider">
                     Seleccionar imagen de portada
                   </h4>
-                  <p className="text-[11px] text-slate-400 max-w-xs">
+                  <p className="text-[11px] text-[#64748B] max-w-xs font-mono">
                     Formatos JPG, PNG o WebP. Recomendado relación 16:9 de alta resolución.
                   </p>
                 </label>
               </div>
 
               <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#64748B] block mb-2 font-mono">
                   Vista Previa de la Portada
                 </span>
-                <div className="aspect-[16/9] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center shadow-xs">
+                <div className="aspect-[16/9] rounded-[2px] overflow-hidden border border-[#E2E8F0] bg-slate-100 flex items-center justify-center shadow-xs">
                   {fotoPreview ? (
                     <img
                       src={fotoPreview}
@@ -1062,8 +1057,8 @@ export default function CreateEventWizard({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="text-center p-6 text-slate-400 text-xs font-semibold">
-                      <FiImage size={32} className="mx-auto mb-2 opacity-50" />
+                    <div className="text-center p-6 text-slate-400 text-xs font-mono">
+                      <FiImage size={32} className="mx-auto mb-2 opacity-50 text-amber-500" />
                       <span>Sin imagen seleccionada (se utilizará la portada cultural por defecto)</span>
                     </div>
                   )}
@@ -1073,81 +1068,126 @@ export default function CreateEventWizard({
           </div>
         )}
 
-        {/* PASO 5: Revisión y Confirmación */}
+        {/* PASO 5: Revisión y Confirmación Editorial */}
         {currentStep === 5 && (
-          <div className="space-y-5 animate-in fade-in duration-200">
+          <div className="space-y-6 animate-in fade-in duration-200">
             <div>
-              <h3 className="text-base font-black text-[#0B1B3D] uppercase tracking-wider">
-                5. Revisión Final de la Información
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
+                Ficha Técnica de Producción
+              </span>
+              <h3 className="font-display font-black text-lg text-[#0F2342] uppercase tracking-tight">
+                05. Verificación de Cartelera
               </h3>
-              
             </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4 text-xs">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <span className="text-[10px] font-black uppercase text-brand tracking-wider">
-                    {selectedCategoryName}
-                  </span>
-                  <h4 className="text-lg font-bold text-slate-900 mt-0.5">{form.titulo}</h4>
-                </div>
-                {fotoPreview && (
-                  <img
-                    src={fotoPreview}
-                    alt="Miniatura"
-                    className="w-16 h-12 rounded-lg object-cover border border-slate-200 shrink-0"
-                  />
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-700">
-                <p className="flex items-center gap-2">
-                  <FiCalendar className="text-brand shrink-0" size={14} />
-                  <span>
-                    <strong>Fecha y hora:</strong> {formatFechaHora12(form.fecha, form.hora)}
-                  </span>
-                </p>
-                <p className="flex items-center gap-2">
-                  <FiMapPin className="text-rose-500 shrink-0" size={14} />
-                  <span>
-                    <strong>Lugar:</strong> {form.lugar}
-                  </span>
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-slate-200">
-                <p className="text-slate-600 line-clamp-2 italic">"{form.descripcion}"</p>
-              </div>
-
-              <div className="pt-3 border-t border-slate-200">
-                <span className="font-bold text-slate-900 block mb-2">
-                  Localidades Configuradas ({localidades.length}):
-                </span>
-                {localidades.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {localidades.map((loc, idx) => (
-                      <span
-                        key={idx}
-                        className="px-3 py-1 bg-white border border-slate-200 rounded-lg font-medium text-slate-700"
-                      >
-                        {loc.nombre}: <strong>{formatPrice(loc.precio)}</strong> ({loc.capacidad} cupos)
+            {/* Boleto Coleccionable Completo */}
+            <article className="rounded-[2px] border border-[#E2E8F0] bg-white overflow-hidden shadow-xs">
+              <div className="flex flex-col sm:flex-row items-stretch border-b border-[#E2E8F0]">
+                <div className="w-full sm:w-[130px] h-40 sm:h-[140px] shrink-0 bg-[#0F2342] overflow-hidden border-b sm:border-b-0 sm:border-r border-[#E2E8F0]">
+                  {fotoPreview ? (
+                    <img
+                      src={fotoPreview}
+                      alt={form.titulo}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-white p-2">
+                      <span className="font-mono text-[9px] text-[#F5B800] uppercase tracking-widest">PASS</span>
+                      <span className="font-display font-black text-2xl mt-0.5">
+                        {(form.titulo || 'EV').slice(0, 2).toUpperCase()}
                       </span>
-                    ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] uppercase text-[#64748B]">
+                      {(form.lugar || 'CARTAGENA').toUpperCase()} • {selectedCategoryName.toUpperCase()}
+                    </span>
+                    <span className="font-mono text-[9px] text-[#94A3B8]">LISTO PARA REVISIÓN</span>
                   </div>
-                ) : (
-                  <p className="text-slate-500">Aún no se han agregado localidades.</p>
-                )}
+
+                  <h4 className="font-display font-black text-lg text-[#0F2342] uppercase tracking-tight line-clamp-2 my-1">
+                    {form.titulo || 'Nombre de la producción'}
+                  </h4>
+
+                  <div className="flex items-center justify-between text-xs font-mono text-[#64748B] pt-2 border-t border-[#F1F5F9]">
+                    <span>{minPrice !== null ? `Desde ${formatPrice(minPrice)}` : 'Precio a definir'}</span>
+                    <span>{totalCapacidad} cupos totales</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-[#FAFAFA] flex items-center justify-between font-mono text-xs text-[#0F2342]">
+                <div className="flex items-center gap-2">
+                  <span className="font-display font-black text-sm uppercase">{tourDate.dayMonth}</span>
+                  <span className="text-[10px] text-[#64748B]">{tourDate.year} {form.hora ? `• ${formatHora12(form.hora)}` : ''}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#F5B800]" />
+                  <span className="text-[10px] uppercase font-bold">{localidades.length} ZONAS CONFIGURADAS</span>
+                </div>
+              </div>
+            </article>
+
+            {/* Resumen de producción dividido por filetes de 1px */}
+            <div className="border border-[#E2E8F0] rounded-[2px] bg-white p-4 space-y-3 font-mono text-xs">
+              <div className="flex justify-between items-center pb-2 border-b border-[#E2E8F0]">
+                <span className="text-[#64748B] uppercase text-[10px]">Categoría Oficial</span>
+                <span className="text-[#0F2342] font-bold">{selectedCategoryName}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-[#E2E8F0]">
+                <span className="text-[#64748B] uppercase text-[10px]">Lugar & Recinto</span>
+                <span className="text-[#0F2342] font-semibold">{form.lugar}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-[#E2E8F0]">
+                <span className="text-[#64748B] uppercase text-[10px]">Coordenadas GPS</span>
+                <span className="text-[#0F2342]">{form.latitud.toFixed(4)}, {form.longitud.toFixed(4)}</span>
+              </div>
+              {form.descripcion && (
+                <div className="pt-1">
+                  <span className="text-[#64748B] uppercase text-[10px] block mb-1">Sinopsis</span>
+                  <p className="text-[#334155] font-sans text-xs italic leading-relaxed">"{form.descripcion}"</p>
+                </div>
+              )}
+            </div>
+
+            {/* Tabla Limpia de Localidades */}
+            <div className="space-y-2">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#0F2342] font-bold block">
+                Zonas de Boletaje y Capacidad ({localidades.length})
+              </span>
+              <div className="border border-[#E2E8F0] rounded-[2px] overflow-hidden">
+                <table className="w-full text-left font-mono text-xs">
+                  <thead className="bg-[#FAFAFA] border-b border-[#E2E8F0] text-[10px] uppercase text-[#64748B]">
+                    <tr>
+                      <th className="py-2 px-3">Localidad</th>
+                      <th className="py-2 px-3">Precio Unitario</th>
+                      <th className="py-2 px-3 text-right">Cupos / Capacidad</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E2E8F0] bg-white">
+                    {localidades.map((loc, idx) => (
+                      <tr key={idx}>
+                        <td className="py-2 px-3 font-semibold text-[#0F2342]">{loc.nombre}</td>
+                        <td className="py-2 px-3 font-bold text-[#0F2342]">{formatPrice(loc.precio)}</td>
+                        <td className="py-2 px-3 text-right text-[#64748B]">{loc.capacidad} cupos</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
         )}
 
         {/* 5. Botones de Navegación del Wizard */}
-        <div className="mt-8 pt-5 border-t border-slate-200 flex items-center justify-between">
+        <div className="mt-8 pt-5 border-t border-[#E2E8F0] flex items-center justify-between">
           <button
             type="button"
             onClick={() => (currentStep === 1 ? handleSafeBack() : setCurrentStep((s) => s - 1))}
-            className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
+            className="px-5 py-2.5 rounded-[2px] border border-[#E2E8F0] text-[#64748B] hover:text-[#0F2342] hover:bg-slate-50 font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
           >
             {currentStep === 1 ? 'Cancelar' : 'Atrás'}
           </button>
@@ -1156,7 +1196,7 @@ export default function CreateEventWizard({
             <button
               type="button"
               onClick={handleNext}
-              className="px-6 py-2.5 rounded-xl bg-[#0B1B3D] hover:bg-slate-900 text-amber-300 text-xs font-bold uppercase tracking-wider shadow-xs transition-all cursor-pointer active:scale-95"
+              className="px-6 py-2.5 rounded-[2px] bg-[#0F2342] hover:bg-[#1B365D] text-white hover:text-[#F5B800] font-mono text-xs font-bold uppercase tracking-wider shadow-xs transition-all cursor-pointer"
             >
               Siguiente Paso →
             </button>
@@ -1165,24 +1205,16 @@ export default function CreateEventWizard({
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="px-7 py-3 rounded-xl bg-[#0B1B3D] hover:bg-slate-900 text-amber-300 text-xs font-bold uppercase tracking-wider shadow-xs transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-95"
+              className="px-7 py-3 rounded-[2px] bg-[#0F2342] hover:bg-[#1B365D] text-white hover:text-[#F5B800] font-mono text-xs font-bold uppercase tracking-wider shadow-xs transition-all disabled:opacity-60 flex items-center gap-2 cursor-pointer active:scale-98"
             >
               {isSubmitting && (
-                <span className="w-3.5 h-3.5 border-2 border-amber-300 border-t-transparent rounded-full animate-spin" />
+                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               )}
-              <span>
-                {initialEvent
-                  ? canSendEvents && !orgSuspended
-                    ? 'Guardar cambios y enviar a revisión'
-                    : 'Guardar cambios'
-                  : canSendEvents && !orgSuspended
-                    ? 'Crear y enviar a revisión'
-                    : 'Crear borrador'}
-              </span>
+              <span>LANZAR EVENTO A CARTELERA</span>
             </button>
           )}
         </div>
-      </div>
+        </div>
       </div>
     </div>
   );

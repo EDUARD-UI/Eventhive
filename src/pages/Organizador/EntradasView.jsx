@@ -1,27 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  FiCreditCard,
-  FiDollarSign,
-  FiSearch,
-  FiCalendar,
-} from 'react-icons/fi';
-import Badge from '../../components/Shared/Badge.jsx';
+import { FiSearch, FiCalendar } from 'react-icons/fi';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import { organizerService } from '../../services/organizerService.js';
 import { formatPrice, formatFecha } from '../../utils/formatters.js';
 
 const PAGE_SIZE = 8;
 
-const toneMap = {
-  PUBLICADO: 'active',
-  FINALIZADO: 'neutral',
-  BORRADOR: 'warning',
-  CANCELADO: 'danger',
-  SUSPENDIDO: 'danger',
-  PENDIENTE_REVISION: 'warning',
-  EN_CORRECCION: 'warning',
-  RECHAZADO: 'danger',
-};
+function getStatusIndicator(status) {
+  const st = String(status || '').toUpperCase();
+  if (st === 'PUBLICADO') return { label: 'A LA VENTA', dotColor: '#F5B800' };
+  if (st === 'BORRADOR' || st === 'EN_CORRECCION') return { label: 'BORRADOR', dotColor: '#64748B' };
+  if (st === 'PENDIENTE_REVISION') return { label: 'EN REVISIÓN', dotColor: '#F5B800' };
+  if (st === 'FINALIZADO' || st === 'CANCELADO') return { label: 'ARCHIVADO', dotColor: '#94A3B8' };
+  return { label: 'ACTIVO', dotColor: '#F5B800' };
+}
 
 export default function EntradasView() {
   const [loading, setLoading] = useState(true);
@@ -133,184 +125,176 @@ export default function EntradasView() {
   }, [filteredEventos, currentPage]);
 
   return (
-    <div className="space-y-6">
-      {/* 1. Header Editorial */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-700 bg-amber-100/70 border border-amber-200/80 px-2 py-0.5 rounded-md">
-              Ticketing & Recaudo Oficial
-            </span>
-          </div>
-          <h2 className="font-display text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1 flex items-center gap-2">
-            <FiCreditCard className="w-5 h-5 text-amber-500" />
-            <span>Gestión de Entradas y Boletaje</span>
-          </h2>
-          <p className="mt-0.5 text-xs text-slate-500 max-w-xl font-medium">
-            Supervisa las ventas de boletas y los recaudos netos de tu organización sin comisiones.
-          </p>
-        </div>
+    <div className="space-y-8 select-none">
+      {/* 1. Cabecera Minimalista */}
+      <div className="border-b border-[#E2E8F0] pb-6">
+        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
+          Mesa de Producción · Cartagena
+        </span>
+        <h1 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-[#0F2342] tracking-tight uppercase leading-none">
+          Libro Contable & Taquilla
+        </h1>
+        <p className="mt-2 text-xs font-mono uppercase tracking-wider text-[#64748B]">
+          Auditoría de boletas emitidas y recaudo neto por producción sin intermediarios
+        </p>
       </div>
 
-      {/* 2. KPIs de Entradas y Ganancias Oficiales */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="p-3.5 rounded-2xl bg-amber-50 text-amber-600 shrink-0">
-              <FiCreditCard size={24} />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block truncate">
-                Total de Boletas Vendidas
-              </span>
-              <strong className="text-2xl sm:text-3xl font-black font-display text-slate-900">
+      {/* 2. Encabezado Financiero Tipográfico Dividido por Filete de 1px (Sin Cajas de Colores) */}
+      <div className="rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] p-6 sm:p-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-0 items-center">
+          {/* Cifra 1: Boletas Emitidas */}
+          <div className="md:pr-8">
+            <span className="font-mono text-xs uppercase tracking-wider text-[#64748B] block mb-2">
+              Volumen de Boletería
+            </span>
+            <div className="flex items-baseline gap-2">
+              <span className="font-mono font-black text-4xl sm:text-5xl text-[#0F2342] tracking-tight tabular-nums">
                 {estadisticas.totalBoletasVendidas.toLocaleString('es-CO')}
-              </strong>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                Acumulado en producciones publicadas
-              </p>
-            </div>
-          </div>
-          <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-xl bg-amber-100/70 text-amber-900 shrink-0">
-            Boletería
-          </span>
-        </div>
-
-        <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="p-3.5 rounded-2xl bg-emerald-50 text-emerald-600 shrink-0">
-              <FiDollarSign size={24} />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block truncate">
-                Ingresos Netos Organización
               </span>
-              <strong className="text-2xl sm:text-3xl font-black font-display text-slate-900">
-                {formatPrice(estadisticas.ingresosNetos)}
-              </strong>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                Descontando comisiones de EventHive
-              </p>
+              <span className="font-display font-bold text-lg text-[#64748B] uppercase">
+                Boletas Emitidas
+              </span>
             </div>
+            <p className="font-mono text-[11px] text-[#94A3B8] mt-1">
+              Acumulado total de tickets emitidos en producciones oficiales
+            </p>
           </div>
-          <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-xl bg-emerald-100/70 text-emerald-900 shrink-0">
-            Recaudo Neto
-          </span>
+
+          {/* Filete Separador Vertical + Cifra 2: Recaudo Neto */}
+          <div className="md:border-l md:border-[#E2E8F0] md:pl-8 border-t md:border-t-0 pt-6 md:pt-0">
+            <span className="font-mono text-xs uppercase tracking-wider text-[#64748B] block mb-2">
+              Balance Financiero
+            </span>
+            <div className="flex items-baseline gap-2">
+              <span className="font-mono font-black text-4xl sm:text-5xl text-[#0F2342] tracking-tight tabular-nums">
+                {formatPrice(estadisticas.ingresosNetos)}
+              </span>
+              <span className="font-display font-bold text-lg text-[#64748B] uppercase">
+                Recaudo Neto
+              </span>
+            </div>
+            <p className="font-mono text-[11px] text-[#94A3B8] mt-1">
+              Ingresos netos transferibles a la cuenta de la organización
+            </p>
+          </div>
         </div>
       </div>
 
       {/* 3. Filtros y Búsqueda */}
-      <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        {/* Selector de Estado */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs">
-            <span className="text-slate-400 font-medium">Estado:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-transparent font-bold text-slate-800 outline-none cursor-pointer"
-            >
-              <option value="Todos">Todos</option>
-              <option value="PUBLICADO">Publicados</option>
-              <option value="BORRADOR">Borrador</option>
-              <option value="PENDIENTE_REVISION">Pendiente de revisión</option>
-              <option value="EN_CORRECCION">En corrección</option>
-              <option value="RECHAZADO">Rechazados</option>
-              <option value="CANCELADO">Cancelados</option>
-              <option value="FINALIZADO">Finalizados</option>
-              <option value="SUSPENDIDO">Suspendidos</option>
-            </select>
-          </div>
+          <span className="font-mono text-xs uppercase text-[#64748B]">Estado:</span>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] px-3 py-1.5 font-mono text-xs uppercase text-[#0F2342] outline-none cursor-pointer focus:border-[#0F2342]"
+          >
+            <option value="Todos">Todos</option>
+            <option value="PUBLICADO">En Venta</option>
+            <option value="BORRADOR">Borrador</option>
+            <option value="PENDIENTE_REVISION">En Revisión</option>
+            <option value="FINALIZADO">Archivados</option>
+          </select>
         </div>
 
+        {/* Buscador */}
         <div className="relative w-full sm:w-72">
-          <FiSearch className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <FiSearch className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar evento por título..."
-            className="w-full pl-9 pr-4 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-amber-500/10 focus:border-amber-500 transition-all"
+            placeholder="BUSCAR POR NOMBRE..."
+            className="w-full rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] pl-8 pr-3 py-1.5 font-mono text-[11px] uppercase text-[#0F2342] placeholder:text-[#94A3B8] outline-none focus:border-[#0F2342] transition-colors"
           />
         </div>
       </div>
 
-      {/* 4. Lista Editorial de Eventos con Rendimiento de Boletaje */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-5 sm:p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
-          <div>
-            <h3 className="font-display text-base font-black text-slate-900">
-              Rendimiento de Entradas y Recaudo por Evento
-            </h3>
-            <p className="text-xs text-slate-500 font-medium">
-              Detalle consolidado de tickets emitidos y recaudos
-            </p>
-          </div>
-          <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-            {filteredEventos.length} eventos registrados
+      {/* 4. Libro Contable Editorial (Filas con Filetes de 1px, Sin Badges de Colores) */}
+      <div className="rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#E2E8F0] flex items-center justify-between">
+          <span className="font-mono text-xs uppercase tracking-wider text-[#64748B] font-bold">
+            Registro Contable por Producción
+          </span>
+          <span className="font-mono text-[11px] text-[#94A3B8]">
+            {filteredEventos.length} Producciones
           </span>
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-xs text-slate-400">
-            <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-            Cargando estadísticas de entradas...
+          <div className="p-16 text-center text-xs font-mono text-[#64748B]">
+            <div className="w-6 h-6 border-2 border-[#0F2342] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+            CONSULTANDO LIBRO CONTABLE...
           </div>
         ) : filteredEventos.length === 0 ? (
-          <div className="p-10 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl">
-            No se encontraron registros de ventas que coincidan con la búsqueda.
+          <div className="p-12 text-center text-xs font-mono text-[#64748B] bg-[#FAFAFA]">
+            NO SE ENCONTRARON REGISTROS QUE COINCIDAN CON LOS CRITERIOS.
           </div>
         ) : (
-          <div className="space-y-4">
-            {paginatedEventos.map((ev) => (
-              <div
-                key={ev.key}
-                className="p-4 sm:p-5 rounded-2xl border border-slate-200/90 hover:border-amber-300 bg-white shadow-2xs hover:shadow-xs transition-all space-y-3.5"
-              >
-                {/* Cabecera del Evento en Ticketing */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-display text-sm sm:text-base font-black text-slate-900 truncate">
+          <div className="divide-y divide-[#E2E8F0]">
+            {paginatedEventos.map((ev) => {
+              const status = getStatusIndicator(ev.estado);
+
+              return (
+                <div
+                  key={ev.key}
+                  className="p-5 sm:px-6 sm:py-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-[#F8F9FA] transition-colors"
+                >
+                  {/* Producción e Identidad */}
+                  <div className="min-w-0 space-y-1 flex-1">
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="w-1.5 h-1.5 rounded-full shrink-0"
+                        style={{ backgroundColor: status.dotColor }}
+                        aria-hidden="true"
+                      />
+                      <h4 className="font-display font-black text-base text-[#0F2342] uppercase tracking-tight truncate">
                         {ev.titulo}
                       </h4>
-                      <Badge tone={toneMap[ev.estado] || 'neutral'}>{ev.estado}</Badge>
                     </div>
-                    {ev.fecha && (
-                      <p className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
-                        <FiCalendar size={11} className="text-slate-400" />
+
+                    <div className="flex items-center gap-3 font-mono text-[11px] text-[#64748B]">
+                      {ev.fecha && (
                         <span>{formatFecha(ev.fecha)}</span>
-                      </p>
-                    )}
+                      )}
+                      <span>•</span>
+                      <span className="uppercase tracking-wider">
+                        {status.label}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-4 shrink-0">
-                    <div className="text-right">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
-                        Boletas
+                  {/* Números Tabulares Alineados a la Derecha */}
+                  <div className="flex items-center justify-between md:justify-end gap-8 shrink-0">
+                    {/* Boletas */}
+                    <div className="text-left md:text-right">
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-[#94A3B8] block">
+                        Boletas Emitidas
                       </span>
-                      <span className="text-xs font-black text-slate-900 bg-slate-100 px-2.5 py-0.5 rounded-lg inline-block">
-                        {ev.boletasVendidas.toLocaleString('es-CO')} boletas
+                      <span className="font-mono text-base font-bold text-[#0F2342] tabular-nums">
+                        {ev.boletasVendidas.toLocaleString('es-CO')}
                       </span>
                     </div>
 
-                    <div className="text-right border-l border-slate-100 pl-4">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                    {/* Recaudo */}
+                    <div className="text-right min-w-[140px]">
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-[#94A3B8] block">
                         Recaudo Neto
                       </span>
-                      <span className="text-sm font-black font-display text-emerald-700">
+                      <span className="font-mono text-lg font-black text-[#0F2342] tabular-nums">
                         {formatPrice(ev.ingresosGenerados)}
                       </span>
                     </div>
                   </div>
                 </div>
-
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {filteredEventos.length > PAGE_SIZE && (
-          <div className="pt-3 border-t border-slate-100 flex justify-center">
+          <div className="p-4 border-t border-[#E2E8F0] flex justify-center bg-[#FFFFFF]">
             <Pagination
               currentPage={currentPage}
               totalItems={filteredEventos.length}

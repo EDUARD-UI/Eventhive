@@ -1,70 +1,52 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  FiAward,
-  FiZap,
-  FiCheckCircle,
-  FiStar,
-  FiDollarSign,
-  FiAlertCircle,
+  FiCheck,
   FiMapPin,
-  FiArrowRight,
-  FiLayers,
-  FiClock,
-  FiCompass,
-  FiShare2,
-  FiArrowLeft,
-  FiInfo,
+  FiAlertCircle,
 } from 'react-icons/fi';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import {
-  showSuccessAlert,
   showErrorAlert,
   showWarningAlert,
-  showInfoAlert,
-  showConfirmAlert,
 } from '../../utils/alertUtils.js';
 import { organizerService } from '../../services/organizerService.js';
 import { promotionPlanService } from '../../services/promotionPlanService.js';
-import StatCard from '../../components/Shared/StatCard.jsx';
-import Badge from '../../components/Shared/Badge.jsx';
-import PlanCard from '../../components/Shared/PlanCard.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
-import { formatPrice, formatFecha, formatHora12 } from '../../utils/formatters.js';
+import { formatPrice, formatFecha } from '../../utils/formatters.js';
 
 const EVENTOS_POR_PAGINA = 6;
+const CARTAGENA_DEFAULT = [10.3910, -75.4794];
 
-// Pin temático ámbar para el mapa de posicionamiento cultural
+// Pin temático ámbar para el mapa
 const positionPinIcon = () =>
   L.divIcon({
     className: 'custom-posicionamiento-pin',
     html: `
-      <div style="position: relative; width: 34px; height: 42px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 4px 10px rgba(245,158,11,0.6));">
-        <svg viewBox="0 0 34 42" width="34" height="42" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M17 0C7.61 0 0 7.61 0 17C0 27.5 14.5 40.5 16.1 41.9C16.6 42.3 17.4 42.3 17.9 41.9C19.5 40.5 34 27.5 34 17C34 7.61 26.39 0 17 0Z" fill="#F59E0B" stroke="#0B1B3D" stroke-width="2"/>
-          <circle cx="17" cy="17" r="5" fill="#0B1B3D"/>
-          <circle cx="17" cy="17" r="2.5" fill="#FCD34D"/>
+      <div style="position: relative; width: 32px; height: 40px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 4px 8px rgba(15,35,66,0.3));">
+        <svg viewBox="0 0 34 42" width="32" height="40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17 0C7.61 0 0 7.61 0 17C0 27.5 14.5 40.5 16.1 41.9C16.6 42.3 17.4 42.3 17.9 41.9C19.5 40.5 34 27.5 34 17C34 7.61 26.39 0 17 0Z" fill="#F5B800" stroke="#0F2342" stroke-width="2"/>
+          <circle cx="17" cy="17" r="5" fill="#0F2342"/>
         </svg>
       </div>
     `,
-    iconSize: [34, 42],
-    iconAnchor: [17, 42],
-    popupAnchor: [0, -42],
+    iconSize: [32, 40],
+    iconAnchor: [16, 40],
   });
 
 function MapReloader({ center }) {
   const map = useMap();
   useEffect(() => {
     if (center && !isNaN(center[0]) && !isNaN(center[1])) {
-      map.setView(center, 15);
+      map.setView(center, 14);
       map.invalidateSize();
     }
   }, [center, map]);
   return null;
 }
 
-export default function PosicionamientoView({ onPromotionSuccess }) {
+export default function PosicionamientoView() {
   const navigate = useNavigate();
   const [allEventos, setAllEventos] = useState([]);
   const [loadingEventos, setLoadingEventos] = useState(true);
@@ -75,7 +57,7 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [procesando, setProcesando] = useState(false);
 
-  // Cargar planes de promoción reales desde el backend (GET /api/promociones/planes)
+  // Cargar planes reales desde el backend
   useEffect(() => {
     let isMounted = true;
     setLoadingPlanes(true);
@@ -101,7 +83,6 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
     };
   }, []);
 
-  // Cargar todos los eventos del organizador
   const loadEventos = async () => {
     setLoadingEventos(true);
     try {
@@ -109,7 +90,6 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
       setAllEventos(items || []);
       setCurrentPage(1);
 
-      // Eventos elegibles: PUBLICADO y que NO tengan promoción activa
       const elegibles = (items || []).filter(
         (ev) =>
           ev.estado === 'PUBLICADO' &&
@@ -118,11 +98,13 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
           !ev.urlImagenDestacado
       );
 
-      if (elegibles.length > 0 && !selectedEventoId) {
+      if (elegibles.length > 0) {
         setSelectedEventoId(String(elegibles[0].id));
+      } else if (items && items.length > 0) {
+        setSelectedEventoId(String(items[0].id));
       }
     } catch (err) {
-      console.warn('Error cargando eventos:', err);
+      console.warn('Error al cargar eventos del organizador:', err);
       setAllEventos([]);
     } finally {
       setLoadingEventos(false);
@@ -133,75 +115,58 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
     loadEventos();
   }, []);
 
-  // Eventos estrictamente PUBLICADOS
+  // Eventos en estado PUBLICADO
   const eventosPublicados = useMemo(() => {
     return allEventos.filter((ev) => ev.estado === 'PUBLICADO');
   }, [allEventos]);
 
-  // Eventos elegibles para contratar promoción (PUBLICADO, no promocionado)
+  // Eventos elegibles sin promoción
   const eventosElegibles = useMemo(() => {
     return eventosPublicados.filter(
-      (ev) =>
-        !ev.promocionado &&
-        !ev.destacado &&
-        !ev.urlImagenDestacado &&
-        !ev.url_imagen_destacado &&
-        !ev.imagenPromocional
+      (ev) => !ev.promocionado && !ev.destacado && !ev.urlImagenDestacado
     );
   }, [eventosPublicados]);
 
-  // Eventos actualmente promocionados
+  // Eventos con promoción activa
   const eventosConPromocion = useMemo(() => {
     return eventosPublicados.filter(
-      (ev) =>
-        Boolean(ev.promocionado) ||
-        Boolean(ev.destacado) ||
-        Boolean(ev.urlImagenDestacado) ||
-        Boolean(ev.url_imagen_destacado) ||
-        Boolean(ev.imagenPromocional)
+      (ev) => ev.promocionado || ev.destacado || ev.urlImagenDestacado
     );
   }, [eventosPublicados]);
 
-  const selectedEvento = eventosPublicados.find(
-    (ev) => String(ev.id) === String(selectedEventoId)
-  );
-
   const eventosPublicadosPaginados = useMemo(() => {
-    const start = (currentPage - 1) * EVENTOS_POR_PAGINA;
-    return eventosPublicados.slice(start, start + EVENTOS_POR_PAGINA);
+    const startIndex = (currentPage - 1) * EVENTOS_POR_PAGINA;
+    return eventosPublicados.slice(startIndex, startIndex + EVENTOS_POR_PAGINA);
   }, [eventosPublicados, currentPage]);
 
-  // Coordenadas válidas del evento seleccionado
+  const selectedEvento = useMemo(() => {
+    return allEventos.find((ev) => String(ev.id) === String(selectedEventoId)) || null;
+  }, [allEventos, selectedEventoId]);
+
+  // Coordenadas con validación numérica estricta y fallback
   const eventCoordinates = useMemo(() => {
     if (!selectedEvento) return null;
-    const lat = Number(selectedEvento.latitud);
-    const lng = Number(selectedEvento.longitud);
+    const lat = Number(selectedEvento.latitud ?? selectedEvento.latitude);
+    const lng = Number(selectedEvento.longitud ?? selectedEvento.longitude);
     if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
       return [lat, lng];
     }
     return null;
   }, [selectedEvento]);
 
-  // Selección directa del plan de promoción y redirección inmediata a PasarelaPagoPage
+  const mapCenter = eventCoordinates || CARTAGENA_DEFAULT;
+
   const handleContratarDirecto = async (plan) => {
-    if (!selectedEventoId) {
-      showWarningAlert({
-        title: 'Selecciona una producción',
-        text: 'Por favor selecciona el evento publicado que deseas promocionar.',
-        badge: 'Evento Requerido',
-      });
-      return;
-    }
+    if (procesando) return;
 
     if (!selectedEvento) {
-      showWarningAlert({
-        title: 'Evento no encontrado',
-        text: 'El evento seleccionado no está disponible.',
+      await showWarningAlert({
+        title: 'Selecciona una producción',
+        text: 'Debes seleccionar primero un evento publicado para aplicar el plan de posicionamiento.',
       });
       return;
     }
 
-    // Verificar si ya cuenta con promoción activa
     const isAlreadyPromoted = Boolean(
       selectedEvento.promocionado ||
       selectedEvento.destacado ||
@@ -214,7 +179,6 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
       showWarningAlert({
         title: 'Producción ya promocionada',
         text: `"${selectedEvento.titulo}" ya cuenta con un plan de posicionamiento activo en la cartelera principal.`,
-        badge: 'Promoción Vigente',
       });
       return;
     }
@@ -223,7 +187,6 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
     setProcesando(true);
 
     try {
-      // 1. Registrar la orden pendiente en el servidor
       const inicioRes = await promotionPlanService.iniciarPagoPosicionamiento(
         selectedEvento.id,
         plan.id
@@ -235,7 +198,6 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
         throw new Error('No se pudo generar la orden de contratación en el servidor.');
       }
 
-      // 2. Redirigir directamente a la pasarela de pagos existente
       navigate('/pago', {
         state: {
           tipoOperacion: 'PROMOCION_EVENTO',
@@ -268,199 +230,220 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
     }
   };
 
+  // Normalizar los 3 planes editoriales requeridos
+  const displayPlanes = useMemo(() => {
+    if (planes.length >= 3) return planes.slice(0, 3);
+    const fallbacks = [
+      {
+        id: 'plan-impulso',
+        nombre: 'Plan Impulso',
+        precio: 350000,
+        detallePublicidad: 'Presencia en carrusel de novedades, etiqueta destacada en listados generales, notificación semanal a asistentes.',
+        beneficios: [
+          'Presencia en carrusel de novedades',
+          'Etiqueta destacada en listados generales',
+          'Notificación semanal a asistentes afines',
+        ],
+      },
+      {
+        id: 'plan-amplificado',
+        nombre: 'Plan Amplificado',
+        precio: 650000,
+        detallePublicidad: 'Ubicación preferencial en cartelera principal, banner rotativo en mapa de calor, mención en redes oficiales.',
+        beneficios: [
+          'Ubicación preferencial en cartelera principal',
+          'Banner rotativo en mapa de calor cultural',
+          'Mención oficial en radar de experiencias',
+          'Soporte prioritario de boletaje',
+        ],
+      },
+      {
+        id: 'plan-total',
+        nombre: 'Plan Exposición Total',
+        precio: 1000000,
+        detallePublicidad: 'Máxima visibilidad en portada completa, push notifications geolocalizadas, apertura destacada en cartelera.',
+        beneficios: [
+          'Máxima visibilidad en portada y cabecera completa',
+          'Push notifications geolocalizadas en Cartagena',
+          'Apertura destacada en cartelera y mapa en vivo',
+          'Reporte semanal de conversión y taquilla',
+        ],
+      },
+    ];
+
+    if (!planes.length) return fallbacks;
+    return fallbacks.map((fb, idx) => ({ ...fb, ...(planes[idx] || {}) }));
+  }, [planes]);
+
   return (
-    <div className="space-y-6">
-      {/* 1. Header Editorial Backstage */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-8 select-none">
+      {/* 1. Cabecera Minimalista */}
+      <div className="border-b border-[#E2E8F0] pb-6 space-y-2">
+        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block">
+          Consola de Amplificación · Cartagena
+        </span>
+        <h1 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-[#0F2342] tracking-tight uppercase leading-none">
+          Posicionamiento
+        </h1>
+        <p className="text-xs font-mono uppercase tracking-wider text-[#64748B] pt-1">
+          Amplifica el alcance de tus producciones en la cartelera principal y el radar de la ciudad
+        </p>
+      </div>
+
+      {/* 2. Barra de Resumen en Línea (Reemplazo de tarjetas KPI) */}
+      <div className="rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 divide-y sm:divide-y-0 sm:divide-x divide-[#E2E8F0]">
+          <div className="w-full sm:w-1/3 sm:px-4 first:pl-0">
+            <span className="font-mono font-black text-2xl text-[#0F2342] tabular-nums">
+              {eventosElegibles.length}
+            </span>
+            <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B] ml-2 font-bold">
+              Producciones Elegibles
+            </span>
+          </div>
+
+          <div className="w-full sm:w-1/3 sm:px-4 pt-3 sm:pt-0">
+            <span className="font-mono font-black text-2xl text-[#0F2342] tabular-nums">
+              {eventosConPromocion.length}
+            </span>
+            <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B] ml-2 font-bold">
+              Promoción Activa
+            </span>
+          </div>
+
+          <div className="w-full sm:w-1/3 sm:px-4 pt-3 sm:pt-0">
+            <span className="font-mono font-black text-2xl text-[#0F2342] tabular-nums">
+              {displayPlanes.length}
+            </span>
+            <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B] ml-2 font-bold">
+              Planes Disponibles
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. PASO 01: Selección de Producción + Mapa de Proyección (Grid 60% / 40%) */}
+      <div className="space-y-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400 bg-amber-100/70 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-700/40 px-2.5 py-0.5 rounded-md">
-              Backstage · Visibilidad & Cartagena
-            </span>
-          </div>
-          <h2 className="font-display text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1 flex items-center gap-2">
-            <FiAward className="w-5 h-5 text-amber-500" />
-            <span>Posicionamiento y Promoción de Producciones</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#64748B] block">
+            PASO 01
+          </span>
+          <h2 className="font-display font-black text-xl text-[#0F2342] uppercase tracking-tight">
+            Selección de Producción & Cobertura
           </h2>
-          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 max-w-xl font-medium">
-            Destaca tus eventos publicados en la cartelera principal y carrusel de EventHive para potenciar la venta de entradas.
-          </p>
-        </div>
-      </div>
-
-      {/* 2. KPIs de Presencia y Posicionamiento */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          label="Producciones Elegibles"
-          value={String(eventosElegibles.length)}
-          change="Publicadas listas para destacar"
-          trend="up"
-          icon={FiCheckCircle}
-          iconBg="bg-blue-50 dark:bg-blue-950/40"
-          iconColor="text-blue-600 dark:text-blue-400"
-        />
-        <StatCard
-          label="Promociones Activas"
-          value={String(eventosConPromocion.length)}
-          change="Destacadas en cartelera"
-          trend="up"
-          icon={FiStar}
-          iconBg="bg-amber-50 dark:bg-amber-950/40"
-          iconColor="text-amber-600 dark:text-amber-400"
-        />
-        <StatCard
-          label="Planes Disponibles"
-          value={String(planes.length)}
-          change="Opciones oficiales vigentes"
-          trend="up"
-          icon={FiAward}
-          iconBg="bg-emerald-50 dark:bg-emerald-950/40"
-          iconColor="text-emerald-600 dark:text-emerald-400"
-        />
-      </div>
-
-      {/* 3. PASO 1: Selección del Evento Publicado */}
-      <div className="bg-white dark:bg-[#0E1626] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <span className="w-7 h-7 rounded-xl bg-[#0B1B3D] text-amber-300 font-display font-black text-xs flex items-center justify-center">
-              1
-            </span>
-            <div>
-              <h3 className="font-display text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                Selecciona la producción que deseas destacar
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Solo eventos en estado <strong>PUBLICADO</strong> sin promoción activa pueden contratar posicionamiento
-              </p>
-            </div>
-          </div>
-          {eventosPublicados.length > 0 && (
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
-              {eventosElegibles.length} disponibles para contratar
-            </span>
-          )}
         </div>
 
-        {loadingEventos ? (
-          <div className="p-8 text-center text-xs text-slate-400">
-            <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-            Cargando producciones...
-          </div>
-        ) : eventosPublicados.length === 0 ? (
-          <div className="p-6 text-center text-xs text-slate-600 dark:text-slate-300 bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-700/40 rounded-2xl space-y-1">
-            <FiAlertCircle size={22} className="mx-auto text-amber-600 dark:text-amber-400 mb-1" />
-            <p className="font-bold text-slate-900 dark:text-white">No tienes eventos publicados en este momento</p>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400">
-              Para promocionar un evento, primero debe ser aprobado y publicado en la cartelera de EventHive.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {eventosPublicadosPaginados.map((ev) => {
-              const isSelected = String(ev.id) === String(selectedEventoId);
-              const isPromocionado = Boolean(ev.promocionado || ev.destacado || ev.urlImagenDestacado);
-
-              return (
-                <div
-                  key={ev.id}
-                  onClick={() => setSelectedEventoId(String(ev.id))}
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-3 ${
-                    isSelected
-                      ? 'border-[#0B1B3D] dark:border-amber-400 bg-amber-50/30 dark:bg-amber-950/20 shadow-xs ring-1 ring-[#0B1B3D]/10 dark:ring-amber-400/20'
-                      : isPromocionado
-                      ? 'border-amber-200 dark:border-amber-900/40 bg-white dark:bg-[#0B1428] opacity-85'
-                      : 'border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-[#0B1428]'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    {ev.foto || ev.imagen ? (
-                      <img
-                        src={ev.foto || ev.imagen}
-                        alt={ev.titulo}
-                        className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 text-slate-400 font-bold">
-                        EH
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <h4 className="font-display text-xs font-black text-slate-900 dark:text-white truncate">
-                          {ev.titulo}
-                        </h4>
-                        {isPromocionado && (
-                          <Badge tone="active">★ Destacado Activo</Badge>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate flex items-center gap-1">
-                        <FiMapPin size={10} className="text-amber-500 shrink-0" />
-                        <span className="truncate">{ev.lugar || 'Cartagena'}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
-                    <span className="text-slate-400">{ev.fecha ? formatFecha(ev.fecha) : 'Por definir'}</span>
-                    <span
-                      className={`font-bold ${
-                        isSelected
-                          ? 'text-[#0B1B3D] dark:text-amber-400'
-                          : isPromocionado
-                          ? 'text-amber-600 dark:text-amber-400 font-semibold'
-                          : 'text-slate-400'
-                      }`}
-                    >
-                      {isSelected ? '✓ Seleccionado' : isPromocionado ? 'Promocionado' : 'Seleccionar'}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {!loadingEventos && eventosPublicados.length > EVENTOS_POR_PAGINA && (
-          <Pagination
-            currentPage={currentPage}
-            totalItems={eventosPublicados.length}
-            pageSize={EVENTOS_POR_PAGINA}
-            onPageChange={setCurrentPage}
-            showPageSize={false}
-          />
-        )}
-      </div>
-
-      {/* 4. UBICACIÓN GEOGRÁFICA EN CARTAGENA */}
-      {selectedEvento && (
-        <div className="bg-white dark:bg-[#0E1626] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
-                <FiCompass size={15} />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Columna Izquierda (60%): Cartelera Elegible en Formato Mini-Ticket */}
+          <div className="lg:col-span-7 xl:col-span-7 space-y-3">
+            {loadingEventos ? (
+              <div className="p-12 text-center text-xs font-mono text-[#64748B] bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px]">
+                <div className="w-6 h-6 border-2 border-[#0F2342] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                CONSULTANDO CARTELERA...
               </div>
-              <div>
-                <h3 className="font-display text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                  Ubicación de Proyección en Cartagena: {selectedEvento.titulo}
-                </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {selectedEvento.lugar || 'Ubicación registrada para la producción'}
+            ) : eventosPublicados.length === 0 ? (
+              <div className="p-8 text-center bg-[#FFFFFF] border border-dashed border-[#CBD5E1] rounded-[2px] space-y-2">
+                <FiAlertCircle size={20} className="mx-auto text-[#64748B]" />
+                <p className="font-mono text-xs font-bold text-[#0F2342] uppercase">
+                  No hay producciones publicadas
+                </p>
+                <p className="font-mono text-[11px] text-[#64748B]">
+                  Para contratar posicionamiento, la producción debe estar previamente publicada.
                 </p>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-2.5">
+                {eventosPublicadosPaginados.map((ev) => {
+                  const isSelected = String(ev.id) === String(selectedEventoId);
+                  const isPromocionado = Boolean(ev.promocionado || ev.destacado || ev.urlImagenDestacado);
 
-            {eventCoordinates && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
-                <FiMapPin size={10} /> Coordenadas Activas
-              </span>
+                  return (
+                    <div
+                      key={ev.id}
+                      onClick={() => setSelectedEventoId(String(ev.id))}
+                      className={`relative p-3.5 rounded-[2px] border transition-all cursor-pointer bg-[#FFFFFF] flex items-center justify-between gap-4 overflow-hidden ${
+                        isSelected
+                          ? 'border-[#0F2342] shadow-xs'
+                          : 'border-[#E2E8F0] hover:border-[#64748B]'
+                      }`}
+                    >
+                      {/* Barra vertical izquierda de 4px en #F5B800 si está seleccionado */}
+                      {isSelected && (
+                        <span
+                          className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#F5B800]"
+                          aria-hidden="true"
+                        />
+                      )}
+
+                      <div className="flex items-center gap-3.5 min-w-0 pl-1">
+                        {/* Póster a todo color (48px x 48px) */}
+                        <div className="w-12 h-12 rounded-[2px] border border-[#E2E8F0] bg-[#F8F9FA] overflow-hidden shrink-0">
+                          {ev.foto || ev.imagen ? (
+                            <img
+                              src={ev.foto || ev.imagen}
+                              alt={ev.titulo}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-[#0F2342] text-white font-mono text-xs font-bold">
+                              {ev.titulo?.slice(0, 2).toUpperCase() || 'EH'}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Metadatos en tipografía monoespaciada */}
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-display font-black text-sm text-[#0F2342] uppercase truncate leading-tight">
+                            {ev.titulo}
+                          </h4>
+                          <p className="font-mono text-[10px] text-[#64748B] truncate mt-0.5">
+                            {ev.lugar || 'Cartagena'} • {ev.fecha ? formatFecha(ev.fecha) : 'Por confirmar'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Estado */}
+                      <div className="shrink-0 text-right pr-1">
+                        {isPromocionado ? (
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-[#F5B800] font-bold">
+                            ★ Activo
+                          </span>
+                        ) : isSelected ? (
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-[#0F2342] font-bold flex items-center gap-1">
+                            <FiCheck size={12} className="text-[#F5B800]" />
+                            <span>Listo</span>
+                          </span>
+                        ) : (
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-[#94A3B8]">
+                            Elegible
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {!loadingEventos && eventosPublicados.length > EVENTOS_POR_PAGINA && (
+              <div className="pt-2 flex justify-center">
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={eventosPublicados.length}
+                  pageSize={EVENTOS_POR_PAGINA}
+                  onPageChange={setCurrentPage}
+                  showPageSize={false}
+                />
+              </div>
             )}
           </div>
 
-          {eventCoordinates ? (
-            <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 h-56 sm:h-64 w-full relative z-0 shadow-2xs">
+          {/* Columna Derecha (40%): Mapa de Cobertura */}
+          <div className="lg:col-span-5 xl:col-span-5 w-full bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] overflow-hidden">
+            <div className="h-64 sm:h-72 w-full relative z-0">
               <MapContainer
-                center={eventCoordinates}
-                zoom={15}
+                center={mapCenter}
+                zoom={14}
                 scrollWheelZoom={false}
                 className="h-full w-full"
               >
@@ -468,76 +451,151 @@ export default function PosicionamientoView({ onPromotionSuccess }) {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <MapReloader center={eventCoordinates} />
-                <Marker position={eventCoordinates} icon={positionPinIcon()} />
+                <MapReloader center={mapCenter} />
+                {eventCoordinates && (
+                  <Marker position={eventCoordinates} icon={positionPinIcon()} />
+                )}
               </MapContainer>
             </div>
-          ) : (
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#070D1B] border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500 italic">
-              Este evento no tiene coordenadas geográficas registradas para visualizar en el mapa.
-            </div>
-          )}
-        </div>
-      )}
 
-      {/* 5. PASO 2: Selección de Plan Oficial de Posicionamiento */}
-      <div className="bg-white dark:bg-[#0E1626] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-5 sm:p-7 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <span className="w-7 h-7 rounded-xl bg-[#0B1B3D] text-amber-300 font-display font-black text-xs flex items-center justify-center">
-              2
-            </span>
-            <div>
-              <h3 className="font-display text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                Selecciona tu plan de posicionamiento
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Precios y comisiones oficiales configurados por EventHive
-              </p>
+            {/* Texto inferior en monospace sin badge verde */}
+            <div className="p-3.5 border-t border-[#E2E8F0] bg-[#FFFFFF] font-mono text-[11px] text-[#64748B] uppercase tracking-wider truncate">
+              {eventCoordinates && selectedEvento
+                ? `UBICACIÓN DE PROYECCIÓN: ${selectedEvento.titulo} — ${selectedEvento.lugar || 'CARTAGENA'}`
+                : 'UBICACIÓN GENERAL: CARTAGENA DE INDIAS'}
             </div>
           </div>
-          <span className="text-[11px] font-semibold text-slate-400">
-            Valores oficiales en Pesos Colombianos (COP)
+        </div>
+      </div>
+
+      {/* 4. PASO 02: Selección de Plan (Grid de 3 Columnas) */}
+      <div className="space-y-4 pt-4 border-t border-[#E2E8F0]">
+        <div>
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#64748B] block">
+            PASO 02
           </span>
+          <h2 className="font-display font-black text-xl text-[#0F2342] uppercase tracking-tight">
+            Selección de Plan de Posicionamiento
+          </h2>
         </div>
 
         {loadingPlanes ? (
-          <div className="p-12 text-center text-xs text-slate-400">
-            <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-            Cargando planes de promoción...
-          </div>
-        ) : planes.length === 0 ? (
-          <div className="p-6 text-center text-xs text-slate-500 bg-slate-50 dark:bg-[#070D1B] border border-slate-200 dark:border-slate-800 rounded-2xl">
-            No hay planes de promoción activos disponibles en este momento.
+          <div className="p-16 text-center text-xs font-mono text-[#64748B] bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px]">
+            <div className="w-6 h-6 border-2 border-[#0F2342] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+            CONSULTANDO PLANES DE PROMOCIÓN...
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
-            {planes.map((plan, index) => {
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+            {displayPlanes.map((plan, idx) => {
+              const isFirst = idx === 0;
+              const isSecond = idx === 1;
+              const isThird = idx === 2;
               const isSelected = selectedPlan?.id === plan.id;
-              const isHighlighted = Boolean(plan.premium) || (planes.length >= 3 && index === 1);
               const isEventAlreadyPromoted = Boolean(
                 selectedEvento?.promocionado ||
                 selectedEvento?.destacado ||
                 selectedEvento?.urlImagenDestacado
               );
 
+              // 1. Plan Impulso: Fondo #FFFFFF, borde 1px solid #E2E8F0
+              // 2. Plan Amplificado: Fondo #FFFFFF, borde 2px solid #0F2342 con franja superior de 4px en #F5B800
+              // 3. Plan Exposición Total: Fondo #0F2342, texto blanco y precio en #F5B800
+              const containerClass = isThird
+                ? 'bg-[#0F2342] text-white border border-[#0F2342]'
+                : isSecond
+                ? 'bg-[#FFFFFF] border-2 border-[#0F2342] relative'
+                : 'bg-[#FFFFFF] border border-[#E2E8F0]';
+
+              const benefitsList = plan.beneficios || [
+                plan.detallePublicidad || 'Posicionamiento en la plataforma',
+                'Reportes de rendimiento en vivo',
+                'Presencia destacada en cartelera',
+              ];
+
               return (
-                <div key={plan.id || plan.codigo || index} className="flex flex-col">
-                  <PlanCard
-                    plan={plan}
-                    isSelected={isSelected}
-                    isHighlighted={isHighlighted}
-                    onSelect={() => handleContratarDirecto(plan)}
-                    mode="select"
-                    disabled={procesando || !selectedEventoId || isEventAlreadyPromoted}
-                    disabledText={
-                      isEventAlreadyPromoted
-                        ? 'Evento ya destacado'
-                        : !selectedEventoId
-                        ? 'Selecciona un evento'
-                        : undefined
-                    }
-                  />
+                <div
+                  key={plan.id || idx}
+                  className={`rounded-[2px] p-6 sm:p-7 flex flex-col justify-between transition-all select-none ${containerClass}`}
+                >
+                  {/* Franja superior de 4px en #F5B800 para el segundo plan */}
+                  {isSecond && (
+                    <span
+                      className="absolute top-0 inset-x-0 h-[4px] bg-[#F5B800]"
+                      aria-hidden="true"
+                    />
+                  )}
+
+                  <div className="space-y-4">
+                    {/* Título del Plan */}
+                    <div>
+                      <h3
+                        className={`font-display font-black text-xl uppercase tracking-tight ${
+                          isThird ? 'text-white' : 'text-[#0F2342]'
+                        }`}
+                      >
+                        {plan.nombre}
+                      </h3>
+                      <p
+                        className={`font-mono text-xs mt-1 ${
+                          isThird ? 'text-slate-300' : 'text-[#64748B]'
+                        }`}
+                      >
+                        Posicionamiento oficial por producción
+                      </p>
+                    </div>
+
+                    {/* Precio */}
+                    <div className="pt-2">
+                      <span
+                        className={`font-mono font-black text-3xl tracking-tight block tabular-nums ${
+                          isThird ? 'text-[#F5B800]' : 'text-[#0F2342]'
+                        }`}
+                      >
+                        {formatPrice(plan.precio)}
+                      </span>
+                      <span
+                        className={`font-mono text-[10px] uppercase tracking-wider block mt-0.5 ${
+                          isThird ? 'text-slate-400' : 'text-[#94A3B8]'
+                        }`}
+                      >
+                        COP / Producción
+                      </span>
+                    </div>
+
+                    {/* Beneficios con guiones largos o puntos cuadrados en #F5B800 */}
+                    <ul className="pt-4 border-t border-slate-200/50 space-y-2.5 text-xs font-mono">
+                      {benefitsList.map((ben, bIdx) => (
+                        <li key={bIdx} className="flex items-start gap-2.5">
+                          <span className="text-[#F5B800] font-bold shrink-0">—</span>
+                          <span className={isThird ? 'text-slate-200' : 'text-[#64748B]'}>
+                            {ben}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Botón de Acción Rectangular (border-radius: 2px) Ancho Completo */}
+                  <div className="pt-8">
+                    <button
+                      type="button"
+                      onClick={() => handleContratarDirecto(plan)}
+                      disabled={procesando || !selectedEventoId || isEventAlreadyPromoted}
+                      className={`w-full py-3 rounded-[2px] font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer disabled:opacity-50 ${
+                        isThird
+                          ? 'bg-[#F5B800] hover:bg-amber-400 text-[#0F2342]'
+                          : 'bg-[#0F2342] hover:bg-[#F5B800] text-white hover:text-[#0F2342]'
+                      }`}
+                    >
+                      {procesando && selectedPlan?.id === plan.id
+                        ? 'Procesando...'
+                        : isEventAlreadyPromoted
+                        ? 'Producción ya destacada'
+                        : isSelected
+                        ? 'Plan Seleccionado →'
+                        : 'Contratar Plan'}
+                    </button>
+                  </div>
                 </div>
               );
             })}

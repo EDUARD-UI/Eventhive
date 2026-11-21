@@ -25,7 +25,7 @@ export default function StandardLayout({
   const actualItems = items.length > 0 ? items : menuItems;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#EEF2F6] font-body text-slate-800 antialiased">
+    <div className="flex h-screen overflow-hidden bg-[#F8F9FA] font-body text-slate-800 antialiased">
       {/* Barra lateral especializada para la organización */}
       <OrganizationSidebar
         role={role}

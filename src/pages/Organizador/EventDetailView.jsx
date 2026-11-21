@@ -213,8 +213,8 @@ export default function EventDetailView({
 
   return renderContainer(
     <div className="flex flex-col h-full bg-white text-slate-900">
-      {/* 1. Header Visual con Portada y Badges */}
-      <div className="relative h-60 sm:h-72 w-full bg-slate-900 shrink-0 overflow-hidden">
+      {/* 1. Header Visual con Portada a Todo Color Natural (220px) */}
+      <div className="relative h-[220px] w-full bg-[#0F2342] shrink-0 overflow-hidden">
         {fotoUrl ? (
           <img
             src={fotoUrl}
@@ -222,59 +222,56 @@ export default function EventDetailView({
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 flex items-center justify-center text-slate-600">
-            <FiCalendar size={48} />
+          <div className="w-full h-full bg-[#0F2342] flex items-center justify-center text-slate-500 font-mono text-xs uppercase tracking-widest">
+            <span>Sin imagen de cartelera</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+        {/* Degradado oscuro sutil en la base */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'linear-gradient(to top, rgba(15, 35, 66, 0.95) 0%, rgba(15, 35, 66, 0.4) 50%, transparent 100%)',
+          }}
+        />
 
-        {/* Botón flotante para cerrar */}
+        {/* Botón Cerrar (✕) Cuadrado Minimalista */}
         <button
           type="button"
           onClick={onBack}
           disabled={Boolean(runningAction)}
           aria-label="Cerrar detalle"
           title="Cerrar"
-          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white flex items-center justify-center backdrop-blur-md cursor-pointer transition-transform hover:scale-105 shadow-md disabled:opacity-50"
+          className="absolute top-4 right-4 z-20 w-8 h-8 rounded-[2px] bg-[#0F2342]/85 hover:bg-[#0F2342] text-white flex items-center justify-center cursor-pointer transition-colors shadow-sm disabled:opacity-50"
         >
-          <FiX size={18} />
+          <FiX size={16} />
         </button>
 
-        {/* Badges de categoría / estado y Título del evento */}
-        <div className="absolute bottom-5 left-6 right-6 z-10 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 shadow-xs">
-              {categoriaNombre}
-            </span>
-            <Badge tone={toneMap[estado] || 'neutral'} size="sm">
-              {labelMap[estado] || estado}
-            </Badge>
+        {/* Línea tipográfica monoespaciada + Título + Organización */}
+        <div className="absolute bottom-4 left-6 right-6 z-10 space-y-1.5">
+          <div className="flex items-center gap-2 font-mono text-[10px] tracking-[0.16em] uppercase text-[#F8FAFC]">
+            <span>{categoriaNombre}</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#F5B800]" />
+            <span className="text-[#F5B800] font-bold">{labelMap[estado] || estado}</span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-black font-display text-white leading-snug line-clamp-2">
+          <h2 className="text-xl sm:text-2xl font-black font-display text-white uppercase tracking-tight line-clamp-2 leading-tight">
             {event.titulo}
           </h2>
 
-          <p className="text-xs text-slate-300 mt-1 flex items-center gap-2">
-            <strong className="text-white font-semibold">{organizacionNombre}</strong>
-            {event.lugar && (
-              <>
-                <span>•</span>
-                <span className="truncate">{event.lugar}</span>
-              </>
-            )}
+          <p className="font-mono text-[10px] text-slate-300 truncate">
+            ORGANIZADO POR {organizacionNombre.toUpperCase()} {event.lugar ? `• ${event.lugar.toUpperCase()}` : ''}
           </p>
         </div>
       </div>
 
-      {/* 2. Contenido Scrolleable */}
+      {/* 2. Cuerpo del Expediente Scrolleable */}
       <div className="p-6 sm:p-7 overflow-y-auto space-y-6 flex-1 text-xs text-slate-700">
         {/* Advertencia si la organización no está aprobada */}
         {!canSendEvents && (
-          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 flex items-start gap-3">
-            <FiAlertCircle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+          <div className="p-3.5 rounded-[2px] bg-amber-50/80 border border-amber-200 text-amber-950 flex items-start gap-3">
+            <FiAlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
             <div className="text-xs">
-              <p className="font-bold">
+              <p className="font-bold uppercase tracking-wider font-mono text-[10px]">
                 {orgSuspended ? 'Organización suspendida' : 'Documento de verificación pendiente'}
               </p>
               <p className="mt-0.5 text-amber-800">
@@ -286,36 +283,36 @@ export default function EventDetailView({
           </div>
         )}
 
-        {/* Metadata Grid (Fecha y Hora) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-              <FiCalendar size={18} />
-            </div>
-            <div>
-              <p className="text-[10px] uppercase font-extrabold text-slate-400">Fecha del Evento</p>
-              <p className="font-bold text-slate-900 text-xs mt-0.5">{event.fecha ? formatFecha(event.fecha) : 'Sin fecha'}</p>
-            </div>
+        {/* Fila Horizontal de Coordenadas Temporales con Filete Vertical */}
+        <div className="border border-[#E2E8F0] rounded-[2px] bg-[#FAFAFA] p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#E2E8F0]">
+          <div className="p-2 sm:px-4 font-mono text-xs">
+            <span className="text-[10px] uppercase text-[#64748B] block mb-0.5 tracking-wider font-semibold">
+              Fecha del Evento
+            </span>
+            <span className="text-[#0F2342] font-bold text-sm tracking-tight">
+              {event.fecha ? formatFecha(event.fecha) : 'Sin fecha definida'}
+            </span>
           </div>
-
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-              <FiClock size={18} />
-            </div>
-            <div>
-              <p className="text-[10px] uppercase font-extrabold text-slate-400">Hora de Inicio</p>
-              <p className="font-bold text-slate-900 text-xs mt-0.5">{event.hora ? formatHora12(event.hora) : 'Sin hora'}</p>
-            </div>
+          <div className="p-2 sm:px-4 font-mono text-xs">
+            <span className="text-[10px] uppercase text-[#64748B] block mb-0.5 tracking-wider font-semibold">
+              Hora de Inicio
+            </span>
+            <span className="text-[#0F2342] font-bold text-sm tracking-tight">
+              {event.hora ? formatHora12(event.hora) : 'Sin hora definida'}
+            </span>
           </div>
         </div>
 
-        {/* Ubicación y Mapa Geográfico con Coordenadas Reales */}
-        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-          <div className="flex items-center gap-2 text-slate-800 font-bold">
-            <FiMapPin className="text-amber-500" size={16} />
-            <span>Lugar y Proyección en Cartagena</span>
+        {/* Bloque Geográfico: UBICACIÓN Y PROYECCIÓN */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-2">
+            <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#0F2342] font-bold">
+              Ubicación y Proyección
+            </span>
+            <span className="font-mono text-[10px] text-[#64748B] uppercase">
+              {event.lugar || 'Cartagena'}
+            </span>
           </div>
-          <p className="text-slate-600 pl-6 text-xs">{event.lugar || 'Ubicación no especificada'}</p>
 
           {event.latitud !== undefined &&
           event.latitud !== null &&
@@ -324,7 +321,7 @@ export default function EventDetailView({
           !isNaN(Number(event.latitud)) &&
           !isNaN(Number(event.longitud)) &&
           Number(event.latitud) !== 0 ? (
-            <div className="overflow-hidden rounded-xl border border-slate-200 h-48 w-full relative z-0">
+            <div className="rounded-[2px] border border-[#E2E8F0] h-48 w-full overflow-hidden relative z-0">
               <MapContainer
                 center={[Number(event.latitud), Number(event.longitud)]}
                 zoom={15}
@@ -342,91 +339,84 @@ export default function EventDetailView({
               </MapContainer>
             </div>
           ) : (
-            <div className="p-3 rounded-xl bg-white border border-slate-200 text-slate-400 text-[11px] text-center italic">
-              Coordenadas de mapa no disponibles para este evento.
+            <div className="p-4 rounded-[2px] bg-[#FAFAFA] border border-[#E2E8F0] text-slate-400 text-xs font-mono text-center">
+              Coordenadas cartográficas no disponibles para este evento.
             </div>
           )}
         </div>
 
-        {/* Descripción del Evento */}
-        <div>
-          <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
-            Descripción de la Producción
-          </h4>
-          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 text-slate-700 leading-relaxed text-xs">
+        {/* Descripción Editorial */}
+        <div className="space-y-2 border-t border-[#E2E8F0] pt-4">
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#64748B] font-bold block">
+            Expediente & Sinopsis
+          </span>
+          <p className="text-xs text-[#334155] leading-relaxed whitespace-pre-line font-normal">
             {event.descripcion || 'Sin descripción provista por el organizador.'}
-          </div>
+          </p>
         </div>
 
-        {/* Localidades y Entradas */}
-        <div>
-          <div className="flex items-center justify-between mb-2.5">
-            <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <FiLayers className="text-amber-500" size={13} />
-              <span>Localidades y Zonas de Boletaje ({event.localidades?.length || 0})</span>
-            </h4>
+        {/* Tabla Limpia de Localidades */}
+        <div className="space-y-3 border-t border-[#E2E8F0] pt-4">
+          <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-2">
+            <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#0F2342] font-bold">
+              Localidades y Zonas ({event.localidades?.length || 0})
+            </span>
           </div>
 
           {!event.localidades || event.localidades.length === 0 ? (
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-400 text-center">
+            <div className="p-4 rounded-[2px] bg-[#FAFAFA] border border-[#E2E8F0] text-slate-400 font-mono text-xs text-center">
               Este evento no tiene localidades configuradas registradas.
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {event.localidades.map((loc, idx) => {
-                const vendidas = (loc.capacidad || 0) - (loc.disponibles || 0);
-                const pct = loc.capacidad > 0 ? Math.round((vendidas / loc.capacidad) * 100) : 0;
-                return (
-                  <div
-                    key={loc.id || idx}
-                    className="p-3.5 rounded-2xl bg-white border border-slate-200/80 flex flex-col justify-between gap-2 shadow-2xs"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-slate-900">
-                        {loc.nombre || `Localidad #${idx + 1}`}
-                      </span>
-                      <span className="font-display font-black text-xs text-amber-700">
-                        {formatPrice(loc.precio || 0)}
-                      </span>
-                    </div>
-
-                    <div className="text-[11px] text-slate-500 flex items-center justify-between">
-                      <span>Aforo: <strong className="text-slate-800">{loc.capacidad} cupos</strong></span>
-                      {loc.disponibles !== undefined && (
-                        <span>Disp: <strong className="text-emerald-600">{loc.disponibles}</strong></span>
-                      )}
-                    </div>
-
-                    {loc.capacidad > 0 && (
-                      <div className="space-y-1 pt-1">
-                        <div className="flex items-center justify-between text-[10px] text-slate-400">
-                          <span>Vendidas: {Math.max(0, vendidas)}</span>
-                          <span className="font-bold text-amber-700">{pct}%</span>
-                        </div>
-                        <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${
-                              pct >= 90 ? 'bg-emerald-500' : 'bg-amber-500'
-                            }`}
-                            style={{ width: `${Math.min(100, pct)}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            <div className="border border-[#E2E8F0] rounded-[2px] overflow-hidden">
+              <table className="w-full text-left font-mono text-xs">
+                <thead className="bg-[#FAFAFA] border-b border-[#E2E8F0] text-[10px] uppercase tracking-wider text-[#64748B]">
+                  <tr>
+                    <th className="py-2.5 px-3">Localidad</th>
+                    <th className="py-2.5 px-3">Precio</th>
+                    <th className="py-2.5 px-3">Aforo</th>
+                    <th className="py-2.5 px-3 text-right">Estado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E2E8F0] bg-white">
+                  {event.localidades.map((loc, idx) => {
+                    const vendidas = (loc.capacidad || 0) - (loc.disponibles || 0);
+                    const pct = loc.capacidad > 0 ? Math.round((vendidas / loc.capacidad) * 100) : 0;
+                    return (
+                      <tr key={loc.id || idx} className="hover:bg-[#F8FAFC]">
+                        <td className="py-2.5 px-3 font-semibold text-[#0F2342]">
+                          {loc.nombre || `Zona ${idx + 1}`}
+                        </td>
+                        <td className="py-2.5 px-3 text-[#0F2342] font-bold">
+                          {formatPrice(loc.precio || 0)}
+                        </td>
+                        <td className="py-2.5 px-3 text-[#64748B]">
+                          {loc.capacidad} cupos
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-medium">
+                          {loc.disponibles !== undefined ? (
+                            <span className={loc.disponibles > 0 ? 'text-emerald-700' : 'text-rose-700'}>
+                              {loc.disponibles > 0 ? `${loc.disponibles} disp.` : 'Agotada'}
+                            </span>
+                          ) : (
+                            <span className="text-[#64748B]">{pct}% vend.</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
 
         {/* Historial de Moderación */}
         {historial.length > 0 && (
-          <div>
-            <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-1.5">
-              <FiClock className="text-amber-500" size={13} />
-              <span>Historial de Moderación</span>
-            </h4>
+          <div className="space-y-3 border-t border-[#E2E8F0] pt-4">
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#64748B] font-bold block">
+              Bitácora de Moderación
+            </span>
 
             <div className="space-y-2">
               {historial.map((item, idx) => {
@@ -437,31 +427,25 @@ export default function EventDetailView({
                 return (
                   <div
                     key={item.id || idx}
-                    className={`p-3.5 rounded-2xl border text-xs space-y-1.5 ${
-                      isCorreccion
-                        ? 'bg-amber-50/70 border-amber-200 text-amber-950'
-                        : isRechazo
-                        ? 'bg-rose-50/70 border-rose-200 text-rose-950'
-                        : 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
-                    }`}
+                    className="p-3 rounded-[2px] border border-[#E2E8F0] bg-[#FAFAFA] text-xs font-mono space-y-1.5"
                   >
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className="font-extrabold uppercase text-[10px] px-2 py-0.5 rounded-md bg-white border border-slate-200 shadow-2xs">
+                      <span className="font-bold uppercase text-[10px] text-[#0F2342]">
                         {item.accion || item.estadoResultante || 'REVISIÓN'}
                       </span>
-                      <span className="text-[11px] text-slate-500 font-medium">
+                      <span className="text-[10px] text-[#64748B]">
                         {item.fecha ? formatFechaHora12(item.fecha) : 'Reciente'}
                       </span>
                     </div>
 
                     {item.motivo && (
-                      <p className="font-bold text-[11px]">
-                        Motivo: <span className="font-semibold text-slate-700">{item.motivo.replace(/_/g, ' ')}</span>
+                      <p className="text-[11px] text-slate-800">
+                        Motivo: <span className="font-semibold">{item.motivo.replace(/_/g, ' ')}</span>
                       </p>
                     )}
 
                     {item.observacion && (
-                      <p className="bg-white/90 p-2.5 rounded-lg border border-slate-200/60 text-slate-800 font-medium italic">
+                      <p className="bg-white p-2 rounded-[2px] border border-[#E2E8F0] text-slate-700 italic">
                         "{item.observacion}"
                       </p>
                     )}
@@ -473,133 +457,97 @@ export default function EventDetailView({
         )}
       </div>
 
-      {/* 3. Footer con Acciones de Gestión y Protección Asíncrona */}
+      {/* 3. Footer Fijo de Acciones Editorial */}
       {estado !== 'FINALIZADO' && (
-        <div className="p-4 sm:p-5 bg-white border-t border-slate-100 flex flex-wrap items-center justify-end gap-2 shrink-0">
-          {canEdit && (
-            <button
-              type="button"
-              onClick={() => onEdit && onEdit(event)}
-              disabled={Boolean(runningAction)}
-              className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 hover:border-amber-500 hover:text-amber-800 transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
-            >
-              <FiEdit3 size={14} />
-              <span>Editar evento</span>
-            </button>
-          )}
-
-          {canSendReview && (
-            <button
-              type="button"
-              onClick={() => {
-                if (!canSendEvents) {
-                  Swal.fire({
-                    icon: 'warning',
-                    title: orgSuspended ? 'Organización suspendida' : 'Verificación pendiente',
-                    text: orgSuspended
-                      ? 'Tu organización está suspendida y no puede enviar eventos a revisión.'
-                      : 'Carga el RUT de tu organización o espera su aprobación para enviar eventos a revisión.',
+        <div className="p-4 sm:p-5 bg-white border-t border-[#E2E8F0] flex items-center justify-between gap-3 shrink-0">
+          <div>
+            {/* Enlace Destructivo o de Pausa */}
+            {canCancel && (
+              <button
+                type="button"
+                onClick={async () => {
+                  const confirmed = await showConfirmAlert({
+                    title: 'Suspender evento',
+                    text: '¿Estás seguro de que deseas suspender o cancelar esta producción cultural?',
+                    confirmButtonText: 'Sí, suspender',
+                    isDanger: true,
                   });
-                  return;
-                }
-                handleAction('review', () => organizerService.enviarRevision(event.id), 'Evento enviado a revisión');
-              }}
-              disabled={Boolean(runningAction) || !canSendEvents}
-              className="px-4 py-2.5 rounded-xl bg-[#0B1B3D] hover:bg-slate-900 text-amber-300 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-xs flex items-center gap-2"
-              title={
-                orgSuspended
-                  ? 'La organización está suspendida'
-                  : !canSendEvents
-                  ? 'Carga el RUT o espera la aprobación de la organización'
-                  : 'Enviar a moderación'
-              }
-            >
-              {runningAction === 'review' ? (
-                <>
-                  <span className="w-3.5 h-3.5 border-2 border-amber-300 border-t-transparent rounded-full animate-spin" />
-                  <span>Enviando a revisión...</span>
-                </>
-              ) : (
-                <>
-                  <FiSend size={14} />
-                  <span>Enviar a revisión</span>
-                </>
-              )}
-            </button>
-          )}
+                  if (confirmed) {
+                    await handleAction('cancel', () => organizerService.cancelarEvento(event.id), 'Evento suspendido');
+                  }
+                }}
+                disabled={Boolean(runningAction)}
+                className="font-mono text-xs text-[#DC2626] hover:underline cursor-pointer bg-transparent border-none p-0 disabled:opacity-50"
+              >
+                Suspender evento
+              </button>
+            )}
 
-          {canWithdraw && (
-            <button
-              type="button"
-              onClick={() => handleAction('withdraw', () => organizerService.retirarEvento(event.id), 'Evento retirado a borrador')}
-              disabled={Boolean(runningAction)}
-              className="px-4 py-2.5 rounded-xl border border-amber-200 bg-amber-50 text-xs font-bold text-amber-800 hover:bg-amber-100 transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-2"
-            >
-              {runningAction === 'withdraw' ? (
-                <>
-                  <span className="w-3.5 h-3.5 border-2 border-amber-800 border-t-transparent rounded-full animate-spin" />
-                  <span>Retirando...</span>
-                </>
-              ) : (
-                <>
-                  <FiRotateCcw size={14} />
-                  <span>Retirar a borrador</span>
-                </>
-              )}
-            </button>
-          )}
+            {canWithdraw && (
+              <button
+                type="button"
+                onClick={() => handleAction('withdraw', () => organizerService.retirarEvento(event.id), 'Evento retirado a borrador')}
+                disabled={Boolean(runningAction)}
+                className="font-mono text-xs text-amber-700 hover:underline cursor-pointer bg-transparent border-none p-0 disabled:opacity-50"
+              >
+                Retirar a borrador
+              </button>
+            )}
 
-          {canCancel && (
-            <button
-              type="button"
-              onClick={async () => {
-                const confirmed = await showConfirmAlert({
-                  title: 'Suspender evento',
-                  text: '¿Estás seguro de que deseas suspender o cancelar esta producción cultural?',
-                  confirmButtonText: 'Sí, suspender',
-                  isDanger: true,
-                });
-                if (confirmed) {
-                  await handleAction('cancel', () => organizerService.cancelarEvento(event.id), 'Evento suspendido');
-                }
-              }}
-              disabled={Boolean(runningAction)}
-              className="px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-2"
-            >
-              {runningAction === 'cancel' ? (
-                <>
-                  <span className="w-3.5 h-3.5 border-2 border-rose-700 border-t-transparent rounded-full animate-spin" />
-                  <span>Suspendiendo...</span>
-                </>
-              ) : (
-                <>
-                  <FiPauseCircle size={14} />
-                  <span>Suspender evento</span>
-                </>
-              )}
-            </button>
-          )}
+            {canReopen && (
+              <button
+                type="button"
+                onClick={() => handleAction('reopen', () => organizerService.reabrirEvento(event.id), 'Evento reabierto')}
+                disabled={Boolean(runningAction)}
+                className="font-mono text-xs text-emerald-700 hover:underline cursor-pointer bg-transparent border-none p-0 disabled:opacity-50"
+              >
+                Reabrir evento
+              </button>
+            )}
+          </div>
 
-          {canReopen && (
-            <button
-              type="button"
-              onClick={() => handleAction('reopen', () => organizerService.reabrirEvento(event.id), 'Evento reabierto')}
-              disabled={Boolean(runningAction)}
-              className="px-4 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-2"
-            >
-              {runningAction === 'reopen' ? (
-                <>
-                  <span className="w-3.5 h-3.5 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin" />
-                  <span>Reabriendo...</span>
-                </>
-              ) : (
-                <>
-                  <FiRotateCcw size={14} />
-                  <span>Reabrir evento</span>
-                </>
-              )}
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => onEdit && onEdit(event)}
+                disabled={Boolean(runningAction)}
+                className="px-5 py-2.5 rounded-[2px] border border-[#0F2342] bg-white hover:bg-[#F8FAFC] text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-all disabled:opacity-50 cursor-pointer"
+              >
+                EDITAR PRODUCCIÓN
+              </button>
+            )}
+
+            {canSendReview && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (!canSendEvents) {
+                    Swal.fire({
+                      icon: 'warning',
+                      title: orgSuspended ? 'Organización suspendida' : 'Verificación pendiente',
+                      text: orgSuspended
+                        ? 'Tu organización está suspendida y no puede enviar eventos a revisión.'
+                        : 'Carga el RUT de tu organización o espera su aprobación para enviar eventos a revisión.',
+                    });
+                    return;
+                  }
+                  handleAction('review', () => organizerService.enviarRevision(event.id), 'Evento enviado a revisión');
+                }}
+                disabled={Boolean(runningAction) || !canSendEvents}
+                className="px-5 py-2.5 rounded-[2px] bg-[#0F2342] hover:bg-[#1B365D] text-[#FFFFFF] hover:text-[#F5B800] font-mono text-xs uppercase tracking-wider font-bold transition-all disabled:opacity-50 cursor-pointer shadow-xs flex items-center gap-2"
+              >
+                {runningAction === 'review' ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>ENVIANDO...</span>
+                  </>
+                ) : (
+                  <span>ENVIAR A REVISIÓN</span>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

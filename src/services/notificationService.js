@@ -53,6 +53,19 @@ export const notificationService = {
       return false;
     }
   },
+
+  /**
+   * Elimina una notificación específica por ID (DELETE /api/notificaciones/{id}).
+   */
+  async eliminarNotificacion(id) {
+    try {
+      await httpClient.delete(`/notificaciones/${id}`);
+      return true;
+    } catch (err) {
+      console.warn(`Error al eliminar notificación ${id}:`, err);
+      return false;
+    }
+  },
 };
 
 export default notificationService;

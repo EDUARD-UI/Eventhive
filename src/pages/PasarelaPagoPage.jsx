@@ -406,7 +406,7 @@ export default function PasarelaPagoPage() {
                   onClick={() => navigate('/organizador')}
                   className="w-full py-3.5 px-6 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-black uppercase tracking-wider transition-all shadow-md cursor-pointer active:scale-98"
                 >
-                  Volver al Centro de Control (Backstage)
+                  Volver al Centro de Control
                 </button>
               ) : (
                 <>

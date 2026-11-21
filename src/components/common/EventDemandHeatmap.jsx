@@ -12,11 +12,11 @@ import { EVENTHIVE_HEAT_GRADIENT } from '../../utils/heatmapUtils.js';
  */
 export default function EventDemandHeatmap({
   points = [],
-  radius = 26,
+  radius = 32,
   blur = 18,
   maxZoom = 17,
-  max = 1.0,
-  minOpacity = 0.25,
+  max = 0.85,
+  minOpacity = 0.38,
   gradient = EVENTHIVE_HEAT_GRADIENT,
 }) {
   const map = useMap();
@@ -25,13 +25,13 @@ export default function EventDemandHeatmap({
   useEffect(() => {
     if (!map) return;
 
-    // Calcular radio adaptativo según el nivel de zoom para una visualización natural
+    // Calcular radio adaptativo equilibrado según el nivel de zoom
     const getAdaptiveRadius = () => {
       const zoom = map.getZoom();
-      if (zoom <= 12) return 18;
-      if (zoom <= 14) return 24;
-      if (zoom <= 16) return 28;
-      return 32;
+      if (zoom <= 12) return 24;
+      if (zoom <= 14) return 34;
+      if (zoom <= 16) return 44;
+      return 54;
     };
 
     const currentRadius = getAdaptiveRadius();
@@ -42,8 +42,8 @@ export default function EventDemandHeatmap({
         layerRef.current.setLatLngs(points);
         layerRef.current.setOptions({
           radius: currentRadius,
-          blur: Math.round(currentRadius * 0.65),
-          max: 1.0,
+          blur: Math.round(currentRadius * 0.52),
+          max: 0.85,
           minOpacity,
           gradient,
         });
@@ -61,12 +61,12 @@ export default function EventDemandHeatmap({
 
     if (!Array.isArray(points) || points.length === 0) return;
 
-    // Crear la capa de calor con HeatLayer
+    // Crear la capa de calor con HeatLayer con intensidad calibrada
     const heatLayer = new HeatLayer(points, {
       radius: currentRadius,
-      blur: Math.round(currentRadius * 0.65),
+      blur: Math.round(currentRadius * 0.52),
       maxZoom,
-      max: 1.0,
+      max: 0.85,
       minOpacity,
       gradient,
     });
@@ -80,7 +80,7 @@ export default function EventDemandHeatmap({
         const nextRadius = getAdaptiveRadius();
         layerRef.current.setOptions({
           radius: nextRadius,
-          blur: Math.round(nextRadius * 0.65),
+          blur: Math.round(nextRadius * 0.52),
         });
         layerRef.current.redraw();
       }

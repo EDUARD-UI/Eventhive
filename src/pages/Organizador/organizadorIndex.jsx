@@ -38,7 +38,7 @@ import { organizerService } from '../../services/organizerService.js';
 import { session } from '../../services/session.js';
 import { formatPrice } from '../../utils/formatters.js';
 import { showInfoAlert } from '../../utils/alertUtils.js';
-import BackstageHeroSection from '../../components/componentsOrganizador/BackstageHeroSection.jsx';
+import ProductionDeskMainView from '../../components/componentsOrganizador/ProductionDeskMainView.jsx';
 
 const menuItems = [
   { id: 'resumen', label: 'Resumen', icon: FiGrid },
@@ -337,7 +337,7 @@ export default function OrganizadorIndex() {
       .slice(0, 3);
   }, [allOrgEvents]);
 
-  // Eventos publicados exclusivamente para la experiencia Backstage y el Calendario
+  // Eventos publicados exclusivamente para la cartelera y el calendario
   const publishedEvents = useMemo(() => {
     return (allOrgEvents || []).filter(
       (e) => (e.estado || '').toUpperCase() === 'PUBLICADO'
@@ -428,221 +428,18 @@ export default function OrganizadorIndex() {
     switch (activeItem) {
       case 'resumen':
         return (
-          <div className="space-y-6">
-            {/* STAGE 1: Hero Operational Command Header + Metric Pulse */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6 items-stretch">
-              {/* Bloque Izquierdo: Bienvenida Editorial y Acciones */}
-              <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-xs flex flex-col justify-between relative overflow-hidden">
-                {/* Elemento sutil de marca */}
-                <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-amber-400/10 via-amber-400/5 to-transparent rounded-bl-full pointer-events-none" />
-
-                <div className="relative z-10 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/80 text-[10px] font-black uppercase tracking-wider">
-                      <FiStar size={11} className="text-amber-600" />
-                      Centro de Control · Backstage
-                    </span>
-                    {hasRutUploaded && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                        <FiShield size={11} /> Verificada
-                      </span>
-                    )}
-                  </div>
-
-                  <h2 className="text-2xl sm:text-3xl font-black font-display text-slate-900 leading-tight">
-                    {orgName}
-                  </h2>
-
-                  <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-xl">
-                    ¡Hola, <strong>{representativeName}</strong>! Administra tus experiencias culturales, supervisa la venta de boletas en tiempo real y potencia la presencia de tus producciones en Cartagena.
-                  </p>
-                </div>
-
-                <div className="relative z-10 mt-6 pt-5 border-t border-slate-100 flex flex-wrap items-center gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setCreationView('wizard')}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#0B1B3D] px-4 py-2.5 text-xs font-bold text-amber-300 hover:bg-slate-900 transition-all shadow-xs cursor-pointer active:scale-95"
-                  >
-                    <FiPlus size={15} />
-                    <span>Crear nuevo evento</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveItem('eventos')}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 transition-all cursor-pointer shadow-2xs"
-                  >
-                    <FiCalendar size={13} className="text-slate-400" />
-                    <span>Ver mis eventos</span>
-                    <FiArrowRight size={13} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveItem('entradas')}
-                    className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
-                  >
-                    <FiCreditCard size={13} />
-                    <span>Reporte de entradas</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Bloque Derecho: Métricas de Operación Asimétricas */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3.5">
-                {/* Métrica 1: Boletas Vendidas */}
-                <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="p-3 rounded-2xl bg-amber-50 text-amber-600 shrink-0">
-                      <FiCreditCard size={20} />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block truncate">
-                        Boletas Vendidas
-                      </span>
-                      <strong className="text-xl sm:text-2xl font-black font-display text-slate-900">
-                        {totalBoletasVendidasGlobal.toLocaleString('es-CO')}
-                      </strong>
-                      <span className="text-[10px] text-slate-500 block mt-0.5">
-                        Eventos publicados activos
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 rounded-lg bg-amber-100/70 text-amber-900 shrink-0">
-                    Boletería
-                  </span>
-                </div>
-
-                {/* Métrica 2: Recaudo Neto */}
-                <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-600 shrink-0">
-                      <FiDollarSign size={20} />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block truncate">
-                        Recaudo Neto Organización
-                      </span>
-                      <strong className="text-xl sm:text-2xl font-black font-display text-slate-900">
-                        {formatPrice(totalIngresosGlobalNeto)}
-                      </strong>
-                      <span className="text-[10px] text-slate-500 block mt-0.5">
-                        Sin comisiones de plataforma
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 rounded-lg bg-emerald-100/70 text-emerald-900 shrink-0">
-                    Neto Org
-                  </span>
-                </div>
-
-                {/* Métrica 3: Eventos Activos en Cartelera */}
-                <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="p-3 rounded-2xl bg-[#0B1B3D] text-amber-300 shrink-0">
-                      <FiActivity size={20} />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block truncate">
-                        Eventos en Cartelera Activa
-                      </span>
-                      <strong className="text-xl sm:text-2xl font-black font-display text-slate-900">
-                        {estadisticasBackend.totalEventosActivos || stats.eventosActivos}
-                      </strong>
-                      <span className="text-[10px] text-slate-500 block mt-0.5">
-                        Visibles al público en Cartagena
-                      </span>
-                    </div>
-                  </div>
-                  <Badge tone={(estadisticasBackend.totalEventosActivos || stats.eventosActivos) > 0 ? 'active' : 'neutral'}>
-                    {(estadisticasBackend.totalEventosActivos || stats.eventosActivos) > 0 ? 'En vivo' : 'Inactivo'}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            {/* STAGE 2: Experiencia Protagonista Backstage + Calendario Visual (Two-Column Hero) */}
-            <BackstageHeroSection
-              publishedEvents={publishedEvents}
-              onSelectEvent={(id) => setSelectedEventId(id)}
-              onCreateEvent={() => setCreationView('wizard')}
-              isLoading={pageLoading}
-            />
-
-            {/* STAGE 3: Cartelera General Paginada */}
-            <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xs overflow-hidden">
-              <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-                <div>
-                  <h3 className="font-display text-base font-black text-slate-900">
-                    Cartelera General de Publicaciones
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                    Control editorial y estado de las producciones
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveItem('eventos')}
-                  className="text-xs font-bold text-slate-700 hover:text-amber-700 bg-slate-100 hover:bg-amber-100/70 px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1 cursor-pointer"
-                >
-                  Ver cartelera completa <FiArrowRight size={11} />
-                </button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-slate-50/70 border-b border-slate-200 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-                    <tr>
-                      <th className="py-3 px-5">Evento Cultural</th>
-                      <th className="py-3 px-4">Categoría</th>
-                      <th className="py-3 px-4">Estado</th>
-                      <th className="py-3 px-5 text-right">Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                    {carteleraEvents.length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="py-12 text-center text-slate-400">
-                          <p className="font-semibold text-slate-700">El escenario está a oscuras.</p>
-                          <p className="text-xs text-slate-400 mt-1">Aún no hay funciones en cartelera. Enciende las luces y publica tu primer evento.</p>
-                        </td>
-                      </tr>
-                    ) : (
-                      carteleraEvents.map((row) => (
-                        <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-3 px-5">
-                            {carteleraColumns[0].render(null, row)}
-                          </td>
-                          <td className="py-3 px-4">
-                            {carteleraColumns[1].render(null, row)}
-                          </td>
-                          <td className="py-3 px-4">
-                            {carteleraColumns[2].render(row.estado, row)}
-                          </td>
-                          <td className="py-3 px-5 text-right">
-                            {carteleraColumns[3].render(null, row)}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {carteleraTotal > carteleraPageSize && (
-                <div className="p-4 border-t border-slate-100 bg-white">
-                  <Pagination
-                    currentPage={carteleraPage + 1}
-                    totalItems={carteleraTotal}
-                    pageSize={carteleraPageSize}
-                    onPageChange={(p) => fetchCarteleraPage(p - 1)}
-                    pageSizeOptions={[5]}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+          <ProductionDeskMainView
+            events={allOrgEvents}
+            orgData={orgData}
+            user={user}
+            representativeName={representativeName}
+            orgName={orgName}
+            onCreateEvent={() => setCreationView('wizard')}
+            onSelectEvent={(eventId) => setSelectedEventId(eventId)}
+            onNavigate={(tab) => setActiveItem(tab)}
+            hasRutUploaded={hasRutUploaded}
+            isLoading={pageLoading}
+          />
         );
       case 'eventos':
         return (
@@ -694,7 +491,7 @@ export default function OrganizadorIndex() {
           setActiveItem('perfil');
         },
       }}
-      maxWidthClass="max-w-[1360px]"
+      maxWidthClass={activeItem === 'resumen' ? 'max-w-[1540px]' : 'max-w-[1360px]'}
     >
       {notification && (
         <div className="mb-6 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/90 px-4 py-3.5 shadow-xs animate-in fade-in duration-200">
