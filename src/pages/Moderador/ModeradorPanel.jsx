@@ -1,4 +1,3 @@
-import Swal from 'sweetalert2';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ModeradorLayout from '../../layouts/ModeradorLayout.jsx';
@@ -11,6 +10,7 @@ import ModeradorPalabrasProhibidasView from './ModeradorPalabrasProhibidasView.j
 import ModalDetalleEventoModeracion from './ModalDetalleEventoModeracion.jsx';
 import ModalAccionModeracion from './ModalAccionModeracion.jsx';
 import moderationService from '../../services/moderationService.js';
+import { showSuccessAlert, showErrorAlert, showToast } from '../../utils/alertUtils.js';
 import {
   FiTrendingUp,
   FiClipboard,
@@ -50,17 +50,6 @@ export default function ModeradorPanel() {
   const [eventoModalDetalle, setEventoModalDetalle] = useState(null);
   const [accionModal, setAccionModal] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
-
-  const showToast = useCallback((message, type = 'success') => {
-    Swal.fire({
-      icon: type === 'error' ? 'error' : 'success',
-      title: type === 'error' ? 'Error' : 'Operación exitosa',
-      text: typeof message === 'string' ? message : String(message),
-      confirmButtonText: 'Aceptar',
-      confirmButtonColor: '#0B1B3D',
-      timer: 3000,
-    });
-  }, []);
 
   // 1. Cargar Estadísticas reales del Moderador
   const fetchEstadisticas = useCallback(async () => {
@@ -140,12 +129,15 @@ export default function ModeradorPanel() {
     try {
       setActionLoading(true);
       await moderationService.aprobarEvento(eventoId);
-      showToast('¡Evento aprobado y publicado exitosamente en la cartelera!', 'success');
+      await showSuccessAlert({
+        title: '¡Evento en cartelera!',
+        text: 'La producción ya está visible al público.',
+      });
       setEventoModalDetalle(null);
       fetchPendientes(page, size);
       fetchEstadisticas();
     } catch (err) {
-      showToast(err.message || 'Error al aprobar el evento.', 'error');
+      showErrorAlert('No fue posible aprobar el evento', err?.message || 'Intenta nuevamente en unos momentos.');
     } finally {
       setActionLoading(false);
     }
@@ -155,13 +147,13 @@ export default function ModeradorPanel() {
     try {
       setActionLoading(true);
       await moderationService.solicitarCorreccion(eventoId, observacion, motivo);
-      showToast('Se solicitaron las correcciones a la organización.', 'success');
+      showToast('Ticket de subsanación emitido a la organización.', 'success');
       setEventoModalDetalle(null);
       setAccionModal(null);
       fetchPendientes(page, size);
       fetchEstadisticas();
     } catch (err) {
-      showToast(err.message || 'Error al solicitar corrección del evento.', 'error');
+      showErrorAlert('No fue posible solicitar la corrección', err?.message || 'Intenta nuevamente en unos momentos.');
     } finally {
       setActionLoading(false);
     }
@@ -171,13 +163,13 @@ export default function ModeradorPanel() {
     try {
       setActionLoading(true);
       await moderationService.rechazarEvento(eventoId, observacion, motivo);
-      showToast('Evento rechazado conforme a las políticas comunitarias.', 'success');
+      showToast('Resolución de exclusión emitida para la producción.', 'info');
       setEventoModalDetalle(null);
       setAccionModal(null);
       fetchPendientes(page, size);
       fetchEstadisticas();
     } catch (err) {
-      showToast(err.message || 'Error al rechazar el evento.', 'error');
+      showErrorAlert('No fue posible registrar el rechazo', err?.message || 'Intenta nuevamente en unos momentos.');
     } finally {
       setActionLoading(false);
     }
@@ -193,7 +185,7 @@ export default function ModeradorPanel() {
         id: 'eventos',
         label: 'Eventos Pendientes',
         icon: FiClipboard,
-        count: totalPendientesCount > 0 ? String(totalPendientesCount) : null,
+        count: totalPendientesCount > 0 ? String(totalPendientesCount).padStart(2, '0') : null,
       },
       { id: 'historial', label: 'Explorar Eventos', icon: FiLayers, count: null },
       { id: 'palabras-prohibidas', label: 'Palabras Prohibidas', icon: FiShield, count: null },
@@ -204,23 +196,23 @@ export default function ModeradorPanel() {
 
   const titlesByTab = {
     resumen: {
-      title: 'Panel del Moderador',
-      subtitle: 'Resumen operativo y cola prioritaria de revisiones',
+      title: 'CURADURÍA Y CONTROL DE CARTELERA',
+      subtitle: 'Supervisión editorial, validación de requisitos y seguimiento de eventos en Cartagena.',
     },
     eventos: {
-      title: 'Eventos Pendientes',
+      title: 'BANDEJA DE EVENTOS PENDIENTES',
       subtitle: 'Bandeja de solicitudes de publicación que requieren moderación',
     },
     historial: {
-      title: 'Explorar Eventos del Sistema',
+      title: 'EXPLORAR EVENTOS',
       subtitle: 'Búsqueda por estado, historial de moderación y auditoría',
     },
     'palabras-prohibidas': {
-      title: 'Palabras Prohibidas',
+      title: 'DICCIONARIO DE PALABRAS PROHIBIDAS',
       subtitle: 'Diccionario de términos restringidos y reglas de filtro de contenido',
     },
     perfil: {
-      title: 'Mi Perfil de Moderador',
+      title: 'MI PERFIL',
       subtitle: 'Administra tus datos personales, credenciales y estado operativo',
     },
   };
@@ -305,8 +297,12 @@ export default function ModeradorPanel() {
           isOpen={Boolean(eventoModalDetalle)}
           onClose={() => setEventoModalDetalle(null)}
           onAprobar={handleAprobarEvento}
-          onSolicitarCorreccion={handleSolicitarCorreccion}
-          onRechazar={handleRechazarEvento}
+          onSolicitarCorreccion={(ev) =>
+            setAccionModal({ evento: ev || eventoModalDetalle, tipo: 'correccion' })
+          }
+          onRechazar={(ev) =>
+            setAccionModal({ evento: ev || eventoModalDetalle, tipo: 'rechazo' })
+          }
           actionLoading={actionLoading}
         />
       )}

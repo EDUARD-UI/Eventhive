@@ -23,6 +23,7 @@ export default function OrganizationHeader({
   userName = 'Organización',
   userInitials = 'EH',
   userPhoto = null,
+  userRole = 'Organizador',
   onMenuToggle,
   onProfileClick,
 }) {
@@ -146,7 +147,7 @@ export default function OrganizationHeader({
                 {userName}
               </span>
               <span className="font-mono text-[10px] text-[#64748B] truncate leading-tight">
-                Organizador
+                {userRole}
               </span>
             </div>
             <FiChevronDown size={14} strokeWidth={1.5} className="text-[#64748B] group-hover:text-[#0F2342] transition-colors" />
@@ -169,7 +170,7 @@ export default function OrganizationHeader({
                 className="w-full flex items-center gap-2 px-4 py-2 text-xs text-[#0F2342] hover:bg-[#F8F9FA] font-mono uppercase tracking-wider transition-colors cursor-pointer"
               >
                 <FiUser size={14} strokeWidth={1.5} className="text-[#64748B]" />
-                <span>Perfil de Organización</span>
+                <span>{userRole === 'Marketing' ? 'Mi Perfil' : 'Perfil de Organización'}</span>
               </button>
 
               <div className="my-1 border-t border-[#F1F5F9]" />

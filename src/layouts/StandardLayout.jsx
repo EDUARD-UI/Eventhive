@@ -44,6 +44,7 @@ export default function StandardLayout({
             customHeader
           ) : (
             <OrganizationHeader
+              userRole={role}
               {...headerProps}
               onMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
             />

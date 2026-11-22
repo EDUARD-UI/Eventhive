@@ -1,4 +1,37 @@
 import Swal from 'sweetalert2';
+import { toast as sonnerToast } from 'sonner';
+
+/**
+ * Toast con Sonner para acciones rápidas e informativas
+ * Estilo Concert & Festival SaaS: fondo #0F2342, texto #FFFFFF, barra izquierda 3px #F5B800
+ */
+export const showToast = (message, type = 'info') => {
+  const customStyle = {
+    background: '#0F2342',
+    color: '#FFFFFF',
+    borderLeft: '3px solid #F5B800',
+    borderRadius: '2px',
+    borderTop: '1px solid rgba(255,255,255,0.08)',
+    borderRight: '1px solid rgba(255,255,255,0.08)',
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontSize: '12px',
+  };
+
+  if (type === 'error') {
+    return sonnerToast.error(message, {
+      style: { ...customStyle, borderLeft: '3px solid #DC2626' },
+    });
+  }
+  if (type === 'success') {
+    return sonnerToast.success(message, {
+      style: { ...customStyle, borderLeft: '3px solid #F5B800' },
+    });
+  }
+  return sonnerToast(message, { style: customStyle });
+};
+
+export { sonnerToast as toast };
 
 /**
  * Escapa cadenas para prevenir inyecciones HTML en mensajes dinámicos
@@ -61,17 +94,24 @@ const normalizeAlertOptions = (titleOrOptions, maybeText, defaultTitle) => {
  * Alerta de éxito con diseño EventHive adaptado a temas claro y oscuro
  * Por defecto es informativa: se cierra sola tras timer sin botón de confirmación.
  */
-export const showSuccessAlert = (titleOrOptions = '¡Éxito!', maybeText = '') => {
-  const opts = normalizeAlertOptions(titleOrOptions, maybeText, '¡Éxito!');
+export const showSuccessAlert = (titleOrOptions = '¡Evento en cartelera!', maybeText = 'La producción ya está visible al público.') => {
+  const opts = normalizeAlertOptions(titleOrOptions, maybeText, '¡Evento en cartelera!');
   const swalConfig = {
     icon: 'success',
     title: opts.title,
     confirmButtonText: opts.confirmButtonText || 'Aceptar',
-    showConfirmButton: opts.showConfirmButton ?? false,
-    showCancelButton: opts.showCancelButton ?? false,
-    timer: opts.timer !== undefined ? opts.timer : 2200,
+    showConfirmButton: false,
+    showCancelButton: false,
+    timer: opts.timer !== undefined ? opts.timer : 2400,
+    timerProgressBar: true,
     buttonsStyling: false,
     customClass: BASE_SWAL_CLASSES,
+    didOpen: () => {
+      const b = Swal.getTimerProgressBar();
+      if (b) {
+        b.style.backgroundColor = '#F5B800';
+      }
+    },
   };
 
   if (opts.badge) {

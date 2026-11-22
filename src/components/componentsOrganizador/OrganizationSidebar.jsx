@@ -87,17 +87,28 @@ export default function OrganizationSidebar({
                 )}
 
                 {/* Ícono lineal con 1.5px de grosor */}
-                {IconComponent && (
-                  <IconComponent
-                    size={17}
-                    strokeWidth={1.5}
-                    className={`shrink-0 transition-colors ${
-                      isActive ? 'text-[#F5B800]' : 'text-slate-400 group-hover:text-slate-200'
-                    }`}
-                  />
-                )}
+                <div className="flex items-center gap-3.5 min-w-0">
+                  {IconComponent && (
+                    <IconComponent
+                      size={17}
+                      strokeWidth={1.5}
+                      className={`shrink-0 transition-colors ${
+                        isActive ? 'text-[#F5B800]' : 'text-slate-400 group-hover:text-slate-200'
+                      }`}
+                    />
+                  )}
+                  <span className="truncate">{item.label}</span>
+                </div>
 
-                <span className="truncate">{item.label}</span>
+                {item.count !== null && item.count !== undefined && (
+                  <span
+                    className={`font-mono text-xs tracking-wider transition-colors shrink-0 ${
+                      isActive ? 'text-[#F5B800] font-bold' : 'text-slate-400'
+                    }`}
+                  >
+                    {String(item.count).padStart(2, '0')}
+                  </span>
+                )}
               </button>
             );
           })}

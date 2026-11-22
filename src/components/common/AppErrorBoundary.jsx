@@ -1,5 +1,9 @@
 import React from 'react';
 
+/**
+ * AppErrorBoundary
+ * Captura excepciones críticas de renderizado o desconexión de red y redirige a la página 404 oficial de Event Hive.
+ */
 export default class AppErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -11,26 +15,33 @@ export default class AppErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Error al renderizar la interfaz:', error, errorInfo);
+    console.warn('Fallo crítico en componente:', error, errorInfo);
+    if (typeof window !== 'undefined' && window.location.pathname !== '/404') {
+      window.location.assign('/404');
+    }
   }
+
+  componentDidMount() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('offline', this.handleOffline);
+    }
+  }
+
+  componentWillUnmount() {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('offline', this.handleOffline);
+    }
+  }
+
+  handleOffline = () => {
+    if (typeof window !== 'undefined' && window.location.pathname !== '/404') {
+      window.location.assign('/404');
+    }
+  };
 
   render() {
     if (this.state.hasError) {
-      return (
-        <main className="min-h-screen flex flex-col items-center justify-center bg-slate-50 px-6 text-center text-slate-900">
-          <h1 className="text-2xl font-black">No pudimos mostrar esta pantalla</h1>
-          <p className="mt-2 max-w-md text-sm text-slate-600">
-            Ocurrió un error inesperado. Intenta cargar la página nuevamente.
-          </p>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="mt-6 rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 hover:bg-amber-400"
-          >
-            Volver a cargar
-          </button>
-        </main>
-      );
+      return null;
     }
 
     return this.props.children;

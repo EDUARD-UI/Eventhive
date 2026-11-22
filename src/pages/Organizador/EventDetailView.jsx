@@ -66,35 +66,81 @@ const labelMap = {
 
 export default function EventDetailView({
   eventId,
+  event: directEvent,
   onBack,
+  onClose,
   onEdit,
   isDrawer = true,
   canSendEvents = true,
   orgSuspended = false,
+  readOnly = false,
+  allowSuspend = true,
+  onAprobar,
+  onSolicitarCorreccion,
+  onRechazar,
+  onEditBanner,
+  actionLoading = false,
 }) {
-  const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const activeEventId = directEvent?.id || eventId;
+  const handleClose = onBack || onClose || (() => {});
+
+  const [event, setEvent] = useState(directEvent || null);
+  const [loading, setLoading] = useState(!directEvent && Boolean(activeEventId));
   const [runningAction, setRunningAction] = useState(null); // 'review' | 'withdraw' | 'cancel' | 'reopen'
   const [historial, setHistorial] = useState([]);
 
+  // Cerrar con tecla Escape
   useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && !runningAction && !actionLoading) {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [runningAction, actionLoading, handleClose]);
+
+  useEffect(() => {
+    if (directEvent && directEvent.titulo) {
+      setEvent(directEvent);
+      if (directEvent.id) {
+        moderationService
+          .getHistorialModeracion(directEvent.id, { page: 0, size: 20 })
+          .then((res) => {
+            const items = Array.isArray(res) ? res : res?.content || [];
+            setHistorial(items);
+          })
+          .catch(() => {});
+      }
+      return;
+    }
+
+    if (!activeEventId) return;
+
     let isMounted = true;
     setLoading(true);
 
     const currentUser = session.getUser();
     const userRole = normalizeRole(currentUser?.role || currentUser?.rol);
-    const canViewModeration = ['MODERADOR', 'ADMINISTRADOR'].includes(userRole);
+    const canViewModeration = ['MODERADOR', 'ADMINISTRADOR'].includes(userRole) || Boolean(onAprobar);
 
     const p1 = organizerService
-      .getEventoDetalle(eventId)
+      .getEventoDetalle(activeEventId)
       .then((data) => {
         if (isMounted && data) setEvent(data);
       })
-      .catch((err) => console.error('Error cargando detalle:', err));
+      .catch((err) => {
+        return moderationService
+          .getEventoDetalle(activeEventId)
+          .then((data) => {
+            if (isMounted && data) setEvent(data);
+          })
+          .catch((e) => console.warn('Error cargando detalle de evento:', e));
+      });
 
     const p2 = canViewModeration
       ? moderationService
-          .getHistorialModeracion(eventId, { page: 0, size: 20 })
+          .getHistorialModeracion(activeEventId, { page: 0, size: 20 })
           .then((res) => {
             if (isMounted) {
               const items = Array.isArray(res) ? res : res?.content || [];
@@ -113,14 +159,14 @@ export default function EventDetailView({
     return () => {
       isMounted = false;
     };
-  }, [eventId]);
+  }, [activeEventId, directEvent, onAprobar]);
 
   const handleAction = async (actionKey, actionFn, successMsg) => {
     if (runningAction) return;
     setRunningAction(actionKey);
     try {
       await actionFn();
-      const updated = await organizerService.getEventoDetalle(eventId);
+      const updated = await organizerService.getEventoDetalle(activeEventId);
       if (updated) setEvent(updated);
       if (successMsg) {
         Swal.fire({
@@ -148,7 +194,7 @@ export default function EventDetailView({
         <div className="fixed inset-0 z-[9999] flex justify-end animate-in fade-in duration-200">
           <div
             className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity cursor-pointer"
-            onClick={() => !runningAction && onBack()}
+            onClick={() => !runningAction && !actionLoading && handleClose()}
             aria-hidden="true"
           />
           <div
@@ -184,7 +230,7 @@ export default function EventDetailView({
           <p className="text-xs text-slate-500">No se pudo recuperar la información de la producción seleccionada.</p>
           <button
             type="button"
-            onClick={onBack}
+            onClick={handleClose}
             className="px-4 py-2 rounded-xl bg-[#0B1B3D] text-amber-300 text-xs font-bold hover:bg-slate-900 transition-colors cursor-pointer"
           >
             Cerrar panel
@@ -237,8 +283,8 @@ export default function EventDetailView({
         {/* Botón Cerrar (✕) Cuadrado Minimalista */}
         <button
           type="button"
-          onClick={onBack}
-          disabled={Boolean(runningAction)}
+          onClick={handleClose}
+          disabled={Boolean(runningAction) || Boolean(actionLoading)}
           aria-label="Cerrar detalle"
           title="Cerrar"
           className="absolute top-4 right-4 z-20 w-8 h-8 rounded-[2px] bg-[#0F2342]/85 hover:bg-[#0F2342] text-white flex items-center justify-center cursor-pointer transition-colors shadow-sm disabled:opacity-50"
@@ -458,11 +504,69 @@ export default function EventDetailView({
       </div>
 
       {/* 3. Footer Fijo de Acciones Editorial */}
-      {estado !== 'FINALIZADO' && (
+      {Boolean(onAprobar || onSolicitarCorreccion || onRechazar) ? (
+        <div className="p-4 sm:p-5 bg-white border-t border-[#E2E8F0] flex items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-4">
+            {onRechazar && (
+              <button
+                type="button"
+                onClick={() => onRechazar(event)}
+                disabled={actionLoading}
+                className="font-mono text-xs text-[#DC2626] hover:underline cursor-pointer bg-transparent border-none p-0 disabled:opacity-50"
+              >
+                Rechazar evento
+              </button>
+            )}
+
+            {onSolicitarCorreccion && (
+              <button
+                type="button"
+                onClick={() => onSolicitarCorreccion(event)}
+                disabled={actionLoading}
+                className="px-4 py-2.5 rounded-[2px] border border-[#F5B800] bg-amber-50 hover:bg-amber-100 text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-all disabled:opacity-50 cursor-pointer"
+              >
+                Solicitar Corrección
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            {onAprobar && (
+              <button
+                type="button"
+                onClick={() => onAprobar(event)}
+                disabled={actionLoading}
+                className="px-5 py-2.5 rounded-[2px] bg-[#0F2342] hover:bg-[#1B365D] text-[#FFFFFF] hover:text-[#F5B800] font-mono text-xs uppercase tracking-wider font-bold transition-all disabled:opacity-50 cursor-pointer shadow-xs flex items-center gap-2"
+              >
+                {actionLoading ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>PROCESANDO...</span>
+                  </>
+                ) : (
+                  <span>APROBAR Y PUBLICAR</span>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+      ) : readOnly ? (
+        onEditBanner ? (
+          <div className="p-4 sm:p-5 bg-white border-t border-[#E2E8F0] flex items-center justify-end gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => onEditBanner(event)}
+              className="px-5 py-2.5 rounded-[2px] bg-[#0F2342] hover:bg-[#1B365D] text-[#FFFFFF] hover:text-[#F5B800] font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer shadow-xs"
+            >
+              EDITAR BANNER
+            </button>
+          </div>
+        ) : null
+      ) : estado !== 'FINALIZADO' ? (
         <div className="p-4 sm:p-5 bg-white border-t border-[#E2E8F0] flex items-center justify-between gap-3 shrink-0">
           <div>
             {/* Enlace Destructivo o de Pausa */}
-            {canCancel && (
+            {canCancel && allowSuspend && (
               <button
                 type="button"
                 onClick={async () => {
@@ -549,7 +653,7 @@ export default function EventDetailView({
             )}
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

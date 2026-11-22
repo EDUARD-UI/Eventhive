@@ -215,6 +215,7 @@ export default function AppRouter() {
           <Route path="/aceptar-invitacion" element={<AceptarInvitacionPage />} />
 
           {/* Fallback de ruta no encontrada: página 404 personalizada */}
+          <Route path="/404" element={<NotFoundPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>

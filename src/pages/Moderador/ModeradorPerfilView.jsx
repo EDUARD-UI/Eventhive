@@ -1,83 +1,51 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   FiUser,
   FiMail,
   FiPhone,
-  FiShield,
-  FiCamera,
-  FiCheckCircle,
-  FiEdit2,
-  FiLock,
   FiX,
   FiSave,
-  FiClock,
-  FiAlertTriangle,
-  FiClipboard,
-  FiLayers,
-  FiCheck,
-  FiShoppingBag,
-  FiExternalLink,
+  FiCamera,
+  FiLock,
+  FiRotateCw,
+  FiActivity,
   FiCalendar,
   FiMapPin,
+  FiClock,
   FiArrowRight,
-  FiCreditCard,
-  FiTag,
-  FiDollarSign,
+  FiCheck,
 } from 'react-icons/fi';
 import Swal from 'sweetalert2';
-import { Link } from 'react-router-dom';
-import Badge from '../../components/Shared/Badge.jsx';
-import {
-  ProfileCard,
-  ProfileField,
-  ProfileMetric,
-} from '../../components/Shared/DashboardProfileComponents.jsx';
-import ModalTicketQR from '../../components/perfilUsuario/ModalTicketQR.jsx';
-import TicketQRCode from '../../components/perfilUsuario/TicketQRCode.jsx';
 import { session, extractPhotoUrl } from '../../services/session.js';
 import userService, { readFileAsDataUrl } from '../../services/userService.js';
 import moderationService from '../../services/moderationService.js';
-import { ticketService } from '../../services/ticketService.js';
-import { formatPrice, formatHora12 } from '../../utils/formatters.js';
+import { formatFecha, formatHora12 } from '../../utils/formatters.js';
+import { sanitizeText, sanitizePhone } from '../../utils/sanitizer.js';
+import EventDetailView from '../Organizador/EventDetailView.jsx';
 
-const formatBoletoFecha = (fechaRaw) => {
-  if (!fechaRaw) return 'Fecha por confirmar';
-  if (typeof fechaRaw === 'string') {
-    const trimmed = fechaRaw.trim();
-    if (trimmed.includes('T') || (trimmed.includes('-') && trimmed.length >= 10)) {
-      try {
-        const d = new Date(trimmed);
-        if (!isNaN(d.getTime())) {
-          return d.toLocaleDateString('es-CO', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-          });
-        }
-      } catch {
-        // fallback
-      }
-    }
-  }
-  return fechaRaw;
-};
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
+const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
 
 export default function ModeradorPerfilView({ onNavigateTab }) {
   const sessionUser = session.getUser();
   const fileInputRef = useRef(null);
 
-  // Estados de datos de perfil
+  // Estados de datos reales de perfil
   const [perfil, setPerfil] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [nombre, setNombre] = useState(sessionUser?.name || sessionUser?.nombre || 'Moderador');
-  const [email, setEmail] = useState(sessionUser?.email || 'moderador@eventhive.local');
+  const [nombre, setNombre] = useState(sessionUser?.name || sessionUser?.nombre || 'Valeria Mendoza');
+  const [email, setEmail] = useState(sessionUser?.email || sessionUser?.correo || 'moderador@eventhive.com');
   const [telefono, setTelefono] = useState(sessionUser?.telefono || '');
   const [fotoUrl, setFotoUrl] = useState(extractPhotoUrl(sessionUser) || '');
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoError, setPhotoError] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  // Estadísticas de moderación
+  // Estado del volteo 3D de la credencial
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  // Estadísticas reales de moderación
   const [stats, setStats] = useState({
     publicados: 0,
     pendientesRevision: 0,
@@ -85,7 +53,12 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
     rechazados: 0,
   });
 
-  // Modal / Drawer de edición de perfil
+  // Bitácora / Setlist de eventos gestionados recientemente
+  const [actividadEventos, setActividadEventos] = useState([]);
+  const [actividadLoading, setActividadLoading] = useState(false);
+  const [inspectedEvent, setInspectedEvent] = useState(null);
+
+  // Modal de edición de perfil
   const [showEditDrawer, setShowEditDrawer] = useState(false);
   const [editNombre, setEditNombre] = useState('');
   const [editTelefono, setEditTelefono] = useState('');
@@ -100,16 +73,20 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
 
-  // Pestaña activa del perfil: 'atribuciones' | 'boletos' | 'historial'
-  const [activeTab, setActiveTab] = useState('atribuciones');
+  // Cierre con Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (showEditDrawer && !saving) setShowEditDrawer(false);
+        if (showPasswordModal && !passwordLoading) setShowPasswordModal(false);
+        if (inspectedEvent) setInspectedEvent(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showEditDrawer, saving, showPasswordModal, passwordLoading, inspectedEvent]);
 
-  // Compras y Boletos del moderador
-  const [compras, setCompras] = useState([]);
-  const [ticketsError, setTicketsError] = useState('');
-  const [ticketModal, setTicketModal] = useState(null);
-  const [selectedCompraTickets, setSelectedCompraTickets] = useState([]);
-
-  // Cargar perfil inmediatamente sin bloquear por estadísticas ni compras
+  // Cargar perfil real y estadísticas de moderación
   useEffect(() => {
     let isMounted = true;
 
@@ -129,10 +106,11 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
           setTelefono(p.telefono);
           setEditTelefono(p.telefono);
         }
-        const photo = extractPhotoUrl(p);
+        const photo = extractPhotoUrl(p) || extractPhotoUrl(session.getUser());
         if (photo) {
           setFotoUrl(photo);
         }
+        setPhotoError(false);
       })
       .catch((err) => {
         console.warn('Error cargando perfil del moderador:', err);
@@ -148,23 +126,21 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
       })
       .catch(() => {});
 
-    ticketService
-      .getMisComprasConBoletos()
-      .then((result) => {
-        if (!isMounted) return;
-        setCompras(result.compras);
-        setTicketsError(
-          result.errorCount > 0
-            ? 'No fue posible consultar los boletos de algunas compras.'
-            : ''
-        );
-      })
-      .catch((err) => {
-        console.warn('No se pudieron cargar las compras y boletos del perfil moderador:', err);
+    // Cargar últimos eventos de la cartelera para el Setlist / Bitácora
+    setActividadLoading(true);
+    moderationService
+      .buscarEventosModeracion({ page: 0, size: 6 })
+      .then((res) => {
         if (isMounted) {
-          setCompras([]);
-          setTicketsError('No fue posible cargar tus boletos desde el servidor.');
+          const list = Array.isArray(res) ? res : res?.content || [];
+          setActividadEventos(list);
         }
+      })
+      .catch(() => {
+        if (isMounted) setActividadEventos([]);
+      })
+      .finally(() => {
+        if (isMounted) setActividadLoading(false);
       });
 
     return () => {
@@ -172,27 +148,27 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
     };
   }, []);
 
-  // Subir o actualizar foto de perfil
+  // Subir fotografía de acreditación
   const handlePhotoSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       Swal.fire({
         icon: 'error',
-        title: 'Formato inválido',
-        text: 'Por favor selecciona un archivo de imagen válido (JPG, PNG, WebP).',
-        confirmButtonColor: '#087fea',
+        title: 'Formato no permitido',
+        text: 'Por favor selecciona un archivo JPG, PNG o WebP.',
+        confirmButtonColor: '#0F2342',
       });
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_IMAGE_SIZE) {
       Swal.fire({
         icon: 'error',
-        title: 'Imagen muy pesada',
+        title: 'Archivo muy pesado',
         text: 'La fotografía no debe superar los 5MB.',
-        confirmButtonColor: '#087fea',
+        confirmButtonColor: '#0F2342',
       });
       return;
     }
@@ -201,7 +177,7 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
     const dataUrlPreview = await readFileAsDataUrl(file);
     if (dataUrlPreview) {
       setPhotoPreview(dataUrlPreview);
-      // Actualización optimista inmediata para que el icono del navegador cambie al instante
+      setPhotoError(false);
       session.updateUser({
         fotoUrl: dataUrlPreview,
         imagenPerfil: dataUrlPreview,
@@ -227,10 +203,15 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
 
       Swal.fire({
         icon: 'success',
-        title: 'Foto actualizada',
-        text: 'Tu fotografía de perfil fue actualizada exitosamente.',
-        timer: 2000,
-        confirmButtonColor: '#087fea',
+        title: 'Fotografía actualizada',
+        text: 'Tu fotografía de credencial fue actualizada exitosamente.',
+        timer: 2400,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        didOpen: () => {
+          const b = Swal.getTimerProgressBar();
+          if (b) b.style.backgroundColor = '#F5B800';
+        },
       });
     } catch (err) {
       setPhotoPreview(null);
@@ -247,8 +228,8 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
         text:
           err?.response?.data?.message ||
           err?.message ||
-          'No fue posible actualizar la fotografía de perfil.',
-        confirmButtonColor: '#087fea',
+          'No fue posible actualizar la fotografía.',
+        confirmButtonColor: '#0F2342',
       });
     } finally {
       setUploadingPhoto(false);
@@ -265,40 +246,51 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
-    if (!editNombre.trim()) {
+    setSaving(true);
+    setEditError(null);
+
+    const nombreSan = sanitizeText(editNombre);
+    const telefonoSan = sanitizePhone(editTelefono);
+
+    if (!nombreSan) {
       setEditError('El nombre completo es obligatorio.');
+      setSaving(false);
       return;
     }
 
     try {
-      setSaving(true);
-      setEditError(null);
       await userService.updatePerfil({
-        nombre: editNombre.trim(),
-        telefono: editTelefono.trim(),
+        nombre: nombreSan,
+        telefono: telefonoSan,
       });
 
-      setNombre(editNombre.trim());
-      setTelefono(editTelefono.trim());
+      setNombre(nombreSan);
+      setTelefono(telefonoSan);
+
       session.updateUser({
-        name: editNombre.trim(),
-        nombre: editNombre.trim(),
-        telefono: editTelefono.trim(),
+        name: nombreSan,
+        nombre: nombreSan,
+        telefono: telefonoSan,
       });
 
       setShowEditDrawer(false);
       Swal.fire({
         icon: 'success',
-        title: 'Perfil actualizado',
-        text: 'Tus datos de moderador se actualizaron correctamente.',
-        timer: 2000,
-        confirmButtonColor: '#087fea',
+        title: 'Datos actualizados',
+        text: 'Tus datos de acreditación han sido guardados correctamente.',
+        timer: 2400,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        didOpen: () => {
+          const b = Swal.getTimerProgressBar();
+          if (b) b.style.backgroundColor = '#F5B800';
+        },
       });
     } catch (err) {
       setEditError(
         err?.response?.data?.message ||
         err?.message ||
-        'Error al guardar los cambios en el perfil.'
+        'No fue posible actualizar el perfil.'
       );
     } finally {
       setSaving(false);
@@ -309,16 +301,10 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
     e.preventDefault();
     setPasswordError('');
 
-    if (!currentPassword) {
-      setPasswordError('Ingresa tu contraseña actual.');
-      return;
-    }
-
     if (newPassword !== confirmPassword) {
       setPasswordError('Las nuevas contraseñas no coinciden.');
       return;
     }
-
     if (newPassword.length < 8) {
       setPasswordError('La nueva contraseña debe tener al menos 8 caracteres.');
       return;
@@ -331,18 +317,23 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-
       Swal.fire({
         icon: 'success',
         title: 'Contraseña actualizada',
-        text: 'Tu contraseña de acceso fue cambiada exitosamente.',
-        confirmButtonColor: '#087fea',
+        text: 'Tu contraseña de acceso ha sido cambiada correctamente.',
+        timer: 2400,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        didOpen: () => {
+          const b = Swal.getTimerProgressBar();
+          if (b) b.style.backgroundColor = '#F5B800';
+        },
       });
     } catch (err) {
       setPasswordError(
         err?.response?.data?.message ||
         err?.message ||
-        'La contraseña actual es incorrecta o no cumple los requisitos.'
+        'No fue posible cambiar la contraseña.'
       );
     } finally {
       setPasswordLoading(false);
@@ -350,629 +341,446 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
   };
 
   const displayPhoto = photoPreview || fotoUrl;
+  const showValidPhoto = Boolean(displayPhoto && !photoError);
+
   const userInitials = nombre
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
     .map((w) => w[0])
     .join('')
-    .toUpperCase() || 'MD';
+    .toUpperCase() || 'VM';
 
   const publicadosCount = stats.publicados ?? stats.aprobados ?? 0;
   const pendientesCount = stats.pendientesRevision ?? stats.pendientes ?? 0;
   const enCorreccionCount = stats.enCorreccion ?? 0;
   const rechazadosCount = stats.rechazados ?? 0;
-  const totalAuditados = publicadosCount + enCorreccionCount + rechazadosCount;
+  const totalGestionados = publicadosCount + enCorreccionCount + rechazadosCount;
 
-  // Formatear boletos emitidos por el backend
-  const boletosList = React.useMemo(() => {
-    const list = [];
-    compras.forEach((compra) => {
-      (compra.boletos || []).forEach((boleto) => {
-        list.push({
-          ...boleto,
-          evento: boleto.evento || '—',
-          fecha: boleto.fecha ? formatBoletoFecha(boleto.fecha) : '—',
-          hora: boleto.hora ? formatHora12(boleto.hora) : '—',
-          lugar: boleto.lugar || '—',
-          zona: boleto.zona || '—',
-          asiento: boleto.asiento || '—',
-          titular: boleto.titular || '—',
-          precio: boleto.precio === null ? '—' : formatPrice(boleto.precio),
-          estado: boleto.estado || '—',
-        });
-      });
-    });
-    return list;
-  }, [compras]);
-
-  // Abrir modal de QR directamente desde una compra
-  const handleOpenTicketModalForCompra = (compra) => {
-    const matchingTickets = boletosList.filter((b) => String(b.compraId) === String(compra.id));
-    if (matchingTickets.length > 0) {
-      setTicketModal(matchingTickets[0]);
-      setSelectedCompraTickets(matchingTickets);
-    } else {
-      Swal.fire({
-        icon: 'info',
-        title: 'Boletos no disponibles',
-        text: 'El servidor no devolvió boletos asociados a esta compra.',
-        confirmButtonColor: '#087fea',
-      });
-    }
-  };
+  // Cálculo de proporciones para el Tablero de Pulso (Equalizer)
+  const aprobadosPct = totalGestionados > 0 ? Math.round((publicadosCount / totalGestionados) * 100) : 0;
+  const enCorreccionPct = totalGestionados > 0 ? Math.round((enCorreccionCount / totalGestionados) * 100) : 0;
+  const rechazadosPct = totalGestionados > 0 ? Math.round((rechazadosCount / totalGestionados) * 100) : 0;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      {/* 1. Tarjeta Principal de Identidad del Moderador */}
-      <ProfileCard className="relative overflow-hidden border border-slate-200/90 bg-white p-6 sm:p-8 shadow-sm">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
-            {/* Avatar con botón de subida de imagen */}
-            <div className="relative group shrink-0">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handlePhotoSelect}
-                accept="image/*"
-                className="hidden"
-              />
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-900 border-2 border-brand/40 overflow-hidden shadow-md flex items-center justify-center relative">
-                {displayPhoto ? (
-                  <img
-                    key={displayPhoto}
-                    src={displayPhoto}
-                    alt={nombre}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 text-white font-extrabold text-3xl">
-                    {userInitials}
-                  </div>
-                )}
+    <div className="space-y-8 select-none animate-in fade-in duration-150">
+      {/* Input oculto para cambiar foto */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handlePhotoSelect}
+        accept="image/png, image/jpeg, image/jpg, image/webp"
+        className="hidden"
+      />
 
-                {uploadingPhoto && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-xs font-bold">
-                    Subiendo...
-                  </div>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingPhoto}
-                title="Cambiar fotografía de perfil"
-                className="absolute -bottom-2 -right-2 p-2 rounded-xl bg-brand text-white shadow-md hover:bg-brand-dark transition-all duration-200 active:scale-95 cursor-pointer disabled:opacity-50"
-              >
-                <FiCamera size={14} />
-              </button>
-            </div>
-
-            {/* Información Personal */}
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                  <FiCheckCircle size={12} className="text-emerald-600" />
-                  <span>Cuenta Activa y Verificada</span>
-                </span>
-              </div>
-
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                {nombre}
-              </h1>
-
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-slate-500 font-medium">
-                <span className="flex items-center gap-1.5">
-                  <FiMail className="text-brand shrink-0" size={13} />
-                  <span>{email}</span>
-                </span>
-                {telefono && (
-                  <span className="flex items-center gap-1.5">
-                    <FiPhone className="text-brand shrink-0" size={13} />
-                    <span>{telefono}</span>
-                  </span>
-                )}
-                <span className="flex items-center gap-1.5">
-                  <FiShield className="text-amber-500 shrink-0" size={13} />
-                  <span>Cartagena Cultural Hive</span>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Botones de Acción */}
-          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2.5 shrink-0 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={openEditDrawer}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs cursor-pointer"
-            >
-              <FiEdit2 size={13} />
-              <span>Editar datos</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setPasswordError('');
-                setShowPasswordModal(true);
-              }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
-            >
-              <FiLock size={13} />
-              <span>Seguridad y Contraseña</span>
-            </button>
-          </div>
-        </div>
-      </ProfileCard>
-
-      {/* 2. Barra de Navegación de Pestañas de Perfil */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto scrollbar-none">
-        <button
-          type="button"
-          onClick={() => setActiveTab('atribuciones')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === 'atribuciones'
-              ? 'bg-slate-900 text-white shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-            }`}
-        >
-          <FiShield size={14} />
-          <span>Atribuciones y Seguridad</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('historial')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === 'historial'
-              ? 'bg-slate-900 text-white shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-            }`}
-        >
-          <FiClock size={14} />
-          <span>Historial de Compras</span>
-          {compras.length > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-800">
-              {compras.length}
-            </span>
-          )}
-        </button>
+      {/* Cabecera Editorial */}
+      <div className="border-b border-[#E2E8F0] pb-4">
+        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
+          Curaduría & Control de Cartelera · Acreditación Oficial
+        </span>
+        <h1 className="font-display font-black text-3xl sm:text-4xl text-[#0F2342] tracking-tight uppercase leading-none">
+          Mi Perfil
+        </h1>
       </div>
 
-      {/* 3. VISTA: Atribuciones y Seguridad */}
-      {activeTab === 'atribuciones' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-200">
-          <ProfileCard className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="p-2 rounded-xl bg-blue-50 text-brand">
-                <FiShield size={18} />
-              </span>
-              <div>
-                <h3 className="font-display text-sm font-bold text-slate-900">
-                  Atribuciones de Moderador
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Responsabilidades operativas asignadas a tu cuenta
-                </p>
+      {/* Layout Principal: Columna Izquierda (Escarapela 3D) y Columna Derecha (Escenario de Actividad & Curaduría) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* =========================================================================
+            COLUMNA IZQUIERDA (~38% ancho): Tarjeta de Credencial Interactivo (Volteo 3D)
+           ========================================================================= */}
+        <aside className="lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center">
+          <div className="w-full max-w-[380px] [perspective:1200px] flex flex-col items-center">
+            {/* Lazo / Correa de Escarapela en Azul Institucional #0F2342 */}
+            <div className="w-full flex flex-col items-center -mb-2 z-30 pointer-events-none select-none">
+              {/* Cinta textil azul institucional con costuras */}
+              <div className="w-12 h-14 bg-[#0F2342] shadow-md relative overflow-hidden flex justify-center border-t-2 border-[#1E3A8A]">
+                <div className="absolute inset-y-0 left-1.5 w-[1.5px] bg-white/20" />
+                <div className="absolute inset-y-0 right-1.5 w-[1.5px] bg-white/20" />
+                <div className="absolute inset-y-0 w-3 bg-[#132A4F]" />
               </div>
+              {/* Hebilla metálica plateada de sujeción */}
+              <div className="w-8 h-3.5 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-400 border border-slate-400 rounded-xs shadow-xs -mt-0.5 z-10" />
+              {/* Mosquetón / Gancho que conecta a la ranura de la credencial */}
+              <div className="w-4 h-4 border-2 border-slate-400 rounded-full -mt-2 z-10 bg-transparent" />
             </div>
 
-            <ul className="space-y-3 text-xs text-slate-600">
-              <li className="flex items-start gap-2.5">
-                <span className="text-emerald-600 mt-0.5">
-                  <FiCheck size={14} />
-                </span>
-                <span>
-                  <strong>Aprobación de publicaciones:</strong> Habilitar la visibilidad oficial de eventos en la cartelera de Cartagena.
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-blue-600 mt-0.5">
-                  <FiCheck size={14} />
-                </span>
-                <span>
-                  <strong>Solicitud de correcciones:</strong> Emitir observaciones formales a los organizadores para subsanar errores de aforo, fechas o contenido.
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-rose-600 mt-0.5">
-                  <FiCheck size={14} />
-                </span>
-                <span>
-                  <strong>Rechazo fundamentado:</strong> Denegar publicaciones que contravengan las normas de la comunidad o requisitos legales.
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-amber-600 mt-0.5">
-                  <FiCheck size={14} />
-                </span>
-                <span>
-                  <strong>Auditoría de eventos:</strong> Inspección de localidades, precios de boletería y material fotográfico.
-                </span>
-              </li>
-            </ul>
-          </ProfileCard>
-
-          <ProfileCard className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
-                <FiLock size={18} />
-              </span>
-              <div>
-                <h3 className="font-display text-sm font-bold text-slate-900">
-                  Seguridad y Acceso
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Estado de la sesión y credenciales administrativas
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-3.5">
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                <div>
-                  <span className="text-xs font-bold text-slate-800 block">
-                    Autenticación en dos pasos (Sesión Activa)
-                  </span>
-                  <span className="text-[11px] text-slate-500">
-                    Token JWT seguro y cifrado de conexión HTTPS
-                  </span>
-                </div>
-                <span className="text-xs font-bold text-emerald-600">Activo</span>
-              </div>
-
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                <div>
-                  <span className="text-xs font-bold text-slate-800 block">
-                    Contraseña de acceso
-                  </span>
-                  <span className="text-[11px] text-slate-500">
-                    Protegida con algoritmos de hashing seguro
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPasswordError('');
-                    setShowPasswordModal(true);
-                  }}
-                  className="text-xs font-bold text-brand hover:underline cursor-pointer"
-                >
-                  Cambiar
-                </button>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs text-amber-900 flex items-start gap-2">
-                <FiClock className="text-amber-600 mt-0.5 shrink-0" size={14} />
-                <span>
-                  Como moderador institucional, recuerda mantener tu contraseña segura y no compartir credenciales de acceso con terceros.
-                </span>
-              </div>
-            </div>
-          </ProfileCard>
-        </div>
-      )}
-
-      {/* 4. VISTA: Mis Boletos Digitales (con visualizador de QR) */}
-      {activeTab === 'boletos' && (
-        <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-            <div>
-              <h2 className="text-base sm:text-lg font-black text-slate-900">
-                Mis Boletos Digitales
-              </h2>
-              <p className="text-xs text-slate-500">
-                Entradas oficiales adquiridas en EventHive con código QR para ingreso
-              </p>
-            </div>
-            <Link
-              to="/buscar"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-brand hover:text-brand-dark"
+            {/* Credencial con Volteo 3D */}
+            <div
+              className={`relative w-full rounded-[2px] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] [transform-style:preserve-3d] shadow-[0_20px_45px_rgba(0,0,0,0.06)] border border-[#E2E8F0] bg-[#FFFFFF] ${
+                isFlipped ? '[transform:rotateY(180deg)]' : ''
+              }`}
             >
-              <span>Explorar más eventos</span>
-              <FiArrowRight size={13} />
-            </Link>
-          </div>
+              {/* =======================================================
+                  CARA FRONTAL: Pase de Curaduría VIP
+                 ======================================================= */}
+              <div className="w-full p-6 sm:p-7 flex flex-col justify-between [backface-visibility:hidden] min-h-[540px]">
+                <div>
+                  {/* Troquelado superior simulado */}
+                  <div className="w-16 h-2.5 rounded-full bg-[#EFEFEF] border border-[#DCDCDC] mx-auto shadow-inner mb-6" />
 
-          {boletosList.length === 0 && ticketsError ? (
-            <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center shadow-xs max-w-xl mx-auto my-6">
-              <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-3.5 border border-amber-200/80">
-                <FiAlertCircle size={22} />
-              </div>
-              <h4 className="font-extrabold text-base sm:text-lg text-slate-900 uppercase tracking-tight mb-1">
-                No pudimos cargar tus boletos
-              </h4>
-              <p className="text-xs sm:text-sm font-medium text-slate-500 max-w-sm mx-auto">
-                {ticketsError}
-              </p>
-            </div>
-          ) : boletosList.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-dashed border-slate-200 p-10 sm:p-14 text-center shadow-xs">
-              <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-3.5 border border-amber-200/80">
-                <FiShoppingBag size={22} />
-              </div>
-              <h4 className="font-extrabold text-base sm:text-lg text-slate-900 mb-1">
-                Aún no tienes boletos adquiridos
-              </h4>
-              <p className="text-xs font-medium text-slate-500 max-w-sm mx-auto mb-5">
-                No hay boletos asociados a tus compras.
-              </p>
-              <Link
-                to="/buscar"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-all active:scale-95"
-              >
-                <span>Explorar Cartelera</span>
-                <FiArrowRight size={14} />
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {boletosList.map((ticket) => (
-                <article
-                  key={ticket.id}
-                  className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group"
-                >
-                  {/* Cabecera oscura del Boleto */}
-                  <div className="p-4 bg-slate-900 text-white relative border-b border-slate-800">
-                    <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
-                      <span className="text-amber-400">Boleto Digital</span>
-                      <span className="bg-slate-800 text-slate-200 border border-slate-700 px-2 py-0.5 rounded-full">
-                        {ticket.zona}
+                  {/* Encabezado editorial de la credencial */}
+                  <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 mb-6">
+                    <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#64748B] font-semibold">
+                      EVENTHIVE · CURADURÍA
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#F5B800]" />
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-[#0F2342] font-bold">
+                        ACTIVO
                       </span>
+                    </span>
+                  </div>
+
+                  {/* Fotografía de Acreditación a Todo Color Natural */}
+                  <div className="w-36 h-36 mx-auto mb-6 bg-[#0F2342] border border-[#E2E8F0] overflow-hidden relative group rounded-[2px] flex items-center justify-center">
+                    {showValidPhoto ? (
+                      <img
+                        src={displayPhoto}
+                        alt={nombre}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        onError={() => setPhotoError(true)}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-[#0F2342] text-[#FFFFFF] p-2">
+                        <span className="font-mono text-xs tracking-widest uppercase text-[#F5B800]">CURADOR</span>
+                        <span className="font-display font-black text-2xl mt-1 text-white">
+                          {userInitials}
+                        </span>
+                      </div>
+                    )}
+
+                    {uploadingPhoto && (
+                      <div className="absolute inset-0 bg-[#0F2342]/85 flex items-center justify-center text-white font-mono text-[10px] uppercase font-bold">
+                        Subiendo...
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingPhoto}
+                      title="Cambiar fotografía"
+                      className="absolute inset-0 bg-[#0F2342]/80 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-[2px] cursor-pointer"
+                    >
+                      <FiCamera size={16} />
+                      <span className="text-[9px] font-mono uppercase mt-1 tracking-wider">Cambiar</span>
+                    </button>
+                  </div>
+
+                  {/* Datos Reales del Acreditado */}
+                  <div className="text-center space-y-1.5 px-2">
+                    <h2 className="font-display font-black text-xl sm:text-2xl text-[#0F2342] uppercase tracking-tight leading-tight">
+                      {nombre}
+                    </h2>
+                    <p className="font-mono text-xs text-[#64748B] truncate">
+                      {email}
+                    </p>
+                    {telefono && (
+                      <p className="font-mono text-xs text-[#0F2342] font-bold pt-0.5">
+                        {telefono}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Pie de la Credencial Frontal */}
+                <div className="mt-8 pt-4 border-t border-[#E2E8F0] flex items-center justify-between text-xs">
+                  <span className="font-mono text-[10px] tracking-wider text-[#64748B]">
+                    CREDENCIAL EVENTHIVE
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsFlipped(true)}
+                    className="font-mono text-[11px] font-semibold text-[#0F2342] hover:text-[#B45309] transition-colors flex items-center gap-1.5 cursor-pointer py-1"
+                  >
+                    <span>Ver Reverso</span>
+                    <FiRotateCw size={12} />
+                  </button>
+                </div>
+              </div>
+
+              {/* =======================================================
+                  CARA TRASERA: Registro Editorial & Acciones Rápidas
+                 ======================================================= */}
+              <div className="absolute inset-0 w-full h-full p-6 sm:p-7 flex flex-col justify-between [backface-visibility:hidden] [transform:rotateY(180deg)] bg-[#FFFFFF] min-h-[540px]">
+                <div>
+                  {/* Troquelado superior simulado */}
+                  <div className="w-16 h-2.5 rounded-full bg-[#EFEFEF] border border-[#DCDCDC] mx-auto shadow-inner mb-6" />
+
+                  {/* Encabezado trasero */}
+                  <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 mb-6">
+                    <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#64748B] font-semibold">
+                      EXPEDIENTE TÉCNICO
+                    </span>
+                    <span className="w-2 h-2 rounded-full bg-[#F5B800]" />
+                  </div>
+
+                  {/* Datos Reales del Sistema (Sin IDs ni número de eventos en la card) */}
+                  <div className="space-y-3 border-b border-[#E2E8F0] pb-5 text-xs font-mono">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#64748B]">CORREO REGISTRADO</span>
+                      <span className="text-[#0F2342] font-semibold truncate max-w-[180px]">{email}</span>
                     </div>
-                    <h4 className="text-base font-extrabold leading-tight text-white line-clamp-1">
-                      {ticket.evento}
-                    </h4>
-                    <div className="mt-2 flex items-center gap-2 text-xs text-slate-300 font-medium">
-                      <span className="flex items-center gap-1.5">
-                        <FiCalendar size={12} className="text-amber-400" />
-                        <span>{ticket.fecha}</span>
+                    <div className="flex justify-between items-center border-t border-[#F1F5F9] pt-2">
+                      <span className="text-[#64748B]">TELÉFONO</span>
+                      <span className="text-[#0F2342] font-semibold">{telefono || 'No registrado'}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-t border-[#F1F5F9] pt-2">
+                      <span className="text-[#64748B]">ESTADO</span>
+                      <span className="text-[#0F2342] font-bold flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                        <span>ACTIVO</span>
                       </span>
-                      <span>·</span>
-                      <span>{ticket.hora}</span>
                     </div>
                   </div>
 
-                  {/* Detalles del Boleto */}
-                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
-                    <div className="space-y-1.5 text-xs text-slate-700 font-medium">
-                      <p className="flex items-center gap-1.5 truncate">
-                        <FiMapPin className="text-slate-400 shrink-0" size={13} />
-                        <span className="truncate">{ticket.lugar}</span>
-                      </p>
-                      <p>
-                        <strong className="text-slate-900 font-semibold">Ubicación:</strong> {ticket.asiento}
-                      </p>
-                      <p>
-                        <strong className="text-slate-900 font-semibold">Titular:</strong> {ticket.titular}
-                      </p>
-                      <p>
-                        <strong className="text-slate-900 font-semibold">Precio:</strong> {ticket.precio}
-                      </p>
-                    </div>
+                  {/* Acciones Rápidas */}
+                  <div className="mt-6 space-y-3">
+                    <button
+                      type="button"
+                      onClick={openEditDrawer}
+                      className="w-full py-2.5 px-4 rounded-[2px] border border-[#0F2342] text-[#0F2342] hover:bg-[#0F2342] hover:text-white font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer"
+                    >
+                      EDITAR DATOS
+                    </button>
 
-                    {/* QR en miniatura y Botón de Apertura de QR Completo */}
-                    <div className="pt-3 border-t border-dashed border-slate-200 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5">
-                        <TicketQRCode value={ticket.codigoQR} size={48} />
-                        <div>
-                          <p className="text-[11px] font-mono font-bold text-slate-900 flex items-center gap-1">
-                            {ticket.estado === '—' ? null : <FiCheckCircle size={12} className="text-emerald-500" />} {ticket.estado}
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-medium">
-                            {ticket.codigoQR || 'Código no disponible'}
-                          </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPasswordError('');
+                        setShowPasswordModal(true);
+                      }}
+                      className="w-full text-center font-mono text-xs font-bold text-[#0F2342] hover:text-[#B45309] underline transition-colors cursor-pointer py-1"
+                    >
+                      Cambiar contraseña →
+                    </button>
+                  </div>
+                </div>
+
+                {/* Pie Reverso */}
+                <div className="pt-4 border-t border-[#E2E8F0] flex items-center justify-between text-xs">
+                  <span className="font-mono text-[10px] text-[#64748B]">
+                    EVENTHIVE DESK
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsFlipped(false)}
+                    className="font-mono text-[11px] font-semibold text-[#0F2342] hover:text-[#B45309] transition-colors flex items-center gap-1.5 cursor-pointer py-1"
+                  >
+                    <span>Ver Frente</span>
+                    <FiRotateCw size={12} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* =========================================================================
+            COLUMNA DERECHA (~62% ancho): Escenario de Actividad & Curaduría
+           ========================================================================= */}
+        <div className="lg:col-span-7 xl:col-span-8 w-full space-y-6">
+          {/* 1. Tablero de Pulso de Cartelera (Equalizer / Nivelador Visual) */}
+          <div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] p-6 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[#E2E8F0]">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#F5B800] shrink-0" />
+                <h3 className="font-display font-black text-lg text-[#0F2342] uppercase tracking-tight">
+                  Pulso de Cartelera & Nivelador Curatorial
+                </h3>
+              </div>
+              <span className="font-mono text-xs text-[#64748B]">
+                {totalGestionados} producciones auditadas
+              </span>
+            </div>
+
+            {/* Barra Ecualizadora Principal */}
+            <div className="space-y-2">
+              <div className="w-full h-4 bg-[#F8F9FA] border border-[#E2E8F0] rounded-[2px] flex overflow-hidden">
+                {totalGestionados === 0 ? (
+                  <div className="w-full h-full bg-slate-200" title="Sin actividad registrada" />
+                ) : (
+                  <>
+                    <div
+                      style={{ width: `${aprobadosPct}%` }}
+                      className="h-full bg-[#0F2342] transition-all duration-500"
+                      title={`Aprobados: ${publicadosCount} (${aprobadosPct}%)`}
+                    />
+                    <div
+                      style={{ width: `${enCorreccionPct}%` }}
+                      className="h-full bg-[#F5B800] transition-all duration-500"
+                      title={`En Corrección: ${enCorreccionCount} (${enCorreccionPct}%)`}
+                    />
+                    <div
+                      style={{ width: `${rechazadosPct}%` }}
+                      className="h-full bg-[#DC2626] transition-all duration-500"
+                      title={`Rechazados: ${rechazadosCount} (${rechazadosPct}%)`}
+                    />
+                  </>
+                )}
+              </div>
+
+              {/* Leyenda y proporciones reales */}
+              <div className="grid grid-cols-3 gap-2 pt-2 font-mono text-xs text-center">
+                <div className="p-2 border border-[#E2E8F0] rounded-[2px] bg-[#F8F9FA]">
+                  <span className="text-[10px] text-[#64748B] uppercase block">Aprobados</span>
+                  <span className="font-bold text-[#0F2342] text-sm">{publicadosCount}</span>
+                  <span className="text-[10px] text-[#64748B] block mt-0.5">{aprobadosPct}%</span>
+                </div>
+                <div className="p-2 border border-[#E2E8F0] rounded-[2px] bg-[#F8F9FA]">
+                  <span className="text-[10px] text-[#64748B] uppercase block">En Corrección</span>
+                  <span className="font-bold text-[#B45309] text-sm">{enCorreccionCount}</span>
+                  <span className="text-[10px] text-[#64748B] block mt-0.5">{enCorreccionPct}%</span>
+                </div>
+                <div className="p-2 border border-[#E2E8F0] rounded-[2px] bg-[#F8F9FA]">
+                  <span className="text-[10px] text-[#64748B] uppercase block">Rechazados</span>
+                  <span className="font-bold text-[#DC2626] text-sm">{rechazadosCount}</span>
+                  <span className="text-[10px] text-[#64748B] block mt-0.5">{rechazadosPct}%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Fila inferior de pendientes en cola */}
+            <div className="p-3 border border-[#E2E8F0] rounded-[2px] bg-[#F8F9FA] flex items-center justify-between font-mono text-xs">
+              <span className="text-[#64748B]">SOLICITUDES EN COLA DE REVISIÓN</span>
+              <span className="font-bold text-[#0F2342] flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#F5B800]" />
+                {String(pendientesCount).padStart(2, '0')} PENDIENTES
+              </span>
+            </div>
+          </div>
+
+          {/* 2. Historial de Actividad: Setlist / Hoja de Ruta de Dictámenes */}
+          <div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold">
+                  Bitácora de Cartelera · Setlist de Evaluaciones
+                </span>
+              </div>
+              <span className="font-mono text-xs text-[#64748B]">
+                ÚLTIMAS ENTRADAS
+              </span>
+            </div>
+
+            {actividadLoading ? (
+              <div className="p-8 text-center font-mono text-xs text-[#64748B]">
+                Sincronizando setlist de cartelera...
+              </div>
+            ) : actividadEventos.length === 0 ? (
+              <div className="p-8 text-center font-mono text-xs text-[#64748B] bg-[#F8F9FA] border border-[#E2E8F0] rounded-[2px]">
+                Sin registros recientes de evaluaciones en la cartelera.
+              </div>
+            ) : (
+              <div className="divide-y divide-[#E2E8F0]">
+                {actividadEventos.map((ev, index) => {
+                  const trackNumber = String(index + 1).padStart(2, '0');
+                  const fechaStr = ev.fecha ? formatFecha(ev.fecha) : 'Fecha pendiente';
+                  const horaStr = ev.hora ? formatHora12(ev.hora) : '';
+
+                  const isPublicado = ev.estado === 'PUBLICADO';
+                  const isCorreccion = ev.estado === 'EN_CORRECCION';
+                  const isRechazado = ev.estado === 'RECHAZADO';
+
+                  return (
+                    <div
+                      key={ev.id || index}
+                      className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#F8F9FA] px-2 -mx-2 transition-colors rounded-[2px]"
+                    >
+                      <div className="flex items-start gap-3 min-w-0">
+                        {/* Número de track / pista en la hoja de ruta */}
+                        <span className="font-mono text-xs font-bold text-[#F5B800] pt-0.5 shrink-0">
+                          {trackNumber}
+                        </span>
+
+                        <div className="min-w-0 space-y-0.5">
+                          <h4 className="font-display font-black text-sm text-[#0F2342] uppercase tracking-tight truncate">
+                            {ev.titulo || 'Concierto en Cartelera'}
+                          </h4>
+                          <div className="font-mono text-[11px] text-[#64748B] flex flex-wrap items-center gap-2">
+                            <span>{ev.organizacionNombre || 'Organizador'}</span>
+                            <span>•</span>
+                            <span>{ev.lugar || 'Cartagena'}</span>
+                          </div>
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setTicketModal(ticket);
-                          setSelectedCompraTickets([ticket]);
-                        }}
-                        className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                      >
-                        <FiExternalLink size={12} />
-                        <span>Ver QR</span>
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                        <div className="text-right font-mono text-[11px]">
+                          <span
+                            className={`font-bold uppercase block ${
+                              isPublicado
+                                ? 'text-emerald-700'
+                                : isCorreccion
+                                ? 'text-[#B45309]'
+                                : isRechazado
+                                ? 'text-[#DC2626]'
+                                : 'text-[#0F2342]'
+                            }`}
+                          >
+                            {ev.estado || 'EVALUADO'}
+                          </span>
+                          <span className="text-[#64748B]">
+                            {fechaStr} {horaStr ? `· ${horaStr}` : ''}
+                          </span>
+                        </div>
 
-      {/* 5. VISTA: Historial de Compras */}
-      {activeTab === 'historial' && (
-        <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-            <div>
-              <h2 className="text-base sm:text-lg font-black text-slate-900">
-                Historial de Compras
-              </h2>
-              <p className="text-xs text-slate-500">
-                Registro de órdenes y transacciones de boletería realizadas
-              </p>
-            </div>
-            <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full">
-              Total compras: {compras.length}
-            </span>
+                        <button
+                          type="button"
+                          onClick={() => setInspectedEvent(ev)}
+                          className="px-2.5 py-1 border border-[#E2E8F0] hover:border-[#0F2342] text-[#0F2342] font-mono text-[11px] uppercase tracking-wider font-bold rounded-[2px] transition-colors cursor-pointer"
+                        >
+                          Ver
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-
-          {compras.length === 0 && ticketsError ? (
-            <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center shadow-xs max-w-xl mx-auto my-6">
-              <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-3.5 border border-amber-200/80">
-                <FiAlertCircle size={22} />
-              </div>
-              <h4 className="font-extrabold text-base sm:text-lg text-slate-900 uppercase tracking-tight mb-1">
-                No pudimos cargar tus compras
-              </h4>
-              <p className="text-xs sm:text-sm font-medium text-slate-500 max-w-sm mx-auto">
-                {ticketsError}
-              </p>
-            </div>
-          ) : compras.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-dashed border-slate-200 p-10 sm:p-14 text-center shadow-xs">
-              <div className="w-12 h-12 mx-auto rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center mb-3.5 border border-slate-200">
-                <FiClock size={22} />
-              </div>
-              <h4 className="font-extrabold text-base sm:text-lg text-slate-900 mb-1">
-                Aún no registras compras
-              </h4>
-              <p className="text-xs font-medium text-slate-500 max-w-sm mx-auto mb-5">
-                Tus órdenes de compra y facturas de boletos se listarán aquí en orden cronológico.
-              </p>
-              <Link
-                to="/buscar"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-all active:scale-95"
-              >
-                <span>Explorar Cartelera</span>
-                <FiArrowRight size={14} />
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {compras.map((compra, index) => {
-                const items = compra.items || compra.detalles || [];
-                const eventNames = items.map((item) => item.eventoNombre).filter(Boolean);
-                const firstTicket = compra.boletos?.[0];
-                const total = compra.total === null || compra.total === undefined
-                  ? '—'
-                  : formatPrice(compra.total);
-                const fecha = compra.fechaCompra ? formatBoletoFecha(compra.fechaCompra) : '—';
-                const orderId = compra.id ?? `compra-${index + 1}`;
-                const boletosCount = compra.boletos?.length || 0;
-
-                return (
-                  <div
-                    key={orderId}
-                    className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-slate-300 transition-all"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">
-                          #ORD-{orderId}
-                        </span>
-                        <span className="text-xs text-slate-500 flex items-center gap-1">
-                          <FiCalendar size={11} className="text-brand" />
-                          <span>{fecha}</span>
-                        </span>
-                        <span className="text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
-                          {compra.estado || '—'}
-                        </span>
-                      </div>
-
-                      <h4 className="text-sm sm:text-base font-bold text-slate-900">
-                        {eventNames.length > 0 ? eventNames.join(', ') : firstTicket?.evento || '—'}
-                      </h4>
-
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                        <span className="flex items-center gap-1">
-                          <FiMapPin size={11} />
-                          <span>{firstTicket?.lugar || '—'}</span>
-                        </span>
-                        <span>·</span>
-                        <span>{boletosCount} entrada(s)</span>
-                      </div>
-                    </div>
-
-                    <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 shrink-0 gap-2">
-                      <div className="text-right">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block sm:text-right">
-                          Total Pagado
-                        </span>
-                        <span className="text-base sm:text-lg font-black text-slate-900">
-                          {total}
-                        </span>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleOpenTicketModalForCompra(compra)}
-                        disabled={boletosCount === 0}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
-                        title="Ver código QR de los boletos"
-                      >
-                        <FiExternalLink size={13} />
-                        <span>Ver boletos ({boletosCount})</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
-      )}
+      </div>
 
-      {/* 4. MODAL / DRAWER DE EDICIÓN DE PERFIL */}
+      {/* MODAL DE EDICIÓN DE DATOS */}
       {showEditDrawer && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150"
+          style={{
+            backgroundColor: 'rgba(15, 35, 66, 0.72)',
+            backdropFilter: 'blur(4px)',
+          }}
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
-              <div className="flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-blue-50 text-brand">
-                  <FiEdit2 size={16} />
+          <div className="w-full max-w-md bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
+              <div>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748B] block">
+                  Acreditación de Curaduría
                 </span>
-                <h3 className="font-display text-base font-bold text-slate-900">
-                  Editar Datos del Moderador
+                <h3 className="font-display font-black text-lg text-[#0F2342] uppercase tracking-tight">
+                  Editar Datos Personales
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowEditDrawer(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                className="p-1.5 text-[#64748B] hover:text-[#0F2342] transition-colors cursor-pointer"
               >
                 <FiX size={18} />
               </button>
             </div>
 
             {editError && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium">
+              <div className="p-3 bg-rose-50 border border-rose-200 text-xs font-mono text-rose-700">
                 {editError}
               </div>
             )}
 
             <form onSubmit={handleSaveProfile} className="space-y-4">
-              {/* Sección de fotografía también disponible desde el modal de edición */}
-              <div className="flex items-center gap-4 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
-                <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
-                  {displayPhoto ? (
-                    <img
-                      key={displayPhoto}
-                      src={displayPhoto}
-                      alt={nombre}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-white font-extrabold text-lg">{userInitials}</span>
-                  )}
-                </div>
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingPhoto}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-xs font-bold text-slate-700 shadow-2xs cursor-pointer transition-colors"
-                  >
-                    <FiCamera size={13} className="text-brand" />
-                    <span>{uploadingPhoto ? 'Subiendo...' : 'Cambiar foto de perfil'}</span>
-                  </button>
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    JPG, PNG o WebP (máx. 5 MB)
-                  </p>
-                </div>
-              </div>
-
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
                   Nombre Completo *
                 </label>
                 <input
@@ -980,55 +788,51 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
                   value={editNombre}
                   onChange={(e) => setEditNombre(e.target.value)}
                   required
-                  placeholder="Ej: Sofía Bermúdez"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none"
+                  placeholder="Ej: Valeria Mendoza"
+                  className="w-full px-3 py-2 border border-[#E2E8F0] rounded-[2px] font-sans text-sm text-[#0F2342] focus:border-[#0F2342] outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#64748B] font-bold mb-1.5">
                   Correo Electrónico (Institucional)
                 </label>
                 <input
                   type="email"
                   value={email}
                   disabled
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 text-sm cursor-not-allowed"
+                  className="w-full px-3 py-2 border border-[#E2E8F0] rounded-[2px] font-mono text-xs text-[#64748B] bg-[#F8F9FA] cursor-not-allowed"
                 />
-                <span className="text-[10px] text-slate-400 mt-1 block">
-                  El correo institucional solo puede ser modificado por el Administrador.
-                </span>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
                   Teléfono de Contacto
                 </label>
                 <input
                   type="tel"
                   value={editTelefono}
                   onChange={(e) => setEditTelefono(e.target.value)}
-                  placeholder="Ej: +57 300 123 4567"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none"
+                  placeholder="Ej: 3011000024"
+                  className="w-full px-3 py-2 border border-[#E2E8F0] rounded-[2px] font-mono text-sm text-[#0F2342] focus:border-[#0F2342] outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 mt-5">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[#E2E8F0]">
                 <button
                   type="button"
                   onClick={() => setShowEditDrawer(false)}
                   disabled={saving}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold cursor-pointer"
+                  className="px-4 py-2 border border-[#E2E8F0] text-[#64748B] hover:text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold rounded-[2px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-bold shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 bg-[#0F2342] hover:bg-[#F5B800] hover:text-[#0F2342] text-white font-mono text-xs uppercase tracking-wider font-bold rounded-[2px] transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  <FiSave size={14} />
-                  <span>{saving ? 'Guardando...' : 'Guardar cambios'}</span>
+                  {saving ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
               </div>
             </form>
@@ -1037,53 +841,45 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
         document.body
       )}
 
-      {/* MODAL DE CÓDIGO QR DE BOLETO */}
-      {ticketModal && (
-        <ModalTicketQR
-          ticket={ticketModal}
-          tickets={selectedCompraTickets}
-          onClose={() => {
-            setTicketModal(null);
-            setSelectedCompraTickets([]);
-          }}
-        />
-      )}
-
-      {/* 5. MODAL DE CAMBIO DE CONTRASEÑA */}
+      {/* MODAL DE CAMBIO DE CONTRASEÑA */}
       {showPasswordModal && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150"
+          style={{
+            backgroundColor: 'rgba(15, 35, 66, 0.72)',
+            backdropFilter: 'blur(4px)',
+          }}
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
-              <div className="flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
-                  <FiLock size={16} />
+          <div className="w-full max-w-md bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
+              <div>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748B] block">
+                  Seguridad de Credencial
                 </span>
-                <h3 className="font-display text-base font-bold text-slate-900">
+                <h3 className="font-display font-black text-lg text-[#0F2342] uppercase tracking-tight">
                   Actualizar Contraseña
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowPasswordModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                className="p-1.5 text-[#64748B] hover:text-[#0F2342] transition-colors cursor-pointer"
               >
                 <FiX size={18} />
               </button>
             </div>
 
             {passwordError && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium">
+              <div className="p-3 bg-rose-50 border border-rose-200 text-xs font-mono text-rose-700">
                 {passwordError}
               </div>
             )}
 
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
                   Contraseña Actual *
                 </label>
                 <input
@@ -1091,13 +887,13 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   required
-                  placeholder="Tu clave actual"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none"
+                  placeholder="Tu contraseña actual"
+                  className="w-full px-3 py-2 border border-[#E2E8F0] rounded-[2px] font-sans text-sm text-[#0F2342] focus:border-[#0F2342] outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
                   Nueva Contraseña *
                 </label>
                 <input
@@ -1107,12 +903,12 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
                   required
                   minLength={8}
                   placeholder="Mínimo 8 caracteres"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none"
+                  className="w-full px-3 py-2 border border-[#E2E8F0] rounded-[2px] font-sans text-sm text-[#0F2342] focus:border-[#0F2342] outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
                   Confirmar Nueva Contraseña *
                 </label>
                 <input
@@ -1120,33 +916,43 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  placeholder="Repite la nueva clave"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none"
+                  placeholder="Repite la nueva contraseña"
+                  className="w-full px-3 py-2 border border-[#E2E8F0] rounded-[2px] font-sans text-sm text-[#0F2342] focus:border-[#0F2342] outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 mt-5">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[#E2E8F0]">
                 <button
                   type="button"
                   onClick={() => setShowPasswordModal(false)}
                   disabled={passwordLoading}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold cursor-pointer"
+                  className="px-4 py-2 border border-[#E2E8F0] text-[#64748B] hover:text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold rounded-[2px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={passwordLoading}
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-dark text-white text-xs font-bold shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 bg-[#0F2342] hover:bg-[#F5B800] hover:text-[#0F2342] text-white font-mono text-xs uppercase tracking-wider font-bold rounded-[2px] transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  <FiLock size={14} />
-                  <span>{passwordLoading ? 'Cambiando...' : 'Cambiar clave'}</span>
+                  {passwordLoading ? 'Actualizando...' : 'Actualizar Contraseña'}
                 </button>
               </div>
             </form>
           </div>
         </div>,
         document.body
+      )}
+
+      {/* INSPECCIÓN DE EVENTO DESDE EL SETLIST */}
+      {inspectedEvent && (
+        <EventDetailView
+          eventId={inspectedEvent?.id}
+          event={inspectedEvent}
+          isDrawer={true}
+          onBack={() => setInspectedEvent(null)}
+          onClose={() => setInspectedEvent(null)}
+        />
       )}
     </div>
   );

@@ -1,56 +1,49 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  Sparkles,
-  Search,
-  Eye,
-  RefreshCw,
-  Award,
-  CheckCircle2,
-  DollarSign,
-  Image as ImageIcon,
-  Edit3,
-  Plus,
-  X,
-  Check,
-  Calendar,
-  Layers,
-  AlertCircle,
-  Loader2,
-  Save,
-  Star,
-  FileText,
-  Share2,
-  Upload,
-} from 'lucide-react';
+  FiSearch,
+  FiRefreshCw,
+  FiX,
+  FiUpload,
+  FiAlertCircle,
+  FiExternalLink,
+  FiCheck,
+  FiPlus,
+  FiLayers,
+  FiAward,
+} from 'react-icons/fi';
 import Swal from 'sweetalert2';
-import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
-import PlanCard from '../../components/Shared/PlanCard.jsx';
 import EventDetailView from '../Organizador/EventDetailView.jsx';
-import { formatPrice, formatHora12, formatFechaHora } from '../../utils/formatters.js';
+import { formatPrice } from '../../utils/formatters.js';
 import { promotionPlanService } from '../../services/promotionPlanService.js';
 
-// formatFechaHora imported from utils/formatters.js
+// Normaliza el nivel o tier de pauta de un plan
+const getPlanTier = (planName, isPremium) => {
+  const norm = String(planName || '').toUpperCase();
+  if (isPremium || norm.includes('EXPOSICI') || norm.includes('TOTAL') || norm.includes('PREMIUM') || norm.includes('VIP')) {
+    return 'EXPOSICION_TOTAL';
+  }
+  if (norm.includes('AMPLIFIC') || norm.includes('PRO') || norm.includes('MEDIO') || norm.includes('INTERMEDIO')) {
+    return 'AMPLIFICADO';
+  }
+  return 'IMPULSO';
+};
 
 export default function MarketingPromocionesView({ initialTab = 'eventos', onNavigateTab }) {
-  const [activeSubTab, setActiveSubTab] = useState(initialTab || 'eventos'); // 'eventos' | 'planes'
+  const [activeSubTab, setActiveSubTab] = useState(initialTab || 'eventos');
   const [promociones, setPromociones] = useState([]);
   const [stats, setStats] = useState({ eventosActivosPromocionados: 0, eventosPorPlan: [] });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPlanFilter, setSelectedPlanFilter] = useState('TODOS');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  // Paginación para Cards de Planes
-  const [planesPage, setPlanesPage] = useState(1);
-  const planesPageSize = 6;
+  const [pageSize] = useState(10);
 
   // Modal a la derecha: Detalle de evento
   const [selectedEventId, setSelectedEventId] = useState(null);
 
-  // Modal a la derecha: Asignar imagen destacada (Solo planes Premium)
+  // Modal a la derecha: Asignar / Editar creatividad de banner (planes con beneficio destacado/carrusel)
   const [promoImageModalEvent, setPromoImageModalEvent] = useState(null);
   const [inputPromoImage, setInputPromoImage] = useState('');
   const [savingPromoImage, setSavingPromoImage] = useState(false);
@@ -62,7 +55,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
   const [planes, setPlanes] = useState([]);
   const [loadingPlanes, setLoadingPlanes] = useState(false);
   const [planDrawerOpen, setPlanDrawerOpen] = useState(false);
-  const [editingPlanId, setEditingPlanId] = useState(null); // null = nuevo
+  const [editingPlanId, setEditingPlanId] = useState(null);
   const [planForm, setPlanForm] = useState({
     nombre: '',
     codigo: '',
@@ -94,12 +87,61 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
     try {
       setLoadingPlanes(true);
       const data = await promotionPlanService.getPlanesMarketing();
-      setPlanes(data);
+      if (Array.isArray(data) && data.length > 0) {
+        setPlanes(data);
+      } else {
+        // Fallback arquitectónico si no hay planes registrados aún
+        setPlanes([
+          {
+            id: 1,
+            nombre: 'Plan Impulso',
+            codigo: 'PLAN_IMPULSO',
+            detallePublicidad: 'Mayor visibilidad orgánica y posición preferente en búsquedas.',
+            precio: 350000,
+            comisionPorcentaje: 10,
+            pautaRedes: false,
+            premium: false,
+            beneficios: [
+              'Posicionamiento prioritario en cartelera cultural',
+              'Inclusión en sección de eventos recomendados',
+              'Mayor visibilidad orgánica en búsquedas de cartelera',
+            ],
+          },
+          {
+            id: 2,
+            nombre: 'Plan Amplificado',
+            codigo: 'PLAN_AMPLIFICADO',
+            detallePublicidad: 'Posicionamiento destacado y difusión activa en redes sociales.',
+            precio: 650000,
+            comisionPorcentaje: 8.5,
+            pautaRedes: true,
+            premium: false,
+            beneficios: [
+              'Posicionamiento destacado superior en cartelera cultural',
+              'Pauta activa y difusión en redes sociales oficiales',
+              'Segmentación estratégica por audiencia de Cartagena',
+            ],
+          },
+          {
+            id: 3,
+            nombre: 'Plan Exposición Total',
+            codigo: 'PLAN_EXPOSICION_TOTAL',
+            detallePublicidad: 'Aparición garantizada en Carrusel Principal de Home y máxima difusión omnicanal.',
+            precio: 1000000,
+            comisionPorcentaje: 6,
+            pautaRedes: true,
+            premium: true,
+            beneficios: [
+              'Espacio exclusivo garantizado en Carrusel Principal del Home',
+              'Difusión prioritaria omnicanal (Web, Push y Redes)',
+              'Soporte preferencial 24/7 y auditoría de boletería',
+            ],
+          },
+        ]);
+      }
     } catch (err) {
       if (err.status === 403) {
-        setAuthError('Acceso denegado (403): Se requieren permisos de MARKETING o ADMINISTRADOR para gestionar planes y eventos.');
-      } else if (err.status === 401) {
-        setAuthError('Tu sesión ha expirado o no es válida. Por favor, inicia sesión nuevamente.');
+        setAuthError('Acceso denegado (403): Se requieren credenciales de Marketing.');
       } else {
         console.warn('Error al cargar planes de promoción:', err);
       }
@@ -108,7 +150,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
     }
   }, []);
 
-  // Cargar eventos promocionados y estadísticas reales desde el backend
+  // Cargar eventos promocionados y estadísticas reales
   const fetchPromociones = useCallback(async () => {
     try {
       setLoading(true);
@@ -128,7 +170,11 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
         const evId = p.eventoId || p.id;
         const planObj = p.plan || p.promocionPlan || {};
         const isPremium = Boolean(p.premium || planObj.premium || p.tipoPlan === 'PREMIUM');
-        const planNombre = p.planNombre || planObj.nombre || p.plan || (isPremium ? 'Posicionamiento Premium' : 'Destacado Estándar');
+        const planNombre =
+          p.planNombre ||
+          planObj.nombre ||
+          p.plan ||
+          (isPremium ? 'Plan Exposición Total' : 'Plan Impulso');
         const precio = Number(p.precio || p.montoPagado || planObj.precio || 0);
 
         return {
@@ -139,8 +185,9 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
             p.organizacionNombre ||
             p.organizacion?.razonSocial ||
             p.organizacion?.nombre ||
-            'Organización Aliada',
+            '',
           plan: planNombre,
+          tier: getPlanTier(planNombre, isPremium),
           precio,
           premium: isPremium,
           pautaRedes: Boolean(p.pautaRedes || planObj.pautaRedes),
@@ -155,9 +202,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
       setPromociones(mapped);
     } catch (err) {
       if (err.status === 403) {
-        setAuthError('Acceso denegado (403): No cuentas con permisos de MARKETING o ADMINISTRADOR para consultar eventos promocionados.');
-      } else if (err.status === 401) {
-        setAuthError('Tu sesión ha expirado o no es válida. Por favor, inicia sesión nuevamente.');
+        setAuthError('Acceso denegado (403): Permisos insuficientes para consultar eventos promocionados.');
       } else {
         console.warn('Error al cargar promociones de marketing:', err);
       }
@@ -171,11 +216,36 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
     loadPlanes();
   }, [fetchPromociones, loadPlanes]);
 
+  // Métricas tipográficas en línea
+  const metrics = useMemo(() => {
+    const totalPromociones = promociones.length;
+    const activos = promociones.filter((p) => p.estado === 'ACTIVO' || p.estado === 'VIGENTE').length;
+
+    let impulso = 0;
+    let amplificado = 0;
+    let exposicion = 0;
+
+    promociones.forEach((p) => {
+      if (p.tier === 'EXPOSICION_TOTAL') exposicion += 1;
+      else if (p.tier === 'AMPLIFICADO') amplificado += 1;
+      else impulso += 1;
+    });
+
+    return {
+      total: totalPromociones,
+      activos: activos > 0 ? activos : totalPromociones,
+      impulso,
+      amplificado,
+      exposicion,
+    };
+  }, [promociones]);
+
   // Filtrado de eventos promocionados
   const filteredPromociones = useMemo(() => {
     return promociones.filter((p) => {
-      if (selectedPlanFilter === 'PREMIUM' && !p.premium) return false;
-      if (selectedPlanFilter === 'ESTANDAR' && p.premium) return false;
+      if (selectedPlanFilter === 'EXPOSICION_TOTAL' && p.tier !== 'EXPOSICION_TOTAL') return false;
+      if (selectedPlanFilter === 'AMPLIFICADO' && p.tier !== 'AMPLIFICADO') return false;
+      if (selectedPlanFilter === 'IMPULSO' && p.tier !== 'IMPULSO') return false;
 
       if (!searchTerm.trim()) return true;
       const term = searchTerm.toLowerCase();
@@ -187,34 +257,32 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
     });
   }, [promociones, selectedPlanFilter, searchTerm]);
 
-  // Paginado en cliente para eventos
+  // Paginado en cliente
   const paginatedPromociones = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredPromociones.slice(start, start + pageSize);
   }, [filteredPromociones, currentPage, pageSize]);
 
-  // Paginado en cliente para planes
-  const paginatedPlanes = useMemo(() => {
-    const start = (planesPage - 1) * planesPageSize;
-    return planes.slice(start, start + planesPageSize);
-  }, [planes, planesPage, planesPageSize]);
+  // Clasificación de planes para el Grid de 3 Columnas Arquitectónicas
+  const planesByTier = useMemo(() => {
+    const sorted = [...planes];
+    const planImpulso =
+      sorted.find((p) => getPlanTier(p.nombre, p.premium) === 'IMPULSO') || sorted[0] || {};
+    const planAmplificado =
+      sorted.find((p) => getPlanTier(p.nombre, p.premium) === 'AMPLIFICADO') || sorted[1] || {};
+    const planExposicion =
+      sorted.find((p) => getPlanTier(p.nombre, p.premium) === 'EXPOSICION_TOTAL') || sorted[2] || {};
 
-  // Abrir drawer para asignar imagen destacada (solo para planes Premium)
+    return { planImpulso, planAmplificado, planExposicion };
+  }, [planes]);
+
+  // Abrir drawer para asignar o editar banner
   const handleOpenPromoImageModal = (item) => {
-    if (!item.premium) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Plan Estándar',
-        text: 'La carga de imagen de banner está reservada exclusivamente para planes contratados con beneficio Premium.',
-      });
-      return;
-    }
     setPromoImageModalEvent(item);
     setInputPromoImage(item.urlImagenDestacado || '');
     setPromoImageError(null);
   };
 
-  // Carga de archivo de imagen directa a /api/marketing/imagenes
   const handlePromoFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -243,13 +311,12 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
     }
   };
 
-  // Guardar imagen destacada (PUT /api/promociones/eventos/{id}/posicionar)
   const handleSavePromoImage = async () => {
     if (!promoImageModalEvent) return;
     const urlTrimmed = inputPromoImage.trim();
 
     if (!urlTrimmed) {
-      setPromoImageError('Por favor ingresa la URL de la imagen para el banner.');
+      setPromoImageError('Por favor ingresa o carga la imagen para el banner.');
       return;
     }
 
@@ -261,7 +328,6 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
         urlTrimmed
       );
 
-      // Actualizar listado localmente
       setPromociones((prev) =>
         prev.map((item) =>
           item.eventoId === promoImageModalEvent.eventoId
@@ -272,10 +338,10 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
 
       Swal.fire({
         icon: 'success',
-        title: '¡Foto para Banner Guardada!',
-        text: 'La imagen destacada ha sido asociada y se mostrará en el carrusel principal.',
+        title: 'Pieza de banner guardada',
+        text: 'La creatividad ha sido asociada y se exhibe en los espacios oficiales.',
         timer: 2000,
-        confirmButtonColor: '#0B1B3D',
+        confirmButtonColor: '#0F2342',
       });
 
       setPromoImageModalEvent(null);
@@ -319,7 +385,6 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
     setPlanDrawerOpen(true);
   };
 
-  // Guardar Plan mediante el backend
   const handleSavePlanSubmit = async (e) => {
     e.preventDefault();
     setPlanFormError(null);
@@ -368,7 +433,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
           title: 'Plan actualizado',
           text: `El plan "${nombreTrimmed}" ha sido actualizado exitosamente.`,
           timer: 1800,
-          confirmButtonColor: '#0B1B3D',
+          confirmButtonColor: '#0F2342',
         });
       } else {
         await promotionPlanService.crearPlan(payload);
@@ -377,7 +442,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
           title: 'Plan creado',
           text: `El plan "${nombreTrimmed}" ha sido registrado exitosamente.`,
           timer: 1800,
-          confirmButtonColor: '#0B1B3D',
+          confirmButtonColor: '#0F2342',
         });
       }
 
@@ -393,177 +458,86 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
   };
 
   return (
-    <div className="space-y-6">
-      {/* Cabecera Principal */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-black font-display text-slate-900 tracking-tight flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-amber-500" />
-            Marketing & Promoción de Eventos
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Supervisa los eventos con contratación pagada de promoción, gestiona las imágenes para carrusel premium y administra las tarifas de posicionamiento.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              setAuthError(null);
-              fetchPromociones();
-              loadPlanes();
-            }}
-            title="Recargar datos"
-            className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-          >
-            <RefreshCw size={15} className={loading || loadingPlanes ? 'animate-spin' : ''} />
-          </button>
-        </div>
-      </div>
-
-      {/* Alerta de Autorización / Sesión */}
+    <div className="space-y-8 select-none">
+      {/* Alerta de Autorización si ocurre */}
       {authError && (
-        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-semibold flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+        <div className="p-4 bg-amber-50 border border-amber-200 text-xs font-mono text-amber-900 rounded-[2px] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FiAlertCircle size={15} className="text-amber-600 shrink-0" />
             <span>{authError}</span>
           </div>
           <button
             type="button"
             onClick={() => setAuthError(null)}
-            className="text-amber-600 hover:text-amber-800 font-bold ml-2 text-sm"
+            className="text-amber-700 hover:text-amber-900 font-bold uppercase underline ml-3"
           >
             ✕
           </button>
         </div>
       )}
 
-      {/* Subnavegación de Pestañas */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
-        <button
-          type="button"
-          onClick={() => handleTabChange('eventos')}
-          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
-            activeSubTab === 'eventos'
-              ? 'bg-slate-900 text-amber-400 shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <Layers size={14} />
-          <span>Eventos Promocionados</span>
-          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-500 text-[10px]">
-            {promociones.length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleTabChange('planes')}
-          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
-            activeSubTab === 'planes'
-              ? 'bg-slate-900 text-amber-400 shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <Award size={14} />
-          <span>Planes de Promoción</span>
-          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-500 text-[10px]">
-            {planes.length}
-          </span>
-        </button>
-      </div>
-
-      {/* PANEL 1: EVENTOS PROMOCIONADOS */}
+      {/* =========================================================================
+          VISTA 1: EVENTOS PROMOCIONADOS (Consola de Campañas Activas)
+         ========================================================================= */}
       {activeSubTab === 'eventos' && (
         <div className="space-y-6">
-          {/* Métricas Requeridas de Marketing (7.4) */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* 1. Número de eventos activos con planes de promoción pagados */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center font-bold">
-                  <CheckCircle2 size={22} />
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    Eventos Activos con Promoción Pagada
-                  </p>
-                  <p className="text-2xl font-black text-slate-900 leading-tight">
-                    {stats.eventosActivosPromocionados || promociones.filter((p) => p.estado === 'ACTIVO' || p.estado === 'VIGENTE').length}
-                  </p>
-                </div>
-              </div>
+          {/* A. Encabezado */}
+          <div className="border-b border-[#E2E8F0] pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
+                Consola de Difusión & Pauta · Campañas Activas
+              </span>
+              <h1 className="font-display font-black text-3xl sm:text-4xl text-[#0F2342] tracking-tight uppercase leading-none">
+                EVENTOS PROMOCIONADOS
+              </h1>
+              <p className="font-sans text-xs sm:text-sm text-[#64748B] mt-2">
+                Control de campañas activas, distribución por nivel de pauta y gestión de creatividad.
+              </p>
+            </div>
 
-              {/* Total Promociones Registradas */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center font-bold">
-                  <Award size={22} />
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    Total Promociones Pagadas
-                  </p>
-                  <p className="text-2xl font-black text-slate-900 leading-tight">
-                    {promociones.length}
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  fetchPromociones();
+                  loadPlanes();
+                }}
+                title="Recargar datos"
+                className="p-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-[#64748B] hover:text-[#0F2342] hover:bg-[#F8F9FA] transition-colors cursor-pointer"
+              >
+                <FiRefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+              </button>
+            </div>
+          </div>
 
-              {/* Beneficio Premium */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center font-bold">
-                  <Star size={22} />
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    Con Beneficio Premium
-                  </p>
-                  <p className="text-2xl font-black text-slate-900 leading-tight">
-                    {promociones.filter((p) => p.premium).length}
-                  </p>
-                </div>
+          {/* Barra de Resumen Tipográfico (Reemplazo de las 3 tarjetas KPI + caja de distribución) */}
+          <div className="w-full bg-[#FFFFFF] border-y border-[#E2E8F0] py-4 px-4 sm:px-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4 font-mono text-xs">
+            <div className="flex flex-wrap items-center gap-6 sm:divide-x divide-[#E2E8F0]">
+              <div className="font-bold text-[#0F2342] uppercase tracking-wider">
+                <span className="text-[#F5B800] mr-1.5 font-black">{metrics.activos}</span>
+                EVENTOS EN PAUTA ACTIVA
+              </div>
+              <div className="sm:pl-6 font-bold text-[#0F2342] uppercase tracking-wider">
+                <span className="text-[#0F2342] mr-1.5 font-black">{metrics.total}</span>
+                PROMOCIONES CONTRATADAS
               </div>
             </div>
 
-            {/* 2. Número de eventos por cada plan de promoción */}
-            {stats.eventosPorPlan && stats.eventosPorPlan.length > 0 && (
-              <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                    <Sparkles size={14} className="text-amber-500" />
-                    <span>Distribución de Eventos por Plan de Promoción</span>
-                  </h4>
-                  <span className="text-[11px] text-slate-400 font-medium">Datos en tiempo real</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {stats.eventosPorPlan.map((planStat, idx) => (
-                    <div
-                      key={planStat.planId || idx}
-                      className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between"
-                    >
-                      <div className="min-w-0 pr-2">
-                        <p className="text-xs font-bold text-slate-800 truncate" title={planStat.planNombre}>
-                          {planStat.planNombre}
-                        </p>
-                        <p className="text-[11px] text-slate-400 font-mono">
-                          {planStat.planCodigo || 'PLAN'}
-                        </p>
-                      </div>
-                      <span className="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 text-xs font-black shrink-0">
-                        {planStat.cantidadEventos} {planStat.cantidadEventos === 1 ? 'evento' : 'eventos'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <div className="text-[#64748B] uppercase tracking-wider flex items-center flex-wrap gap-2">
+              <span className="text-[#94A3B8]">DISTRIBUCIÓN:</span>
+              <span className="text-[#0F2342] font-semibold">{metrics.impulso} IMPULSO</span>
+              <span className="text-[#CBD5E1]">•</span>
+              <span className="text-[#0F2342] font-semibold">{metrics.amplificado} AMPLIFICADO</span>
+              <span className="text-[#CBD5E1]">•</span>
+              <span className="text-[#C68B17] font-bold">{metrics.exposicion} EXPOSICIÓN TOTAL</span>
+            </div>
           </div>
 
-          {/* Barra de Filtros */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
-            <div className="relative w-full md:w-96">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          {/* B. Barra de Control y Filtros */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {/* Buscador rectangular (border-radius: 2px, borde 1px solid #E2E8F0) */}
+            <div className="relative w-full sm:w-80 md:w-96">
+              <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
               <input
                 type="text"
                 value={searchTerm}
@@ -571,142 +545,151 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="Buscar por evento u organización..."
-                className="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20 focus:border-amber-400 transition-all"
+                placeholder="Buscar campaña por evento u organización..."
+                className="w-full pl-10 pr-4 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] font-mono text-xs text-[#0F2342] placeholder-[#94A3B8] focus:outline-none focus:border-[#0F2342] transition-colors"
               />
             </div>
 
-            <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold gap-1 w-full md:w-auto overflow-x-auto">
+            {/* Filtros tipográficos (sin píldoras): subrayado de 2px en #F5B800 */}
+            <div className="flex items-center gap-6 overflow-x-auto border-b border-[#E2E8F0] sm:border-b-0 pb-1 sm:pb-0">
               {[
-                { label: 'Todos los Planes', val: 'TODOS' },
-                { label: 'Planes Premium', val: 'PREMIUM' },
-                { label: 'Planes Estándar', val: 'ESTANDAR' },
-              ].map((f) => (
-                <button
-                  key={f.val}
-                  type="button"
-                  onClick={() => {
-                    setSelectedPlanFilter(f.val);
-                    setCurrentPage(1);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
-                    selectedPlanFilter === f.val
-                      ? 'bg-white text-slate-950 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-900'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
+                { label: 'TODOS LOS PLANES', val: 'TODOS' },
+                { label: 'EXPOSICIÓN TOTAL', val: 'EXPOSICION_TOTAL' },
+                { label: 'AMPLIFICADO', val: 'AMPLIFICADO' },
+                { label: 'IMPULSO', val: 'IMPULSO' },
+              ].map((f) => {
+                const isActive = selectedPlanFilter === f.val;
+                return (
+                  <button
+                    key={f.val}
+                    type="button"
+                    onClick={() => {
+                      setSelectedPlanFilter(f.val);
+                      setCurrentPage(1);
+                    }}
+                    className={`font-mono text-xs uppercase tracking-wider transition-all cursor-pointer pb-2 relative shrink-0 ${
+                      isActive
+                        ? 'text-[#0F2342] font-bold'
+                        : 'text-[#64748B] hover:text-[#0F2342] font-medium'
+                    }`}
+                  >
+                    <span>{f.label}</span>
+                    {isActive && (
+                      <span
+                        className="absolute bottom-0 inset-x-0 h-[2px] bg-[#F5B800] transition-all"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* TABLA DE EVENTOS QUE HAN PAGADO PROMOCIÓN (SIN IDs INTERNOS) */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+          {/* C. Listado de Campañas (Formato Ficha de Pauta — Sin badges apilados) */}
+          <div className="w-full bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] overflow-hidden">
             {loading ? (
-              <div className="p-12 text-center text-slate-400 text-xs font-medium">
-                <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-slate-400" />
-                Cargando eventos promocionados...
+              <div className="p-16 text-center text-[#64748B] font-mono text-xs">
+                <FiRefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-[#0F2342]" />
+                Cargando campañas en pauta...
               </div>
             ) : filteredPromociones.length === 0 ? (
-              <div className="p-12 text-center text-slate-400 text-xs font-medium">
-                No se encontraron eventos con promociones pagadas registradas.
+              <div className="p-16 text-center text-[#64748B] font-mono text-xs">
+                No se encontraron campañas activas con los criterios seleccionados.
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-700">
-                  <thead className="bg-white border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#FFFFFF] border-b border-[#E2E8F0] font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
                     <tr>
-                      <th className="py-3.5 px-4">Evento</th>
-                      <th className="py-3.5 px-4">Plan Contratado</th>
-                      <th className="py-3.5 px-4">Beneficios del Plan</th>
-                      <th className="py-3.5 px-4 text-right">Acciones</th>
+                      <th className="py-4 px-6 font-bold">Evento y Arte</th>
+                      <th className="py-4 px-6 font-bold">Nivel de Pauta Contratado</th>
+                      <th className="py-4 px-6 font-bold">Alcance / Cobertura</th>
+                      <th className="py-4 px-6 font-bold text-right">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-[#E2E8F0]">
                     {paginatedPromociones.map((p) => {
-                      const isActivo = p.estado === 'ACTIVO' || p.estado === 'VIGENTE' || p.estado === 'CONFIRMADO';
+                      const isExposicion = p.tier === 'EXPOSICION_TOTAL';
                       const hasPromoImage = Boolean(p.urlImagenDestacado);
 
+                      const coberturaTexto = isExposicion
+                        ? 'Carrusel Home + Posición Prioritaria'
+                        : p.pautaRedes
+                        ? 'Posición Destacada + Pauta en Redes'
+                        : 'Cartelera Prioritaria en Búsquedas';
+
                       return (
-                        <tr key={p.id} className="hover:bg-white transition-colors">
-                          {/* Evento (Sin IDs internos visibles) */}
-                          <td className="py-3.5 px-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-slate-100 flex items-center justify-center">
+                        <tr key={p.id} className="hover:bg-[#F8F9FA]/60 transition-colors">
+                          {/* Columna 1 — Evento y Arte: Miniatura cuadrada a todo color (48px x 48px, border-radius: 2px) */}
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-3.5">
+                              <div className="w-12 h-12 rounded-[2px] border border-[#E2E8F0] overflow-hidden shrink-0 bg-[#F8F9FA] flex items-center justify-center">
                                 {p.urlImagenDestacado || p.foto ? (
                                   <img
                                     src={p.urlImagenDestacado || p.foto}
                                     alt={p.eventoNombre}
                                     className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      e.target.style.display = 'none';
-                                    }}
                                   />
                                 ) : (
-                                  <div className="w-full h-full bg-slate-200 dark:bg-slate-800" />
+                                  <span className="font-mono text-xs font-bold text-[#64748B]">ARTE</span>
                                 )}
                               </div>
-                              <div>
-                                <p className="font-bold text-slate-900 line-clamp-1 max-w-[220px]">
+                              <div className="min-w-0 max-w-xs">
+                                <p className="font-sans font-bold text-sm text-[#0F2342] truncate" title={p.eventoNombre}>
                                   {p.eventoNombre}
                                 </p>
-                                <span className="text-[11px] text-slate-400 font-medium">Evento Cultural</span>
+                                {p.organizacionNombre ? (
+                                  <p className="font-mono text-[11px] text-[#64748B] truncate mt-0.5">
+                                    {p.organizacionNombre}
+                                  </p>
+                                ) : null}
                               </div>
                             </div>
                           </td>
 
-                          {/* Plan Contratado */}
-                          <td className="py-3.5 px-4 font-semibold text-slate-800">
-                            <span>{p.plan}</span>
-                          </td>
-
-                          {/* Beneficios / Atributos del Plan */}
-                          <td className="py-3.5 px-4">
-                            <div className="flex flex-col gap-1 items-start">
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-900 border border-amber-200">
-                                <Award size={10} />
-                                <span>Destacado</span>
+                          {/* Columna 2 — Nivel de Pauta Contratado: Nombre monoespaciado + indicador limpio */}
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`w-2 h-2 rounded-full shrink-0 ${
+                                  isExposicion ? 'bg-[#C68B17]' : 'bg-[#F5B800]'
+                                }`}
+                              />
+                              <span
+                                className={`font-mono text-xs uppercase tracking-wider font-bold ${
+                                  isExposicion ? 'text-[#C68B17]' : 'text-[#0F2342]'
+                                }`}
+                              >
+                                {p.plan.toUpperCase()}
                               </span>
-
-                              {p.premium ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
-                                  <Star size={10} />
-                                  <span>Premium</span>
-                                </span>
-                              ) : (
-                                <span className="text-[10px] text-slate-400 font-medium">
-                                  Plan Estándar
-                                </span>
-                              )}
                             </div>
                           </td>
 
-                          {/* Acciones */}
-                          <td className="py-3.5 px-4 text-right">
-                            <div className="inline-flex items-center gap-2">
-                              {/* SOLO si el plan tiene premium = true se muestra "Agregar foto para banner" */}
-                              {p.premium && isActivo && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenPromoImageModal(p)}
-                                  title="Agregar o actualizar foto para el banner del carrusel"
-                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-[11px] uppercase tracking-wider border border-amber-300 transition-all cursor-pointer shadow-2xs"
-                                >
-                                  <ImageIcon size={12} className="text-amber-600" />
-                                  <span>{hasPromoImage ? 'Editar Banner' : 'Agregar foto para banner'}</span>
-                                </button>
-                              )}
+                          {/* Columna 3 — Alcance / Cobertura (Sin badges amarillos, texto limpio) */}
+                          <td className="py-4 px-6 font-mono text-xs text-[#64748B]">
+                            <span>{coberturaTexto}</span>
+                          </td>
 
-                              {/* Botón Detalle Evento */}
+                          {/* Columna 4 — Acciones Limpias: Enlace tipográfico + Botón rectangular minimalista */}
+                          <td className="py-4 px-6 text-right">
+                            <div className="inline-flex items-center gap-4">
+                              {/* Enlace tipográfico: Editar Banner */}
+                              <button
+                                type="button"
+                                onClick={() => handleOpenPromoImageModal(p)}
+                                className="font-mono text-xs uppercase tracking-wider text-[#0F2342] hover:text-[#C68B17] hover:underline font-bold transition-colors cursor-pointer"
+                              >
+                                {hasPromoImage ? 'Editar Banner' : 'Cargar Banner'}
+                              </button>
+
+                              {/* Botón rectangular minimalista (border-radius: 2px, borde 1px solid #0F2342) */}
                               <button
                                 type="button"
                                 onClick={() => setSelectedEventId(p.eventoId)}
-                                title="Ver detalle del evento"
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-amber-300 font-bold text-[11px] uppercase tracking-wider shadow-xs transition-all cursor-pointer"
+                                className="rounded-[2px] border border-[#0F2342] hover:bg-[#0F2342] text-[#0F2342] hover:text-white px-3.5 py-1.5 font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer"
                               >
-                                <Eye size={12} />
-                                <span>Detalle</span>
+                                VER MÉTRICAS / DETALLE
                               </button>
                             </div>
                           </td>
@@ -720,9 +703,9 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
 
             {/* Paginación */}
             {filteredPromociones.length > pageSize && (
-              <div className="p-4 border-t border-slate-100 flex justify-between items-center">
-                <span className="text-xs text-slate-500 font-medium">
-                  Mostrando {paginatedPromociones.length} de {filteredPromociones.length} promociones
+              <div className="p-4 border-t border-[#E2E8F0] flex flex-col sm:flex-row justify-between items-center gap-3">
+                <span className="font-mono text-xs text-[#64748B]">
+                  Mostrando {paginatedPromociones.length} de {filteredPromociones.length} campañas
                 </span>
                 <Pagination
                   currentPage={currentPage}
@@ -736,459 +719,502 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
         </div>
       )}
 
-      {/* PANEL 2: PLANES DE PROMOCIÓN (CARDS VERTICALES CON PAGINACIÓN, SIN TABLA, SIN ARRASTRE) */}
+      {/* =========================================================================
+          VISTA 2: PLANES DE PROMOCIÓN (Catálogo de Tarifas y Comisiones)
+         ========================================================================= */}
       {activeSubTab === 'planes' && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+        <div className="space-y-8">
+          {/* Cabecera: Título + Botón Rectangular Azul #0F2342 */}
+          <div className="border-b border-[#E2E8F0] pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
-                <Award className="w-5 h-5 text-amber-500" />
-                <span>Planes de Promoción Disponibles</span>
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Tarifas y parámetros oficiales de posicionamiento para organizaciones.
+              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
+                Catálogo de Tarifas & Comisiones · Event Hive
+              </span>
+              <h1 className="font-display font-black text-3xl sm:text-4xl text-[#0F2342] tracking-tight uppercase leading-none">
+                PLANES DE PROMOCIÓN
+              </h1>
+              <p className="font-sans text-xs sm:text-sm text-[#64748B] mt-2">
+                Tarifas comerciales, niveles de exposición y comisiones para organizadores.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleOpenCreatePlan}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-400 font-bold text-xs uppercase tracking-wider shadow-sm transition-all cursor-pointer"
-            >
-              <Plus size={15} />
-              <span>Crear Nuevo Plan</span>
-            </button>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={handleOpenCreatePlan}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-[2px] bg-[#0F2342] hover:bg-[#F5B800] text-white hover:text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-all duration-150 cursor-pointer shadow-xs active:scale-98"
+              >
+                <FiPlus size={15} />
+                <span>CREAR NUEVO PLAN</span>
+              </button>
+            </div>
           </div>
 
-          {/* Cards de planes organizadas en grid responsive con paginación */}
-          {loadingPlanes ? (
-            <div className="p-16 text-center text-slate-400 text-xs font-medium bg-white rounded-3xl border border-slate-200/80">
-              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-slate-400" />
-              Cargando planes de promoción...
-            </div>
-          ) : planes.length === 0 ? (
-            <div className="p-16 text-center text-slate-400 text-xs font-medium bg-white rounded-3xl border border-slate-200/80">
-              No hay planes de promoción registrados en el catálogo.
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-                {paginatedPlanes.map((plan) => (
-                  <PlanCard
-                    key={plan.id || plan.codigo}
-                    plan={plan}
-                    className="w-full"
-                    mode="manage"
-                    onEdit={() => handleOpenEditPlan(plan)}
-                  />
-                ))}
+          {/* Grid de 3 Columnas Arquitectónicas (border-radius: 2px) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+            {/* 1. Plan Impulso ($350.000 COP / evento): Superficie #FFFFFF, borde 1px solid #E2E8F0 */}
+            <div className="w-full bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] p-6 sm:p-7 flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B] block">
+                    TIER 01 · BÁSICO
+                  </span>
+                  <h3 className="font-display font-black text-xl text-[#0F2342] uppercase tracking-tight mt-1">
+                    {planesByTier.planImpulso.nombre || 'Plan Impulso'}
+                  </h3>
+                </div>
+
+                <div className="py-2 border-y border-[#E2E8F0]">
+                  <span className="font-mono font-black text-2xl sm:text-3xl text-[#0F2342] tracking-tight block">
+                    {formatPrice(planesByTier.planImpulso.precio || 350000)}
+                  </span>
+                  <span className="font-mono text-[11px] text-[#64748B] uppercase">COP / evento</span>
+                </div>
+
+                <p className="text-xs text-[#64748B] leading-relaxed">
+                  {planesByTier.planImpulso.detallePublicidad ||
+                    'Posicionamiento prioritario en cartelera y mayor visibilidad orgánica en búsquedas.'}
+                </p>
+
+                {/* Detalle de Beneficios con guiones largos (—) */}
+                <div className="space-y-2 pt-2 border-t border-[#E2E8F0] font-sans text-xs text-[#0F2342]">
+                  <p>— Posicionamiento prioritario en cartelera cultural</p>
+                  <p>— Inclusión en sección de eventos recomendados</p>
+                  <p>— Mayor visibilidad orgánica en búsquedas de cartelera</p>
+                </div>
+
+                {/* Comisión comercial en tipografía monoespaciada tabular */}
+                <div className="pt-2 font-mono text-xs text-[#0F2342] font-bold">
+                  Comisión preferencial: {planesByTier.planImpulso.comisionPorcentaje ?? 10}%
+                </div>
               </div>
 
-              {planes.length > planesPageSize && (
-                <div className="p-4 bg-white rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row justify-between items-center gap-3">
-                  <span className="text-xs text-slate-500 font-medium">
-                    Mostrando {paginatedPlanes.length} de {planes.length} planes
-                  </span>
-                  <Pagination
-                    currentPage={planesPage}
-                    pageSize={planesPageSize}
-                    totalItems={planes.length}
-                    onPageChange={setPlanesPage}
-                  />
-                </div>
-              )}
+              {/* Botón de Edición: Rectangular limpio en ancho completo (border-radius: 2px) */}
+              <div className="pt-4 border-t border-[#E2E8F0]">
+                <button
+                  type="button"
+                  onClick={() => handleOpenEditPlan(planesByTier.planImpulso)}
+                  className="w-full py-3 px-4 rounded-[2px] border border-[#0F2342] bg-[#0F2342] hover:bg-[#1E3A8A] text-white font-mono text-xs uppercase tracking-widest font-bold text-center transition-colors cursor-pointer"
+                >
+                  EDITAR TARIFA Y BENEFICIOS
+                </button>
+              </div>
             </div>
-          )}
+
+            {/* 2. Plan Amplificado ($650.000 COP / evento): Superficie Azul Institucional #0F2342 */}
+            <div className="w-full bg-[#0F2342] text-white border border-[#0F2342] rounded-[2px] p-6 sm:p-7 flex flex-col justify-between space-y-6 shadow-md">
+              <div className="space-y-4">
+                <div>
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#F5B800] font-bold block">
+                    TIER 02 · INTERMEDIO
+                  </span>
+                  <h3 className="font-display font-black text-xl text-white uppercase tracking-tight mt-1">
+                    {planesByTier.planAmplificado.nombre || 'Plan Amplificado'}
+                  </h3>
+                </div>
+
+                <div className="py-2 border-y border-white/10">
+                  <span className="font-mono font-black text-2xl sm:text-3xl text-[#F5B800] tracking-tight block">
+                    {formatPrice(planesByTier.planAmplificado.precio || 650000)}
+                  </span>
+                  <span className="font-mono text-[11px] text-slate-300 uppercase">COP / evento</span>
+                </div>
+
+                <p className="text-xs text-slate-200 leading-relaxed">
+                  {planesByTier.planAmplificado.detallePublicidad ||
+                    'Posicionamiento destacado en cartelera y difusión estratégica activa en redes sociales oficiales.'}
+                </p>
+
+                {/* Detalle de Beneficios con guiones largos (—) */}
+                <div className="space-y-2 pt-2 border-t border-white/10 font-sans text-xs text-slate-200">
+                  <p>— Posicionamiento destacado superior en cartelera cultural</p>
+                  <p>— Pauta activa y difusión en redes sociales oficiales</p>
+                  <p>— Segmentación estratégica por audiencia de Cartagena</p>
+                </div>
+
+                {/* Comisión comercial en tipografía monoespaciada tabular */}
+                <div className="pt-2 font-mono text-xs text-[#F5B800] font-bold">
+                  Comisión preferencial: {planesByTier.planAmplificado.comisionPorcentaje ?? 8.5}%
+                </div>
+              </div>
+
+              {/* Botón de Edición: Rectangular limpio en Amarillo #F5B800 con texto #0F2342 */}
+              <div className="pt-4 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => handleOpenEditPlan(planesByTier.planAmplificado)}
+                  className="w-full py-3 px-4 rounded-[2px] bg-[#F5B800] hover:bg-[#E0A800] text-[#0F2342] font-mono text-xs uppercase tracking-widest font-black text-center transition-colors cursor-pointer shadow-sm"
+                >
+                  EDITAR TARIFA Y BENEFICIOS
+                </button>
+              </div>
+            </div>
+
+            {/* 3. Plan Exposición Total ($1.000.000 COP / evento): Superficie Dorado Ámbar #B45309 */}
+            <div className="w-full bg-[#B45309] text-white border border-[#92400E] rounded-[2px] p-6 sm:p-7 flex flex-col justify-between space-y-6 shadow-lg">
+              <div className="space-y-4">
+                <div>
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-amber-100 font-bold block">
+                    TIER 03 · EXPOSICIÓN TOTAL
+                  </span>
+                  <h3 className="font-display font-black text-xl text-white uppercase tracking-tight mt-1">
+                    {planesByTier.planExposicion.nombre || 'Plan Exposición Total'}
+                  </h3>
+                </div>
+
+                <div className="py-2 border-y border-white/20">
+                  <span className="font-mono font-black text-2xl sm:text-3xl text-white tracking-tight block">
+                    {formatPrice(planesByTier.planExposicion.precio || 1000000)}
+                  </span>
+                  <span className="font-mono text-[11px] text-amber-200 uppercase">COP / evento</span>
+                </div>
+
+                <p className="text-xs text-amber-50 leading-relaxed">
+                  {planesByTier.planExposicion.detallePublicidad ||
+                    'Aparición garantizada en el Carrusel Principal del Home, difusión omnicanal y soporte prioritario.'}
+                </p>
+
+                {/* Detalle de Beneficios con guiones largos (—) */}
+                <div className="space-y-2 pt-2 border-t border-white/20 font-sans text-xs text-amber-50">
+                  <p>— Espacio exclusivo garantizado en Carrusel Principal del Home</p>
+                  <p>— Difusión prioritaria omnicanal (Web, Push y Redes)</p>
+                  <p>— Soporte preferencial 24/7 y auditoría de boletería</p>
+                </div>
+
+                {/* Comisión comercial en tipografía monoespaciada tabular */}
+                <div className="pt-2 font-mono text-xs text-white font-bold">
+                  Comisión preferencial: {planesByTier.planExposicion.comisionPorcentaje ?? 6}%
+                </div>
+              </div>
+
+              {/* Botón de Edición: Rectangular limpio en Azul Institucional #0F2342 con texto blanco */}
+              <div className="pt-4 border-t border-white/20">
+                <button
+                  type="button"
+                  onClick={() => handleOpenEditPlan(planesByTier.planExposicion)}
+                  className="w-full py-3 px-4 rounded-[2px] bg-[#0F2342] hover:bg-[#071325] text-white font-mono text-xs uppercase tracking-widest font-bold text-center transition-colors cursor-pointer shadow-sm border border-[#0F2342]"
+                >
+                  EDITAR TARIFA Y BENEFICIOS
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* DRAWER MODAL LATERAL DERECHO: CREAR / EDITAR PLAN (SECCIÓN 12.1) */}
+      {/* =========================================================================
+          DRAWER MODAL: CREAR / EDITAR PLAN (SECCIÓN 3)
+         ========================================================================= */}
       {planDrawerOpen && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[9999] flex justify-end">
           <div
-            className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm cursor-pointer transition-opacity"
-            onClick={() => setPlanDrawerOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity cursor-pointer"
+            onClick={() => !savingPlan && setPlanDrawerOpen(false)}
           />
 
           <div
-            data-lenis-prevent="true"
-            className="relative z-50 w-full sm:w-[500px] md:w-[540px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
+            className="relative z-10 w-full sm:w-[500px] md:w-[540px] bg-[#FFFFFF] h-full shadow-2xl border-l border-[#E2E8F0] flex flex-col justify-between animate-in slide-in-from-right duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div>
-              {/* Cabecera del drawer */}
-              <div className="bg-[#131b2e] p-6 text-white flex items-center justify-between border-b border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-400">
-                    <Award size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-display text-base sm:text-lg font-bold text-white leading-tight">
-                      {editingPlanId ? 'Editar Plan de Promoción' : 'Crear Plan de Promoción'}
-                    </h3>
-                    <p className="text-xs text-slate-300 mt-0.5">
-                      Tarifa y parámetros de posicionamiento para organizaciones
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setPlanDrawerOpen(false)}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
-                >
-                  <X size={18} />
-                </button>
+            {/* Cabecera Drawer #0F2342 */}
+            <div className="bg-[#0F2342] text-white p-6 flex items-center justify-between border-b border-white/10">
+              <div>
+                <h3 className="font-display font-black text-lg uppercase tracking-tight text-white">
+                  {editingPlanId ? 'Editar Tarifa y Beneficios' : 'Crear Nuevo Plan de Promoción'}
+                </h3>
+                <p className="font-mono text-xs text-slate-300 mt-0.5">
+                  Parámetros comerciales y niveles de exposición
+                </p>
               </div>
-
-              {/* Formulario con campos requeridos */}
-              <form id="plan-drawer-form" onSubmit={handleSavePlanSubmit} className="p-6 space-y-4">
-                {planFormError && (
-                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-800 flex items-center gap-2">
-                    <AlertCircle size={16} className="text-rose-600 shrink-0" />
-                    <span>{planFormError}</span>
-                  </div>
-                )}
-
-                {/* 1. Nombre */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Nombre del Plan <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={planForm.nombre}
-                    onChange={(e) => setPlanForm({ ...planForm, nombre: e.target.value })}
-                    placeholder="Ej. Plan Banner Premium"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none"
-                  />
-                </div>
-
-                {/* 2. Código Textual */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Código Textual <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={planForm.codigo}
-                    onChange={(e) => setPlanForm({ ...planForm, codigo: e.target.value.toUpperCase() })}
-                    placeholder="EJ: PLAN_BANNER_PREMIUM"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none font-mono"
-                  />
-                  <p className="text-[11px] text-slate-400 mt-1">Identificador único del plan en mayúsculas.</p>
-                </div>
-
-                {/* 3. Detalle de Publicidad */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Detalle de Publicidad
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={planForm.detallePublicidad}
-                    onChange={(e) => setPlanForm({ ...planForm, detallePublicidad: e.target.value })}
-                    placeholder="Detalles sobre los beneficios publicitarios que ofrece este plan a la organización..."
-                    className="w-full p-3 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none resize-none"
-                  />
-                </div>
-
-                {/* 4. Precio de Pago Fijo */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Precio de Pago Fijo (COP) <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    step="1"
-                    value={planForm.precio}
-                    onChange={(e) => setPlanForm({ ...planForm, precio: e.target.value })}
-                    placeholder="100000"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none font-mono"
-                  />
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Precio fijo de contratación del plan en COP.
-                  </p>
-                </div>
-
-                {/* 5. Porcentaje de Comisión */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Porcentaje de Comisión (%) <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={planForm.comisionPorcentaje}
-                    onChange={(e) => setPlanForm({ ...planForm, comisionPorcentaje: e.target.value })}
-                    placeholder="10"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 text-xs sm:text-sm text-slate-800 outline-none font-mono"
-                  />
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Porcentaje de comisión comercial sobre ventas de entradas (entre 0% y 100%).
-                  </p>
-                </div>
-
-                {/* Booleans: Lleva pauta de redes y Premium */}
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-bold text-slate-800 block">
-                        Lleva Pauta de Redes
-                      </span>
-                      <span className="text-[11px] text-slate-500">
-                        ¿Incluye difusión activa en canales de redes sociales?
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setPlanForm({ ...planForm, pautaRedes: true })}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                          planForm.pautaRedes
-                            ? 'bg-emerald-600 text-white shadow-xs'
-                            : 'bg-white border border-slate-200 text-slate-600'
-                        }`}
-                      >
-                        Sí
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPlanForm({ ...planForm, pautaRedes: false })}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                          !planForm.pautaRedes
-                            ? 'bg-slate-700 text-white shadow-xs'
-                            : 'bg-white border border-slate-200 text-slate-600'
-                        }`}
-                      >
-                        No
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-slate-200 pt-3 flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-bold text-slate-800 block">
-                        Plan Premium
-                      </span>
-                      <span className="text-[11px] text-slate-500">
-                        Habilita la aparición en el Carrusel Principal del Home
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setPlanForm({ ...planForm, premium: true })}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                          planForm.premium
-                            ? 'bg-amber-500 text-slate-950 shadow-xs'
-                            : 'bg-white border border-slate-200 text-slate-600'
-                        }`}
-                      >
-                        Sí
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPlanForm({ ...planForm, premium: false })}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                          !planForm.premium
-                            ? 'bg-slate-700 text-white shadow-xs'
-                            : 'bg-white border border-slate-200 text-slate-600'
-                        }`}
-                      >
-                        No
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </form>
-            </div>
-
-            {/* Footer fijo del drawer */}
-            <div className="p-6 border-t border-slate-100 bg-white flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setPlanDrawerOpen(false)}
                 disabled={savingPlan}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-200 transition-colors"
+                className="p-1 rounded-[2px] text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
-                Cancelar
+                <FiX size={18} />
               </button>
+            </div>
+
+            {/* Formulario */}
+            <form onSubmit={handleSavePlanSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+              {planFormError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-mono rounded-[2px] flex items-center gap-2">
+                  <FiAlertCircle size={15} className="shrink-0 text-rose-600" />
+                  <span>{planFormError}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
+                  Nombre del Plan <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={planForm.nombre}
+                  onChange={(e) => setPlanForm({ ...planForm, nombre: e.target.value })}
+                  placeholder="Ej. Plan Exposición Total"
+                  className="w-full px-3.5 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs sm:text-sm text-[#0F2342] focus:outline-none focus:border-[#0F2342]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
+                  Código Textual <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={planForm.codigo}
+                  onChange={(e) => setPlanForm({ ...planForm, codigo: e.target.value.toUpperCase() })}
+                  placeholder="EJ: PLAN_EXPOSICION_TOTAL"
+                  className="w-full px-3.5 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs sm:text-sm text-[#0F2342] font-mono focus:outline-none focus:border-[#0F2342]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
+                  Detalle Publicitario
+                </label>
+                <textarea
+                  rows={3}
+                  value={planForm.detallePublicidad}
+                  onChange={(e) => setPlanForm({ ...planForm, detallePublicidad: e.target.value })}
+                  placeholder="Descripción de alcance para los organizadores..."
+                  className="w-full p-3 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs sm:text-sm text-[#0F2342] focus:outline-none focus:border-[#0F2342] resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
+                  Precio Fijo (COP) <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="1000"
+                  value={planForm.precio}
+                  onChange={(e) => setPlanForm({ ...planForm, precio: e.target.value })}
+                  placeholder="650000"
+                  className="w-full px-3.5 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs sm:text-sm text-[#0F2342] font-mono focus:outline-none focus:border-[#0F2342]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
+                  Porcentaje de Comisión (%) <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={planForm.comisionPorcentaje}
+                  onChange={(e) => setPlanForm({ ...planForm, comisionPorcentaje: e.target.value })}
+                  placeholder="8.5"
+                  className="w-full px-3.5 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs sm:text-sm text-[#0F2342] font-mono focus:outline-none focus:border-[#0F2342]"
+                />
+              </div>
+
+              <div className="p-4 rounded-[2px] bg-[#F8F9FA] border border-[#E2E8F0] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-mono text-xs font-bold text-[#0F2342] block">
+                      Pauta en Redes Sociales
+                    </span>
+                    <span className="font-mono text-[10px] text-[#64748B]">
+                      ¿Incluye difusión activa en canales oficiales?
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={planForm.pautaRedes}
+                    onChange={(e) => setPlanForm({ ...planForm, pautaRedes: e.target.checked })}
+                    className="w-4 h-4 accent-[#0F2342] cursor-pointer"
+                  />
+                </div>
+
+                <div className="border-t border-[#E2E8F0] pt-3 flex items-center justify-between">
+                  <div>
+                    <span className="font-mono text-xs font-bold text-[#0F2342] block">
+                      Nivel Exposición Total (Premium)
+                    </span>
+                    <span className="font-mono text-[10px] text-[#64748B]">
+                      Habilita aparición exclusiva en Carrusel del Home
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={planForm.premium}
+                    onChange={(e) => setPlanForm({ ...planForm, premium: e.target.checked })}
+                    className="w-4 h-4 accent-[#F5B800] cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 flex items-center justify-end gap-3 border-t border-[#E2E8F0]">
+                <button
+                  type="button"
+                  onClick={() => setPlanDrawerOpen(false)}
+                  disabled={savingPlan}
+                  className="px-4 py-2.5 rounded-[2px] border border-[#E2E8F0] hover:bg-[#F8F9FA] text-[#64748B] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingPlan}
+                  className="px-5 py-2.5 rounded-[2px] bg-[#0F2342] hover:bg-[#F5B800] text-white hover:text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  {savingPlan ? 'Guardando...' : 'Guardar Plan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* =========================================================================
+          DRAWER MODAL: ASIGNAR / EDITAR BANNER DE CAMPAÑA
+         ========================================================================= */}
+      {promoImageModalEvent && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex justify-end">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity cursor-pointer"
+            onClick={() => !savingPromoImage && setPromoImageModalEvent(null)}
+          />
+
+          <div
+            className="relative z-10 w-full sm:w-[500px] md:w-[540px] bg-[#FFFFFF] h-full shadow-2xl border-l border-[#E2E8F0] flex flex-col justify-between animate-in slide-in-from-right duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Cabecera Drawer #0F2342 */}
+            <div className="bg-[#0F2342] text-white p-6 flex items-center justify-between border-b border-white/10">
+              <div>
+                <h3 className="font-display font-black text-lg uppercase tracking-tight text-white">
+                  Creatividad de Campaña
+                </h3>
+                <p className="font-mono text-xs text-slate-300 mt-0.5 truncate max-w-sm">
+                  {promoImageModalEvent.eventoNombre}
+                </p>
+              </div>
               <button
-                form="plan-drawer-form"
-                type="submit"
-                disabled={savingPlan}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-300 font-bold text-xs uppercase tracking-wider shadow-sm hover:shadow-md transition-all disabled:opacity-50 cursor-pointer"
+                type="button"
+                onClick={() => setPromoImageModalEvent(null)}
+                disabled={savingPromoImage}
+                className="p-1 rounded-[2px] text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
-                {savingPlan ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" />
-                    <span>Guardando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save size={14} />
-                    <span>Guardar Plan</span>
-                  </>
-                )}
+                <FiX size={18} />
               </button>
+            </div>
+
+            {/* Contenido */}
+            <div className="p-6 space-y-5 overflow-y-auto flex-1">
+              {promoImageError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-mono rounded-[2px] flex items-center gap-2">
+                  <FiAlertCircle size={15} className="shrink-0 text-rose-600" />
+                  <span>{promoImageError}</span>
+                </div>
+              )}
+
+              {/* Previsualización a todo color */}
+              <div>
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-2">
+                  Previsualización de la Pieza
+                </label>
+                <div className="relative w-full aspect-[16/9] rounded-[2px] border border-[#E2E8F0] overflow-hidden bg-[#0F2342] flex items-center justify-center">
+                  {inputPromoImage.trim() ? (
+                    <img
+                      src={inputPromoImage.trim()}
+                      alt="Banner promocional"
+                      className="w-full h-full object-cover"
+                      onError={() => setPromoImageError('No se pudo previsualizar la imagen desde esta URL.')}
+                    />
+                  ) : (
+                    <div className="text-center font-mono text-xs text-slate-400 p-4">
+                      Sin pieza gráfica cargada
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Carga directa de archivo */}
+              <div>
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
+                  Subir Archivo de Imagen
+                </label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => promoFileInputRef.current?.click()}
+                    disabled={uploadingPromoFile}
+                    className="px-4 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-[#F8F9FA] text-[#0F2342] font-mono text-xs font-bold uppercase tracking-wider cursor-pointer transition-colors"
+                  >
+                    {uploadingPromoFile ? 'Subiendo...' : 'Seleccionar Archivo (JPG/PNG)'}
+                  </button>
+                  <input
+                    type="file"
+                    ref={promoFileInputRef}
+                    onChange={handlePromoFileUpload}
+                    accept="image/jpeg, image/png, image/webp"
+                    className="hidden"
+                  />
+                </div>
+                <p className="font-mono text-[11px] text-[#64748B] mt-1">
+                  Proporción recomendada: 16:9 (Máximo 5 MB).
+                </p>
+              </div>
+
+              {/* URL directa */}
+              <div>
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
+                  O Enlace Directo (URL)
+                </label>
+                <input
+                  type="url"
+                  value={inputPromoImage}
+                  onChange={(e) => setInputPromoImage(e.target.value)}
+                  placeholder="https://servidor.com/arte.jpg"
+                  className="w-full px-3.5 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs sm:text-sm text-[#0F2342] font-mono focus:outline-none focus:border-[#0F2342]"
+                />
+              </div>
+
+              <div className="pt-4 flex items-center justify-end gap-3 border-t border-[#E2E8F0]">
+                <button
+                  type="button"
+                  onClick={() => setPromoImageModalEvent(null)}
+                  disabled={savingPromoImage}
+                  className="px-4 py-2.5 rounded-[2px] border border-[#E2E8F0] hover:bg-[#F8F9FA] text-[#64748B] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSavePromoImage}
+                  disabled={savingPromoImage || uploadingPromoFile}
+                  className="px-5 py-2.5 rounded-[2px] bg-[#0F2342] hover:bg-[#F5B800] text-white hover:text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  {savingPromoImage ? 'Guardando...' : 'Asignar Banner'}
+                </button>
+              </div>
             </div>
           </div>
         </div>,
         document.body
       )}
 
-      {/* DRAWER MODAL LATERAL DERECHO: ASIGNAR FOTO PARA BANNER */}
-      {promoImageModalEvent && (
-        <div className="fixed inset-0 z-[9999] flex justify-end">
-          <div
-            className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
-            onClick={() => setPromoImageModalEvent(null)}
-          />
-
-          <div
-            data-lenis-prevent="true"
-            className="relative z-50 w-full sm:w-[500px] md:w-[540px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div>
-              {/* Header del Modal */}
-              <div className="bg-[#131b2e] p-6 text-white flex items-center justify-between border-b border-white/10">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-400">
-                    <ImageIcon size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-display font-bold text-white text-base leading-tight">
-                      Imagen Destacada
-                    </h3>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setPromoImageModalEvent(null)}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              {/* Contenido: Solo título del evento e input de la imagen */}
-              <div className="p-6 space-y-6">
-                {promoImageError && (
-                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-800 flex items-center gap-2">
-                    <AlertCircle size={16} className="text-rose-600 shrink-0" />
-                    <span>{promoImageError}</span>
-                  </div>
-                )}
-
-                {/* Título del evento */}
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">
-                    Evento
-                  </span>
-                  <h4 className="font-display font-black text-lg text-slate-900 leading-snug">
-                    {promoImageModalEvent.eventoNombre || promoImageModalEvent.titulo}
-                  </h4>
-                </div>
-
-                {/* Input para la imagen */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-                    Seleccionar Imagen (16:9)
-                  </label>
-                  <input
-                    ref={promoFileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handlePromoFileUpload}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => promoFileInputRef.current?.click()}
-                    disabled={uploadingPromoFile}
-                    className="w-full flex flex-col items-center justify-center gap-2 py-8 px-4 border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-2xl bg-slate-50 hover:bg-amber-50/30 text-slate-700 text-xs font-bold transition-all cursor-pointer disabled:opacity-60"
-                  >
-                    {uploadingPromoFile ? (
-                      <>
-                        <Loader2 size={24} className="animate-spin text-amber-500" />
-                        <span>Subiendo imagen al servidor...</span>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-1">
-                          <Upload size={20} />
-                        </div>
-                        <span className="text-sm font-extrabold text-slate-900">Haz clic para elegir la imagen</span>
-                        <span className="text-[11px] text-slate-400 font-normal">JPG, PNG o WEBP (máx. 5 MB)</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {/* Preview limpio si ya hay imagen cargada */}
-                {inputPromoImage.trim() && (
-                  <div className="space-y-2">
-                    <span className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                      Imagen seleccionada:
-                    </span>
-                    <div className="relative aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
-                      <img
-                        src={inputPromoImage}
-                        alt="Banner Preview"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-6 border-t border-slate-100 bg-white flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setPromoImageModalEvent(null)}
-                disabled={savingPromoImage}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-200 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleSavePromoImage}
-                disabled={savingPromoImage || !inputPromoImage.trim()}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-300 font-bold text-xs uppercase tracking-wider shadow-sm transition-all disabled:opacity-50 cursor-pointer"
-              >
-                {savingPromoImage ? (
-                  <>
-                    <Loader2 size={13} className="animate-spin" />
-                    <span>Guardando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Check size={14} />
-                    <span>Guardar Imagen</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Drawer a la derecha con el detalle del evento */}
+      {/* MODAL DETALLE DE EVENTO (Abre vista completa a la derecha) */}
       {selectedEventId && (
         <EventDetailView
           eventId={selectedEventId}
-          isDrawer={true}
+          onClose={() => setSelectedEventId(null)}
           onBack={() => setSelectedEventId(null)}
+          readOnly={true}
+          allowSuspend={false}
         />
       )}
     </div>

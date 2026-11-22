@@ -31,7 +31,7 @@ function BannerCard({ banner }) {
           targetUrl ? 'cursor-pointer' : 'cursor-default'
         }`}
       >
-        {/* Imagen de fondo del banner */}
+        {/* Imagen de fondo del banner a todo color natural */}
         {banner.imagenUrl ? (
           <ImageWithFallback
             src={banner.imagenUrl}
@@ -43,8 +43,10 @@ function BannerCard({ banner }) {
           <div className="w-full h-full bg-gradient-to-br from-[#0B132B] to-[#1C2541]" />
         )}
 
-        {/* Degradado suave para garantizar legibilidad de textos */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+        {/* Sombra sutil solo en la base inferior para texto sin apagar la imagen */}
+        {banner.titulo && (
+          <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 via-black/25 to-transparent pointer-events-none" />
+        )}
 
         {/* Contenido textual y Botón de acción */}
         <div className="absolute inset-0 p-5 sm:p-7 lg:p-8 flex flex-col justify-end z-10 pointer-events-none">

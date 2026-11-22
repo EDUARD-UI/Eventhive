@@ -4,7 +4,7 @@ import { formatPrice } from '../../utils/formatters.js';
 
 /**
  * ProductionDeskMainView
- * Vista Principal: Cartelera de Eventos & Acreditación VIP Backstage
+ * Vista Principal: Cartelera de Eventos & Acreditación de Producción
  *
  * Sistema visual estricto (Regla 60 / 30 / 10):
  * - 60% Superficie: Blanco puro (#FFFFFF) y Blanco Hueso (#FAFAFA)
@@ -110,6 +110,11 @@ export default function ProductionDeskMainView({
     });
   }, [events, filter]);
 
+  // Solo se muestra la primera página de la paginación (primeros 5 eventos)
+  const displayedEvents = useMemo(() => {
+    return filteredEvents.slice(0, 5);
+  }, [filteredEvents]);
+
   const serialCode = useMemo(() => {
     const rawId = user?.id || user?.sub || '0849';
     const num = String(rawId).replace(/\D/g, '').slice(-4).padStart(4, '0') || '0849';
@@ -123,12 +128,26 @@ export default function ProductionDeskMainView({
       <div className="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-12 items-start">
 
         {/* =========================================================================
-            ZONA A: Columna Izquierda (~30% del ancho) — La Credencial VIP Backstage
+            ZONA A: Columna Izquierda (~30% del ancho) — La Escarapela de Producción
            ========================================================================= */}
         <aside className="lg:col-span-4 xl:col-span-4 w-full flex flex-col items-center lg:items-start lg:sticky lg:top-8 z-20">
-          <div className="w-full max-w-[380px] [perspective:1200px]">
+          <div className="w-full max-w-[380px] [perspective:1200px] flex flex-col items-center">
+            {/* Lazo / Correa de Escarapela en Azul Institucional #0F2342 */}
+            <div className="w-full flex flex-col items-center -mb-2 z-30 pointer-events-none select-none">
+              {/* Cinta textil azul institucional con costuras */}
+              <div className="w-12 h-14 bg-[#0F2342] shadow-md relative overflow-hidden flex justify-center border-t-2 border-[#1E3A8A]">
+                <div className="absolute inset-y-0 left-1.5 w-[1.5px] bg-white/20" />
+                <div className="absolute inset-y-0 right-1.5 w-[1.5px] bg-white/20" />
+                <div className="absolute inset-y-0 w-3 bg-[#132A4F]" />
+              </div>
+              {/* Hebilla metálica plateada de sujeción */}
+              <div className="w-8 h-3.5 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-400 border border-slate-400 rounded-xs shadow-xs -mt-0.5 z-10" />
+              {/* Mosquetón / Gancho que conecta a la ranura de la credencial */}
+              <div className="w-4 h-4 border-2 border-slate-400 rounded-full -mt-2 z-10 bg-transparent" />
+            </div>
+
             <div
-              className={`relative w-full rounded-[2px] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] [transform-style:preserve-3d] shadow-[0_20px_45px_rgba(0,0,0,0.05)] border border-[#E2E8F0] bg-[#FFFFFF] ${
+              className={`relative w-full rounded-[2px] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] [transform-style:preserve-3d] shadow-[0_20px_45px_rgba(0,0,0,0.06)] border border-[#E2E8F0] bg-[#FFFFFF] ${
                 isFlipped ? '[transform:rotateY(180deg)]' : ''
               }`}
             >
@@ -415,7 +434,7 @@ export default function ProductionDeskMainView({
             </div>
           ) : (
             <div className="space-y-4 sm:space-y-5">
-              {filteredEvents.map((event) => {
+              {displayedEvents.map((event) => {
                 const eventId = event.id || event.eventoId;
                 const { sold, capacity } = getEventTicketMetrics(event);
                 const status = getTicketStatus(event.estado || event.rawStatus);
@@ -532,6 +551,19 @@ export default function ProductionDeskMainView({
                   </article>
                 );
               })}
+
+              {/* Botón para ver toda la cartelera si hay más de 5 eventos */}
+              {filteredEvents.length > 5 && (
+                <div className="pt-3 text-center">
+                  <button
+                    type="button"
+                    onClick={() => onNavigate && onNavigate('eventos')}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-[2px] border border-[#0F2342] bg-[#FFFFFF] hover:bg-[#0F2342] text-[#0F2342] hover:text-white font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer shadow-xs"
+                  >
+                    <span>Ver todos los eventos en Cartelera ({filteredEvents.length}) →</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </main>

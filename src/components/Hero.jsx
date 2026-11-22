@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import videoPromocionalMobile from '../assets/video promocional.mp4';
 import videoPromocionalDesktop from '../assets/16x9.mp4';
-import { useTheme } from '../context/ThemeContext.jsx';
 import { useLanguage } from '../context/LanguageContext.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 export default function Hero() {
-  const { isDark } = useTheme();
   const { t } = useLanguage();
+  const { isDark } = useTheme();
 
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -109,18 +109,6 @@ export default function Hero() {
 
         {/* Gradiente horizontal sutil para asegurar perfecta legibilidad de texto a la izquierda sin apagar el video */}
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/40 to-transparent pointer-events-none" />
-
-        {/* Desvanecimiento superior sutil para integrar el navbar */}
-        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#080E1C]/80 to-transparent pointer-events-none" />
-
-        {/* Difusión inferior rápida y clara en la misma altura hacia la siguiente sección */}
-        <div
-          className={`absolute inset-x-0 bottom-0 h-32 sm:h-36 pointer-events-none transition-colors duration-500 ${
-            isDark
-              ? 'bg-gradient-to-t from-[#070D1B] via-[#070D1B]/70 to-transparent'
-              : 'bg-gradient-to-t from-slate-100 via-slate-100/30 to-transparent'
-          }`}
-        />
       </div>
 
       {/* =========================================================
@@ -160,6 +148,15 @@ export default function Hero() {
           </div>
         </div>
       </div>
+
+      {/* Degradado muy sutil y pequeño en la base entre Hero y la sección de carrusel */}
+      <div
+        className={`absolute inset-x-0 bottom-0 h-10 sm:h-12 pointer-events-none transition-colors duration-300 z-10 ${
+          isDark
+            ? 'bg-gradient-to-t from-[#070D1B] to-transparent'
+            : 'bg-gradient-to-t from-slate-50 to-transparent'
+        }`}
+      />
     </section>
   );
 }

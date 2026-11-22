@@ -222,6 +222,10 @@ async function request(
       throw error;
     }
 
+    if (typeof window !== 'undefined' && typeof navigator !== 'undefined' && !navigator.onLine && window.location.pathname !== '/404') {
+      window.location.assign('/404');
+    }
+
     // Errores de red o rechazo de conexión (Failed to fetch)
     const error = new Error('No fue posible conectar con el servidor de EventHive. Por favor, intenta de nuevo más tarde.');
     error.status = 503;

@@ -235,9 +235,7 @@ export default function Home() {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
-  const [mapRevealed, setMapRevealed] = useState(false);
   const [carouselRevealed, setCarouselRevealed] = useState(false);
-  const mapSectionRef = useRef(null);
   const carouselSectionRef = useRef(null);
   const { data: mapEvents = [] } = useQuery({
     queryKey: ['home-map-events', selectedCategory, userLocation],
@@ -446,7 +444,6 @@ export default function Home() {
   useEffect(() => {
     const checkReveals = () => {
       const triggerThreshold = window.innerHeight * 0.92;
-      const mapTriggerThreshold = window.innerHeight * 0.85;
 
       if (carouselSectionRef.current) {
         const rect = carouselSectionRef.current.getBoundingClientRect();
@@ -454,14 +451,6 @@ export default function Home() {
           setCarouselRevealed(true);
         }
       }
-
-      if (mapSectionRef.current) {
-        const rect = mapSectionRef.current.getBoundingClientRect();
-        if (rect.top <= mapTriggerThreshold) {
-          setMapRevealed(true);
-        }
-      }
-
     };
 
     window.addEventListener('scroll', checkReveals, { passive: true });
@@ -472,7 +461,6 @@ export default function Home() {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             if (entry.target === carouselSectionRef.current) setCarouselRevealed(true);
-            if (entry.target === mapSectionRef.current) setMapRevealed(true);
           }
         });
       },
@@ -480,7 +468,6 @@ export default function Home() {
     );
 
     if (carouselSectionRef.current) observer.observe(carouselSectionRef.current);
-    if (mapSectionRef.current) observer.observe(mapSectionRef.current);
     return () => {
       window.removeEventListener('scroll', checkReveals);
       observer.disconnect();
@@ -587,101 +574,96 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Mapa de Eventos en Cartagena con Fondo de Puntos Flotantes, Perspectiva 3D y Elevación Interactiva */}
+      {/* 4. Mapa de Eventos en Cartagena con Fondo de Puntos Flotantes */}
       <section
         id="mapa"
-        ref={mapSectionRef}
         className="w-full bg-slate-100 dark:bg-[#0B0F19] text-slate-900 dark:text-white px-4 sm:px-10 lg:px-20 pt-12 sm:pt-16 md:pt-20 pb-16 sm:pb-22 relative z-0 isolate overflow-hidden border-b border-slate-200/60 dark:border-white/[0.06]"
       >
         {/* Fondo animado de puntos flotantes y ondas de radar detrás del mapa */}
         <MapDynamicBackground />
 
         <div className="max-w-7xl mx-auto relative z-10">
-          <Scroll3DReveal variant="fade-elevate" duration={850} className="relative z-30">
-            <div className="mb-8 relative z-20 flex flex-col items-center justify-center text-center">
+          <div className="mb-8 relative z-30 flex flex-col items-center justify-center text-center">
 
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-6">
-                {t('home.eventMap')}
-              </h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight uppercase mb-6">
+              {t('home.eventMap')}
+            </h2>
 
-              <div className="flex flex-wrap items-center justify-center gap-3 relative z-30">
-                {/* Botón Geolocalización */}
-                <button
-                  type="button"
-                  onClick={() => requestLocation(selectedDistance !== 'all' ? selectedDistance : null)}
-                  disabled={isLocating}
-                  className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95 shadow-sm cursor-pointer ${userLocation
-                    ? 'border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-700'
-                    : 'border-amber-500 bg-amber-500 hover:bg-amber-400 text-slate-950'
-                    }`}
-                  title={userLocation ? t('home.locationActiveTitle') : t('home.activateMyLocation')}
-                >
-                  {isLocating ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                      <span>{t('home.gettingLocation')}</span>
-                    </>
-                  ) : userLocation ? (
-                    <>
-                      <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                      <span>{t('home.myLocationActive')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <FiNavigation className="text-slate-950 shrink-0" size={14} />
-                      <span>{t('home.activateMyLocation')}</span>
-                    </>
-                  )}
-                </button>
+            <div className="flex flex-wrap items-center justify-center gap-3 relative z-30">
+              {/* Botón Geolocalización */}
+              <button
+                type="button"
+                onClick={() => requestLocation(selectedDistance !== 'all' ? selectedDistance : null)}
+                disabled={isLocating}
+                className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95 shadow-sm cursor-pointer ${userLocation
+                  ? 'border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-700'
+                  : 'border-amber-500 bg-amber-500 hover:bg-amber-400 text-slate-950'
+                  }`}
+                title={userLocation ? t('home.locationActiveTitle') : t('home.activateMyLocation')}
+              >
+                {isLocating ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                    <span>{t('home.gettingLocation')}</span>
+                  </>
+                ) : userLocation ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                    <span>{t('home.myLocationActive')}</span>
+                  </>
+                ) : (
+                  <>
+                    <FiNavigation className="text-slate-950 shrink-0" size={14} />
+                    <span>{t('home.activateMyLocation')}</span>
+                  </>
+                )}
+              </button>
 
-                {/* Selector Categoría con CustomSelect sincronizado con el tema */}
-                <div className="w-48 sm:w-56 relative z-30">
-                  <CustomSelect
-                    value={selectedCategory}
-                    onChange={(event) => setSelectedCategory(event.target.value)}
-                    options={categoryOptions}
-                    placeholder={t('home.allCategories')}
-                    variant={isDark ? 'dark' : 'light'}
-                  />
-                </div>
-
-                {/* Selector Distancia con CustomSelect sincronizado con el tema */}
-                <div className="w-44 sm:w-52 relative z-30">
-                  <CustomSelect
-                    value={selectedDistance}
-                    onChange={(event) => handleDistanceChange(event.target.value)}
-                    options={distanceOptions}
-                    placeholder={t('home.distance')}
-                    variant={isDark ? 'dark' : 'light'}
-                  />
-                </div>
-
-                {/* Botón Mapa de Calor / Modo Movida */}
-                <button
-                  type="button"
-                  onClick={() => setShowHeatmap((prev) => !prev)}
-                  className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm cursor-pointer relative z-30 ${showHeatmap
-                      ? 'border-amber-400 bg-amber-500 text-slate-950 shadow-amber-500/25 ring-2 ring-amber-400/40'
-                      : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-400'
-                    }`}
-                  title={showHeatmap ? 'Desactivar Modo Movida' : 'Activar Modo Movida'}
-                >
-                  <Flame size={15} className={showHeatmap ? 'text-slate-950 fill-slate-950 animate-pulse' : 'text-slate-400'} />
-                  <span>{showHeatmap ? 'Modo Movida: Activo' : 'Ver Mapa de Calor'}</span>
-                </button>
+              {/* Selector Categoría con CustomSelect sincronizado con el tema */}
+              <div className="w-48 sm:w-56 relative z-30">
+                <CustomSelect
+                  value={selectedCategory}
+                  onChange={(event) => setSelectedCategory(event.target.value)}
+                  options={categoryOptions}
+                  placeholder={t('home.allCategories')}
+                  variant={isDark ? 'dark' : 'light'}
+                />
               </div>
-            </div>
-          </Scroll3DReveal>
 
-          {/* Contenedor del Mapa con Elevación 3D, Stickers Flotantes e Iluminación Perimetral */}
-          <Scroll3DReveal variant="tilt-up" delay={140} duration={1100} glowAccent={true} className="relative z-10">
+              {/* Selector Distancia con CustomSelect sincronizado con el tema */}
+              <div className="w-44 sm:w-52 relative z-30">
+                <CustomSelect
+                  value={selectedDistance}
+                  onChange={(event) => handleDistanceChange(event.target.value)}
+                  options={distanceOptions}
+                  placeholder={t('home.distance')}
+                  variant={isDark ? 'dark' : 'light'}
+                />
+              </div>
+
+              {/* Botón Mapa de Calor / Modo Movida */}
+              <button
+                type="button"
+                onClick={() => setShowHeatmap((prev) => !prev)}
+                className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm cursor-pointer relative z-30 ${showHeatmap
+                    ? 'border-amber-400 bg-amber-500 text-slate-950 shadow-amber-500/25 ring-2 ring-amber-400/40'
+                    : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-400'
+                  }`}
+                title={showHeatmap ? 'Desactivar Modo Movida' : 'Activar Modo Movida'}
+              >
+                <Flame size={15} className={showHeatmap ? 'text-slate-950 fill-slate-950 animate-pulse' : 'text-slate-400'} />
+                <span>{showHeatmap ? 'Modo Movida: Activo' : 'Ver Mapa de Calor'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Contenedor del Mapa sin animación de entrada en scroll */}
+          <div className="relative z-10">
             {/* Sticker flotante superior izquierdo del mapa */}
             <div className="hidden sm:inline-flex items-center gap-1.5 pointer-events-none absolute -top-4 left-6 z-30 px-3.5 py-1.5 rounded-2xl bg-amber-400 text-slate-950 font-black text-[11px] uppercase tracking-wider border-2 border-slate-950 shadow-[0_5px_0_0_rgba(15,23,42,1)] -rotate-2">
               <FiMapPin size={13} />
               <span>{filteredMapEvents.length} Experiencias Activas</span>
             </div>
-
-
 
             <div className="relative z-0 isolate overflow-hidden rounded-[28px] border-2 border-slate-900/80 dark:border-amber-400/35 shadow-[0_20px_50px_-12px_rgba(15,23,42,0.4)] dark:shadow-[0_20px_55px_-12px_rgba(245,158,11,0.18)] h-[440px] sm:h-[500px] bg-slate-100 ring-1 ring-black/5 dark:ring-white/10">
               <div
@@ -853,7 +835,7 @@ export default function Home() {
                 })}
               </MapContainer>
             </div>
-          </Scroll3DReveal>
+          </div>
         </div>
       </section>
 

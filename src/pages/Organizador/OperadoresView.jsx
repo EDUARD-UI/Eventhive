@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   FiUsers,
   FiMail,
@@ -606,9 +607,25 @@ export default function OperadoresView() {
       )}
 
       {/* Modal Invitar Colaborador */}
-      {showInviteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-[#FFFFFF] rounded-[2px] border border-[#E2E8F0] shadow-2xl p-6 sm:p-7 space-y-5">
+      {showInviteModal && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200"
+          style={{
+            backgroundColor: 'rgba(15, 35, 66, 0.72)',
+            backdropFilter: 'blur(4px)',
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isInviting) {
+              setShowInviteModal(false);
+            }
+          }}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="w-full max-w-md bg-[#FFFFFF] rounded-[2px] border border-[#E2E8F0] shadow-2xl p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-200 select-none"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
               <div>
                 <h3 className="font-display font-black text-lg text-[#0F2342] uppercase tracking-tight">
@@ -629,7 +646,7 @@ export default function OperadoresView() {
 
             <form onSubmit={handleInvite} className="space-y-4">
               <div>
-                <label className="block font-mono text-[11px] uppercase tracking-wider text-[#64748B] mb-1">
+                <label className="block font-mono text-[11px] uppercase tracking-wider text-[#64748B] mb-1 font-bold">
                   Correo Electrónico *
                 </label>
                 <input
@@ -647,7 +664,7 @@ export default function OperadoresView() {
                   type="button"
                   onClick={() => setShowInviteModal(false)}
                   disabled={isInviting}
-                  className="px-4 py-2 rounded-[2px] border border-[#E2E8F0] font-mono text-xs uppercase text-[#64748B] hover:bg-[#F8F9FA] cursor-pointer"
+                  className="px-4 py-2 rounded-[2px] border border-[#E2E8F0] font-mono text-xs uppercase text-[#64748B] hover:bg-[#F8F9FA] cursor-pointer font-bold"
                 >
                   Cancelar
                 </button>
@@ -661,7 +678,8 @@ export default function OperadoresView() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modal Enviar Correo */}

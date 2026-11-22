@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { FiAlertTriangle, FiX, FiCheck, FiInfo } from 'react-icons/fi';
+import { FiX, FiAlertTriangle, FiCheck, FiSend, FiFileText } from 'react-icons/fi';
 
 const MOTIVOS_OFICIALES = [
   { value: 'INFORMACION_INCOMPLETA', label: 'Información Incompleta o Insuficiente' },
@@ -10,7 +10,7 @@ const MOTIVOS_OFICIALES = [
   { value: 'INCUMPLE_POLITICAS', label: 'Incumple Políticas de la Plataforma' },
   { value: 'FECHA_INVALIDA', label: 'Fecha u Horario Inválido' },
   { value: 'LOCALIDADES_INVALIDAS', label: 'Localidades o Precios Inválidos' },
-  { value: 'OTRO', label: 'Otro Motivo (Observación requerida)' },
+  { value: 'OTRO', label: 'Otro Requerimiento Técnico' },
 ];
 
 export default function ModalAccionModeracion({
@@ -22,14 +22,6 @@ export default function ModalAccionModeracion({
   onSubmit,
   loading = false,
 }) {
-  const [motivoSeleccionado, setMotivoSeleccionado] = useState(
-    motivos[0] || MOTIVOS_OFICIALES[0].value
-  );
-  const [observacion, setObservacion] = useState('');
-  const [error, setError] = useState('');
-
-  if (!isOpen || !evento) return null;
-
   const isRechazo = tipo === 'rechazo';
 
   // Combinar motivos del backend si existen con el mapa oficial
@@ -41,18 +33,51 @@ export default function ModalAccionModeracion({
         })
       : MOTIVOS_OFICIALES;
 
+  const [motivoSeleccionado, setMotivoSeleccionado] = useState(
+    opcionesMotivos[0]?.value || 'INFORMACION_INCOMPLETA'
+  );
+  const [observacion, setObservacion] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setMotivoSeleccionado(opcionesMotivos[0]?.value || 'INFORMACION_INCOMPLETA');
+      setObservacion('');
+      setError('');
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && !loading && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, loading, onClose]);
+
+  if (!isOpen || !evento) return null;
+
+  const eventoTitulo = evento.titulo || evento.nombre || 'Producción de Evento';
+  const organizacion =
+    evento.organizacionNombre ||
+    evento.organizacion?.nombre ||
+    evento.organizadorNombre ||
+    'Organización Responsable';
+  const lugar = evento.lugar || evento.ubicacion || 'Cartagena de Indias';
+
+  const motivoActivoObj = opcionesMotivos.find((m) => m.value === motivoSeleccionado);
+  const motivoTexto = motivoActivoObj?.label || motivoSeleccionado;
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!motivoSeleccionado) {
-      setError('Debes seleccionar un motivo.');
-      return;
-    }
-    if (motivoSeleccionado === 'OTRO' && !observacion.trim()) {
-      setError('La observación es obligatoria cuando seleccionas "Otro Motivo".');
+      setError('Debes seleccionar un motivo oficial.');
       return;
     }
     if (!observacion.trim()) {
-      setError('Por favor detalla la observación para que la organización comprenda la resolución.');
+      setError('Por favor redacta la observación técnica para que el organizador pueda subsanar el expediente.');
       return;
     }
     setError('');
@@ -64,115 +89,115 @@ export default function ModalAccionModeracion({
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200"
-      onClick={onClose}
+      className="fixed inset-0 z-[10001] flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-200"
+      style={{
+        backgroundColor: 'rgba(15, 35, 66, 0.72)',
+        backdropFilter: 'blur(4px)',
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !loading) {
+          onClose();
+        }
+      }}
+      role="dialog"
+      aria-modal="true"
     >
       <div
-        className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-200 my-auto max-h-[92vh] overflow-y-auto"
+        className="w-full max-w-2xl bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 select-none my-auto max-h-[92vh] flex flex-col justify-between"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Cabecera del Modal */}
-        <div
-          className={`p-6 border-b ${
-            isRechazo
-              ? 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-100 dark:border-rose-900/50'
-              : 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-100 dark:border-amber-900/50'
-          }`}
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
-                  isRechazo
-                    ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300'
-                    : 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300'
-                }`}
-              >
-                <FiAlertTriangle size={20} />
-              </div>
-              <div>
-                <h3
-                  className={`font-extrabold text-base ${
-                    isRechazo
-                      ? 'text-rose-950 dark:text-rose-100'
-                      : 'text-amber-950 dark:text-amber-100'
-                  }`}
-                >
-                  {isRechazo ? 'Rechazar Evento' : 'Solicitar Corrección de Evento'}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
-                  {evento.titulo}
-                </p>
-              </div>
+        {/* Cabecera Oscura Azul Institucional #0F2342 */}
+        <div className="p-5 bg-[#0F2342] text-white flex items-center justify-between border-b border-[#0F2342] shrink-0">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`w-2 h-2 rounded-full ${isRechazo ? 'bg-[#DC2626]' : 'bg-[#F5B800]'}`} />
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-300 font-bold">
+                {isRechazo ? 'Dictamen de Exclusión' : 'Ticket de Revisión Técnica de Cartelera'}
+              </span>
             </div>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-8 h-8 rounded-xl bg-white/80 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center border border-slate-200/60 dark:border-slate-700 transition-colors cursor-pointer"
-            >
-              <FiX size={16} />
-            </button>
-          </div>
-        </div>
-
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800 flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300">
-            <FiInfo size={16} className="text-amber-500 shrink-0 mt-0.5" />
-            <p>
-              {isRechazo
-                ? 'El evento pasará al estado RECHAZADO. La organización recibirá la justificación técnica y normativa.'
-                : 'El evento pasará al estado EN_CORRECCION. La organización podrá subsanar las observaciones y reenviar su solicitud a revisión.'}
+            <h3 className="font-display font-black text-xl text-white uppercase tracking-tight">
+              {isRechazo ? 'Rechazo de Publicación' : 'Solicitar Ajuste & Corrección'}
+            </h3>
+            <p className="font-mono text-xs text-slate-300 truncate mt-0.5">
+              {eventoTitulo} · <span className="text-[#F5B800]">{organizacion}</span>
             </p>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="p-1.5 text-slate-400 hover:text-white transition-colors cursor-pointer rounded-[2px]"
+          >
+            <FiX size={18} />
+          </button>
+        </div>
 
-          {/* Selector de Motivo oficial */}
-          <div>
-            <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1.5">
-              Motivo Oficial del Dictamen <span className="text-rose-500">*</span>
+        {/* Cuerpo del Formulario Scrolleable */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+          {error && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-xs font-mono text-rose-700 rounded-[2px]">
+              {error}
+            </div>
+          )}
+
+          {/* 1. Selector Visual de Motivos: Grid de 2 Columnas de Tarjetas Seleccionables */}
+          <div className="space-y-2.5">
+            <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold">
+              Seleccionar Criterio / Motivo Oficial *
             </label>
-            <select
-              value={motivoSeleccionado}
-              onChange={(e) => setMotivoSeleccionado(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-medium text-slate-800 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer"
-            >
-              {opcionesMotivos.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {opcionesMotivos.map((opcion) => {
+                const isSelected = motivoSeleccionado === opcion.value;
+                return (
+                  <button
+                    key={opcion.value}
+                    type="button"
+                    onClick={() => setMotivoSeleccionado(opcion.value)}
+                    className={`p-3 text-left transition-all rounded-[2px] cursor-pointer flex items-center justify-between gap-2 border ${
+                      isSelected
+                        ? 'border-[#0F2342] border-l-4 border-l-[#F5B800] bg-[#F8F9FA] shadow-xs'
+                        : 'border-[#E2E8F0] bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <span className={`font-mono text-xs ${isSelected ? 'font-bold text-[#0F2342]' : 'text-[#64748B]'}`}>
+                      {opcion.label}
+                    </span>
+                    {isSelected && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#F5B800] shrink-0" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Observación / Justificación */}
-          <div>
-            <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1.5">
-              Observación para la Organización {motivoSeleccionado === 'OTRO' ? '(Obligatoria)' : ''}{' '}
-              <span className="text-rose-500">*</span>
-            </label>
+          {/* 2. Área de Observación Técnica */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center">
+              <label className="font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold">
+                Instrucciones Técnicas de Subsanación *
+              </label>
+              <span className="font-mono text-[10px] text-[#64748B]">
+                {observacion.length} caracteres
+              </span>
+            </div>
             <textarea
-              rows={4}
               value={observacion}
               onChange={(e) => setObservacion(e.target.value)}
-              placeholder="Detalla qué aspectos deben subsanarse (fechas, aforo, permisos, descripción, imágenes) para que la organización pueda corregir y reenviar..."
-              className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-800 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all resize-none"
+              required
+              rows={4}
+              placeholder="Detalla claramente los elementos que el organizador debe corregir (ej. adjuntar autorización de aforo, ajustar hora de apertura o rectificar precios)..."
+              className="w-full p-3 border border-[#E2E8F0] rounded-[2px] font-sans text-sm text-[#0F2342] placeholder-[#94A3B8] focus:border-[#0F2342] outline-none leading-relaxed resize-none"
             />
           </div>
 
-          {error && (
-            <p className="text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50">
-              {error}
-            </p>
-          )}
-
-          {/* Botones de acción */}
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+          {/* Footer de Acciones */}
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 cursor-pointer"
+              className="px-4 py-2 border border-[#E2E8F0] text-[#64748B] hover:text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold rounded-[2px] cursor-pointer"
             >
               Cancelar
             </button>
@@ -180,17 +205,20 @@ export default function ModalAccionModeracion({
             <button
               type="submit"
               disabled={loading}
-              className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm transition-all active:scale-95 cursor-pointer disabled:opacity-50 text-white ${
+              className={`inline-flex items-center gap-2 px-6 py-2.5 font-mono text-xs uppercase tracking-wider font-bold rounded-[2px] transition-colors cursor-pointer text-white shadow-xs disabled:opacity-50 ${
                 isRechazo
-                  ? 'bg-rose-600 hover:bg-rose-700'
-                  : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+                  ? 'bg-[#DC2626] hover:bg-rose-700'
+                  : 'bg-[#0F2342] hover:bg-[#F5B800] hover:text-[#0F2342]'
               }`}
             >
-              {loading
-                ? 'Procesando...'
-                : isRechazo
-                ? 'Confirmar Rechazo'
-                : 'Solicitar Corrección'}
+              <FiSend size={13} />
+              <span>
+                {loading
+                  ? 'Emitiendo...'
+                  : isRechazo
+                  ? 'Confirmar Rechazo'
+                  : 'Emitir Requerimiento'}
+              </span>
             </button>
           </div>
         </form>
@@ -198,7 +226,5 @@ export default function ModalAccionModeracion({
     </div>
   );
 
-  return typeof document !== 'undefined'
-    ? createPortal(modalContent, document.body)
-    : modalContent;
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null;
 }

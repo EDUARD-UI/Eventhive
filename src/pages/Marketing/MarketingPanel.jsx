@@ -1,39 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Swal from 'sweetalert2';
-import StandardDashboardSidebar from '../../components/common/StandardDashboardSidebar.jsx';
-import Header from '../../components/Shared/Header.jsx';
-import { Sparkles, Award, Image, User } from 'lucide-react';
+import { FiLayers, FiAward, FiImage, FiUser } from 'react-icons/fi';
+import StandardLayout from '../../layouts/StandardLayout.jsx';
 import MarketingPromocionesView from './MarketingPromocionesView.jsx';
 import MarketingBannersView from './MarketingBannersView.jsx';
-import AdminPerfilView from '../Administrador/AdminPerfilView.jsx';
-import { session } from '../../services/session.js';
+import MarketingPerfilView from './MarketingPerfilView.jsx';
+import { session, extractPhotoUrl } from '../../services/session.js';
 import { useDashboardTheme } from '../../hooks/useDashboardTheme.js';
 
 const menuItems = [
-  { id: 'eventos', label: 'Eventos Promocionados', icon: Sparkles },
-  { id: 'planes', label: 'Planes de Promoción', icon: Award },
-  { id: 'banners', label: 'Banners Publicitarios', icon: Image },
-  { id: 'perfil', label: 'Mi Perfil', icon: User },
-];
-
-const marketingGroups = [
-  {
-    label: 'Campañas & Difusión',
-    itemIds: ['eventos', 'planes', 'banners'],
-  },
-  {
-    label: 'Cuenta',
-    itemIds: ['perfil'],
-  },
+  { id: 'eventos', label: 'Eventos Promocionados', icon: FiLayers },
+  { id: 'planes', label: 'Planes de Promoción', icon: FiAward },
+  { id: 'banners', label: 'Banners Publicitarios', icon: FiImage },
+  { id: 'perfil', label: 'Mi Perfil', icon: FiUser },
 ];
 
 export default function MarketingPanel() {
   useDashboardTheme();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'eventos';
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [pageLoading, setPageLoading] = useState(false);
   const [sessionUser, setSessionUser] = useState(() => session.getUser());
 
   useEffect(() => {
@@ -49,17 +34,6 @@ export default function MarketingPanel() {
     };
   }, []);
 
-  const showToast = useCallback((message, type = 'success') => {
-    Swal.fire({
-      icon: type === 'error' ? 'error' : type === 'info' ? 'info' : 'success',
-      title: type === 'error' ? 'Error' : 'Operación exitosa',
-      text: typeof message === 'string' ? message : String(message),
-      confirmButtonText: 'Aceptar',
-      confirmButtonColor: '#087fea',
-      timer: 2500,
-    });
-  }, []);
-
   const userName = sessionUser?.name || sessionUser?.nombre || 'Especialista Marketing';
   const userInitials = userName
     ? userName
@@ -71,14 +45,7 @@ export default function MarketingPanel() {
         .toUpperCase()
     : 'MK';
 
-  const userPhoto =
-    sessionUser?.urlImagenPerfil ||
-    sessionUser?.imagenPerfil ||
-    sessionUser?.fotoUrl ||
-    sessionUser?.foto ||
-    sessionUser?.imagenUrl ||
-    sessionUser?.avatar ||
-    null;
+  const userPhoto = extractPhotoUrl(sessionUser) || null;
 
   const handleSelectTab = (tabId) => {
     setSearchParams({ tab: tabId });
@@ -90,72 +57,59 @@ export default function MarketingPanel() {
         return <MarketingBannersView />;
 
       case 'perfil':
-        return (
-          <AdminPerfilView
-            onNavigateTab={handleSelectTab}
-            showToast={showToast}
-          />
-        );
+        return <MarketingPerfilView onNavigateTab={handleSelectTab} />;
 
       case 'planes':
-        return <MarketingPromocionesView initialTab="planes" onNavigateTab={handleSelectTab} />;
+        return (
+          <MarketingPromocionesView
+            initialTab="planes"
+            onNavigateTab={handleSelectTab}
+          />
+        );
 
       case 'eventos':
       case 'promociones':
       default:
-        return <MarketingPromocionesView initialTab="eventos" onNavigateTab={handleSelectTab} />;
+        return (
+          <MarketingPromocionesView
+            initialTab="eventos"
+            onNavigateTab={handleSelectTab}
+          />
+        );
     }
   };
 
   const getHeaderTitle = () => {
     switch (currentTab) {
       case 'banners':
-        return 'Espacios Publicitarios y Banners';
+        return 'BANNERS PUBLICITARIOS';
       case 'perfil':
-        return 'Mi Perfil de Marketing';
+        return 'MI PERFIL';
       case 'planes':
-        return 'Planes de Promoción';
+        return 'PLANES DE PROMOCIÓN';
       case 'eventos':
       case 'promociones':
       default:
-        return 'Eventos Promocionados';
+        return 'EVENTOS PROMOCIONADOS';
     }
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#EEF2F6] font-body text-slate-800 antialiased">
-      {/* Sidebar estandarizado azul oscuro (#0B1B3D) con favicon logo */}
-      <StandardDashboardSidebar
-        role="Marketing"
-        items={menuItems}
-        activeItem={currentTab}
-        onSelect={handleSelectTab}
-        isOpen={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
-        groups={marketingGroups}
-      />
-
-      {/* Contenido Principal */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <div className="shrink-0 z-20">
-          <Header
-            title={getHeaderTitle()}
-            userName={userName}
-            userInitials={userInitials}
-            userPhoto={userPhoto}
-            userEmail={sessionUser?.email || sessionUser?.correo}
-            onProfileClick={() => handleSelectTab('perfil')}
-            onMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
-          />
-        </div>
-
-        {/* Contenedor con scroll vertical pegado al borde derecho de la pantalla */}
-        <div className="w-full flex-1 min-h-0 overflow-y-auto">
-          <main className="px-4 sm:px-8 pb-10 pt-5 sm:pt-7 max-w-[1400px] w-full mx-auto animate-stage-entry">
-            {renderCurrentView()}
-          </main>
-        </div>
-      </div>
-    </div>
+    <StandardLayout
+      role="Marketing"
+      items={menuItems}
+      activeItem={currentTab}
+      onSelect={handleSelectTab}
+      headerProps={{
+        title: getHeaderTitle(),
+        userName: userName,
+        userInitials: userInitials,
+        userPhoto: userPhoto,
+        onProfileClick: () => handleSelectTab('perfil'),
+      }}
+      maxWidthClass="max-w-[1400px]"
+    >
+      {renderCurrentView()}
+    </StandardLayout>
   );
 }

@@ -1,35 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import {
   FiSearch,
-  FiFilter,
-  FiEye,
-  FiCalendar,
-  FiMapPin,
-  FiClock,
   FiInbox,
-  FiLayers,
   FiRefreshCw,
 } from 'react-icons/fi';
-import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import moderationService from '../../services/moderationService.js';
 import categoryService from '../../services/categoryService.js';
-import { formatHora12, formatFecha, formatHora24, formatFechaHora } from '../../utils/formatters.js';
+import { formatHora12 } from '../../utils/formatters.js';
 
 const ESTADOS_DISPONIBLES = [
   { value: 'TODOS', label: 'Todos los estados' },
   { value: 'PENDIENTE_REVISION', label: 'Pendiente de Revisión' },
   { value: 'EN_CORRECCION', label: 'En Corrección' },
   { value: 'PUBLICADO', label: 'Publicado' },
+  { value: 'FINALIZADO', label: 'Finalizado' },
   { value: 'RECHAZADO', label: 'Rechazado' },
+  { value: 'CANCELADO', label: 'Cancelado' },
   { value: 'SUSPENDIDO', label: 'Suspendido' },
 ];
 
 export default function ModeradorHistorialView({
   onInspect = () => {},
-  onAprobar = () => {},
-  onSolicitarCorreccion = () => {},
-  onRechazar = () => {},
 }) {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -46,7 +38,7 @@ export default function ModeradorHistorialView({
   const [categoriaFilter, setCategoriaFilter] = useState('');
   const [categorias, setCategorias] = useState([]);
 
-  // Cargar categorías reales
+  // Cargar categorías reales desde la API
   useEffect(() => {
     async function loadCats() {
       try {
@@ -64,7 +56,7 @@ export default function ModeradorHistorialView({
     const timer = setTimeout(() => {
       setDebouncedTitle(searchTitle);
       setPage(0);
-    }, 400);
+    }, 350);
     return () => clearTimeout(timer);
   }, [searchTitle]);
 
@@ -105,66 +97,57 @@ export default function ModeradorHistorialView({
     };
   }, [debouncedTitle, estadoFilter, categoriaFilter, page, size, retryCount]);
 
-  const getToneForEstado = (estado) => {
-    switch ((estado || '').toUpperCase()) {
-      case 'PUBLICADO':
-      case 'APROBADO':
-      case 'APLICADO':
-        return 'emerald';
-      case 'PENDIENTE_REVISION':
-        return 'amber';
-      case 'EN_CORRECCION':
-        return 'indigo';
-      case 'RECHAZADO':
-      case 'RECHAZADA':
-      case 'CANCELADO':
-      case 'CANCELADA':
-      case 'SUSPENDIDO':
-      case 'SUSPENDIDA':
-        return 'rose';
-      default:
-        return 'slate';
-    }
+  const getStatusDotColor = (estado) => {
+    const st = String(estado || '').toUpperCase();
+    if (st.includes('PUBLIC') || st.includes('APROB')) return '#15803D'; // Verde
+    if (st.includes('PENDIENTE')) return '#F5B800'; // Amarillo
+    if (st.includes('CORRECCION')) return '#B45309'; // Ámbar
+    if (st.includes('RECHAZ') || st.includes('CANCEL') || st.includes('SUSPEND')) return '#DC2626'; // Rojo
+    return '#64748B'; // Gris pizarra
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Encabezado y Barra de Filtros */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-5 sm:p-6 space-y-4">
+    <div className="space-y-6 select-none animate-in fade-in duration-200">
+      {/* Cabecera Editorial y Barra de Filtros Rectangulares */}
+      <div className="border-b border-[#E2E8F0] pb-6 space-y-5">
         <div>
-          <h2 className="font-display text-base sm:text-lg font-black text-slate-900">
-            Explorador de Eventos y Moderación
-          </h2>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Consulta el estado de todos los eventos del sistema, revisa su trazabilidad y accede a su historial
+          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
+            Registro Maestro de Trazabilidad · Cartelera
+          </span>
+          <h1 className="font-display font-black text-3xl sm:text-4xl text-[#0F2342] tracking-tight uppercase leading-none">
+            EXPLORAR EVENTOS DEL SISTEMA
+          </h1>
+          <p className="font-sans text-xs sm:text-sm text-[#64748B] mt-2">
+            Consulta el estado de todos los eventos del sistema, revisa su trazabilidad y accede a su historial.
           </p>
         </div>
 
+        {/* Filtros Superiores: Buscador + Selectores limpios (border-radius: 2px) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Búsqueda por título */}
           <div className="relative">
             <FiSearch
               size={14}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none"
             />
             <input
               type="text"
-              placeholder="Buscar por título..."
+              placeholder="Buscar evento por título..."
               value={searchTitle}
               onChange={(e) => setSearchTitle(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 font-medium"
+              className="w-full pl-9 pr-3 py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs font-mono text-[#0F2342] placeholder-[#94A3B8] outline-none focus:border-[#0F2342] transition-colors"
             />
           </div>
 
           {/* Filtro por estado */}
-          <div className="relative">
+          <div>
             <select
               value={estadoFilter}
               onChange={(e) => {
                 setEstadoFilter(e.target.value);
                 setPage(0);
               }}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 outline-none focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 cursor-pointer"
+              className="w-full px-3 py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs font-mono text-[#0F2342] outline-none focus:border-[#0F2342] cursor-pointer"
             >
               {ESTADOS_DISPONIBLES.map((est) => (
                 <option key={est.value} value={est.value}>
@@ -175,14 +158,14 @@ export default function ModeradorHistorialView({
           </div>
 
           {/* Filtro por categoría */}
-          <div className="relative">
+          <div>
             <select
               value={categoriaFilter}
               onChange={(e) => {
                 setCategoriaFilter(e.target.value);
                 setPage(0);
               }}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 outline-none focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 cursor-pointer"
+              className="w-full px-3 py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs font-mono text-[#0F2342] outline-none focus:border-[#0F2342] cursor-pointer"
             >
               <option value="">Todas las categorías</option>
               {categorias.map((c) => (
@@ -198,73 +181,70 @@ export default function ModeradorHistorialView({
       {loadError && eventos.length > 0 && (
         <div
           role="alert"
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"
+          className="flex items-center justify-between gap-3 p-3.5 bg-rose-50 border border-rose-200 text-xs font-mono text-rose-800 rounded-[2px]"
         >
           <span>{loadError}</span>
           <button
             type="button"
             onClick={() => setRetryCount((count) => count + 1)}
-            className="inline-flex items-center gap-2 font-bold text-rose-900 hover:text-rose-700"
+            className="font-bold underline text-rose-900 cursor-pointer"
           >
-            <FiRefreshCw size={14} />
             Reintentar
           </button>
         </div>
       )}
 
-      {/* Resultados en Tabla estilizada */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+      {/* Tabla Editorial (Sin pills de colores) */}
+      <div className="w-full bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[750px] border-collapse text-left">
+          <table className="w-full border-collapse text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/70 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                <th className="px-5 py-3.5">Evento</th>
-                <th className="px-5 py-3.5">Organización</th>
-                <th className="px-5 py-3.5">Categoría</th>
-                <th className="px-5 py-3.5">Fecha y Hora</th>
-                <th className="px-5 py-3.5">Estado</th>
-                <th className="px-5 py-3.5 text-right">Acción</th>
+              <tr className="border-b border-[#E2E8F0] bg-[#FFFFFF] font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
+                <th className="px-5 py-4 font-bold">Evento</th>
+                <th className="px-5 py-4 font-bold">Organización</th>
+                <th className="px-5 py-4 font-bold">Categoría</th>
+                <th className="px-5 py-4 font-bold">Fecha y Hora</th>
+                <th className="px-5 py-4 font-bold">Estado</th>
+                <th className="px-5 py-4 font-bold text-right">Acción</th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100 text-xs text-slate-700 font-medium">
+            <tbody className="divide-y divide-[#E2E8F0]">
               {loading ? (
-                Array.from({ length: 4 }).map((_, idx) => (
+                Array.from({ length: 5 }).map((_, idx) => (
                   <tr key={idx} className="animate-pulse">
                     <td colSpan={6} className="px-5 py-4">
-                      <div className="h-4 bg-slate-100 rounded-md w-3/4" />
+                      <div className="h-4 bg-[#F8F9FA] rounded-[1px] w-3/4" />
                     </td>
                   </tr>
                 ))
               ) : loadError && eventos.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-5 py-12 text-center">
-                    <p role="alert" className="font-bold text-rose-800 text-sm">
-                      No se pudieron cargar los eventos.
+                    <p role="alert" className="font-mono font-bold text-rose-800 text-xs">
+                      No se pudieron cargar los eventos del sistema.
                     </p>
-                    <p className="text-xs text-rose-700 mt-1 max-w-sm mx-auto">
+                    <p className="font-mono text-[11px] text-[#64748B] mt-1 max-w-sm mx-auto">
                       {loadError}
                     </p>
                     <button
                       type="button"
                       onClick={() => setRetryCount((count) => count + 1)}
-                      className="mt-3 inline-flex items-center gap-2 rounded-lg bg-rose-700 px-3 py-2 text-xs font-bold text-white hover:bg-rose-800"
+                      className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] bg-[#0F2342] text-white font-mono text-xs uppercase cursor-pointer"
                     >
-                      <FiRefreshCw size={13} />
-                      Reintentar
+                      <FiRefreshCw size={12} />
+                      <span>Reintentar</span>
                     </button>
                   </td>
                 </tr>
               ) : eventos.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-5 py-12 text-center">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
-                      <FiInbox size={22} />
-                    </div>
-                    <p className="font-bold text-slate-800 text-sm">
+                    <FiInbox className="mx-auto text-[#64748B] mb-2" size={24} />
+                    <p className="font-mono font-bold text-[#0F2342] text-xs uppercase tracking-wider">
                       No se encontraron eventos
                     </p>
-                    <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                    <p className="font-mono text-[11px] text-[#64748B] mt-1 max-w-sm mx-auto">
                       Intenta ajustar los filtros de búsqueda para consultar otros registros.
                     </p>
                   </td>
@@ -273,23 +253,27 @@ export default function ModeradorHistorialView({
                 eventos.map((evento) => {
                   const categoriaNombre =
                     typeof evento.categoria === 'object'
-                      ? evento.categoria?.nombre
-                      : evento.categoria || '—';
+                      ? evento.categoria?.nombre || 'General'
+                      : evento.categoria || 'General';
 
                   const organizacionNombre =
                     typeof evento.organizacion === 'object'
-                      ? evento.organizacion?.nombre
+                      ? evento.organizacion?.nombre || evento.organizacion?.razonSocial || '—'
                       : evento.organizacion || '—';
+
+                  const dotColor = getStatusDotColor(evento.estado);
+                  const fechaDisplay = evento.fecha || '—';
+                  const horaDisplay = evento.hora ? ` • ${formatHora12(evento.hora)}` : '';
 
                   return (
                     <tr
                       key={evento.id}
-                      className="hover:bg-slate-50/70 transition-colors"
+                      className="hover:bg-[#F8F9FA]/60 transition-colors"
                     >
-                      {/* Evento */}
-                      <td className="px-5 py-4">
+                      {/* Columna Evento: Miniatura cuadrada a todo color (40px x 40px) + Título en negrita */}
+                      <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-11 h-11 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
+                          <div className="w-10 h-10 rounded-[2px] bg-[#F8F9FA] border border-[#E2E8F0] overflow-hidden shrink-0 flex items-center justify-center">
                             {evento.foto ? (
                               <img
                                 src={evento.foto}
@@ -297,53 +281,56 @@ export default function ModeradorHistorialView({
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-xs">
+                              <span className="font-mono text-[10px] font-bold text-[#64748B]">
                                 EH
-                              </div>
+                              </span>
                             )}
                           </div>
-                          <div>
-                            <p className="font-bold text-slate-900 leading-snug line-clamp-1">
+                          <div className="min-w-0 max-w-xs">
+                            <p className="font-sans font-bold text-sm text-[#0F2342] truncate" title={evento.titulo}>
                               {evento.titulo}
                             </p>
                           </div>
                         </div>
                       </td>
 
-                      {/* Organización */}
-                      <td className="px-5 py-4 font-bold text-slate-800">
+                      {/* Columna Organización */}
+                      <td className="px-5 py-3.5 font-sans text-xs text-[#64748B]">
                         {organizacionNombre}
                       </td>
 
-                      {/* Categoría */}
-                      <td className="px-5 py-4">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">
-                          {categoriaNombre}
-                        </span>
+                      {/* Columna Categoría: Tipografía monoespaciada limpia sin cajas amarillas pastel */}
+                      <td className="px-5 py-3.5 font-mono text-xs uppercase tracking-wider text-[#0F2342]">
+                        {categoriaNombre}
                       </td>
 
-                      {/* Fecha y Hora */}
-                      <td className="px-5 py-4 text-slate-600">
-                        {evento.fecha || '—'}
-                        {evento.hora ? ` · ${formatHora12(evento.hora)}` : ''}
+                      {/* Columna Fecha y Hora: Tabular monoespaciada */}
+                      <td className="px-5 py-3.5 font-mono text-xs text-[#64748B] whitespace-nowrap">
+                        {fechaDisplay}{horaDisplay}
                       </td>
 
-                      {/* Estado */}
-                      <td className="px-5 py-4">
-                        <Badge tone={getToneForEstado(evento.estado)}>
-                          {evento.estado || 'PENDIENTE'}
-                        </Badge>
+                      {/* Columna Estado: Indicador minimalista con punto de 6px + texto en mayúsculas */}
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="w-1.5 h-1.5 rounded-full shrink-0"
+                            style={{ backgroundColor: dotColor }}
+                            aria-hidden="true"
+                          />
+                          <span className="font-mono text-xs uppercase tracking-wider font-semibold text-[#0F2342]">
+                            {evento.estado || 'PENDIENTE'}
+                          </span>
+                        </div>
                       </td>
 
-                      {/* Acción */}
-                      <td className="px-5 py-4 text-right">
+                      {/* Columna Acción: Botón rectangular limpio Inspeccionar */}
+                      <td className="px-5 py-3.5 text-right whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => onInspect(evento)}
-                          className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                          className="px-3 py-1.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-[#F8F9FA] text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer"
                         >
-                          <FiEye size={13} />
-                          <span>Inspeccionar</span>
+                          Inspeccionar
                         </button>
                       </td>
                     </tr>
@@ -354,9 +341,12 @@ export default function ModeradorHistorialView({
           </table>
         </div>
 
-        {/* Paginación */}
+        {/* Paginación Inferior Limpia */}
         {totalElements > 0 && (
-          <div className="border-t border-slate-100">
+          <div className="p-3 border-t border-[#E2E8F0] flex flex-col sm:flex-row justify-between items-center gap-3 text-xs font-mono">
+            <span className="text-[#64748B]">
+              Mostrando {page * size + 1}–{Math.min((page + 1) * size, totalElements)} de {totalElements} eventos
+            </span>
             <Pagination
               currentPage={page + 1}
               totalItems={totalElements}
