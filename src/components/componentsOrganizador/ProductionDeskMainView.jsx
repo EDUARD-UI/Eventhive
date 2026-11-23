@@ -131,7 +131,7 @@ export default function ProductionDeskMainView({
             ZONA A: Columna Izquierda (~30% del ancho) — La Escarapela de Producción
            ========================================================================= */}
         <aside className="lg:col-span-4 xl:col-span-4 w-full flex flex-col items-center lg:items-start lg:sticky lg:top-8 z-20">
-          <div className="w-full max-w-[380px] [perspective:1200px] flex flex-col items-center">
+          <div className="w-full max-w-[420px] mx-auto lg:mx-0 [perspective:1200px] flex flex-col items-center">
             {/* Lazo / Correa de Escarapela en Azul Institucional #0F2342 */}
             <div className="w-full flex flex-col items-center -mb-2 z-30 pointer-events-none select-none">
               {/* Cinta textil azul institucional con costuras */}
@@ -337,11 +337,7 @@ export default function ProductionDeskMainView({
           <div className="border-b border-[#E2E8F0] pb-6 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
-                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] flex items-center gap-1.5 mb-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#F5B800]" />
-                  <span>Mesa de Producción · Cartagena</span>
-                </span>
-                <h1 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-[#0F2342] tracking-tight uppercase leading-none">
+                <h1 className="font-display font-black text-[clamp(1.5rem,4vw,2.5rem)] text-[#0F2342] tracking-tight uppercase leading-none">
                   Cartelera Oficial
                 </h1>
               </div>
@@ -454,8 +450,8 @@ export default function ProductionDeskMainView({
                     onClick={() => onSelectEvent && onSelectEvent(eventId)}
                     className="group relative rounded-[2px] border border-[#E2E8F0] hover:border-[#F5B800] bg-[#FFFFFF] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(245,184,0,0.12)] cursor-pointer overflow-hidden flex flex-col md:flex-row items-stretch select-none"
                   >
-                    {/* SECCIÓN 1: PÓSTER OFICIAL A COLOR (110px x 130px fijo) */}
-                    <div className="w-full md:w-[110px] md:h-[130px] shrink-0 bg-[#F8F9FA] overflow-hidden border-b md:border-b-0 md:border-r border-[#E2E8F0]">
+                    {/* SECCIÓN 1: PÓSTER OFICIAL A COLOR (aspect-ratio 16/9 en móvil, 110px x 130px en desktop) */}
+                    <div className="w-full md:w-[110px] aspect-[16/9] md:aspect-auto md:h-[130px] shrink-0 bg-[#F8F9FA] overflow-hidden border-b md:border-b-0 md:border-r border-[#E2E8F0]">
                       {posterUrl ? (
                         <img
                           src={posterUrl}
@@ -464,7 +460,7 @@ export default function ProductionDeskMainView({
                           loading="lazy"
                         />
                       ) : (
-                        <div className="w-full h-32 md:h-full flex flex-col items-center justify-center bg-[#0F2342] text-white p-2">
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-[#0F2342] text-white p-2">
                           <span className="font-mono text-[9px] uppercase tracking-widest text-[#F5B800]">PASS</span>
                           <span className="font-display font-black text-lg mt-0.5">
                             {title.slice(0, 2).toUpperCase()}
@@ -501,7 +497,7 @@ export default function ProductionDeskMainView({
                       </div>
                     </div>
 
-                    {/* DIVISIÓN DE TALÓN (STUB) CON MUESCAS Y LÍNEA DISCONTINUA */}
+                    {/* DIVISIÓN DE TALÓN (STUB) CON MUESCAS Y LÍNEA DISCONTINUA EN ESCRITORIO */}
                     <div className="relative hidden md:flex items-center justify-center">
                       <span
                         aria-hidden="true"
@@ -517,8 +513,8 @@ export default function ProductionDeskMainView({
                       />
                     </div>
 
-                    {/* SECCIÓN 3: TALÓN DERECHO (FECHA DE GIRA + ESTADO + GESTIONAR) */}
-                    <div className="w-full md:w-[190px] lg:w-[210px] p-4 sm:p-5 bg-[#FAFAFA] border-t md:border-t-0 border-[#E2E8F0] flex flex-row md:flex-col justify-between items-center md:items-start gap-3 shrink-0">
+                    {/* SECCIÓN 3: TALÓN (FECHA DE GIRA + ESTADO + GESTIONAR) - SEPARADO EN MÓVIL POR LÍNEA DISCONTINUA SUPERIOR */}
+                    <div className="w-full md:w-[190px] lg:w-[210px] p-4 sm:p-5 bg-[#FAFAFA] border-t border-dashed border-[#CBD5E1] md:border-t-0 flex flex-row md:flex-col justify-between items-center md:items-start gap-3 shrink-0">
                       <div>
                         {/* Fecha de Gira: Día y Mes en Display Grande + Año debajo */}
                         <div className="font-display font-black text-xl sm:text-2xl text-[#0F2342] tracking-tight leading-none uppercase">

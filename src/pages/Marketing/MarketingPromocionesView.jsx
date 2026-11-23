@@ -484,10 +484,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
           {/* A. Encabezado */}
           <div className="border-b border-[#E2E8F0] pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
-                Consola de Difusión & Pauta · Campañas Activas
-              </span>
-              <h1 className="font-display font-black text-3xl sm:text-4xl text-[#0F2342] tracking-tight uppercase leading-none">
+              <h1 className="font-display font-black text-[clamp(1.5rem,4vw,2.25rem)] text-[#0F2342] tracking-tight uppercase leading-none">
                 EVENTOS PROMOCIONADOS
               </h1>
               <p className="font-sans text-xs sm:text-sm text-[#64748B] mt-2">
@@ -598,8 +595,8 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
                 No se encontraron campañas activas con los criterios seleccionados.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="editorial-scroll-x w-full">
+                <table className="w-full text-left text-xs min-w-[680px]">
                   <thead className="bg-[#FFFFFF] border-b border-[#E2E8F0] font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
                     <tr>
                       <th className="py-4 px-6 font-bold">Evento y Arte</th>
@@ -727,10 +724,7 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
           {/* Cabecera: Título + Botón Rectangular Azul #0F2342 */}
           <div className="border-b border-[#E2E8F0] pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
-                Catálogo de Tarifas & Comisiones · Event Hive
-              </span>
-              <h1 className="font-display font-black text-3xl sm:text-4xl text-[#0F2342] tracking-tight uppercase leading-none">
+              <h1 className="font-display font-black text-[clamp(1.5rem,4vw,2.25rem)] text-[#0F2342] tracking-tight uppercase leading-none">
                 PLANES DE PROMOCIÓN
               </h1>
               <p className="font-sans text-xs sm:text-sm text-[#64748B] mt-2">
@@ -750,8 +744,8 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
             </div>
           </div>
 
-          {/* Grid de 3 Columnas Arquitectónicas (border-radius: 2px) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+          {/* Grid de 3 Columnas Arquitectónicas (1 columna en móvil, 3 en escritorio) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6 items-stretch">
             {/* 1. Plan Impulso ($350.000 COP / evento): Superficie #FFFFFF, borde 1px solid #E2E8F0 */}
             <div className="w-full bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] p-6 sm:p-7 flex flex-col justify-between space-y-6">
               <div className="space-y-4">
@@ -850,49 +844,49 @@ export default function MarketingPromocionesView({ initialTab = 'eventos', onNav
               </div>
             </div>
 
-            {/* 3. Plan Exposición Total ($1.000.000 COP / evento): Superficie Dorado Ámbar #B45309 */}
-            <div className="w-full bg-[#B45309] text-white border border-[#92400E] rounded-[2px] p-6 sm:p-7 flex flex-col justify-between space-y-6 shadow-lg">
+            {/* 3. Plan Exposición Total: Fondo Amarillo Ámbar Vibrante #F5B800, borde #D97706 con borde superior #B45309 */}
+            <div className="w-full bg-[#F5B800] text-[#0F2342] border border-[#D97706] border-t-4 border-t-[#B45309] rounded-[2px] p-6 sm:p-7 flex flex-col justify-between space-y-6 shadow-lg relative">
               <div className="space-y-4">
                 <div>
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-amber-100 font-bold block">
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#0F2342]/80 font-bold block">
                     TIER 03 · EXPOSICIÓN TOTAL
                   </span>
-                  <h3 className="font-display font-black text-xl text-white uppercase tracking-tight mt-1">
+                  <h3 className="font-display font-black text-xl text-[#0F2342] uppercase tracking-tight mt-1">
                     {planesByTier.planExposicion.nombre || 'Plan Exposición Total'}
                   </h3>
                 </div>
 
-                <div className="py-2 border-y border-white/20">
-                  <span className="font-mono font-black text-2xl sm:text-3xl text-white tracking-tight block">
+                <div className="py-2 border-y border-[#D97706]/40">
+                  <span className="font-mono font-black text-2xl sm:text-3xl text-[#0F2342] tracking-tight block">
                     {formatPrice(planesByTier.planExposicion.precio || 1000000)}
                   </span>
-                  <span className="font-mono text-[11px] text-amber-200 uppercase">COP / evento</span>
+                  <span className="font-mono text-[11px] text-[#0F2342]/70 uppercase font-bold">COP / evento</span>
                 </div>
 
-                <p className="text-xs text-amber-50 leading-relaxed">
+                <p className="text-xs text-[#0F2342]/90 leading-relaxed font-medium">
                   {planesByTier.planExposicion.detallePublicidad ||
                     'Aparición garantizada en el Carrusel Principal del Home, difusión omnicanal y soporte prioritario.'}
                 </p>
 
                 {/* Detalle de Beneficios con guiones largos (—) */}
-                <div className="space-y-2 pt-2 border-t border-white/20 font-sans text-xs text-amber-50">
+                <div className="space-y-2 pt-2 border-t border-[#D97706]/40 font-sans text-xs text-[#0F2342] font-medium">
                   <p>— Espacio exclusivo garantizado en Carrusel Principal del Home</p>
                   <p>— Difusión prioritaria omnicanal (Web, Push y Redes)</p>
                   <p>— Soporte preferencial 24/7 y auditoría de boletería</p>
                 </div>
 
                 {/* Comisión comercial en tipografía monoespaciada tabular */}
-                <div className="pt-2 font-mono text-xs text-white font-bold">
+                <div className="pt-2 font-mono text-xs text-[#0F2342] font-bold">
                   Comisión preferencial: {planesByTier.planExposicion.comisionPorcentaje ?? 6}%
                 </div>
               </div>
 
-              {/* Botón de Edición: Rectangular limpio en Azul Institucional #0F2342 con texto blanco */}
-              <div className="pt-4 border-t border-white/20">
+              {/* Botón de Edición: Rectangular sólido en Azul Institucional #0F2342 con texto en Blanco Puro #FFFFFF */}
+              <div className="pt-4 border-t border-[#D97706]/40">
                 <button
                   type="button"
                   onClick={() => handleOpenEditPlan(planesByTier.planExposicion)}
-                  className="w-full py-3 px-4 rounded-[2px] bg-[#0F2342] hover:bg-[#071325] text-white font-mono text-xs uppercase tracking-widest font-bold text-center transition-colors cursor-pointer shadow-sm border border-[#0F2342]"
+                  className="w-full py-3 px-4 rounded-[2px] bg-[#0F2342] hover:bg-[#1E3A8A] text-white font-mono text-xs uppercase tracking-widest font-bold text-center transition-colors cursor-pointer shadow-sm border border-[#0F2342]"
                 >
                   EDITAR TARIFA Y BENEFICIOS
                 </button>

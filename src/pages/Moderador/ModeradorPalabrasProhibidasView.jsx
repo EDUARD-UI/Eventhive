@@ -268,10 +268,7 @@ export default function ModeradorPalabrasProhibidasView() {
       {/* 1. Cabecera Editorial */}
       <div className="border-b border-[#E2E8F0] pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
-            Motor de Filtro & Auditoría de Texto
-          </span>
-          <h1 className="font-display font-black text-3xl sm:text-4xl text-[#0F2342] tracking-tight uppercase leading-none">
+          <h1 className="font-display font-black text-2xl sm:text-3xl lg:text-[clamp(1.5rem,4vw,2.25rem)] text-[#0F2342] tracking-tight uppercase leading-none">
             DICCIONARIO DE PALABRAS PROHIBIDAS
           </h1>
           <p className="font-sans text-xs sm:text-sm text-[#64748B] mt-2">
@@ -303,7 +300,7 @@ export default function ModeradorPalabrasProhibidasView() {
 
       {/* 2. Resumen en Línea (Reemplazo de las 3 cajas KPI) */}
       <div className="w-full bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] shadow-2xs overflow-hidden">
-        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#E2E8F0]">
+        <div className="grid grid-cols-2 md:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#E2E8F0]">
           <div className="p-4 sm:p-5 flex items-center justify-between">
             <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
               Términos Registrados
@@ -325,7 +322,7 @@ export default function ModeradorPalabrasProhibidasView() {
             </span>
           </div>
 
-          <div className="p-4 sm:p-5 flex items-center justify-between">
+          <div className="p-4 sm:p-5 col-span-2 md:col-span-1 flex items-center justify-between border-t border-[#E2E8F0] md:border-t-0">
             <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
               Severidad Grave
             </span>
@@ -454,8 +451,8 @@ export default function ModeradorPalabrasProhibidasView() {
 
       {/* 5. Tabla de Términos (Sin cajas redondeadas de colores) */}
       <div className="w-full bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left text-xs">
+        <div className="editorial-scroll-x w-full">
+          <table className="w-full border-collapse text-left text-xs min-w-[680px]">
             <thead>
               <tr className="border-b border-[#E2E8F0] bg-[#FFFFFF] font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
                 <th className="px-5 py-4 font-bold">Término Prohibido</th>

@@ -252,10 +252,7 @@ export default function MiEvento({
       <div className="border-b border-[#E2E8F0] pb-6 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
-              Mesa de Producción · Cartagena
-            </span>
-            <h1 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-[#0F2342] tracking-tight uppercase leading-none">
+            <h1 className="font-display font-black text-[clamp(1.5rem,4vw,2.5rem)] text-[#0F2342] tracking-tight uppercase leading-none">
               Cartelera Completa
             </h1>
           </div>
@@ -344,7 +341,7 @@ export default function MiEvento({
           )}
 
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {[1, 2, 3].map((n) => (
                 <div key={n} className="rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] animate-pulse overflow-hidden">
                   <div className="aspect-[4/5] bg-[#F1F5F9]" />
@@ -378,7 +375,7 @@ export default function MiEvento({
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {paginatedEvents.map((event) => {
                 const isDeleting = deletingId === event.id;
                 const posterDate = formatPosterMeta(event.date, event.time);

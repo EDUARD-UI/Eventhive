@@ -388,9 +388,6 @@ export default function PerfilOrganizador() {
       <div className="border-b border-[#E2E8F0] pb-6 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
-              Expediente de Producción · Cartagena
-            </span>
             <h1 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-[#0F2342] tracking-tight uppercase leading-none">
               Mi Perfil
             </h1>

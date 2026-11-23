@@ -41,11 +41,8 @@ export default function ModeradorResumenView({
       <div className="space-y-6">
         <div className="border-b border-[#E2E8F0] pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
-              Mesa de Control Editorial & Curaduría de Cartelera
-            </span>
-            <h1 className="font-display font-black text-3xl sm:text-4xl text-[#0F2342] tracking-tight uppercase leading-none">
-              CURADURÍA Y CONTROL DE CARTELERA
+            <h1 className="font-display font-black text-[clamp(1.5rem,4vw,2.25rem)] text-[#0F2342] tracking-tight uppercase leading-none">
+              MODERACIÓN Y CONTROL DE CARTELERA
             </h1>
             <p className="font-sans text-xs sm:text-sm text-[#64748B] mt-2">
               Supervisión editorial, validación de requisitos y seguimiento de eventos en Cartagena.
@@ -53,11 +50,11 @@ export default function ModeradorResumenView({
           </div>
         </div>
 
-        {/* Barra de Métricas Unificada (5 Columnas separadas por líneas de 1px) */}
+        {/* Barra de Métricas Unificada (Grid 2 columnas en móvil con 5to span 2, 5 columnas en escritorio) */}
         <div className="w-full bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] shadow-2xs overflow-hidden">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-[#E2E8F0]">
+          <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-[#E2E8F0]">
             {/* 1. En Cola de Revisión */}
-            <div className="p-4 sm:p-5 flex flex-col justify-center space-y-1">
+            <div className="p-4 sm:p-5 flex flex-col justify-center space-y-1 border-b md:border-b-0 border-[#E2E8F0]">
               <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
                 En Cola de Revisión
               </span>
@@ -73,7 +70,7 @@ export default function ModeradorResumenView({
             </div>
 
             {/* 2. Publicados en Cartelera */}
-            <div className="p-4 sm:p-5 flex flex-col justify-center space-y-1">
+            <div className="p-4 sm:p-5 flex flex-col justify-center space-y-1 border-b md:border-b-0 border-[#E2E8F0]">
               <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
                 Publicados en Cartelera
               </span>
@@ -88,7 +85,7 @@ export default function ModeradorResumenView({
             </div>
 
             {/* 3. En Corrección */}
-            <div className="p-4 sm:p-5 flex flex-col justify-center space-y-1">
+            <div className="p-4 sm:p-5 flex flex-col justify-center space-y-1 border-b md:border-b-0 border-[#E2E8F0]">
               <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
                 En Corrección
               </span>
@@ -103,7 +100,7 @@ export default function ModeradorResumenView({
             </div>
 
             {/* 4. Rechazados */}
-            <div className="p-4 sm:p-5 flex flex-col justify-center space-y-1">
+            <div className="p-4 sm:p-5 flex flex-col justify-center space-y-1 border-b md:border-b-0 border-[#E2E8F0]">
               <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
                 Rechazados
               </span>
@@ -117,8 +114,8 @@ export default function ModeradorResumenView({
               </div>
             </div>
 
-            {/* 5. Total Histórico */}
-            <div className="p-4 sm:p-5 flex flex-col justify-center space-y-1 col-span-2 sm:col-span-1">
+            {/* 5. Total Histórico (col-span-2 en móvil para ocupar el ancho completo) */}
+            <div className="p-4 sm:p-5 flex flex-col justify-center space-y-1 col-span-2 md:col-span-1">
               <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
                 Total Histórico
               </span>
@@ -208,43 +205,47 @@ export default function ModeradorResumenView({
                   key={evento.id}
                   className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-[#F8F9FA]/70 transition-colors"
                 >
-                  {/* Izquierda: Póster limpio a todo color (64px x 64px, border-radius: 2px) */}
-                  <div className="flex items-center gap-4 min-w-0 flex-1">
-                    <div className="w-16 h-16 rounded-[2px] border border-[#E2E8F0] overflow-hidden shrink-0 bg-[#F8F9FA] flex items-center justify-center">
-                      {evento.foto ? (
-                        <img
-                          src={evento.foto}
-                          alt={evento.titulo}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="font-mono text-[11px] font-bold text-[#64748B]">
-                          ARTE
-                        </span>
-                      )}
+                  {/* Contenido en bloque: Fila Superior + Fila Media en móvil */}
+                  <div className="flex flex-col gap-2.5 min-w-0 flex-1">
+                    {/* Fila Superior en móvil (< 768px): Póster 56x56 + Título y Organización */}
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="w-14 h-14 md:w-16 md:h-16 rounded-[2px] border border-[#E2E8F0] overflow-hidden shrink-0 bg-[#F8F9FA] flex items-center justify-center">
+                        {evento.foto ? (
+                          <img
+                            src={evento.foto}
+                            alt={evento.titulo}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="font-mono text-[10px] md:text-[11px] font-bold text-[#64748B]">
+                            ARTE
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-sans font-bold text-sm sm:text-base text-[#0F2342] truncate leading-tight">
+                          {evento.titulo}
+                        </h3>
+                        <p className="font-sans text-xs text-[#64748B] truncate mt-0.5">
+                          Organizado por <strong className="text-[#0F2342] font-semibold">{organizacionNombre}</strong>
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Centro: Metadatos y Título */}
-                    <div className="min-w-0 flex-1">
-                      <p className="font-mono text-[11px] text-[#64748B] truncate uppercase">
-                        {metaLine}
-                      </p>
-                      <h3 className="font-sans font-bold text-sm sm:text-base text-[#0F2342] truncate mt-0.5">
-                        {evento.titulo}
-                      </h3>
-                      <p className="font-sans text-xs text-[#64748B] truncate mt-0.5">
-                        Organizado por <strong className="text-[#0F2342] font-semibold">{organizacionNombre}</strong>
-                      </p>
+                    {/* Fila Media: Fecha, hora y recinto en tipografía monoespaciada */}
+                    <div className="font-mono text-[11px] text-[#64748B] uppercase tracking-wide truncate">
+                      {metaLine}
                     </div>
                   </div>
 
-                  {/* Derecha: Botones de Dictamen Rectangulares (border-radius: 2px) */}
-                  <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                  {/* Fila Inferior en móvil: Grid de 2x2 con gap de 8px (en desktop vuelve a fila flex horizontal) */}
+                  <div className="grid grid-cols-2 gap-2 md:flex md:items-center md:gap-2 shrink-0 w-full md:w-auto pt-2 md:pt-0 border-t border-[#F1F5F9] md:border-t-0">
                     <button
                       type="button"
                       disabled={actionLoading}
                       onClick={() => onInspect(evento)}
-                      className="px-3.5 py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-[#F8F9FA] text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer disabled:opacity-50"
+                      className="px-3.5 py-2.5 md:py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-[#F8F9FA] text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer disabled:opacity-50 text-center justify-center flex items-center"
                     >
                       Revisar
                     </button>
@@ -253,7 +254,7 @@ export default function ModeradorResumenView({
                       type="button"
                       disabled={actionLoading}
                       onClick={() => onSolicitarCorreccion(evento)}
-                      className="px-3.5 py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-amber-50 text-[#B45309] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer disabled:opacity-50"
+                      className="px-3.5 py-2.5 md:py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-amber-50 text-[#B45309] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer disabled:opacity-50 text-center justify-center flex items-center"
                     >
                       Corrección
                     </button>
@@ -262,7 +263,7 @@ export default function ModeradorResumenView({
                       type="button"
                       disabled={actionLoading}
                       onClick={() => onRechazar(evento)}
-                      className="px-3.5 py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-rose-50 text-[#DC2626] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer disabled:opacity-50"
+                      className="px-3.5 py-2.5 md:py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-rose-50 text-[#DC2626] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer disabled:opacity-50 text-center justify-center flex items-center"
                     >
                       Rechazar
                     </button>
@@ -271,7 +272,7 @@ export default function ModeradorResumenView({
                       type="button"
                       disabled={actionLoading}
                       onClick={() => onAprobar(evento.id)}
-                      className="px-4 py-2 rounded-[2px] bg-[#0F2342] hover:bg-[#15803D] text-[#FFFFFF] font-mono text-xs uppercase tracking-wider font-bold transition-colors shadow-2xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                      className="px-4 py-2.5 md:py-2 rounded-[2px] bg-[#0F2342] hover:bg-[#15803D] text-[#FFFFFF] font-mono text-xs uppercase tracking-wider font-bold transition-colors shadow-2xs cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
                     >
                       {actionLoading ? (
                         <FiLoader size={13} className="animate-spin" />

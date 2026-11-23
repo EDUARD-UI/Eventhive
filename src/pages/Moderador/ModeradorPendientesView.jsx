@@ -58,11 +58,8 @@ export default function ModeradorPendientesView({
       {/* Cabecera Editorial y Buscador Rectangular */}
       <div className="border-b border-[#E2E8F0] pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
-            Bandeja de Dictamen · Curaduría
-          </span>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-display font-black text-3xl sm:text-4xl text-[#0F2342] tracking-tight uppercase leading-none">
+            <h1 className="font-display font-black text-[clamp(1.5rem,4vw,2.25rem)] text-[#0F2342] tracking-tight uppercase leading-none">
               BANDEJA DE EVENTOS PENDIENTES
             </h1>
             <span className="font-mono text-xs text-[#0F2342] font-bold px-2 py-0.5 bg-[#F8F9FA] border border-[#E2E8F0] rounded-[2px]">
@@ -144,43 +141,46 @@ export default function ModeradorPendientesView({
                 key={evento.id}
                 className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-[#F8F9FA]/70 transition-colors"
               >
-                {/* Izquierda: Póster limpio a todo color (sin badges superpuestos) */}
-                <div className="flex items-center gap-4 min-w-0 flex-1">
-                  <div className="w-16 h-16 rounded-[2px] border border-[#E2E8F0] overflow-hidden shrink-0 bg-[#F8F9FA] flex items-center justify-center">
-                    {evento.foto ? (
-                      <img
-                        src={evento.foto}
-                        alt={evento.titulo}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="font-mono text-[11px] font-bold text-[#64748B]">
-                        ARTE
-                      </span>
-                    )}
+                {/* Móvil: Fila superior (Póster 56x56 + Título y Org) y Fila media (Fecha/Recinto) */}
+                <div className="flex flex-col gap-2 min-w-0 flex-1">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-14 h-14 rounded-[2px] border border-[#E2E8F0] overflow-hidden shrink-0 bg-[#F8F9FA] flex items-center justify-center">
+                      {evento.foto ? (
+                        <img
+                          src={evento.foto}
+                          alt={evento.titulo}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="font-mono text-[11px] font-bold text-[#64748B]">
+                          ARTE
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-sans font-bold text-sm sm:text-base text-[#0F2342] truncate">
+                        {evento.titulo}
+                      </h3>
+                      <p className="font-sans text-xs text-[#64748B] truncate mt-0.5">
+                        Organizado por <strong className="text-[#0F2342] font-semibold">{organizacionNombre}</strong>
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Centro: Metadatos y Título */}
-                  <div className="min-w-0 flex-1">
-                    <p className="font-mono text-[11px] text-[#64748B] truncate uppercase">
-                      {metaLine}
-                    </p>
-                    <h3 className="font-sans font-bold text-sm sm:text-base text-[#0F2342] truncate mt-0.5">
-                      {evento.titulo}
-                    </h3>
-                    <p className="font-sans text-xs text-[#64748B] truncate mt-0.5">
-                      Organizado por <strong className="text-[#0F2342] font-semibold">{organizacionNombre}</strong>
-                    </p>
-                  </div>
+                  {/* Fila media: Metadata monoespaciada */}
+                  <p className="font-mono text-[11px] text-[#64748B] uppercase truncate pl-0 md:pl-[4.25rem]">
+                    {metaLine}
+                  </p>
                 </div>
 
-                {/* Derecha: Botones de Dictamen Rectangulares (border-radius: 2px) */}
-                <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                {/* Botones de Dictamen: Grid 2x2 en móvil (<768px), fila en escritorio */}
+                <div className="grid grid-cols-2 gap-2 w-full md:w-auto md:flex md:items-center md:gap-2 shrink-0 pt-2 border-t border-[#E2E8F0] md:pt-0 md:border-t-0">
                   <button
                     type="button"
                     disabled={actionLoading}
                     onClick={() => onInspect(evento)}
-                    className="px-3.5 py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-[#F8F9FA] text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer disabled:opacity-50"
+                    className="w-full md:w-auto px-3.5 py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-[#F8F9FA] text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer disabled:opacity-50 text-center"
                   >
                     Revisar
                   </button>
@@ -189,7 +189,7 @@ export default function ModeradorPendientesView({
                     type="button"
                     disabled={actionLoading}
                     onClick={() => onSolicitarCorreccion(evento)}
-                    className="px-3.5 py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-amber-50 text-[#B45309] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer disabled:opacity-50"
+                    className="w-full md:w-auto px-3.5 py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-amber-50 text-[#B45309] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer disabled:opacity-50 text-center"
                   >
                     Corrección
                   </button>
@@ -198,7 +198,7 @@ export default function ModeradorPendientesView({
                     type="button"
                     disabled={actionLoading}
                     onClick={() => onRechazar(evento)}
-                    className="px-3.5 py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-rose-50 text-[#DC2626] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer disabled:opacity-50"
+                    className="w-full md:w-auto px-3.5 py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-rose-50 text-[#DC2626] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer disabled:opacity-50 text-center"
                   >
                     Rechazar
                   </button>
@@ -207,7 +207,7 @@ export default function ModeradorPendientesView({
                     type="button"
                     disabled={actionLoading}
                     onClick={() => onAprobar(evento.id)}
-                    className="px-4 py-2 rounded-[2px] bg-[#0F2342] hover:bg-[#15803D] text-[#FFFFFF] font-mono text-xs uppercase tracking-wider font-bold transition-colors shadow-2xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                    className="w-full md:w-auto px-4 py-2 rounded-[2px] bg-[#0F2342] hover:bg-[#15803D] text-[#FFFFFF] font-mono text-xs uppercase tracking-wider font-bold transition-colors shadow-2xs cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 text-center"
                   >
                     {actionLoading ? (
                       <FiLoader size={13} className="animate-spin" />

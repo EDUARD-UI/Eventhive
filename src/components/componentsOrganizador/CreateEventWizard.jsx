@@ -118,6 +118,7 @@ export default function CreateEventWizard({
   const [currentStep, setCurrentStep] = useState(1);
   const [categories, setCategories] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
   const drawerPanelRef = useRef(null);
   const stepperRef = useRef(null);
 
@@ -637,7 +638,20 @@ export default function CreateEventWizard({
 
       {/* 2. Stepper Arquitectónico de 5 Segmentos Iguales (Verde al completar, Dorado en activo) */}
       <div ref={stepperRef} className="border-b border-[#E2E8F0] pb-2 bg-white scroll-mt-4">
-        <div className="grid grid-cols-5 gap-2 sm:gap-4">
+        {/* Botón minimalista para ver/ocultar preview en móviles y tablets (<1024px) */}
+        <div className="lg:hidden flex items-center justify-between pb-2 mb-2 border-b border-[#F1F5F9]">
+          <span className="font-mono text-[10px] uppercase text-[#64748B]">Paso {currentStep} de 5</span>
+          <button
+            type="button"
+            onClick={() => setShowMobilePreview(!showMobilePreview)}
+            className="px-2.5 py-1 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-slate-50 text-[#0F2342] font-mono text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
+          >
+            {showMobilePreview ? 'Ocultar vista previa' : 'Ver vista previa del boleto'}
+          </button>
+        </div>
+
+        <div className="editorial-scroll-x w-full pb-1">
+          <div className="grid grid-cols-5 gap-2 sm:gap-4 min-w-[540px] sm:min-w-0">
           {STEPS.map((s) => {
             const isCompleted = s.id < currentStep;
             const isCurrent = s.id === currentStep;
@@ -674,13 +688,14 @@ export default function CreateEventWizard({
               </div>
             );
           })}
+          </div>
         </div>
       </div>
 
       {/* 3. Split Layout: Preview Boleto Físico Izquierda + Formulario Derecha */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-8 items-start">
         {/* COLUMNA IZQUIERDA: Vista Previa en Vivo (Boleto Coleccionable) */}
-        <div className="lg:col-span-5 xl:col-span-5 lg:sticky lg:top-4 z-10 space-y-3">
+        <div className={`${showMobilePreview ? 'block' : 'hidden'} lg:block lg:col-span-5 xl:col-span-5 lg:sticky lg:top-4 z-10 space-y-3`}>
           <div className="flex items-center justify-between px-1 border-b border-[#E2E8F0] pb-2">
             <span className="font-mono text-[11px] uppercase tracking-wider text-[#0F2342] font-bold">
               Boleto Coleccionable
@@ -1183,7 +1198,7 @@ export default function CreateEventWizard({
         )}
 
         {/* 5. Botones de Navegación del Wizard */}
-        <div className="mt-8 pt-5 border-t border-[#E2E8F0] flex items-center justify-between">
+        <div className="mt-8 pt-5 border-t border-[#E2E8F0] flex items-center justify-between sticky bottom-0 bg-white/95 backdrop-blur-xs py-3.5 px-2 z-20 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))]">
           <button
             type="button"
             onClick={() => (currentStep === 1 ? handleSafeBack() : setCurrentStep((s) => s - 1))}
@@ -1233,7 +1248,7 @@ export default function CreateEventWizard({
         <div
           ref={drawerPanelRef}
           data-lenis-prevent="true"
-          className="relative z-50 w-full sm:w-[680px] md:w-[840px] lg:w-[1060px] xl:w-[1240px] 2xl:w-[1360px] max-w-[98vw] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300"
+          className="relative z-50 w-full sm:w-[680px] md:w-[840px] lg:w-[1060px] xl:w-[1240px] 2xl:w-[1360px] max-w-full h-[100dvh] sm:h-full bg-white shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300"
         >
           {wizardContent}
         </div>

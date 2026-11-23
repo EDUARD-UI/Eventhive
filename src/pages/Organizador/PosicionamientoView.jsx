@@ -279,10 +279,7 @@ export default function PosicionamientoView() {
     <div className="space-y-8 select-none">
       {/* 1. Cabecera Minimalista */}
       <div className="border-b border-[#E2E8F0] pb-6 space-y-2">
-        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block">
-          Consola de Amplificación · Cartagena
-        </span>
-        <h1 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-[#0F2342] tracking-tight uppercase leading-none">
+        <h1 className="font-display font-black text-[clamp(1.5rem,4vw,2.5rem)] text-[#0F2342] tracking-tight uppercase leading-none">
           Posicionamiento
         </h1>
         <p className="text-xs font-mono uppercase tracking-wider text-[#64748B] pt-1">
@@ -290,32 +287,32 @@ export default function PosicionamientoView() {
         </p>
       </div>
 
-      {/* 2. Barra de Resumen en Línea (Reemplazo de tarjetas KPI) */}
-      <div className="rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] p-4 sm:p-5">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 divide-y sm:divide-y-0 sm:divide-x divide-[#E2E8F0]">
-          <div className="w-full sm:w-1/3 sm:px-4 first:pl-0">
-            <span className="font-mono font-black text-2xl text-[#0F2342] tabular-nums">
+      {/* 2. Barra de Resumen en Línea (Grid 2 columnas en móvil, 3 en escritorio) */}
+      <div className="rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] p-4 sm:p-5 overflow-hidden">
+        <div className="grid grid-cols-2 md:grid-cols-3 divide-x divide-[#E2E8F0]">
+          <div className="px-2 sm:px-4 first:pl-0">
+            <span className="font-mono font-black text-xl sm:text-2xl text-[#0F2342] tabular-nums">
               {eventosElegibles.length}
             </span>
-            <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B] ml-2 font-bold">
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-wider text-[#64748B] block sm:inline sm:ml-2 font-bold">
               Producciones Elegibles
             </span>
           </div>
 
-          <div className="w-full sm:w-1/3 sm:px-4 pt-3 sm:pt-0">
-            <span className="font-mono font-black text-2xl text-[#0F2342] tabular-nums">
+          <div className="px-2 sm:px-4">
+            <span className="font-mono font-black text-xl sm:text-2xl text-[#0F2342] tabular-nums">
               {eventosConPromocion.length}
             </span>
-            <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B] ml-2 font-bold">
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-wider text-[#64748B] block sm:inline sm:ml-2 font-bold">
               Promoción Activa
             </span>
           </div>
 
-          <div className="w-full sm:w-1/3 sm:px-4 pt-3 sm:pt-0">
-            <span className="font-mono font-black text-2xl text-[#0F2342] tabular-nums">
+          <div className="col-span-2 md:col-span-1 px-2 sm:px-4 pt-2 md:pt-0 border-t md:border-t-0 md:border-l border-[#E2E8F0]">
+            <span className="font-mono font-black text-xl sm:text-2xl text-[#0F2342] tabular-nums">
               {displayPlanes.length}
             </span>
-            <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B] ml-2 font-bold">
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-wider text-[#64748B] block sm:inline sm:ml-2 font-bold">
               Planes Disponibles
             </span>
           </div>
@@ -485,7 +482,7 @@ export default function PosicionamientoView() {
             CONSULTANDO PLANES DE PROMOCIÓN...
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6 items-stretch">
             {displayPlanes.map((plan, idx) => {
               const isFirst = idx === 0;
               const isSecond = idx === 1;
@@ -497,95 +494,190 @@ export default function PosicionamientoView() {
                 selectedEvento?.urlImagenDestacado
               );
 
-              // 1. Plan Impulso: Fondo #FFFFFF, borde 1px solid #E2E8F0
-              // 2. Plan Amplificado: Fondo #FFFFFF, borde 2px solid #0F2342 con franja superior de 4px en #F5B800
-              // 3. Plan Exposición Total: Fondo #0F2342, texto blanco y precio en #F5B800
-              const containerClass = isThird
-                ? 'bg-[#0F2342] text-white border border-[#0F2342]'
-                : isSecond
-                ? 'bg-[#FFFFFF] border-2 border-[#0F2342] relative'
-                : 'bg-[#FFFFFF] border border-[#E2E8F0]';
-
               const benefitsList = plan.beneficios || [
                 plan.detallePublicidad || 'Posicionamiento en la plataforma',
                 'Reportes de rendimiento en vivo',
                 'Presencia destacada en cartelera',
               ];
 
+              if (isFirst) {
+                // Plan 1 — Impulso (Nivel Base — Blanco):
+                // Fondo: Blanco Puro (#FFFFFF)
+                // Borde: 1px solid #E2E8F0 (border-radius: 2px)
+                // Tipografía: Título y precio en Azul Institucional (#0F2342), textos secundarios en Gris Pizarra (#64748B)
+                // Botón: Rectangular con borde 1px solid #0F2342, fondo #FFFFFF y texto #0F2342 (o sólido #0F2342 con texto blanco cuando esté seleccionado)
+                return (
+                  <div
+                    key={plan.id || idx}
+                    className="w-full bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] p-6 sm:p-7 flex flex-col justify-between space-y-6 transition-all select-none"
+                  >
+                    <div className="space-y-4">
+                      <div>
+                        <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B] block">
+                          TIER 01 · BASE
+                        </span>
+                        <h3 className="font-display font-black text-xl text-[#0F2342] uppercase tracking-tight mt-1">
+                          {plan.nombre}
+                        </h3>
+                        <p className="font-mono text-xs text-[#64748B] mt-1">
+                          Posicionamiento oficial por producción
+                        </p>
+                      </div>
+
+                      <div className="py-2 border-y border-[#E2E8F0]">
+                        <span className="font-mono font-black text-3xl text-[#0F2342] tracking-tight block tabular-nums">
+                          {formatPrice(plan.precio)}
+                        </span>
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-[#94A3B8] block mt-0.5">
+                          COP / Producción
+                        </span>
+                      </div>
+
+                      <ul className="pt-2 border-t border-[#E2E8F0] space-y-2.5 text-xs font-mono text-[#64748B]">
+                        {benefitsList.map((ben, bIdx) => (
+                          <li key={bIdx} className="flex items-start gap-2.5">
+                            <span className="text-[#0F2342] font-bold shrink-0">—</span>
+                            <span>{ben}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="pt-6">
+                      <button
+                        type="button"
+                        onClick={() => handleContratarDirecto(plan)}
+                        disabled={procesando || !selectedEventoId || isEventAlreadyPromoted}
+                        className={`w-full py-3 rounded-[2px] font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer disabled:opacity-50 border border-[#0F2342] ${
+                          isSelected
+                            ? 'bg-[#0F2342] text-white'
+                            : 'bg-[#FFFFFF] hover:bg-[#F8F9FA] text-[#0F2342]'
+                        }`}
+                      >
+                        {procesando && selectedPlan?.id === plan.id
+                          ? 'Procesando...'
+                          : isEventAlreadyPromoted
+                          ? 'Producción ya destacada'
+                          : isSelected
+                          ? 'Plan Seleccionado →'
+                          : 'Contratar Plan'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
+              if (isSecond) {
+                // Plan 2 — Amplificado (Nivel Intermedio — Azul Institucional):
+                // Fondo: Azul Institucional Event Hive (#0F2342)
+                // Borde: 1px solid #0F2342 (border-radius: 2px)
+                // Tipografía: Título en Blanco Puro (#FFFFFF), precio destacado en Amarillo (#F5B800), lista de beneficios en blanco suave (#E2E8F0) con guiones en #F5B800
+                // Botón: Rectangular sólido en Blanco (#FFFFFF) con texto en Azul Institucional (#0F2342) y tipografía en negrita
+                return (
+                  <div
+                    key={plan.id || idx}
+                    className="w-full bg-[#0F2342] text-white border border-[#0F2342] rounded-[2px] p-6 sm:p-7 flex flex-col justify-between space-y-6 shadow-md transition-all select-none"
+                  >
+                    <div className="space-y-4">
+                      <div>
+                        <span className="font-mono text-[11px] uppercase tracking-wider text-[#F5B800] font-bold block">
+                          TIER 02 · INTERMEDIO
+                        </span>
+                        <h3 className="font-display font-black text-xl text-[#FFFFFF] uppercase tracking-tight mt-1">
+                          {plan.nombre}
+                        </h3>
+                        <p className="font-mono text-xs text-slate-300 mt-1">
+                          Posicionamiento oficial por producción
+                        </p>
+                      </div>
+
+                      <div className="py-2 border-y border-white/10">
+                        <span className="font-mono font-black text-3xl text-[#F5B800] tracking-tight block tabular-nums">
+                          {formatPrice(plan.precio)}
+                        </span>
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-slate-300 block mt-0.5">
+                          COP / Producción
+                        </span>
+                      </div>
+
+                      <ul className="pt-2 border-t border-white/10 space-y-2.5 text-xs font-mono text-[#E2E8F0]">
+                        {benefitsList.map((ben, bIdx) => (
+                          <li key={bIdx} className="flex items-start gap-2.5">
+                            <span className="text-[#F5B800] font-bold shrink-0">—</span>
+                            <span>{ben}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="pt-6">
+                      <button
+                        type="button"
+                        onClick={() => handleContratarDirecto(plan)}
+                        disabled={procesando || !selectedEventoId || isEventAlreadyPromoted}
+                        className="w-full py-3 rounded-[2px] bg-[#FFFFFF] hover:bg-slate-100 text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer disabled:opacity-50 border border-white shadow-xs"
+                      >
+                        {procesando && selectedPlan?.id === plan.id
+                          ? 'Procesando...'
+                          : isEventAlreadyPromoted
+                          ? 'Producción ya destacada'
+                          : isSelected
+                          ? 'Plan Seleccionado →'
+                          : 'Contratar Plan'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Plan 3 — Exposición Total (Nivel Máximo — Amarillo Ámbar):
+              // Fondo: Amarillo Ámbar Vibrante (#F5B800) con acento de borde superior en Dorado Ámbar profundo (#B45309)
+              // Borde: 1px solid #D97706 (border-radius: 2px)
+              // Tipografía: Título, precio y beneficios en Azul Institucional profundo (#0F2342) para garantizar contraste AAA de lectura impecable
+              // Botón: Rectangular sólido en Azul Institucional (#0F2342) con texto en Blanco Puro (#FFFFFF)
               return (
                 <div
                   key={plan.id || idx}
-                  className={`rounded-[2px] p-6 sm:p-7 flex flex-col justify-between transition-all select-none ${containerClass}`}
+                  className="w-full bg-[#F5B800] border border-[#D97706] border-t-4 border-t-[#B45309] rounded-[2px] p-6 sm:p-7 flex flex-col justify-between space-y-6 text-[#0F2342] shadow-lg transition-all select-none relative"
                 >
-                  {/* Franja superior de 4px en #F5B800 para el segundo plan */}
-                  {isSecond && (
-                    <span
-                      className="absolute top-0 inset-x-0 h-[4px] bg-[#F5B800]"
-                      aria-hidden="true"
-                    />
-                  )}
-
                   <div className="space-y-4">
-                    {/* Título del Plan */}
                     <div>
-                      <h3
-                        className={`font-display font-black text-xl uppercase tracking-tight ${
-                          isThird ? 'text-white' : 'text-[#0F2342]'
-                        }`}
-                      >
+                      <span className="font-mono text-[11px] uppercase tracking-wider text-[#0F2342]/80 font-bold block">
+                        TIER 03 · MÁXIMO
+                      </span>
+                      <h3 className="font-display font-black text-xl text-[#0F2342] uppercase tracking-tight mt-1">
                         {plan.nombre}
                       </h3>
-                      <p
-                        className={`font-mono text-xs mt-1 ${
-                          isThird ? 'text-slate-300' : 'text-[#64748B]'
-                        }`}
-                      >
+                      <p className="font-mono text-xs text-[#0F2342]/80 mt-1 font-medium">
                         Posicionamiento oficial por producción
                       </p>
                     </div>
 
-                    {/* Precio */}
-                    <div className="pt-2">
-                      <span
-                        className={`font-mono font-black text-3xl tracking-tight block tabular-nums ${
-                          isThird ? 'text-[#F5B800]' : 'text-[#0F2342]'
-                        }`}
-                      >
+                    <div className="py-2 border-y border-[#D97706]/40">
+                      <span className="font-mono font-black text-3xl text-[#0F2342] tracking-tight block tabular-nums">
                         {formatPrice(plan.precio)}
                       </span>
-                      <span
-                        className={`font-mono text-[10px] uppercase tracking-wider block mt-0.5 ${
-                          isThird ? 'text-slate-400' : 'text-[#94A3B8]'
-                        }`}
-                      >
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-[#0F2342]/70 font-bold block mt-0.5">
                         COP / Producción
                       </span>
                     </div>
 
-                    {/* Beneficios con guiones largos o puntos cuadrados en #F5B800 */}
-                    <ul className="pt-4 border-t border-slate-200/50 space-y-2.5 text-xs font-mono">
+                    <ul className="pt-2 border-t border-[#D97706]/40 space-y-2.5 text-xs font-mono text-[#0F2342] font-medium">
                       {benefitsList.map((ben, bIdx) => (
                         <li key={bIdx} className="flex items-start gap-2.5">
-                          <span className="text-[#F5B800] font-bold shrink-0">—</span>
-                          <span className={isThird ? 'text-slate-200' : 'text-[#64748B]'}>
-                            {ben}
-                          </span>
+                          <span className="text-[#0F2342] font-black shrink-0">—</span>
+                          <span>{ben}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
 
-                  {/* Botón de Acción Rectangular (border-radius: 2px) Ancho Completo */}
-                  <div className="pt-8">
+                  <div className="pt-6">
                     <button
                       type="button"
                       onClick={() => handleContratarDirecto(plan)}
                       disabled={procesando || !selectedEventoId || isEventAlreadyPromoted}
-                      className={`w-full py-3 rounded-[2px] font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer disabled:opacity-50 ${
-                        isThird
-                          ? 'bg-[#F5B800] hover:bg-amber-400 text-[#0F2342]'
-                          : 'bg-[#0F2342] hover:bg-[#F5B800] text-white hover:text-[#0F2342]'
-                      }`}
+                      className="w-full py-3 rounded-[2px] bg-[#0F2342] hover:bg-[#1B365D] text-white font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer disabled:opacity-50 border border-[#0F2342] shadow-sm"
                     >
                       {procesando && selectedPlan?.id === plan.id
                         ? 'Procesando...'

@@ -402,6 +402,111 @@ Evitar scroll horizontal accidental.
 
 Los elementos interactivos deben tener áreas de contacto adecuadas para dispositivos táctiles.
 
+## 9.1. Mobile Experience & Adaptive Design
+
+La aplicación es un producto Web-first, pero debe ofrecer una experiencia Mobile completamente optimizada. No se debe interpretar responsive como simplemente reducir el tamaño de los componentes de escritorio.
+
+El diseño debe adaptarse inteligentemente al dispositivo, manteniendo la identidad visual, funcionalidad y calidad del producto.
+
+### Filosofía Web-first, Mobile-ready
+
+- Desktop continúa siendo el entorno principal de trabajo y debe aprovechar correctamente el espacio disponible.
+- Mobile debe sentirse como una experiencia diseñada intencionalmente, no como una versión comprimida de escritorio.
+- Tablet debe funcionar como un punto intermedio, reorganizando los componentes según el espacio disponible.
+- Mantener consistencia visual entre dispositivos sin obligar a utilizar exactamente la misma distribución.
+
+### Adaptación de layouts
+
+**Desktop:**
+
+- Aprovechar el espacio horizontal.
+- Utilizar grids y composiciones de múltiples columnas.
+- Mantener jerarquías visuales claras.
+- Evitar espacios desperdiciados y contenido excesivamente extendido.
+
+**Tablet:**
+
+- Reducir columnas cuando sea necesario.
+- Reorganizar secciones y componentes.
+- Mantener accesibles las acciones principales.
+- Evitar que los componentes pierdan legibilidad.
+
+**Mobile:**
+
+- Priorizar una composición vertical.
+- Utilizar el ancho disponible de forma eficiente.
+- Reorganizar acciones y controles según su importancia.
+- Evitar elementos comprimidos o superpuestos.
+- Simplificar visualmente sin eliminar funcionalidades.
+- Mantener una navegación intuitiva mediante patrones adecuados para pantallas táctiles.
+
+### Reglas específicas para Mobile
+
+- No utilizar anchos fijos que provoquen desbordamientos.
+- Evitar scroll horizontal, excepto cuando exista una justificación funcional.
+- Utilizar áreas táctiles cómodas, preferiblemente de al menos 44x44px.
+- Mantener textos legibles sin necesidad de zoom.
+- Evitar títulos, botones o etiquetas cortados.
+- Adaptar modales: utilizar paneles inferiores, diálogos adaptativos o pantallas completas cuando resulte más natural.
+- Adaptar los paneles laterales a patrones de navegación apropiados para mobile.
+- Mantener las acciones principales visibles y fáciles de alcanzar.
+- Utilizar menús compactos sin sacrificar accesibilidad.
+- Adaptar tablas complejas mediante tarjetas, listados o estructuras alternativas cuando sea necesario.
+- Evitar que formularios extensos resulten incómodos en dispositivos pequeños.
+- Mantener imágenes proporcionales y correctamente optimizadas.
+
+### Navegación Mobile
+
+La navegación debe adaptarse al contexto del producto.
+
+- No intentar comprimir un sidebar de escritorio en una pantalla pequeña.
+- Utilizar un menú móvil o navegación contextual cuando corresponda.
+- Mantener las secciones principales fácilmente accesibles.
+- Evitar esconder acciones frecuentes en múltiples niveles de navegación.
+- Garantizar que los usuarios puedan regresar y comprender dónde se encuentran.
+
+### Responsive de componentes
+
+Cada componente debe contemplar su comportamiento en diferentes resoluciones:
+
+- Cards: adaptar distribución, dimensiones y contenido.
+- Formularios: reorganizar campos y botones.
+- Modales: ajustar altura, anchura y posición.
+- Dropdowns: evitar desbordamientos del viewport.
+- Tablas: utilizar estructuras alternativas cuando sea necesario.
+- Gráficos: adaptar dimensiones y legibilidad.
+- Imágenes: utilizar tamaños apropiados y lazy loading.
+- Navegación: adaptar jerarquías y accesos.
+
+### Breakpoints y validación
+
+Utilizar los breakpoints existentes del proyecto siempre que estén definidos.
+
+Si no existen, establecer una estrategia consistente, tomando como referencias:
+
+- Mobile: 320px - 767px.
+- Tablet: 768px - 1023px.
+- Desktop: 1024px en adelante.
+
+No depender exclusivamente de estos rangos. Los breakpoints deben responder al momento en que el contenido necesita reorganizarse.
+
+### Validación obligatoria
+
+Antes de finalizar cualquier interfaz, comprobar su funcionamiento en:
+
+- 320px.
+- 375px.
+- 390px.
+- 430px.
+- 768px.
+- 1024px.
+- 1280px.
+- 1440px.
+
+Verificar que no existan desbordamientos, elementos cortados, botones inaccesibles, superposiciones ni problemas de navegación.
+
+**Regla fundamental:** preservar todas las funcionalidades de escritorio y ofrecer una experiencia mobile coherente, cómoda y visualmente impecable.
+
 ## 10. Reglas de implementación técnica
 
 La calidad visual nunca debe comprometer la calidad del código.
@@ -499,6 +604,79 @@ Nunca deben quedar integrados accidentalmente en una funcionalidad que trabaja c
 
 **Regla definitiva: si la API proporciona un dato, utiliza ese dato. Si no lo proporciona, no lo inventes.**
 
+## 10.2. High Performance Engineering & Fast Development
+
+La velocidad de desarrollo y el rendimiento en producción son prioridades fundamentales.
+
+El objetivo es construir componentes rápidamente, con código limpio, reutilizable y eficiente, sin sacrificar calidad visual, funcionalidad ni mantenibilidad.
+
+### Desarrollo rápido y eficiente
+
+- Antes de crear un componente, revisar si ya existe uno reutilizable.
+- Priorizar los componentes y utilidades existentes del proyecto.
+- Evitar reinventar funcionalidades que ya están resueltas.
+- No crear abstracciones innecesarias para componentes simples.
+- Mantener componentes pequeños, independientes y fáciles de mantener.
+- Evitar archivos excesivamente grandes y lógica duplicada.
+- No introducir dependencias externas cuando una solución nativa sea suficiente.
+- Evitar refactorizaciones masivas cuando el requerimiento solo necesita un cambio puntual.
+- Implementar directamente la solución más sencilla que cumpla correctamente el objetivo.
+- No invertir tiempo en complejidad técnica que no aporte valor al producto.
+
+### Rendimiento en producción
+
+Cada componente debe construirse pensando en su impacto sobre el rendimiento general de la aplicación.
+
+- Evitar renders innecesarios.
+- Evitar cálculos repetitivos durante cada renderizado.
+- Utilizar memoización únicamente cuando exista un beneficio real.
+- Evitar estados globales para información que puede mantenerse localmente.
+- Evitar actualizaciones de estado innecesarias.
+- Utilizar carga diferida para componentes pesados y módulos que no se necesitan inmediatamente.
+- Implementar lazy loading de imágenes y recursos.
+- Optimizar las solicitudes a la API.
+- Evitar peticiones duplicadas.
+- Cancelar solicitudes obsoletas cuando corresponda.
+- Evitar descargar información que no se utiliza.
+- Priorizar paginación desde el backend.
+- Evitar dependencias y librerías pesadas sin justificación.
+- Evitar animaciones que provoquen bloqueos o trabajo excesivo del navegador.
+
+### Optimización de frontend
+
+- Priorizar `transform` y `opacity` para animaciones.
+- Evitar cambios de layout innecesarios.
+- Utilizar dimensiones y proporciones que reduzcan los saltos visuales durante la carga.
+- Optimizar imágenes según su tamaño y formato.
+- Utilizar división de código (code splitting) cuando aporte beneficios.
+- Cargar únicamente los recursos necesarios para cada pantalla.
+- Evitar operaciones costosas en el hilo principal.
+- Mantener interacciones fluidas incluso con grandes cantidades de información.
+
+### Eficiencia de implementación
+
+No sobreingenierizar.
+
+La mejor solución no es necesariamente la que utiliza más patrones, hooks, abstracciones o dependencias.
+
+Elegir la implementación más directa, eficiente y mantenible.
+
+No utilizar `useMemo`, `useCallback` o `React.memo` indiscriminadamente. Aplicarlos cuando ayuden a evitar trabajo costoso o renders realmente innecesarios.
+
+### Validación de rendimiento
+
+Antes de finalizar una implementación:
+
+- Comprobar que no existan renders innecesarios evidentes.
+- Revisar solicitudes duplicadas a la API.
+- Comprobar el comportamiento con grandes cantidades de registros.
+- Verificar que las animaciones no provoquen saltos.
+- Comprobar que los componentes pesados se carguen cuando sean necesarios.
+- Evitar errores y advertencias en consola.
+- Verificar que la optimización no haya afectado la funcionalidad.
+
+**Regla fundamental:** construir rápido, ejecutar rápido y mantener código limpio. No confundir rapidez de desarrollo con código apresurado.
+
 ## 11. Reglas estrictas para trabajar sobre interfaces existentes
 
 Cuando se solicite rediseñar una pantalla:
@@ -546,3 +724,37 @@ Cada pantalla debe sentirse parte de un mismo ecosistema, con personalidad propi
 **El resultado debe transmitir calidad, confianza, madurez tecnológica y atención al detalle.**
 
 No busques que parezca una plantilla SaaS premium. Construye un producto que realmente se sienta premium.
+
+## 14. Resumen de la Skill — IMPECABLE
+
+La calidad del producto debe evaluarse bajo el principio IMPECABLE:
+
+- **I — Identidad:** respetar la identidad visual, los colores y la personalidad del producto.
+- **M — Minimalismo:** eliminar el ruido visual y priorizar lo verdaderamente importante.
+- **P — Precisión:** cuidar alineaciones, tipografía, espaciados, dimensiones y detalles.
+- **E — Experiencia:** diseñar interacciones intuitivas, naturales y agradables.
+- **C — Consistencia:** mantener patrones visuales y funcionales en todo el ecosistema.
+- **A — Adaptabilidad:** garantizar una experiencia Web-first, responsive y optimizada para Mobile.
+- **B — Buen rendimiento:** construir componentes rápidos, optimizar recursos, reducir renders innecesarios y garantizar una ejecución fluida.
+- **L — Lógica:** respetar la arquitectura, los datos reales de la API, la seguridad y las reglas de negocio.
+- **E — Excelencia:** alcanzar una experiencia premium sin sacrificar rendimiento, funcionalidad ni mantenibilidad.
+
+### Prioridades absolutas
+
+1. Rendimiento y velocidad de respuesta.
+2. Funcionalidad e integridad de los datos.
+3. Experiencia de usuario.
+4. Calidad visual y consistencia.
+5. Mantenibilidad y simplicidad del código.
+
+Estas prioridades deben trabajarse conjuntamente, sin utilizar una como excusa para descuidar las demás.
+
+### Mandamiento final
+
+Construye componentes rápidamente, pero nunca de manera improvisada.
+
+Cada implementación debe ser visualmente impecable, técnicamente sólida, eficiente y funcionalmente completa.
+
+No sacrificar rendimiento por animaciones, funcionalidad por estética ni simplicidad por complejidad innecesaria.
+
+El resultado debe sentirse como un producto SaaS premium en escritorio, tablet y mobile, con una identidad única y una experiencia rápida en todos sus entornos.

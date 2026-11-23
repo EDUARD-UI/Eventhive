@@ -206,7 +206,7 @@ export default function DashboardNotifications({
 
       {/* Popover desplegable — Estilo Bitácora Editorial */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-[340px] sm:w-[380px] max-w-[92vw] rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] shadow-[0_12px_32px_rgba(15,35,66,0.08)] z-50 animate-in fade-in zoom-in-95 duration-100 select-none">
+        <div className="fixed sm:absolute left-2 sm:left-auto right-2 sm:right-0 top-14 sm:top-full sm:mt-2 w-auto sm:w-[380px] max-w-[calc(100vw-16px)] sm:max-w-[420px] rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] shadow-[0_12px_32px_rgba(15,35,66,0.12)] z-50 animate-in fade-in zoom-in-95 duration-100 select-none">
           {/* Cabecera del Popover */}
           <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3.5 gap-2 flex-wrap">
             <div className="flex items-center gap-2">

@@ -196,7 +196,7 @@ export default function ModeradorPanel() {
 
   const titlesByTab = {
     resumen: {
-      title: 'CURADURÍA Y CONTROL DE CARTELERA',
+      title: 'MODERACIÓN Y CONTROL DE CARTELERA',
       subtitle: 'Supervisión editorial, validación de requisitos y seguimiento de eventos en Cartagena.',
     },
     eventos: {

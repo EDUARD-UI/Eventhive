@@ -226,10 +226,7 @@ export default function MarketingBannersView() {
       {/* A. Cabecera Editorial */}
       <div className="border-b border-[#E2E8F0] pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
-            Pantallas de Escenario · Exhibición Principal
-          </span>
-          <h1 className="font-display font-black text-3xl sm:text-4xl text-[#0F2342] tracking-tight uppercase leading-none">
+          <h1 className="font-display font-black text-[clamp(1.5rem,4vw,2.25rem)] text-[#0F2342] tracking-tight uppercase leading-none">
             ESPACIOS PUBLICITARIOS
           </h1>
           <p className="font-sans text-xs sm:text-sm text-[#64748B] mt-2">
@@ -291,9 +288,9 @@ export default function MarketingBannersView() {
                 </button>
               </div>
 
-              {/* Lienzo del Banner: Idéntico al Home (rounded-2xl sm:rounded-3xl, aspecto 16/9, colores vivos) */}
+              {/* Lienzo del Banner: Idéntico al Home (rounded-2xl sm:rounded-3xl, aspecto real 16/9, colores vivos) */}
               <div
-                className="relative w-full aspect-[16/10] sm:aspect-[16/9] min-h-[220px] rounded-2xl sm:rounded-3xl border border-[#E2E8F0] overflow-hidden bg-slate-950 flex items-center justify-center group cursor-pointer shadow-md transition-shadow hover:shadow-lg"
+                className="relative w-full aspect-[16/9] rounded-2xl sm:rounded-3xl border border-[#E2E8F0] overflow-hidden bg-slate-950 flex items-center justify-center group cursor-pointer shadow-md transition-shadow hover:shadow-lg"
                 onClick={() => handleOpenEditDrawer(banner)}
               >
                 {hasImage ? (

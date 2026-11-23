@@ -110,7 +110,7 @@ export default function ComposeMailDrawer({
 
   const drawerContent = (
     <div
-      className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200"
+      className="fixed inset-0 z-[9999] flex justify-end animate-in fade-in duration-200"
       style={{
         backgroundColor: 'rgba(15, 35, 66, 0.72)',
         backdropFilter: 'blur(4px)',
@@ -124,7 +124,7 @@ export default function ComposeMailDrawer({
       aria-modal="true"
     >
       <div
-        className="w-full max-w-xl bg-[#FFFFFF] border-l border-[#E2E8F0] shadow-2xl h-full flex flex-col justify-between overflow-hidden animate-in slide-in-from-right duration-300 select-none"
+        className="w-full sm:max-w-xl max-w-full bg-[#FFFFFF] border-l border-[#E2E8F0] shadow-2xl h-[100dvh] sm:h-full flex flex-col justify-between overflow-hidden animate-in slide-in-from-right duration-300 select-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Cabecera Azul Institucional #0F2342 */}
@@ -213,8 +213,8 @@ export default function ComposeMailDrawer({
           </div>
 
           {/* Footer de Envío en #0F2342 con acento #F5B800 */}
-          <div className="p-4 sm:p-5 bg-[#FFFFFF] border-t border-[#E2E8F0] flex items-center justify-between gap-3 shrink-0">
-            <span className="font-mono text-[11px] text-[#64748B]">
+          <div className="p-4 sm:p-5 bg-[#FFFFFF] border-t border-[#E2E8F0] flex items-center justify-between gap-3 shrink-0 sticky bottom-0 z-10 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
+            <span className="font-mono text-[11px] text-[#64748B] hidden sm:inline">
               Firma y protocolo oficial EventHive
             </span>
 

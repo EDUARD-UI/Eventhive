@@ -220,10 +220,7 @@ export default function OperadoresView() {
       <div className="border-b border-[#E2E8F0] pb-6 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
-              Crew & Acreditaciones · Cartagena
-            </span>
-            <h1 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-[#0F2342] tracking-tight uppercase leading-none">
+            <h1 className="font-display font-black text-[clamp(1.5rem,4vw,2.5rem)] text-[#0F2342] tracking-tight uppercase leading-none">
               Trabajadores
             </h1>
             <p className="text-xs font-mono uppercase tracking-wider text-[#64748B] pt-1">
@@ -255,32 +252,32 @@ export default function OperadoresView() {
         </div>
       </div>
 
-      {/* 2. Barra de Resumen en Línea (Sin tarjetas KPI redondeadas) */}
-      <div className="rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] p-4 sm:p-5">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 divide-y sm:divide-y-0 sm:divide-x divide-[#E2E8F0]">
-          <div className="w-full sm:w-1/3 sm:px-4 first:pl-0">
-            <span className="font-mono font-black text-2xl text-[#0F2342] tabular-nums">
+      {/* 2. Barra de Resumen en Línea (Grid 2 columnas en móvil, 3 en escritorio) */}
+      <div className="rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] p-4 sm:p-5 overflow-hidden">
+        <div className="grid grid-cols-2 md:grid-cols-3 divide-x divide-[#E2E8F0]">
+          <div className="px-2 sm:px-4 first:pl-0">
+            <span className="font-mono font-black text-xl sm:text-2xl text-[#0F2342] tabular-nums">
               {operadoresActivos}
             </span>
-            <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B] ml-2 font-bold">
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-wider text-[#64748B] block sm:inline sm:ml-2 font-bold">
               Operadores Activos
             </span>
           </div>
 
-          <div className="w-full sm:w-1/3 sm:px-4 pt-3 sm:pt-0">
-            <span className="font-mono font-black text-2xl text-[#0F2342] tabular-nums">
+          <div className="px-2 sm:px-4">
+            <span className="font-mono font-black text-xl sm:text-2xl text-[#0F2342] tabular-nums">
               {invitacionesPendientes}
             </span>
-            <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B] ml-2 font-bold">
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-wider text-[#64748B] block sm:inline sm:ml-2 font-bold">
               Invitaciones Pendientes
             </span>
           </div>
 
-          <div className="w-full sm:w-1/3 sm:px-4 pt-3 sm:pt-0">
-            <span className="font-mono font-black text-2xl text-[#0F2342] tabular-nums">
+          <div className="col-span-2 md:col-span-1 px-2 sm:px-4 pt-2 md:pt-0 border-t md:border-t-0 md:border-l border-[#E2E8F0]">
+            <span className="font-mono font-black text-xl sm:text-2xl text-[#0F2342] tabular-nums">
               {historicoPersonal}
             </span>
-            <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B] ml-2 font-bold">
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-wider text-[#64748B] block sm:inline sm:ml-2 font-bold">
               Histórico de Personal
             </span>
           </div>
@@ -544,7 +541,8 @@ export default function OperadoresView() {
       ) : (
         /* VISTA LISTA / TABLA EDITORIAL */
         <div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] overflow-hidden">
-          <table className="w-full text-left border-collapse text-xs">
+          <div className="editorial-scroll-x w-full">
+            <table className="w-full text-left border-collapse text-xs min-w-[680px]">
             <thead className="bg-[#F8F9FA] border-b border-[#E2E8F0] font-mono text-[10px] uppercase tracking-wider text-[#64748B]">
               <tr>
                 <th className="py-3 px-5">Colaborador</th>
@@ -604,6 +602,7 @@ export default function OperadoresView() {
             </tbody>
           </table>
         </div>
+      </div>
       )}
 
       {/* Modal Invitar Colaborador */}

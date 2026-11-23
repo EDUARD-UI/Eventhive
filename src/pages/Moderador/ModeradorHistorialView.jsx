@@ -111,10 +111,7 @@ export default function ModeradorHistorialView({
       {/* Cabecera Editorial y Barra de Filtros Rectangulares */}
       <div className="border-b border-[#E2E8F0] pb-6 space-y-5">
         <div>
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
-            Registro Maestro de Trazabilidad · Cartelera
-          </span>
-          <h1 className="font-display font-black text-3xl sm:text-4xl text-[#0F2342] tracking-tight uppercase leading-none">
+          <h1 className="font-display font-black text-2xl sm:text-3xl lg:text-[clamp(1.5rem,4vw,2.25rem)] text-[#0F2342] tracking-tight uppercase leading-none">
             EXPLORAR EVENTOS DEL SISTEMA
           </h1>
           <p className="font-sans text-xs sm:text-sm text-[#64748B] mt-2">
@@ -196,8 +193,8 @@ export default function ModeradorHistorialView({
 
       {/* Tabla Editorial (Sin pills de colores) */}
       <div className="w-full bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left text-xs">
+        <div className="editorial-scroll-x w-full">
+          <table className="w-full border-collapse text-left text-xs min-w-[680px]">
             <thead>
               <tr className="border-b border-[#E2E8F0] bg-[#FFFFFF] font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
                 <th className="px-5 py-4 font-bold">Evento</th>

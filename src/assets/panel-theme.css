@@ -63,3 +63,26 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Barra de desplazamiento horizontal persistente en gris para tablas y listados */
+.editorial-scroll-x {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #94A3B8 #E2E8F0;
+  -webkit-overflow-scrolling: touch;
+}
+.editorial-scroll-x::-webkit-scrollbar {
+  height: 6px;
+  display: block;
+}
+.editorial-scroll-x::-webkit-scrollbar-track {
+  background: #E2E8F0;
+  border-radius: 0px;
+}
+.editorial-scroll-x::-webkit-scrollbar-thumb {
+  background: #94A3B8;
+  border-radius: 0px;
+}
+.editorial-scroll-x::-webkit-scrollbar-thumb:hover {
+  background: #64748B;
+}

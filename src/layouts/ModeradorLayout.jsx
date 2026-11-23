@@ -15,7 +15,11 @@ export default function ModeradorLayout({
       items={menuItems}
       activeItem={activeItem}
       onSelect={onSelect}
-      headerProps={{ title, subtitle }}
+      headerProps={{
+        title,
+        subtitle,
+        onProfileClick: () => onSelect && onSelect('perfil'),
+      }}
       maxWidthClass="max-w-[1400px]"
     >
       {children}

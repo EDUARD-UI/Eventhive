@@ -124,7 +124,7 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
       .then((res) => {
         if (isMounted && res) setStats(res);
       })
-      .catch(() => {});
+      .catch(() => { });
 
     // Cargar últimos eventos de la cartelera para el Setlist / Bitácora
     setActividadLoading(true);
@@ -375,10 +375,7 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
 
       {/* Cabecera Editorial */}
       <div className="border-b border-[#E2E8F0] pb-4">
-        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#64748B] block mb-1">
-          Curaduría & Control de Cartelera · Acreditación Oficial
-        </span>
-        <h1 className="font-display font-black text-3xl sm:text-4xl text-[#0F2342] tracking-tight uppercase leading-none">
+        <h1 className="font-display font-black text-2xl sm:text-3xl lg:text-[clamp(1.5rem,4vw,2.25rem)] text-[#0F2342] tracking-tight uppercase leading-none">
           Mi Perfil
         </h1>
       </div>
@@ -389,7 +386,7 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
             COLUMNA IZQUIERDA (~38% ancho): Tarjeta de Credencial Interactivo (Volteo 3D)
            ========================================================================= */}
         <aside className="lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center">
-          <div className="w-full max-w-[380px] [perspective:1200px] flex flex-col items-center">
+          <div className="w-full max-w-[420px] mx-auto [perspective:1200px] flex flex-col items-center">
             {/* Lazo / Correa de Escarapela en Azul Institucional #0F2342 */}
             <div className="w-full flex flex-col items-center -mb-2 z-30 pointer-events-none select-none">
               {/* Cinta textil azul institucional con costuras */}
@@ -406,9 +403,8 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
 
             {/* Credencial con Volteo 3D */}
             <div
-              className={`relative w-full rounded-[2px] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] [transform-style:preserve-3d] shadow-[0_20px_45px_rgba(0,0,0,0.06)] border border-[#E2E8F0] bg-[#FFFFFF] ${
-                isFlipped ? '[transform:rotateY(180deg)]' : ''
-              }`}
+              className={`relative w-full rounded-[2px] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] [transform-style:preserve-3d] shadow-[0_20px_45px_rgba(0,0,0,0.06)] border border-[#E2E8F0] bg-[#FFFFFF] ${isFlipped ? '[transform:rotateY(180deg)]' : ''
+                }`}
             >
               {/* =======================================================
                   CARA FRONTAL: Pase de Curaduría VIP
@@ -421,7 +417,7 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
                   {/* Encabezado editorial de la credencial */}
                   <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 mb-6">
                     <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#64748B] font-semibold">
-                      EVENTHIVE · CURADURÍA
+                      EVENTHIVE · MODERACIÓN
                     </span>
                     <span className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-[#F5B800]" />
@@ -708,15 +704,14 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
                       <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                         <div className="text-right font-mono text-[11px]">
                           <span
-                            className={`font-bold uppercase block ${
-                              isPublicado
+                            className={`font-bold uppercase block ${isPublicado
                                 ? 'text-emerald-700'
                                 : isCorreccion
-                                ? 'text-[#B45309]'
-                                : isRechazado
-                                ? 'text-[#DC2626]'
-                                : 'text-[#0F2342]'
-                            }`}
+                                  ? 'text-[#B45309]'
+                                  : isRechazado
+                                    ? 'text-[#DC2626]'
+                                    : 'text-[#0F2342]'
+                              }`}
                           >
                             {ev.estado || 'EVALUADO'}
                           </span>
@@ -757,7 +752,7 @@ export default function ModeradorPerfilView({ onNavigateTab }) {
             <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
               <div>
                 <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748B] block">
-                  Acreditación de Curaduría
+                  Acreditación de Moderación
                 </span>
                 <h3 className="font-display font-black text-lg text-[#0F2342] uppercase tracking-tight">
                   Editar Datos Personales

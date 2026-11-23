@@ -199,7 +199,7 @@ export default function EventDetailView({
           />
           <div
             data-lenis-prevent="true"
-            className="relative z-50 w-full sm:w-[620px] md:w-[680px] lg:w-[740px] bg-white h-full shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-300"
+            className="relative z-50 w-full sm:w-[620px] md:w-[680px] lg:w-[740px] max-w-full bg-white h-[100dvh] sm:h-full shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-300"
           >
             {content}
           </div>
@@ -414,8 +414,8 @@ export default function EventDetailView({
               Este evento no tiene localidades configuradas registradas.
             </div>
           ) : (
-            <div className="border border-[#E2E8F0] rounded-[2px] overflow-hidden">
-              <table className="w-full text-left font-mono text-xs">
+            <div className="editorial-scroll-x w-full border border-[#E2E8F0] rounded-[2px] overflow-hidden">
+              <table className="w-full text-left font-mono text-xs min-w-[480px]">
                 <thead className="bg-[#FAFAFA] border-b border-[#E2E8F0] text-[10px] uppercase tracking-wider text-[#64748B]">
                   <tr>
                     <th className="py-2.5 px-3">Localidad</th>
@@ -505,7 +505,7 @@ export default function EventDetailView({
 
       {/* 3. Footer Fijo de Acciones Editorial */}
       {Boolean(onAprobar || onSolicitarCorreccion || onRechazar) ? (
-        <div className="p-4 sm:p-5 bg-white border-t border-[#E2E8F0] flex items-center justify-between gap-3 shrink-0">
+        <div className="p-4 sm:p-5 bg-white border-t border-[#E2E8F0] flex items-center justify-between gap-3 shrink-0 sticky bottom-0 z-20 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
           <div className="flex items-center gap-4">
             {onRechazar && (
               <button
@@ -552,7 +552,7 @@ export default function EventDetailView({
         </div>
       ) : readOnly ? (
         onEditBanner ? (
-          <div className="p-4 sm:p-5 bg-white border-t border-[#E2E8F0] flex items-center justify-end gap-3 shrink-0">
+          <div className="p-4 sm:p-5 bg-white border-t border-[#E2E8F0] flex items-center justify-end gap-3 shrink-0 sticky bottom-0 z-20 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
             <button
               type="button"
               onClick={() => onEditBanner(event)}
@@ -563,7 +563,7 @@ export default function EventDetailView({
           </div>
         ) : null
       ) : estado !== 'FINALIZADO' ? (
-        <div className="p-4 sm:p-5 bg-white border-t border-[#E2E8F0] flex items-center justify-between gap-3 shrink-0">
+        <div className="p-4 sm:p-5 bg-white border-t border-[#E2E8F0] flex items-center justify-between gap-3 shrink-0 sticky bottom-0 z-20 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
           <div>
             {/* Enlace Destructivo o de Pausa */}
             {canCancel && allowSuspend && (
