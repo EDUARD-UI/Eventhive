@@ -28,65 +28,61 @@ export default function OrganizationSidebar({
       <div className="flex flex-col flex-1 min-h-0">
         <div
           className={`h-[56px] lg:h-[64px] border-b border-white/[0.08] flex items-center shrink-0 ${
-            isCollapsed ? 'justify-center px-1' : 'justify-between px-4'
+            isCollapsed ? 'justify-between px-2.5' : 'justify-between px-4'
           }`}
         >
           {isCollapsed ? (
-            <div className="flex flex-col items-center gap-1">
-              {/* Botón superior con flecha / isotipo para expandir */}
+            <div className="w-full flex items-center justify-between gap-1">
+              {/* Isotipo no clickeable */}
+              <div className="flex items-center justify-center shrink-0">
+                <img
+                  src="/LOGO45x50.png"
+                  alt="EventHive"
+                  className="h-6 w-auto object-contain"
+                  onError={(e) => {
+                    e.currentTarget.src = '/LOGO32x32.png';
+                  }}
+                />
+              </div>
+              {/* Botón superior con flecha desplazada a la derecha para expandir */}
               <button
                 type="button"
                 onClick={onToggleDesktop}
                 aria-label="Expandir barra lateral"
                 title="Expandir barra lateral"
-                className="flex items-center justify-center gap-1 p-1 rounded-[2px] text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer group"
+                className="flex items-center justify-center p-1 rounded-[2px] text-slate-400 hover:text-[#F5B800] hover:bg-white/10 transition-colors cursor-pointer"
               >
-                <img
-                  src="/LOGO45x50.png"
-                  alt="EventHive"
-                  className="h-6 w-auto object-contain group-hover:scale-105 transition-transform"
-                  onError={(e) => {
-                    e.currentTarget.src = '/LOGO32x32.png';
-                  }}
-                />
-                <FiChevronRight size={13} className="text-[#F5B800] group-hover:translate-x-0.5 transition-transform" />
+                <FiChevronRight size={15} />
               </button>
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-2 min-w-0">
-                <Link
-                  to="/"
-                  className="flex items-center gap-2 focus:outline-none group shrink-0"
-                  title="EventHive"
-                >
-                  {/* Isotipo */}
-                  <img
-                    src="/LOGO45x50.png"
-                    alt="EventHive"
-                    className="h-7 w-auto object-contain transition-transform group-hover:scale-105"
-                    onError={(e) => {
-                      e.currentTarget.src = '/LOGO32x32.png';
-                    }}
-                  />
-                  {/* Nombre con Event blanco y Hive dorado ámbar */}
-                  <span className="font-display font-black text-base lg:text-lg tracking-wider uppercase leading-none">
-                    <span className="text-white">Event</span>
-                    <span className="text-[#F5B800]">Hive</span>
-                  </span>
-                </Link>
-
-                {/* Flecha superior para colapsar junto a EventHive */}
-                <button
-                  type="button"
-                  onClick={onToggleDesktop}
-                  aria-label="Colapsar barra lateral"
-                  title="Colapsar barra lateral"
-                  className="hidden lg:flex text-slate-400 hover:text-[#F5B800] p-1.5 rounded-[2px] hover:bg-white/10 transition-colors cursor-pointer shrink-0 ml-1"
-                >
-                  <FiChevronLeft size={16} />
-                </button>
+              {/* Isotipo y nombre institucional (No redirige al home; el portal público está en el pie) */}
+              <div className="flex items-center gap-2.5 min-w-0 select-none">
+                <img
+                  src="/LOGO45x50.png"
+                  alt="EventHive"
+                  className="h-7 w-auto object-contain shrink-0"
+                  onError={(e) => {
+                    e.currentTarget.src = '/LOGO32x32.png';
+                  }}
+                />
+                <span className="font-display font-black text-base lg:text-lg tracking-wider uppercase leading-none">
+                  <span className="text-white">Event</span>
+                  <span className="text-[#F5B800]">Hive</span>
+                </span>
               </div>
+
+              {/* Flecha superior para colapsar desplazada a la derecha, separada del isotipo y nombre */}
+              <button
+                type="button"
+                onClick={onToggleDesktop}
+                aria-label="Colapsar barra lateral"
+                title="Colapsar barra lateral"
+                className="hidden lg:flex text-slate-400 hover:text-[#F5B800] p-1.5 rounded-[2px] hover:bg-white/10 transition-colors cursor-pointer shrink-0 ml-auto"
+              >
+                <FiChevronLeft size={16} />
+              </button>
 
               {/* Botón de cierre en móviles/tablet (< 1024px) */}
               {isOpen && (
@@ -94,7 +90,7 @@ export default function OrganizationSidebar({
                   type="button"
                   onClick={onClose}
                   aria-label="Cerrar navegación"
-                  className="lg:hidden text-slate-400 hover:text-white p-1.5 rounded-[2px] transition-colors cursor-pointer"
+                  className="lg:hidden text-slate-400 hover:text-white p-1.5 rounded-[2px] transition-colors cursor-pointer shrink-0 ml-auto"
                 >
                   <FiX size={18} />
                 </button>

@@ -1,30 +1,21 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Sparkles,
-  TrendingUp,
-  Building2,
-  CheckCircle2,
-  XCircle,
-  Clock,
   RotateCw,
   Search,
   ArrowRight,
-  ShieldAlert,
+  Check,
+  X,
 } from 'lucide-react';
-import Badge from '../../components/Shared/Badge.jsx';
-import Pagination from '../../components/Shared/Pagination.jsx';
 import adminService from '../../features/admin/services/adminService.js';
 import { formatFechaHora } from '../../utils/formatters.js';
 import { showSuccessAlert, showErrorAlert, showConfirmAlert } from '../../utils/alertUtils.js';
-import ActionButton from '../../components/Shared/ActionButton.jsx';
 
 export default function AdminSugerenciasAscensoView() {
   const [sugerencias, setSugerencias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
 
   const fetchSugerencias = useCallback(async () => {
     setLoading(true);
@@ -52,7 +43,7 @@ export default function AdminSugerenciasAscensoView() {
         title: '¿Aprobar ascenso de nivel?',
         text: `La organización "${item.organizacionNombre || 'Organización'}" pasará de nivel ${item.nivelActual} a ${item.nivelSugerido}.`,
         confirmButtonText: 'Sí, aprobar ascenso',
-        confirmButtonColor: '#059669',
+        confirmButtonColor: '#0F2342',
       });
 
       if (confirmed !== true) return;
@@ -81,7 +72,7 @@ export default function AdminSugerenciasAscensoView() {
         title: '¿Rechazar sugerencia de ascenso?',
         text: `Se descartará la propuesta de ascenso para "${item.organizacionNombre || 'Organización'}".`,
         confirmButtonText: 'Sí, rechazar',
-        confirmButtonColor: '#e11d48',
+        confirmButtonColor: '#DC2626',
       });
 
       if (confirmed !== true) return;
@@ -110,30 +101,16 @@ export default function AdminSugerenciasAscensoView() {
     });
   }, [sugerencias, searchTerm]);
 
-  const paginated = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }, [filtered, currentPage, pageSize]);
-
-  const getNivelBadgeVariant = (nivel) => {
-    const n = (nivel || '').toUpperCase();
-    if (n === 'ORO' || n === 'GOLD') return 'warning';
-    if (n === 'PLATA' || n === 'SILVER') return 'neutral';
-    if (n === 'DIAMANTE' || n === 'PLATINO') return 'primary';
-    return 'info';
-  };
-
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Encabezado */}
-      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="space-y-6 select-none animate-in fade-in duration-300">
+      {/* 1. Encabezado Editorial */}
+      <div className="border-b border-[#E2E8F0] pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-500" />
-            <span>Sugerencias de Ascenso de Organizaciones</span>
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Evalúa y aprueba el ascenso de nivel para las organizaciones que han alcanzado los requisitos de aforo y eventos
+          <h1 className="font-display font-black text-2xl sm:text-3xl lg:text-[clamp(1.5rem,4vw,2.25rem)] text-[#0F2342] tracking-tight uppercase leading-none">
+            TABLERO DE ASCENSOS DE NIVEL
+          </h1>
+          <p className="font-sans text-xs sm:text-sm text-[#64748B] mt-2">
+            Consola de evaluación de nivel para organizaciones con cumplimiento de cartelera y aforo.
           </p>
         </div>
 
@@ -141,152 +118,111 @@ export default function AdminSugerenciasAscensoView() {
           type="button"
           onClick={fetchSugerencias}
           disabled={loading || actionLoading}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-[#F8F9FA] text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
         >
           <RotateCw size={14} className={loading ? 'animate-spin' : ''} />
           <span>Actualizar</span>
         </button>
       </div>
 
-      {/* Barra de Búsqueda */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3">
-        <div className="relative w-full sm:w-96">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+      {/* 2. Barra de Búsqueda Compacta */}
+      <div className="bg-[#FFFFFF] p-4 rounded-[2px] border border-[#E2E8F0] shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none" />
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar por nombre de organización..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+            className="w-full pl-10 pr-4 py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs font-mono text-[#0F2342] placeholder-[#94A3B8] outline-none focus:border-[#0F2342] transition-colors"
           />
         </div>
-        <div className="text-xs text-slate-500 font-semibold">
-          Total: <strong className="text-slate-900">{filtered.length}</strong> sugerencias
+
+        <div className="font-mono text-xs uppercase tracking-wider text-[#64748B] flex items-center gap-2 self-end sm:self-center">
+          <span>Total:</span>
+          <strong className="text-[#0F2342] font-bold">{filtered.length}</strong>
+          <span>sugerencias</span>
         </div>
       </div>
 
-      {/* Tabla Principal */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse bg-white">
-            <thead className="bg-white border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-              <tr>
-                <th className="py-4 px-4">Organización</th>
-                <th className="py-4 px-4 text-center">Nivel Actual</th>
-                <th className="py-4 px-4 text-center">Nivel Sugerido</th>
-                <th className="py-4 px-4">Fecha de Generación</th>
-                <th className="py-4 px-4 text-center">Estado</th>
-                <th className="py-4 px-4 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-xs bg-white">
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
-                    <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                    Cargando sugerencias de ascenso...
-                  </td>
-                </tr>
-              ) : paginated.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
-                    <Sparkles className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                    No hay sugerencias de ascenso pendientes en este momento.
-                  </td>
-                </tr>
-              ) : (
-                paginated.map((item, idx) => (
-                  <tr key={item.id || idx} className="hover:bg-slate-50/70 transition-colors">
-                    {/* Organización sin IDs */}
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary font-bold flex items-center justify-center shrink-0 border border-primary/20">
-                          {item.organizacionNombre?.charAt(0).toUpperCase() || 'O'}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-bold text-slate-900 truncate">
-                            {item.organizacionNombre || 'Organización Oficial'}
-                          </p>
-                          <span className="text-[11px] text-slate-400">
-                            Evaluación por cumplimiento
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Nivel Actual */}
-                    <td className="py-4 px-4 text-center">
-                      <Badge variant={getNivelBadgeVariant(item.nivelActual)} size="sm">
-                        {item.nivelActual || 'BRONCE'}
-                      </Badge>
-                    </td>
-
-                    {/* Nivel Sugerido */}
-                    <td className="py-4 px-4 text-center">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 font-bold">
-                        <TrendingUp size={13} className="text-amber-600" />
-                        <span>{item.nivelSugerido || 'PLATA'}</span>
-                      </div>
-                    </td>
-
-                    {/* Fecha de Generación: {dia/mes/año} {hora/minutos} */}
-                    <td className="py-4 px-4 text-slate-600 whitespace-nowrap">
-                      {item.fechaGeneracion ? formatFechaHora(item.fechaGeneracion) : '—'}
-                    </td>
-
-                    {/* Estado */}
-                    <td className="py-4 px-4 text-center">
-                      <Badge variant="warning" size="xs">
-                        {item.estado || 'PENDIENTE'}
-                      </Badge>
-                    </td>
-
-                    {/* Acciones */}
-                    <td className="py-4 px-4 text-right">
-                      <div className="inline-flex items-center gap-2 justify-end">
-                        <ActionButton
-                          onClick={() => handleAprobar(item)}
-                          variant="success"
-                          disabled={actionLoading}
-                          className="gap-1 px-3 py-1.5"
-                          title="Aprobar ascenso de nivel"
-                        >
-                          <CheckCircle2 size={13} />
-                          <span>Aprobar</span>
-                        </ActionButton>
-                        <ActionButton
-                          onClick={() => handleRechazar(item)}
-                          variant="danger"
-                          disabled={actionLoading}
-                          className="gap-1 px-3 py-1.5"
-                          title="Rechazar sugerencia"
-                        >
-                          <XCircle size={13} />
-                          <span>Rechazar</span>
-                        </ActionButton>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* 3. Consola de Evaluación de Nivel (Sin Tablas) */}
+      {loading ? (
+        <div className="p-12 bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] text-center font-mono text-xs text-[#64748B] shadow-2xs">
+          <RotateCw size={18} className="mx-auto mb-2 text-[#0F2342] animate-spin" />
+          <p className="uppercase tracking-wider">Consultando propuestas de ascenso...</p>
         </div>
+      ) : filtered.length === 0 ? (
+        /* Estado Vacío Editorial Especificado */
+        <div className="p-12 rounded-[2px] border border-dashed border-[#CBD5E1] bg-[#FFFFFF] text-center font-mono text-xs text-[#64748B] shadow-2xs">
+          <p className="font-bold text-[#0F2342] uppercase tracking-wider text-sm mb-1.5">
+            [ SIN SOLICITUDES DE ASCENSO ]
+          </p>
+          <p className="text-[11px] text-[#94A3B8]">
+            Ninguna organización cumple actualmente con nuevos criterios pendientes de ascenso.
+          </p>
+        </div>
+      ) : (
+        /* Fichas de Promoción de Nivel */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filtered.map((item, idx) => (
+            <div
+              key={item.id || idx}
+              className="bg-[#FFFFFF] border border-[#E2E8F0] border-l-4 border-l-[#F5B800] rounded-[2px] p-5 shadow-2xs hover:border-[#0F2342]/40 transition-all flex flex-col justify-between space-y-4"
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-display font-black text-base text-[#0F2342] uppercase tracking-tight truncate">
+                    {item.organizacionNombre || 'Organización'}
+                  </h3>
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-[#B45309] font-bold bg-[#F5B800]/15 px-1.5 py-0.5 rounded-[1px]">
+                    EVALUACIÓN
+                  </span>
+                </div>
 
-        {filtered.length > pageSize && (
-          <div className="p-4 border-t border-slate-100 bg-white">
-            <Pagination
-              currentPage={currentPage}
-              totalItems={filtered.length}
-              pageSize={pageSize}
-              onPageChange={setCurrentPage}
-            />
-          </div>
-        )}
-      </div>
+                {/* Transición de Nivel: Nivel Actual -> Nivel Sugerido con acento #F5B800 */}
+                <div className="flex items-center gap-3 py-2 px-3 bg-[#F8F9FA] rounded-[2px] border border-[#E2E8F0] font-mono text-xs">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] uppercase tracking-wider text-[#64748B]">NIVEL ACTUAL</span>
+                    <span className="font-bold text-[#0F2342]">{item.nivelActual || 'BRONCE'}</span>
+                  </div>
+
+                  <ArrowRight size={15} className="text-[#F5B800] shrink-0" />
+
+                  <div className="flex flex-col">
+                    <span className="text-[9px] uppercase tracking-wider text-[#F5B800] font-bold">NIVEL SUGERIDO</span>
+                    <span className="font-bold text-[#0F2342]">{item.nivelSugerido || 'PLATA'}</span>
+                  </div>
+                </div>
+
+                <div className="font-mono text-[11px] text-[#64748B]">
+                  Generado: {item.fechaGeneracion ? formatFechaHora(item.fechaGeneracion) : '—'}
+                </div>
+              </div>
+
+              {/* Botones de Dictamen Rectangulares (border-radius: 2px) */}
+              <div className="pt-3 border-t border-[#F1F5F9] flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => handleRechazar(item)}
+                  disabled={actionLoading}
+                  className="px-4 py-2 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] hover:bg-rose-50 text-[#DC2626] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer"
+                >
+                  Rechazar
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleAprobar(item)}
+                  disabled={actionLoading}
+                  className="px-5 py-2 rounded-[2px] bg-[#0F2342] hover:bg-[#15803D] text-white font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer shadow-2xs"
+                >
+                  APROBAR ASCENSO
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

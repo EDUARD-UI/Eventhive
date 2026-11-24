@@ -61,20 +61,18 @@ export default function Sidebar({
           {collapsed ? (
             /* Cabecera en estado Colapsado (Desktop) */
             <div className="flex flex-col items-center gap-3 mb-6 pt-1">
-              <Link
-                to="/"
-                aria-label="Ir al inicio"
+              <div
                 title={`EventHive (${role})`}
-                className="group flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/10 p-1 transition-all group-hover:scale-105 group-hover:bg-white/15"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/10 p-1 select-none"
               >
                 <AppLogo showName={false} className="h-5 w-5 shrink-0" />
-              </Link>
+              </div>
               <button
                 type="button"
                 onClick={handleToggleCollapse}
                 aria-label="Expandir barra lateral"
                 title="Expandir barra lateral"
-                className="hidden md:flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 active:scale-95 transition-all"
+                className="hidden md:flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
               >
                 <FiMenu size={16} />
               </button>
@@ -82,12 +80,8 @@ export default function Sidebar({
           ) : (
             /* Cabecera en estado Expandido (Desktop y Móvil) */
             <div className="flex items-center justify-between pr-3 mb-5 pt-1">
-              <Link
-                to="/"
-                aria-label="Ir al inicio"
-                className="group flex items-center gap-2.5 min-w-0"
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/10 p-1 transition-all group-hover:scale-105 group-hover:bg-white/15 shadow-sm">
+              <div className="flex items-center gap-2.5 min-w-0 select-none">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/10 p-1 shadow-sm">
                   <AppLogo showName={false} className="h-5 w-5 shrink-0" />
                 </div>
                 <div className="flex flex-col min-w-0">
@@ -99,15 +93,15 @@ export default function Sidebar({
                     {role}
                   </span>
                 </div>
-              </Link>
+              </div>
 
-              {/* Botón de cierre en Móvil o botón de colapso en Desktop */}
+              {/* Botón de cierre en Móvil o botón de colapso en Desktop desplazado a la derecha */}
               {isDrawer ? (
                 <button
                   type="button"
                   onClick={onClose}
                   aria-label="Cerrar menú"
-                  className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-slate-300 hover:text-white active:scale-95 transition-all"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-slate-300 hover:text-white active:scale-95 transition-all cursor-pointer ml-auto"
                 >
                   <FiX size={18} />
                 </button>
@@ -117,7 +111,7 @@ export default function Sidebar({
                   onClick={handleToggleCollapse}
                   aria-label="Colapsar barra lateral"
                   title="Colapsar barra lateral"
-                  className="hidden md:flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 active:scale-95 transition-all"
+                  className="hidden md:flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer ml-auto"
                 >
                   <FiMenu size={16} />
                 </button>

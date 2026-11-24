@@ -4,10 +4,10 @@ import { X, Tag, Calendar } from 'lucide-react';
 import BannerPreviewCard from './BannerPreviewCard.jsx';
 
 const GRADIENTS = [
-  { label: 'Azul Heroica', val: 'from-[#087fea] via-blue-600 to-indigo-700' },
-  { label: 'Atardecer Caribe', val: 'from-amber-500 via-orange-500 to-rose-500' },
-  { label: 'Noche Getsemaní', val: 'from-purple-600 via-violet-600 to-indigo-800' },
-  { label: 'Esmeralda Caribeña', val: 'from-emerald-600 via-teal-600 to-cyan-700' },
+  { label: 'Azul Institucional', val: 'from-[#0F2342] via-slate-800 to-slate-900' },
+  { label: 'Ámbar Event Hive', val: 'from-amber-500 via-yellow-500 to-amber-600' },
+  { label: 'Noche Editorial', val: 'from-slate-800 via-slate-900 to-black' },
+  { label: 'Esmeralda Plataforma', val: 'from-emerald-600 via-teal-700 to-slate-900' },
 ];
 
 export default function ModalPromocion({ onClose, onSave, promocion }) {
@@ -112,7 +112,7 @@ export default function ModalPromocion({ onClose, onSave, promocion }) {
                   required
                   value={codigo}
                   onChange={(e) => setCodigo(e.target.value.toUpperCase())}
-                  placeholder="Ej: CARTAGENA20"
+                  placeholder="Ej: EVENTHIVE20"
                   className="w-full text-xs font-mono uppercase font-bold px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-[#087fea] focus:ring-2 focus:ring-[#087fea]/10 transition-all"
                 />
               </div>

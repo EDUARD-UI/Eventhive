@@ -209,7 +209,7 @@ export default function ModeradorPanel() {
     },
     'palabras-prohibidas': {
       title: 'DICCIONARIO DE PALABRAS PROHIBIDAS',
-      subtitle: 'Diccionario de términos restringidos y reglas de filtro de contenido',
+      subtitle: 'Reglas de filtrado editorial y bloqueo automático para publicaciones en cartelera.',
     },
     perfil: {
       title: 'MI PERFIL',

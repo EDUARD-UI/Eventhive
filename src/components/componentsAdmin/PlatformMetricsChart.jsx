@@ -2,16 +2,16 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { PieChart, TrendingUp, Layers, CheckCircle2 } from 'lucide-react';
 import adminService from '../../features/admin/services/adminService.js';
 
-// Paleta de colores atractiva y accesible para los sectores del gráfico
+// Paleta oficial sobria Event Hive
 const SLICE_COLORS = [
-  '#087fea', // Azul Heroica
-  '#f59e0b', // Ámbar Colmena
-  '#10b981', // Esmeralda Caribe
-  '#8b5cf6', // Violeta Festivo
-  '#ec4899', // Rosa Cartagena
-  '#06b6d4', // Turquesa Mar
-  '#f97316', // Naranja Atardecer
-  '#6366f1', // Índigo Nocturno
+  '#0F2342', // Azul Institucional
+  '#F5B800', // Amarillo Ámbar
+  '#B45309', // Ocre / Ámbar Oscuro
+  '#64748B', // Pizarra
+  '#334155', // Azul Grisáceo Oscuro
+  '#15803D', // Verde Bosque
+  '#D97706', // Ámbar Cálido
+  '#475569', // Pizarra Neutro
 ];
 
 export default function PlatformMetricsChart({ eventosPorCategoria = [] }) {

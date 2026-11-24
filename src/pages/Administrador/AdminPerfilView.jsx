@@ -3,32 +3,26 @@ import { createPortal } from 'react-dom';
 import Swal from 'sweetalert2';
 import {
   User,
-  ShieldCheck,
   Key,
   Mail,
   Phone,
-  Lock,
-  CheckCircle2,
-  Save,
   Calendar,
   ShoppingBag,
   Ticket,
   Heart,
   DollarSign,
   Receipt,
-  Camera,
-  Loader2,
-  AlertCircle,
   X,
   Edit2,
+  Shield,
+  Check,
 } from 'lucide-react';
-import Badge from '../../components/Shared/Badge.jsx';
-import {
-  ProfileCard,
-  ProfileMetric,
-} from '../../components/Shared/DashboardProfileComponents.jsx';
+import LanyardCredentialCard from '../../components/common/LanyardCredentialCard.jsx';
 import { session, extractPhotoUrl, normalizeRole } from '../../services/session.js';
 import userService, { readFileAsDataUrl } from '../../services/userService.js';
+
+const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 export default function AdminPerfilView({ onNavigateTab, showToast }) {
   const sessionUser = session.getUser();
@@ -46,7 +40,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast }) {
         title: type === 'error' ? 'Error' : 'Operación exitosa',
         text: message,
         timer: 2200,
-        confirmButtonColor: '#087fea',
+        confirmButtonColor: '#0F2342',
       });
     }
   };
@@ -61,13 +55,10 @@ export default function AdminPerfilView({ onNavigateTab, showToast }) {
     sessionUser?.email || (isMarketing ? 'marketing@eventhive.com' : 'admin@eventhive.com')
   );
   const [telefono, setTelefono] = useState(sessionUser?.telefono || '');
-  const [cargo, setCargo] = useState(
-    isMarketing ? 'Especialista en Difusión y Campañas' : 'Administrador General'
-  );
   const [fotoUrl, setFotoUrl] = useState(extractPhotoUrl(sessionUser) || '');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState(null);
   const [photoError, setPhotoError] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
 
   // Modal lateral derecho para edición de datos de perfil
   const [showEditDrawer, setShowEditDrawer] = useState(false);
@@ -99,7 +90,7 @@ export default function AdminPerfilView({ onNavigateTab, showToast }) {
   // Pestaña interna: perfil o compras/actividad
   const [activeTab, setActiveTab] = useState('perfil');
 
-  // Cargar perfil inmediatamente sin bloquear por las consultas de actividad
+  // Cargar perfil inmediatamente
   useEffect(() => {
     let isMounted = true;
 
@@ -149,12 +140,13 @@ export default function AdminPerfilView({ onNavigateTab, showToast }) {
           setCompras(list);
         }
         if (deseosRes.status === 'fulfilled' && deseosRes.value) {
-          const list =
+          const dList =
             deseosRes.value?.content ||
             (Array.isArray(deseosRes.value) ? deseosRes.value : []);
-          setDeseos(list);
+          setDeseos(dList);
         }
       })
+      .catch((err) => console.warn('Error al cargar actividad:', err))
       .finally(() => {
         if (isMounted) setLoadingActividad(false);
       });
@@ -164,63 +156,43 @@ export default function AdminPerfilView({ onNavigateTab, showToast }) {
     };
   }, []);
 
-  // Manejo de carga de fotografía de perfil
   const handlePhotoSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      notify('Por favor selecciona un archivo de imagen válido (JPG, PNG, WebP).', 'error');
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      notify('Por favor selecciona una imagen válida (PNG, JPG, WebP).', 'error');
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      notify('La imagen no debe superar los 5MB.', 'error');
+    if (file.size > MAX_IMAGE_SIZE) {
+      notify('La imagen no puede exceder los 5 MB.', 'error');
       return;
     }
 
     const previousPhoto = fotoUrl;
-    const dataUrlPreview = await readFileAsDataUrl(file);
-    if (dataUrlPreview) {
-      setPhotoPreview(dataUrlPreview);
-      setPhotoError(false);
-      // Actualización optimista para reflejar la foto al instante en el Header y Navbar
-      session.updateUser({
-        urlImagenPerfil: dataUrlPreview,
-        imagenPerfil: dataUrlPreview,
-        fotoUrl: dataUrlPreview,
-        foto: dataUrlPreview,
-        avatar: dataUrlPreview,
-      });
-    }
-
     try {
       setUploadingPhoto(true);
-      const res = await userService.uploadFotoPerfil(file);
-      const newUrl = extractPhotoUrl(res) || dataUrlPreview;
-      if (newUrl) {
-        setFotoUrl(newUrl);
-        setPhotoPreview(null);
+      const previewUrl = await readFileAsDataUrl(file);
+      if (previewUrl) {
+        setFotoUrl(previewUrl);
         setPhotoError(false);
-        session.updateUser({
-          urlImagenPerfil: newUrl,
-          imagenPerfil: newUrl,
-          fotoUrl: newUrl,
-          foto: newUrl,
-          avatar: newUrl,
-        });
       }
-      notify('Fotografía de perfil actualizada exitosamente.', 'success');
-    } catch (err) {
-      setPhotoPreview(null);
-      setFotoUrl(previousPhoto);
+
+      const res = await userService.uploadFotoPerfil(file);
+      const serverUrl = extractPhotoUrl(res) || previewUrl;
+      setFotoUrl(serverUrl);
+      setPhotoError(false);
       session.updateUser({
-        urlImagenPerfil: previousPhoto || null,
-        imagenPerfil: previousPhoto || null,
-        fotoUrl: previousPhoto || null,
-        foto: previousPhoto || null,
-        avatar: previousPhoto || null,
+        fotoUrl: serverUrl,
+        foto: serverUrl,
+        urlImagenPerfil: serverUrl,
+        imagenPerfil: serverUrl,
+        avatar: serverUrl,
       });
+      notify('Fotografía de credencial actualizada.', 'success');
+    } catch (err) {
+      setFotoUrl(previousPhoto);
       notify(
         err?.response?.data?.message || err?.message || 'Error al subir la fotografía de perfil.',
         'error'
@@ -299,565 +271,464 @@ export default function AdminPerfilView({ onNavigateTab, showToast }) {
       maximumFractionDigits: 0,
     }).format(val || 0);
 
-  const displayPhoto = photoPreview || fotoUrl;
-  const showValidPhoto = Boolean(displayPhoto && !photoError);
-  const userInitials = nombre
-    ? nombre
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((w) => w[0])
-        .join('')
-        .toUpperCase()
-    : isMarketing
-      ? 'MK'
-      : 'AD';
-  const displayRoleBadge = perfil?.rolNombre || normalizedRole || 'ADMINISTRADOR';
+  const displayRole = perfil?.rolNombre || normalizedRole || (isMarketing ? 'MARKETING' : 'ADMINISTRADOR');
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-300">
-      <ProfileCard className="relative overflow-hidden border-t-2 border-t-brand p-5 sm:p-7">
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Input de archivo oculto para la fotografía */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handlePhotoSelect}
+        accept="image/png, image/jpeg, image/jpg, image/webp"
+        className="hidden"
+      />
 
-        <div className="flex flex-col gap-5 pt-1 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            {/* Input de archivo oculto para la fotografía */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handlePhotoSelect}
-              accept="image/*"
-              className="hidden"
-            />
-
-            {/* Círculo de la Fotografía con botón de cámara directo */}
-            <div className="relative group shrink-0">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingPhoto}
-                title="Haz clic para cambiar tu foto de perfil"
-                className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-brand/30 bg-slate-900 font-display text-2xl font-bold text-white shadow-md ring-4 ring-white transition-all group-hover:brightness-95 active:scale-95 sm:h-24 sm:w-24 sm:text-3xl cursor-pointer"
-              >
-                {showValidPhoto ? (
-                  <img
-                    key={displayPhoto}
-                    src={displayPhoto}
-                    alt={nombre}
-                    className="w-full h-full object-cover object-center"
-                    onError={() => setPhotoError(true)}
-                  />
-                ) : (
-                  <span className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 text-white font-extrabold">
-                    {userInitials}
-                  </span>
-                )}
-
-                <div className="absolute inset-0 bg-black/45 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  {uploadingPhoto ? (
-                    <Loader2 size={20} className="animate-spin" />
-                  ) : (
-                    <>
-                      <Camera size={20} />
-                      <span className="text-[9px] font-bold mt-0.5 uppercase tracking-wider">Cambiar</span>
-                    </>
-                  )}
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingPhoto}
-                title="Cambiar fotografía de perfil"
-                className="absolute -bottom-1.5 -right-1.5 rounded-xl bg-brand p-2 text-white ring-2 ring-white shadow-md hover:bg-brand-dark transition-all active:scale-95 cursor-pointer disabled:opacity-50"
-              >
-                <Camera className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            <div>
-              <div className="mb-1 flex flex-wrap items-center gap-2">
-                <h2 className="font-display text-xl font-bold leading-tight text-slate-900 sm:text-2xl">
-                  {nombre}
-                </h2>
-                <span className="inline-flex items-center gap-1 rounded-full border border-brand/15 bg-brand-light px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-dark">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  {displayRoleBadge}
-                </span>
-              </div>
-              <p className="text-xs font-medium text-slate-500">{cargo}</p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 self-stretch sm:self-auto">
-            <button
-              type="button"
-              onClick={openEditDrawer}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand cursor-pointer"
-            >
-              <Edit2 className="w-3.5 h-3.5" />
-              <span>Editar perfil</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowPasswordModal(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand cursor-pointer"
-            >
-              <Key className="w-4 h-4 text-slate-500" strokeWidth={1.75} />
-              <span>Cambiar contraseña</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Pestañas de Navegación del Perfil */}
-        <div role="group" aria-label="Secciones del perfil" className="mt-6 flex flex-wrap gap-1 rounded-xl bg-slate-100/80 p-1">
-          <button
-            type="button"
-            aria-pressed={activeTab === 'perfil'}
-            onClick={() => setActiveTab('perfil')}
-            className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors cursor-pointer ${
-              activeTab === 'perfil'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <User className="h-4 w-4" />
-            <span>Datos de la cuenta</span>
-          </button>
-
-          <button
-            type="button"
-            aria-pressed={activeTab === 'compras'}
-            onClick={() => setActiveTab('compras')}
-            className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors cursor-pointer ${
-              activeTab === 'compras'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <ShoppingBag className="h-4 w-4" />
-            <span>Actividad como comprador</span>
-            {actividad?.comprasConfirmadas > 0 && (
-              <span className="rounded-full bg-brand-light px-2 py-0.5 font-mono text-[10px] text-brand-dark">
-                {actividad.comprasConfirmadas}
-              </span>
-            )}
-          </button>
-        </div>
-      </ProfileCard>
-
-      {/* VISTA 1: RESUMEN DE DATOS DE LA CUENTA */}
-      {activeTab === 'perfil' && (
+      {/* Cabecera Editorial */}
+      <div className="border-b border-[#E2E8F0] pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <ProfileCard className="space-y-5 p-5 sm:p-6">
-            <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
-              <div>
-                <h3 className="flex items-center gap-2 font-display text-base font-bold text-slate-900">
-                  <User className="h-5 w-5 text-brand" strokeWidth={1.75} />
-                  <span>Información personal</span>
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={openEditDrawer}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand cursor-pointer"
-              >
-                <Edit2 size={13} />
-                <span>Editar</span>
-              </button>
-            </div>
+          <h1 className="font-display font-black text-2xl sm:text-3xl lg:text-[clamp(1.5rem,4vw,2.25rem)] text-[#0F2342] tracking-tight uppercase leading-none">
+            Mi Perfil
+          </h1>
+          <p className="font-sans text-xs sm:text-sm text-[#64748B] mt-2">
+            Acreditación oficial del sistema, parámetros de seguridad y actividad personal.
+          </p>
+        </div>
 
-            <div className="grid grid-cols-1 divide-y divide-slate-100 sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4">
-              <div className="flex min-w-0 items-start gap-3 py-3 sm:px-4 sm:py-2 lg:border-r lg:border-slate-100 lg:first:pl-0">
-                <User className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
-                <div className="min-w-0">
-                  <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Nombre completo</span>
-                  <p className="mt-1 break-words text-sm font-semibold text-slate-800">{nombre}</p>
+        {/* Acciones principales del perfil con botones rectangulares */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={openEditDrawer}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-[2px] bg-[#0F2342] hover:bg-[#F5B800] text-white hover:text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer shadow-2xs"
+          >
+            <Edit2 size={13} />
+            <span>EDITAR PERFIL</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowPasswordModal(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[2px] border border-[#0F2342] bg-[#FFFFFF] hover:bg-[#F8F9FA] text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer"
+          >
+            <Key size={13} />
+            <span>CAMBIAR CONTRASEÑA</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Layout Asimétrico: Columna Izquierda (Escarapela con Lazo) y Columna Derecha (Datos y Actividad Real) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* =========================================================================
+            COLUMNA IZQUIERDA (~38% ancho): Escarapela Física Colgante con Lazo
+           ========================================================================= */}
+        <aside className="lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center">
+          <LanyardCredentialCard
+            nombre={nombre}
+            email={email}
+            telefono={telefono}
+            rol={displayRole}
+            fotoUrl={fotoUrl}
+            photoError={photoError}
+            onPhotoError={() => setPhotoError(true)}
+            uploadingPhoto={uploadingPhoto}
+            onPhotoClick={() => fileInputRef.current?.click()}
+            isFlipped={isFlipped}
+            onFlip={() => setIsFlipped(!isFlipped)}
+          />
+        </aside>
+
+        {/* =========================================================================
+            COLUMNA DERECHA (~62% ancho): Tabs Tipográficos con Subrayado #F5B800 y Actividad Real
+           ========================================================================= */}
+        <section className="lg:col-span-7 xl:col-span-8 w-full space-y-6">
+          {/* Tabs Tipográficos con Subrayado #F5B800 */}
+          <div className="flex items-center gap-6 border-b border-[#E2E8F0] px-1 font-mono text-xs uppercase tracking-wider overflow-x-auto no-scrollbar">
+            <button
+              type="button"
+              onClick={() => setActiveTab('perfil')}
+              className={`pb-2.5 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'perfil'
+                  ? 'border-b-2 border-[#F5B800] text-[#0F2342] font-black'
+                  : 'text-[#64748B] hover:text-[#0F2342] border-b-2 border-transparent'
+              }`}
+            >
+              DATOS DE LA CUENTA
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('compras')}
+              className={`pb-2.5 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'compras'
+                  ? 'border-b-2 border-[#F5B800] text-[#0F2342] font-black'
+                  : 'text-[#64748B] hover:text-[#0F2342] border-b-2 border-transparent'
+              }`}
+            >
+              ACTIVIDAD COMO COMPRADOR ({actividad?.comprasConfirmadas ?? 0})
+            </button>
+          </div>
+
+          {/* TAB 1: DATOS DE LA CUENTA (Consola Editorial) */}
+          {activeTab === 'perfil' && (
+            <div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] p-6 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
+                <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#0F2342] flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#F5B800]" />
+                  <span>EXPEDIENTE ADMINISTRATIVO</span>
+                </span>
+                <span className="font-mono text-[10px] text-[#64748B] uppercase">DATOS OFICIALES</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] space-y-1">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748B]">
+                    Nombre Completo
+                  </span>
+                  <p className="font-sans font-bold text-sm text-[#0F2342] break-words">
+                    {nombre}
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] space-y-1">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748B]">
+                    Correo Electrónico
+                  </span>
+                  <p className="font-mono text-xs text-[#0F2342] break-words font-semibold">
+                    {email}
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] space-y-1">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748B]">
+                    Teléfono de Contacto
+                  </span>
+                  <p className="font-mono text-xs text-[#0F2342] font-semibold">
+                    {telefono || 'No registrado'}
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] space-y-1">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748B]">
+                    Rol y Acreditación
+                  </span>
+                  <div className="flex items-center gap-1.5 pt-0.5">
+                    <span className="w-2 h-2 rounded-full bg-[#F5B800]" />
+                    <span className="font-mono text-xs font-bold text-[#0F2342] uppercase tracking-wider">
+                      {displayRole}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div className="flex min-w-0 items-start gap-3 py-3 sm:px-4 sm:py-2 lg:border-r lg:border-slate-100">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
-                <div className="min-w-0">
-                  <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Correo electrónico</span>
-                  <p className="mt-1 break-words text-sm font-semibold text-slate-800">{email}</p>
+            </div>
+          )}
+
+          {/* TAB 2: ACTIVIDAD COMO COMPRADOR */}
+          {activeTab === 'compras' && (
+            <div className="space-y-6">
+              {/* Barra de Métricas de Comprador */}
+              <div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] shadow-2xs p-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#E2E8F0]">
+                  <div className="p-3">
+                    <span className="block font-mono text-[10px] uppercase tracking-wider text-[#64748B]">
+                      Eventos Comprados
+                    </span>
+                    <span className="font-mono font-bold text-lg text-[#0F2342] mt-1 block">
+                      {actividad?.eventosComprados ?? 0}
+                    </span>
+                  </div>
+                  <div className="p-3">
+                    <span className="block font-mono text-[10px] uppercase tracking-wider text-[#64748B]">
+                      Entradas Adquiridas
+                    </span>
+                    <span className="font-mono font-bold text-lg text-[#0F2342] mt-1 block">
+                      {actividad?.entradasCompradas ?? 0}
+                    </span>
+                  </div>
+                  <div className="p-3">
+                    <span className="block font-mono text-[10px] uppercase tracking-wider text-[#64748B]">
+                      Favoritos
+                    </span>
+                    <span className="font-mono font-bold text-lg text-[#0F2342] mt-1 block">
+                      {actividad?.favoritos ?? deseos.length ?? 0}
+                    </span>
+                  </div>
+                  <div className="p-3">
+                    <span className="block font-mono text-[10px] uppercase tracking-wider text-[#64748B]">
+                      Total Invertido
+                    </span>
+                    <span className="font-mono font-bold text-lg text-[#0F2342] mt-1 block">
+                      {formatCOP(actividad?.totalGastado ?? 0)}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div className="flex min-w-0 items-start gap-3 py-3 sm:px-4 sm:py-2 lg:border-r lg:border-slate-100">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
-                <div className="min-w-0">
-                  <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Teléfono de contacto</span>
-                  <p className="mt-1 break-words text-sm font-semibold text-slate-800">{telefono || 'No registrado'}</p>
-                </div>
-              </div>
-              <div className="flex min-w-0 items-start gap-3 py-3 sm:px-4 sm:py-2 lg:pr-0">
-                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
-                <div className="min-w-0">
-                  <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Rol</span>
-                  <span className="mt-1 inline-flex rounded-full border border-brand/15 bg-brand-light px-2.5 py-1 text-[11px] font-semibold text-brand-dark">
-                    {displayRoleBadge}
+
+              {/* Historial de Compras en Tabla Limpia */}
+              <div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-[2px] shadow-2xs p-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
+                  <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#0F2342] flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#F5B800]" />
+                    <span>ÓRDENES REGISTRADAS</span>
                   </span>
                 </div>
+
+                {loadingActividad ? (
+                  <div className="p-8 text-center font-mono text-xs text-[#64748B]">
+                    Cargando historial de compras...
+                  </div>
+                ) : compras.length === 0 ? (
+                  <div className="p-8 border border-dashed border-[#CBD5E1] rounded-[2px] text-center font-mono text-xs text-[#64748B]">
+                    No se registran compras comerciales para este usuario.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-[#E2E8F0]">
+                    {compras.map((compra) => {
+                      const primerItem = compra.items?.[0];
+                      const totalItems = (compra.items || []).reduce(
+                        (acc, it) => acc + (it.cantidad || 0),
+                        0
+                      );
+                      const fecha = compra.fechaCompra
+                        ? new Date(compra.fechaCompra).toLocaleDateString('es-CO')
+                        : 'Reciente';
+
+                      return (
+                        <div
+                          key={compra.id}
+                          className="py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                        >
+                          <div className="space-y-0.5">
+                            <h4 className="font-sans font-bold text-sm text-[#0F2342]">
+                              {primerItem?.eventoNombre || 'Evento EventHive'}
+                            </h4>
+                            <p className="font-mono text-xs text-[#64748B]">
+                              {fecha} · {primerItem?.localidadNombre ? `${primerItem.localidadNombre} · ` : ''}
+                              {totalItems || primerItem?.cantidad || 1} entradas
+                            </p>
+                          </div>
+
+                          <div className="text-right">
+                            <span className="font-mono font-bold text-sm text-[#0F2342] block">
+                              {formatCOP(compra.total)}
+                            </span>
+                            <span className="font-mono text-[10px] text-[#15803D] uppercase font-bold">
+                              CONFIRMADA
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
-          </ProfileCard>
-        </div>
-      )}
+          )}
+        </section>
+      </div>
 
-      {/* VISTA 2: ACTIVIDAD COMO COMPRADOR */}
-      {activeTab === 'compras' && (
-        <div className="space-y-5">
-          <div className="flex items-center gap-3 rounded-2xl border border-brand/15 bg-brand-light/50 px-4 py-3.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-brand shadow-sm">
-              <Ticket className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <h3 className="text-sm font-bold text-slate-900">Actividad como comprador</h3>
-              <p className="text-xs text-slate-600">Compras, entradas y favoritos de esta cuenta.</p>
-            </div>
-            <span className="ml-auto shrink-0 rounded-full border border-brand/15 bg-white px-2.5 py-1 text-[10px] font-semibold text-brand-dark">
-              Acceso habilitado
-            </span>
-          </div>
+      {/* DRAWER LATERAL DERECHO: EDICIÓN DE PERFIL */}
+      {showEditDrawer &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex justify-end">
+            <div
+              className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
+              onClick={() => setShowEditDrawer(false)}
+            />
 
-          {/* Métricas de Actividad de Comprador */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <ProfileMetric
-              icon={Calendar}
-              label="Eventos comprados"
-              value={actividad?.eventosComprados ?? 0}
-              detail="Asistencia personal"
-            />
-            <ProfileMetric
-              icon={Ticket}
-              label="Entradas adquiridas"
-              value={actividad?.entradasCompradas ?? 0}
-              detail="Boletos emitidos"
-            />
-            <ProfileMetric
-              icon={Heart}
-              label="Eventos favoritos"
-              value={actividad?.favoritos ?? deseos.length ?? 0}
-              detail="En lista de deseos"
-            />
-            <ProfileMetric
-              icon={DollarSign}
-              label="Total invertido"
-              value={formatCOP(actividad?.totalGastado ?? 0)}
-              detail={`${actividad?.comprasConfirmadas ?? 0} compras exitosas`}
-            />
-          </div>
-
-          {/* Listado de Compras Recientes */}
-          <ProfileCard className="p-5 sm:p-6">
-            <div className="mb-4 flex items-center gap-3 border-b border-slate-100 pb-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
-                <Receipt className="h-5 w-5" />
-              </span>
+            <div
+              className="relative z-50 w-full sm:w-[480px] bg-[#FFFFFF] h-full shadow-2xl border-l border-[#E2E8F0] overflow-y-auto animate-in slide-in-from-right duration-250 flex flex-col justify-between"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div>
-                <h3 className="font-display text-base font-bold text-slate-900">Historial de compras</h3>
+                <div className="flex items-center justify-between border-b border-[#E2E8F0] p-5 sm:p-6 bg-[#0F2342] text-white">
+                  <div>
+                    <h3 className="font-display font-black text-base uppercase tracking-tight text-white">
+                      Editar Perfil
+                    </h3>
+                    <p className="font-mono text-xs text-slate-300 mt-0.5">
+                      Actualización de datos de acreditación
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditDrawer(false)}
+                    className="p-1 rounded-[2px] text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveProfile} className="p-5 sm:p-6 space-y-4">
+                  {editError && (
+                    <div className="p-3 rounded-[2px] bg-rose-50 border border-rose-200 text-rose-700 font-mono text-xs">
+                      {editError}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
+                      Nombre Completo <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editNombre}
+                      onChange={(e) => setEditNombre(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs font-mono text-[#0F2342] outline-none focus:border-[#0F2342] transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
+                      Teléfono de Contacto
+                    </label>
+                    <input
+                      type="tel"
+                      value={editTelefono}
+                      onChange={(e) => setEditTelefono(e.target.value)}
+                      placeholder="Ej: +57 300 123 4567"
+                      className="w-full px-3.5 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs font-mono text-[#0F2342] outline-none focus:border-[#0F2342] transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
+                      Correo Electrónico (No modificable)
+                    </label>
+                    <input
+                      type="email"
+                      disabled
+                      value={email}
+                      className="w-full px-3.5 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#F8F9FA] text-xs font-mono text-[#64748B] outline-none cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div className="pt-4 border-t border-[#E2E8F0] flex items-center justify-end gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditDrawer(false)}
+                      disabled={saving}
+                      className="px-4 py-2.5 rounded-[2px] border border-[#E2E8F0] hover:bg-[#F8F9FA] text-[#64748B] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="px-5 py-2.5 rounded-[2px] bg-[#0F2342] hover:bg-[#F5B800] text-white hover:text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {saving ? 'Guardando...' : 'Guardar Cambios'}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
+          </div>,
+          document.body
+        )}
 
-            {loadingActividad ? (
-              <div className="space-y-3">
-                {[1, 2].map((n) => (
-                  <div key={n} className="h-20 rounded-2xl bg-slate-100/70 animate-pulse" />
-                ))}
-              </div>
-            ) : compras.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center">
-                <ShoppingBag className="mx-auto text-slate-400 mb-2" size={32} />
-                <h4 className="font-display text-sm font-bold text-slate-800">
-                  Aún no has realizado compras
-                </h4>
-              </div>
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {compras.map((compra) => {
-                  const primerItem = compra.items?.[0];
-                  const totalItems = (compra.items || []).reduce((acc, it) => acc + (it.cantidad || 0), 0);
-                  const fecha = compra.fechaCompra ? new Date(compra.fechaCompra).toLocaleDateString('es-CO') : 'Reciente';
+      {/* MODAL PARA CAMBIO DE CONTRASEÑA */}
+      {showPasswordModal &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <div
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-2xs cursor-pointer transition-opacity"
+              onClick={() => setShowPasswordModal(false)}
+            />
 
-                  return (
-                    <div
-                      key={compra.id}
-                      className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50/60 px-3 rounded-2xl transition-colors"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                            Orden de Compra
-                          </span>
-                          <span className="text-xs font-bold text-slate-900">
-                            {primerItem?.eventoNombre || 'Evento EventHive'}
-                          </span>
-                          <Badge variant="success" size="xs">
-                            CONFIRMADA
-                          </Badge>
-                        </div>
-                        <div className="text-xs text-slate-500 flex flex-wrap items-center gap-3">
-                          <span>Fecha: {fecha}</span>
-                          {primerItem?.localidadNombre && (
-                            <>
-                              <span>•</span>
-                              <span>Localidad: {primerItem.localidadNombre}</span>
-                            </>
-                          )}
-                          <span>•</span>
-                          <span>{totalItems || primerItem?.cantidad || 1} boletos</span>
-                        </div>
-                      </div>
-
-                      <div className="text-right self-end sm:self-center">
-                        <span className="text-base font-extrabold font-display text-slate-900 block">
-                          {formatCOP(compra.total)}
-                        </span>
-                        <span className="text-[11px] text-slate-400 uppercase font-mono">
-                          {compra.metodoPago || 'PAGO DIGITAL'}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </ProfileCard>
-        </div>
-      )}
-
-      {/* DRAWER MODAL LATERAL DERECHO: EDICIÓN DE PERFIL */}
-      {showEditDrawer && (
-        createPortal(<div className="fixed inset-0 z-[9999] flex justify-end">
-          <div
-            className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs cursor-pointer transition-opacity"
-            onClick={() => setShowEditDrawer(false)}
-          />
-
-          <div
-            data-lenis-prevent="true"
-            className="relative z-50 w-full sm:w-[480px] md:w-[520px] bg-white h-full shadow-2xl border-l border-slate-200 overflow-y-auto animate-in slide-in-from-right duration-300 flex flex-col justify-between"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div>
-              <div className="flex items-center justify-between border-b border-slate-100 bg-white p-5 sm:p-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-light text-brand">
-                    <Edit2 size={18} />
-                  </div>
-                  <div>
-                    <h3 className="font-display text-base font-bold leading-tight text-slate-900">
-                      Editar perfil
-                    </h3>
-                  </div>
+            <div
+              className="relative z-50 w-full max-w-md bg-[#FFFFFF] rounded-[2px] border border-[#E2E8F0] shadow-2xl overflow-hidden animate-in fade-in duration-150"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-[#E2E8F0] p-5 bg-[#0F2342] text-white">
+                <div>
+                  <h3 className="font-display font-black text-base uppercase tracking-tight text-white">
+                    Cambiar Contraseña
+                  </h3>
+                  <p className="font-mono text-xs text-slate-300 mt-0.5">
+                    Seguridad y credenciales de acceso
+                  </p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShowEditDrawer(false)}
-                  aria-label="Cerrar edición de perfil"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 cursor-pointer"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="p-1 rounded-[2px] text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              <form id="edit-profile-drawer-form" onSubmit={handleSaveProfile} className="p-6 space-y-4">
-                {editError && (
-                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-800 flex items-center gap-2">
-                    <AlertCircle size={16} className="text-rose-600 shrink-0" />
-                    <span>{editError}</span>
+              <form onSubmit={handlePasswordSubmit} className="p-5 sm:p-6 space-y-4">
+                {passwordError && (
+                  <div className="p-3 rounded-[2px] bg-rose-50 border border-rose-200 text-rose-700 font-mono text-xs">
+                    {passwordError}
                   </div>
                 )}
 
-                {/* Cambio de foto de perfil también accesible desde el drawer */}
-                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                  <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
-                    {showValidPhoto ? (
-                      <img
-                        key={displayPhoto}
-                        src={displayPhoto}
-                        alt={nombre}
-                        className="w-full h-full object-cover"
-                        onError={() => setPhotoError(true)}
-                      />
-                    ) : (
-                      <span className="text-white font-extrabold text-lg">{userInitials}</span>
-                    )}
-                  </div>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploadingPhoto}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-xs font-bold text-slate-700 shadow-2xs cursor-pointer transition-colors"
-                    >
-                      <Camera size={14} className="text-brand" />
-                      <span>{uploadingPhoto ? 'Subiendo...' : 'Cambiar foto de perfil'}</span>
-                    </button>
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      JPG, PNG o WebP (máx. 5 MB)
-                    </p>
-                  </div>
-                </div>
-
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                    Nombre completo *
+                  <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
+                    Contraseña Actual <span className="text-rose-500">*</span>
                   </label>
                   <input
-                    type="text"
-                    value={editNombre}
-                    onChange={(e) => setEditNombre(e.target.value)}
+                    type="password"
                     required
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-800 outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/10"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs font-mono text-[#0F2342] outline-none focus:border-[#0F2342] transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                    Correo electrónico
+                  <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
+                    Nueva Contraseña (Mín. 8 caracteres) <span className="text-rose-500">*</span>
                   </label>
                   <input
-                    type="email"
-                    value={email}
-                    disabled
-                    className="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-500 outline-none"
-                    title="El correo electrónico está protegido por el sistema central."
+                    type="password"
+                    required
+                    minLength={8}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs font-mono text-[#0F2342] outline-none focus:border-[#0F2342] transition-colors"
                   />
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    El correo electrónico no puede modificarse directamente.
-                  </p>
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                    Teléfono de contacto
+                  <label className="block font-mono text-xs uppercase tracking-wider text-[#0F2342] font-bold mb-1.5">
+                    Confirmar Nueva Contraseña <span className="text-rose-500">*</span>
                   </label>
                   <input
-                    type="text"
-                    value={editTelefono}
-                    onChange={(e) => setEditTelefono(e.target.value)}
-                    placeholder="+57 300 123 4567"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-800 outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/10"
+                    type="password"
+                    required
+                    minLength={8}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-[2px] border border-[#E2E8F0] bg-[#FFFFFF] text-xs font-mono text-[#0F2342] outline-none focus:border-[#0F2342] transition-colors"
                   />
+                </div>
+
+                <div className="pt-4 border-t border-[#E2E8F0] flex items-center justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordModal(false)}
+                    disabled={passwordLoading}
+                    className="px-4 py-2.5 rounded-[2px] border border-[#E2E8F0] hover:bg-[#F8F9FA] text-[#64748B] font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={passwordLoading}
+                    className="px-5 py-2.5 rounded-[2px] bg-[#0F2342] hover:bg-[#F5B800] text-white hover:text-[#0F2342] font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {passwordLoading ? 'Actualizando...' : 'Actualizar Contraseña'}
+                  </button>
                 </div>
               </form>
             </div>
-
-            <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-white p-5 sm:p-6">
-              <button
-                type="button"
-                onClick={() => setShowEditDrawer(false)}
-                disabled={saving}
-                className="rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button
-                form="edit-profile-drawer-form"
-                type="submit"
-                disabled={saving}
-                className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-brand-dark disabled:cursor-wait disabled:opacity-50 cursor-pointer"
-              >
-                <Save size={14} />
-                <span>{saving ? 'Guardando...' : 'Guardar Cambios'}</span>
-              </button>
-            </div>
-          </div>
-        </div>, document.body)
-      )}
-
-      {/* Modal de Cambio de Contraseña */}
-      {showPasswordModal && (
-        createPortal(<div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-200"
-          onClick={() => setShowPasswordModal(false)}
-        >
-          <div
-            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-slate-100 text-slate-800">
-                  <Key className="w-5 h-5" strokeWidth={1.75} />
-                </div>
-                <div>
-                  <h3 className="font-display text-base font-bold text-slate-900">
-                    Cambiar contraseña
-                  </h3>
-                </div>
-              </div>
-            </div>
-
-            <form onSubmit={handlePasswordSubmit} className="space-y-4">
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-700">
-                  Contraseña actual *
-                </label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-700">
-                  Nueva contraseña *
-                </label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10"
-                  required
-                />
-                <p className="mt-1 text-[11px] text-slate-500">Mínimo 8 caracteres alfanuméricos.</p>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-700">
-                  Confirmar nueva contraseña *
-                </label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10"
-                  required
-                />
-              </div>
-
-              {passwordError && (
-                <p className="text-xs font-semibold text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-200">
-                  {passwordError}
-                </p>
-              )}
-
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowPasswordModal(false)}
-                  disabled={passwordLoading}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={passwordLoading}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-amber-300 text-xs font-bold shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
-                >
-                  {passwordLoading ? 'Actualizando...' : 'Actualizar'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>, document.body)
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

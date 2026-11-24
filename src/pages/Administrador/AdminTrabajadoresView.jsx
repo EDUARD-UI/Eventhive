@@ -6,21 +6,14 @@ import {
   Shield,
   Mail,
   Search,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
   RotateCw,
-  Send,
   Trash2,
-  Phone,
-  Sparkles,
 } from 'lucide-react';
-import Badge from '../../components/Shared/Badge.jsx';
 import Pagination from '../../components/Shared/Pagination.jsx';
 import ModalInvitacionOficial from '../../components/componentsAdmin/ModalInvitacionOficial.jsx';
+import ComposeMailDrawer from '../../components/Shared/ComposeMailDrawer.jsx';
 import adminService from '../../features/admin/services/adminService.js';
 import { normalizeRole } from '../../services/session.js';
-import { httpClient } from '../../services/httpClient.js';
 import { showSuccessAlert, showErrorAlert } from '../../utils/alertUtils.js';
 
 export default function AdminTrabajadoresView() {
@@ -34,13 +27,15 @@ export default function AdminTrabajadoresView() {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Modal para Invitar / Enviar Comunicado
-  const [mailModal, setMailModal] = useState({
+  // Modal para Invitar con token
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+
+  // ComposeMailDrawer para enviar comunicado / correo
+  const [mailDrawer, setMailDrawer] = useState({
     isOpen: false,
-    email: '',
-    name: '',
-    subject: '',
-    mode: 'invite', // 'invite' | 'comunicado'
+    recipientEmail: '',
+    recipientName: '',
+    initialSubject: '',
   });
 
   // Modal revocar moderador
@@ -197,20 +192,8 @@ export default function AdminTrabajadoresView() {
       title: 'Invitación enviada',
       text: `Invitación oficial enviada exitosamente a "${inviteData.email}" con el rol ${inviteData.rol}.`,
     });
+    setInviteModalOpen(false);
     await fetchTrabajadores();
-  };
-
-  // Enviar comunicado administrativo
-  const handleComunicadoSubmit = async ({ destinatario, asunto, mensaje }) => {
-    await httpClient.post('/admin/correos/enviar', {
-      destinatario,
-      asunto,
-      mensaje,
-    });
-    await showSuccessAlert({
-      title: 'Comunicado enviado',
-      text: `Comunicado oficial despachado correctamente a "${destinatario}".`,
-    });
   };
 
   // Reenviar invitación
@@ -233,62 +216,82 @@ export default function AdminTrabajadoresView() {
     }
   };
 
+  const countModeradores = useMemo(() => {
+    return trabajadores.filter((t) => t.rolNombre === 'MODERADOR').length;
+  }, [trabajadores]);
+
+  const countMarketing = useMemo(() => {
+    return trabajadores.filter((t) => t.rolNombre === 'MARKETING').length;
+  }, [trabajadores]);
+
   const countPendientes = invitaciones.filter(
     (i) => (i.estado || '').toUpperCase() === 'PENDIENTE'
   ).length;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      
-
-      {/* Encabezado y Acciones */}
-      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      {/* Cabecera */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <Users className="w-5 h-5 text-amber-500" strokeWidth={2} />
-            <span>Gestión del Equipo y Privilegios</span>
-          </h2>
+          <h1 className="text-xl font-bold tracking-tight text-[#0F2342] font-display">
+            EQUIPO Y PRIVILEGIOS
+          </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Administra a moderadores y especialistas de marketing, o emite invitaciones seguras con token
+            Administración de moderadores y especialistas de marketing, o emisión de credenciales de acceso.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() =>
-              setMailModal({
-                isOpen: true,
-                email: '',
-                name: '',
-                subject: '',
-                mode: 'invite',
-              })
-            }
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold shadow-sm transition-all active:scale-95 cursor-pointer"
+            onClick={() => setInviteModalOpen(true)}
+            className="px-4 py-2 bg-[#0F2342] text-white font-mono text-xs font-bold tracking-wider rounded-[2px] hover:bg-[#F5B800] hover:text-[#0F2342] transition-colors inline-flex items-center gap-2 shadow-sm cursor-pointer"
           >
-            <UserPlus size={14} className="text-amber-400" />
-            <span>Invitar Colaborador</span>
+            <UserPlus size={14} />
+            <span>INVITAR COLABORADOR</span>
           </button>
         </div>
       </div>
 
-      {/* Sistema de Pestañas SaaS */}
-      <div className="flex items-center gap-2 border-b border-slate-200">
+      {/* Barra de Resumen en Línea con Separadores Verticales */}
+      <div className="bg-white border border-[#E2E8F0] rounded-[2px] p-3 flex flex-wrap items-center divide-x divide-[#E2E8F0] shadow-sm">
+        <div className="px-4 py-1 text-left">
+          <span className="font-mono text-[10px] text-slate-500 tracking-wider uppercase block">INTEGRANTES ACTIVOS</span>
+          <span className="font-mono text-sm font-bold text-[#0F2342]">{trabajadores.length}</span>
+        </div>
+        <div className="px-4 py-1 text-left">
+          <span className="font-mono text-[10px] text-slate-500 tracking-wider uppercase block">MODERADORES</span>
+          <span className="font-mono text-sm font-bold text-[#0F2342]">{countModeradores}</span>
+        </div>
+        <div className="px-4 py-1 text-left">
+          <span className="font-mono text-[10px] text-slate-500 tracking-wider uppercase block">MARKETING</span>
+          <span className="font-mono text-sm font-bold text-[#0F2342]">{countMarketing}</span>
+        </div>
+        <div className="px-4 py-1 text-left">
+          <span className="font-mono text-[10px] text-slate-500 tracking-wider uppercase block flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#F5B800]" />
+            INVITACIONES EN ESPERA
+          </span>
+          <span className="font-mono text-sm font-bold text-[#D97706]">{countPendientes}</span>
+        </div>
+      </div>
+
+      {/* Tabs Tipográficos con Subrayado #F5B800 */}
+      <div className="flex items-center gap-6 border-b border-[#E2E8F0]">
         <button
           type="button"
           onClick={() => {
             setActiveTab('trabajadores');
             setCurrentPage(1);
           }}
-          className={`pb-3 px-3 text-xs font-bold transition-colors cursor-pointer border-b-2 flex items-center gap-2 ${
+          className={`pb-3 font-mono text-xs font-bold tracking-wider transition-colors cursor-pointer border-b-2 flex items-center gap-2 ${
             activeTab === 'trabajadores'
-              ? 'border-amber-500 text-slate-950'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
+              ? 'border-[#F5B800] text-[#0F2342]'
+              : 'border-transparent text-slate-400 hover:text-[#0F2342]'
           }`}
         >
           <Shield size={14} />
-          <span>Integrantes Activos ({trabajadores.length})</span>
+          <span>INTEGRANTES ACTIVOS ({trabajadores.length})</span>
         </button>
 
         <button
@@ -297,24 +300,21 @@ export default function AdminTrabajadoresView() {
             setActiveTab('invitaciones');
             setCurrentPage(1);
           }}
-          className={`pb-3 px-3 text-xs font-bold transition-colors cursor-pointer border-b-2 flex items-center gap-2 ${
+          className={`pb-3 font-mono text-xs font-bold tracking-wider transition-colors cursor-pointer border-b-2 flex items-center gap-2 ${
             activeTab === 'invitaciones'
-              ? 'border-amber-500 text-slate-950'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
+              ? 'border-[#F5B800] text-[#0F2342]'
+              : 'border-transparent text-slate-400 hover:text-[#0F2342]'
           }`}
         >
           <Mail size={14} />
-          <span>Invitaciones Enviadas ({invitaciones.length})</span>
-          {countPendientes > 0 && (
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-          )}
+          <span>INVITACIONES ENVIADAS ({invitaciones.length})</span>
         </button>
       </div>
 
       {/* Barra de Filtros y Búsqueda */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
+      <div className="bg-white p-3 rounded-[2px] border border-[#E2E8F0] shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="relative w-full md:w-96">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder={
@@ -327,12 +327,12 @@ export default function AdminTrabajadoresView() {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-slate-900 placeholder:text-slate-400"
+            className="w-full pl-9 pr-3 py-2 rounded-[2px] border border-[#E2E8F0] text-xs focus:outline-none focus:border-[#0F2342] transition-colors"
           />
         </div>
 
         {activeTab === 'trabajadores' && (
-          <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold gap-1 self-end md:self-center">
+          <div className="flex gap-2">
             {['TODOS', 'MODERADOR', 'MARKETING'].map((rf) => (
               <button
                 key={rf}
@@ -341,10 +341,10 @@ export default function AdminTrabajadoresView() {
                   setRolFilter(rf);
                   setCurrentPage(1);
                 }}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-[2px] font-mono text-[11px] font-bold tracking-wider transition-colors cursor-pointer ${
                   rolFilter === rf
-                    ? 'bg-white text-slate-950 shadow-2xs font-extrabold'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-[#0F2342] text-white'
+                    : 'border border-[#E2E8F0] bg-white text-slate-600 hover:bg-[#F8F9FA]'
                 }`}
               >
                 {rf}
@@ -354,79 +354,83 @@ export default function AdminTrabajadoresView() {
         )}
       </div>
 
-      {/* TABLA PRINCIPAL */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
+      {/* TABLA PRINCIPAL CON SCROLL EDITORIAL */}
+      <div className="bg-white rounded-[2px] border border-[#E2E8F0] shadow-sm overflow-hidden">
+        <div className="overflow-x-auto editorial-scroll-x">
           {activeTab === 'trabajadores' ? (
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
-                <tr className="bg-white border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                  <th className="py-3.5 px-4">Colaborador</th>
-                  <th className="py-3.5 px-4">Correo</th>
-                  <th className="py-3.5 px-4">Teléfono</th>
-                  <th className="py-3.5 px-4 text-center">Rol Asignado</th>
-                  <th className="py-3.5 px-4 text-right">Acciones</th>
+                <tr className="bg-[#F8F9FA] border-b border-[#E2E8F0] text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">
+                  <th className="py-3 px-4">Colaborador</th>
+                  <th className="py-3 px-4">Correo</th>
+                  <th className="py-3 px-4">Teléfono</th>
+                  <th className="py-3 px-4 text-center">Rol Asignado</th>
+                  <th className="py-3 px-4 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-xs">
-                {paginatedData.length === 0 ? (
+              <tbody className="divide-y divide-[#E2E8F0] text-xs">
+                {loading ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-400">
+                    <td colSpan={5} className="py-12 text-center text-slate-400 font-mono text-xs">
+                      Cargando integrantes del equipo...
+                    </td>
+                  </tr>
+                ) : paginatedData.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-12 text-center text-slate-400 font-mono text-xs">
                       No se encontraron integrantes activos con los criterios seleccionados.
                     </td>
                   </tr>
                 ) : (
                   paginatedData.map((t) => (
-                    <tr key={t.id} className="hover:bg-white transition-colors">
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-slate-900">{t.nombre}</div>
-                        
+                    <tr key={t.id} className="hover:bg-[#F8F9FA] transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="font-bold text-[#0F2342]">{t.nombre}</div>
                       </td>
 
-                      <td className="py-3.5 px-4 text-slate-600 font-medium">
+                      <td className="py-3 px-4 text-slate-600 font-mono text-xs">
                         {t.correo || '—'}
                       </td>
 
-                      <td className="py-3.5 px-4 text-slate-500">
+                      <td className="py-3 px-4 text-slate-500 font-mono text-xs">
                         {t.telefono || '—'}
                       </td>
 
-                      <td className="py-3.5 px-4 text-center">
-                        <Badge
-                          variant={t.rolNombre === 'MODERADOR' ? 'warning' : 'info'}
-                          size="xs"
-                        >
+                      <td className="py-3 px-4 text-center">
+                        <span className="font-mono text-[11px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5 text-[#0F2342]">
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            t.rolNombre === 'MODERADOR' ? 'bg-[#F5B800]' : 'bg-[#0F2342]'
+                          }`} />
                           {t.rolNombre}
-                        </Badge>
+                        </span>
                       </td>
 
-                      <td className="py-3.5 px-4 text-right">
+                      <td className="py-3 px-4 text-right">
                         <div className="inline-flex items-center gap-1.5 justify-end">
                           <button
                             type="button"
                             onClick={() =>
-                              setMailModal({
+                              setMailDrawer({
                                 isOpen: true,
-                                email: t.correo,
-                                name: t.nombre,
-                                subject: 'Aviso del equipo administrativo de EventHive',
-                                mode: 'comunicado',
+                                recipientEmail: t.correo,
+                                recipientName: t.nombre,
+                                initialSubject: 'Comunicación oficial de EventHive',
                               })
                             }
-                            className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
-                            title="Enviar comunicado por correo"
+                            className="p-1.5 rounded-[2px] border border-[#E2E8F0] text-[#0F2342] hover:bg-[#0F2342] hover:text-white transition-colors cursor-pointer"
+                            title="Enviar correo"
                           >
-                            <Mail size={15} />
+                            <Mail size={14} />
                           </button>
 
                           <button
-                              type="button"
-                              onClick={() => setModalRevocar(t)}
-                              className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
-                              title={`Revocar rol de ${t.rolNombre.toLowerCase()}`}
-                            >
-                              <Trash2 size={15} />
-                            </button>
+                            type="button"
+                            onClick={() => setModalRevocar(t)}
+                            className="p-1.5 rounded-[2px] border border-[#E2E8F0] text-[#DC2626] hover:bg-[#DC2626] hover:text-white transition-colors cursor-pointer"
+                            title={`Revocar rol de ${t.rolNombre.toLowerCase()}`}
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -436,71 +440,76 @@ export default function AdminTrabajadoresView() {
             </table>
           ) : (
             /* TABLA DE INVITACIONES EMITIDAS POR EL ADMINISTRADOR */
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
-                <tr className="bg-white border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                  <th className="py-3.5 px-4">Correo Invitado</th>
-                  <th className="py-3.5 px-4">Rol Asignado</th>
-                  <th className="py-3.5 px-4">Fecha de Envío</th>
-                  <th className="py-3.5 px-4">Fecha Expiración</th>
-                  <th className="py-3.5 px-4 text-center">Estado</th>
-                  <th className="py-3.5 px-4 text-right">Acciones</th>
+                <tr className="bg-[#F8F9FA] border-b border-[#E2E8F0] text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">
+                  <th className="py-3 px-4">Correo Invitado</th>
+                  <th className="py-3 px-4">Rol Asignado</th>
+                  <th className="py-3 px-4">Fecha Envío</th>
+                  <th className="py-3 px-4">Fecha Expiración</th>
+                  <th className="py-3 px-4 text-center">Estado</th>
+                  <th className="py-3 px-4 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-xs">
+              <tbody className="divide-y divide-[#E2E8F0] text-xs">
                 {paginatedData.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                    <td colSpan={6} className="py-12 text-center text-slate-400 font-mono text-xs">
                       No hay invitaciones emitidas registradas.
                     </td>
                   </tr>
                 ) : (
                   paginatedData.map((inv, idx) => {
                     const estado = (inv.estado || 'PENDIENTE').toUpperCase();
-                    const badgeVariant =
-                      estado === 'ACEPTADA'
-                        ? 'success'
-                        : estado === 'RECHAZADA' || estado === 'EXPIRADA'
-                        ? 'danger'
-                        : 'warning';
 
                     return (
-                      <tr key={inv.id || idx} className="hover:bg-white transition-colors">
-                        <td className="py-3.5 px-4 font-bold text-slate-900">
+                      <tr key={inv.id || idx} className="hover:bg-[#F8F9FA] transition-colors">
+                        <td className="py-3 px-4 font-mono font-bold text-[#0F2342]">
                           {inv.correo}
                         </td>
 
-                        <td className="py-3.5 px-4">
-                          <Badge variant="neutral" size="xs">
-                            {inv.rol || 'STAFF'}
-                          </Badge>
+                        <td className="py-3 px-4 font-mono text-[11px] font-bold uppercase text-[#0F2342]">
+                          {inv.rol || 'STAFF'}
                         </td>
 
-                        <td className="py-3.5 px-4 text-slate-500">
+                        <td className="py-3 px-4 text-slate-500 font-mono text-xs">
                           {inv.fechaInvitacion || inv.fechaEnvio || '—'}
                         </td>
 
-                        <td className="py-3.5 px-4 text-slate-500">
+                        <td className="py-3 px-4 text-slate-500 font-mono text-xs">
                           {inv.fechaExpiracion || '24 horas posteriores'}
                         </td>
 
-                        <td className="py-3.5 px-4 text-center">
-                          <Badge variant={badgeVariant} size="xs">
+                        <td className="py-3 px-4 text-center">
+                          <span className={`inline-flex items-center gap-1.5 font-mono text-[11px] font-bold ${
+                            estado === 'ACEPTADA'
+                              ? 'text-[#15803D]'
+                              : estado === 'RECHAZADA' || estado === 'EXPIRADA'
+                              ? 'text-[#DC2626]'
+                              : 'text-[#D97706]'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                              estado === 'ACEPTADA'
+                                ? 'bg-[#15803D]'
+                                : estado === 'RECHAZADA' || estado === 'EXPIRADA'
+                                ? 'bg-[#DC2626]'
+                                : 'bg-[#F5B800]'
+                            }`} />
                             {estado}
-                          </Badge>
+                          </span>
                         </td>
 
-                        <td className="py-3.5 px-4 text-right">
+                        <td className="py-3 px-4 text-right">
                           {(estado === 'PENDIENTE' || estado === 'EXPIRADA') && (
                             <button
                               type="button"
                               onClick={() => handleReenviar(inv.correo, inv.rol)}
                               disabled={actionLoading}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-950 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                              className="px-2.5 py-1 rounded-[2px] border border-[#0F2342] text-[#0F2342] hover:bg-[#0F2342] hover:text-white font-mono font-bold text-[11px] transition-colors cursor-pointer inline-flex items-center gap-1"
                               title="Reenviar enlace con nueva vigencia de 24h"
                             >
                               <RotateCw size={12} />
-                              <span>Reenviar</span>
+                              <span>REENVIAR</span>
                             </button>
                           )}
                         </td>
@@ -527,30 +536,36 @@ export default function AdminTrabajadoresView() {
         />
       </div>
 
-      {/* Modal de Invitación / Comunicado */}
+      {/* Modal de Invitación Oficial con Token */}
       <ModalInvitacionOficial
-        isOpen={mailModal.isOpen}
-        onClose={() => setMailModal((prev) => ({ ...prev, isOpen: false }))}
+        isOpen={inviteModalOpen}
+        onClose={() => setInviteModalOpen(false)}
         onSendInvite={handleInviteSubmit}
-        onSendComunicado={handleComunicadoSubmit}
-        mode={mailModal.mode}
-        initialEmail={mailModal.email}
-        initialName={mailModal.name}
+        mode="invite"
+      />
+
+      {/* Drawer Desplegable para Enviar Correo */}
+      <ComposeMailDrawer
+        isOpen={mailDrawer.isOpen}
+        onClose={() => setMailDrawer((prev) => ({ ...prev, isOpen: false }))}
+        recipientEmail={mailDrawer.recipientEmail}
+        recipientName={mailDrawer.recipientName}
+        initialSubject={mailDrawer.initialSubject}
       />
 
       {/* Modal Confirmación de Revocar Moderador */}
       {modalRevocar && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 text-center space-y-4">
-            <div className="w-12 h-12 mx-auto rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center">
-              <Trash2 size={24} />
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#0F2342]/70 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-[2px] max-w-sm w-full p-6 shadow-2xl border border-[#E2E8F0] text-center space-y-4">
+            <div className="w-10 h-10 mx-auto rounded-[2px] bg-rose-50 text-[#DC2626] flex items-center justify-center border border-rose-200">
+              <Trash2 size={20} />
             </div>
             <div>
-              <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                ¿Revocar rol de Moderador?
+              <h3 className="font-bold text-base text-[#0F2342] font-display">
+                ¿REVOCAR ROL DE {modalRevocar.rolNombre}?
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                El usuario <strong>{modalRevocar.nombre}</strong> perderá los privilegios de moderación en la plataforma y volverá a ser CLIENTE.
+              <p className="text-xs text-slate-500 mt-1">
+                El usuario <strong>{modalRevocar.nombre}</strong> perderá los privilegios en la plataforma y volverá a ser CLIENTE.
               </p>
             </div>
             <div className="flex items-center gap-2 pt-2">
@@ -558,22 +573,17 @@ export default function AdminTrabajadoresView() {
                 type="button"
                 onClick={() => setModalRevocar(null)}
                 disabled={actionLoading}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="flex-1 py-2 rounded-[2px] border border-[#E2E8F0] text-xs font-mono font-bold text-slate-700 hover:bg-[#F8F9FA] transition-colors"
               >
-                Cancelar
+                CANCELAR
               </button>
               <button
                 type="button"
                 onClick={handleConfirmRevocar}
                 disabled={actionLoading}
-                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-sm"
+                className="flex-1 py-2 rounded-[2px] bg-[#DC2626] hover:bg-rose-700 text-white text-xs font-mono font-bold transition-all shadow-sm"
               >
-                {actionLoading ? (
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                    Revocando...
-                  </span>
-                ) : 'Sí, Revocar'}
+                {actionLoading ? 'REVOCANDO...' : 'SÍ, REVOCAR'}
               </button>
             </div>
           </div>

@@ -39,7 +39,7 @@ export default function ModalAsignarModerador({ onClose, onSave }) {
               <h3 className="font-display font-bold text-base text-slate-900 leading-tight">
                 Asignar Nuevo Moderador
               </h3>
-              <p className="text-xs text-slate-500">Equipo de control y validación PULEP en Cartagena</p>
+              <p className="text-xs text-slate-500">Equipo de control y validación editorial en la plataforma</p>
             </div>
           </div>
           <button

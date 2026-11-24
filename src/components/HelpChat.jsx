@@ -9,6 +9,7 @@ import { httpClient } from "../services/httpClient.js";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { useLanguage } from "../context/LanguageContext.jsx";
+import ChatbotWelcomeBubble from "./home/ChatbotWelcomeBubble.jsx";
 
 /**
  * HelpChat (Conectado a Spring Boot + Groq Llama 3.1)
@@ -108,6 +109,11 @@ export default function HelpChat({
   const handleClose = () => {
     setInternalOpen(false);
     controlledOnClose?.();
+  };
+
+  const handleOpen = () => {
+    setInternalOpen(true);
+    controlledOnOpen?.();
   };
 
   const pushUserMessage = (text) => {
@@ -327,7 +333,13 @@ export default function HelpChat({
         </aside>
       )}
 
-      {/* 2. BOTÓN FLOTANTE ESTÁTICO (Fijo entre esquina inferior derecha y centro vertical) */}
+      {/* 2. GLOBO DE DIÁLOGO ESTILO CARICATURA (Solo en Home, anclado al botón del chatbot) */}
+      <ChatbotWelcomeBubble
+        onOpenChat={handleOpen}
+        isChatOpen={isOpen}
+      />
+
+      {/* 3. BOTÓN FLOTANTE ESTÁTICO (Fijo entre esquina inferior derecha y centro vertical) */}
       <button
         type="button"
         onClick={handleToggle}

@@ -1,32 +1,25 @@
 import React from 'react';
 import {
-  Users,
   Building2,
   Calendar,
-  Ticket,
   DollarSign,
   Clock,
   CheckCircle2,
   Ban,
   ArrowUpRight,
   TrendingUp,
-  FileCheck,
   AlertTriangle,
-  ExternalLink,
   ClipboardList,
 } from 'lucide-react';
-import StatCard from '../../components/Shared/StatCard.jsx';
-import Badge from '../../components/Shared/Badge.jsx';
 import PlatformMetricsChart from '../../components/componentsAdmin/PlatformMetricsChart.jsx';
 
 export default function AdminResumenView({
   metrics,
   commercialMetrics,
   organizaciones = [],
-  eventos = [],
-  organizacionesPorValidacion = null,
   eventosPorEstado = [],
   eventosPorCategoria = [],
+  organizacionesPorValidacion = null,
   onNavigateTab,
   onVerOrganizacion,
 }) {
@@ -37,7 +30,6 @@ export default function AdminResumenView({
       maximumFractionDigits: 0,
     }).format(val || 0);
 
-  // Estados de organizaciones desde endpoint /admin/estadisticas/organizaciones-por-validacion o metrics
   const totalOrgs = organizacionesPorValidacion?.total ?? metrics?.totalOrganizaciones ?? 0;
   const pendientesValidacionRut =
     organizacionesPorValidacion?.pendientesValidacionRut ??
@@ -54,12 +46,7 @@ export default function AdminResumenView({
     orgsPorEstadoBackend.find((e) => e.estado === 'SUSPENDIDA')?.cantidad ??
     metrics?.organizacionesSuspendidas ??
     0;
-  const enRevisionCount =
-    orgsPorEstadoBackend.find((e) => e.estado === 'PENDIENTE_REVISION')?.cantidad ??
-    metrics?.organizacionesPendientes ??
-    0;
 
-  // Estados de eventos desde endpoint /admin/estadisticas/eventos-por-estado o metrics
   const getEventCount = (estadoName) => {
     if (Array.isArray(eventosPorEstado) && eventosPorEstado.length > 0) {
       const found = eventosPorEstado.find(
@@ -67,7 +54,6 @@ export default function AdminResumenView({
       );
       if (found) return found.cantidad;
     }
-    // Fallback a metrics
     switch (estadoName) {
       case 'PUBLICADO':
         return metrics?.eventosPublicados || 0;
@@ -86,22 +72,16 @@ export default function AdminResumenView({
     }
   };
 
-  // Organizaciones con solicitudes o pendientes
-  const orgsRequierenAtencion = organizaciones.filter(
-    (o) => o.estado === 'PENDIENTE_REVISION' || o.estado === 'SUSPENDIDA'
-  );
-
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Encabezado Principal */}
-      <div className="flex flex-col justify-between gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:p-6">
-        <div className="min-w-0">
-          <p className="mb-1 text-xs font-semibold text-brand">Administración</p>
-          <h1 className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
-            Panel de Resumen Global
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Cabecera Principal */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-[#0F2342] font-display">
+            RESUMEN GLOBAL DE PLATAFORMA
           </h1>
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-600">
-            Supervisión integral de organizaciones, validaciones de RUT, métricas comerciales y actividad en Eventhive.
+          <p className="text-xs text-slate-500 mt-0.5">
+            Supervisión integral de organizaciones, validaciones de RUT, métricas comerciales y actividad en Event Hive.
           </p>
         </div>
 
@@ -109,220 +89,196 @@ export default function AdminResumenView({
           <button
             type="button"
             onClick={() => onNavigateTab('organizaciones')}
-            className="flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+            className="px-3.5 py-2 rounded-[2px] bg-[#0F2342] text-white hover:bg-[#F5B800] hover:text-[#0F2342] font-mono text-xs font-bold tracking-wider transition-colors inline-flex items-center gap-2 cursor-pointer shadow-sm"
           >
-            <Building2 className="h-4 w-4" strokeWidth={1.75} />
-            <span>Gestionar Organizaciones</span>
+            <Building2 className="w-3.5 h-3.5" />
+            <span>ORGANIZACIONES</span>
           </button>
 
           <button
             type="button"
             onClick={() => onNavigateTab('solicitudes')}
-            className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+            className="px-3.5 py-2 rounded-[2px] border border-[#0F2342] bg-white text-[#0F2342] hover:bg-[#0F2342] hover:text-white font-mono text-xs font-bold tracking-wider transition-colors inline-flex items-center gap-2 cursor-pointer"
           >
-            <ClipboardList className="h-4 w-4 text-slate-500" strokeWidth={1.75} />
-            <span>Organizaciones por Validación</span>
+            <ClipboardList className="w-3.5 h-3.5" />
+            <span>VALIDAR RUT</span>
           </button>
         </div>
       </div>
 
-      {/* Indicadores Agregados de la Plataforma (Requerimiento 6) */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" strokeWidth={1.75} />
-              <span>Indicadores Agregados de Plataforma</span>
-            </h2>
-            <p className="text-xs text-slate-500">
-              Métricas consolidadas de la plataforma en tiempo real
-            </p>
+      {/* Barra de Indicadores Agregados Unificada */}
+      <div className="bg-white border border-[#E2E8F0] rounded-[2px] p-4 shadow-sm grid grid-cols-2 md:grid-cols-4 gap-4 divide-y md:divide-y-0 md:divide-x divide-[#E2E8F0]">
+        <div className="px-3 py-1">
+          <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider block">
+            ORGANIZACIONES
+          </span>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="font-mono text-2xl font-bold text-[#0F2342]">{totalOrgs}</span>
+            <span className="font-mono text-[10px] text-[#15803D] font-bold">
+              {aprobadasCount} activas
+            </span>
           </div>
         </div>
 
-        {/* Grid de 4 KPIs Oficiales */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          <StatCard
-            title="Número de organizaciones"
-            value={totalOrgs}
-            subtitle={`${aprobadasCount} activas/aprobadas`}
-            icon={Building2}
-            color="primary"
-          />
-          <StatCard
-            title="Organizaciones pendientes de validar el RUT"
-            value={pendientesValidacionRut}
-            subtitle="Documento RUT en espera de validación"
-            icon={Clock}
-            color="amber"
-          />
-          <StatCard
-            title="Organizaciones que no han cargado el RUT"
-            value={sinRutCount}
-            subtitle="Sin documento RUT registrado"
-            icon={AlertTriangle}
-            color="rose"
-          />
-          <StatCard
-            title="Comisiones de EventHive"
-            value={formatCOP(commercialMetrics?.comisionesVentas ?? metrics?.comisionesVentas ?? 0)}
-            subtitle="Comisiones comerciales sobre ventas"
-            icon={DollarSign}
-            color="emerald"
-          />
-        </div>
-
-        {/* Sub-tarjetas de Estado Detallado (Organizaciones y Eventos) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Desglose Organizaciones */}
-          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} />
-                <span>Estado de Organizaciones</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => onNavigateTab('organizaciones')}
-                className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
-              >
-                <span>Ver todas</span>
-                <ArrowUpRight className="w-3 h-3" />
-              </button>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
-                <div className="flex items-center justify-center gap-1.5 text-slate-600 text-xs font-semibold mb-0.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2} />
-                  <span>Aprobadas</span>
-                </div>
-                <div className="text-lg font-black text-slate-900">
-                  {aprobadasCount}
-                </div>
-              </div>
-              <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
-                <div className="flex items-center justify-center gap-1.5 text-slate-600 text-xs font-semibold mb-0.5">
-                  <Clock className="w-3.5 h-3.5 text-amber-500" strokeWidth={2} />
-                  <span>Por Validación</span>
-                </div>
-                <div className="text-lg font-black text-slate-900">
-                  {pendientesValidacionRut}
-                </div>
-              </div>
-              <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
-                <div className="flex items-center justify-center gap-1.5 text-slate-600 text-xs font-semibold mb-0.5">
-                  <Ban className="w-3.5 h-3.5 text-rose-500" strokeWidth={2} />
-                  <span>Suspendidas</span>
-                </div>
-                <div className="text-lg font-black text-slate-900">
-                  {suspendidasCount}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Desglose Estados de Eventos (Nuevo endpoint /admin/estadisticas/eventos-por-estado) */}
-          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} />
-                <span>Resumen de Estados de Eventos</span>
-              </span>
-              <span className="text-[11px] font-semibold text-slate-400">
-                Total: {(metrics?.totalEventos || 0)}
-              </span>
-            </div>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
-              <div className="p-2 rounded-xl bg-emerald-50/60 border border-emerald-100">
-                <span className="text-[10px] font-bold text-emerald-700 block truncate">Publicados</span>
-                <span className="text-base font-black text-emerald-800">
-                  {getEventCount('PUBLICADO')}
-                </span>
-              </div>
-              <div className="p-2 rounded-xl bg-amber-50/60 border border-amber-100">
-                <span className="text-[10px] font-bold text-amber-700 block truncate">Revisión</span>
-                <span className="text-base font-black text-amber-800">
-                  {getEventCount('PENDIENTE_REVISION')}
-                </span>
-              </div>
-              <div className="p-2 rounded-xl bg-blue-50/60 border border-blue-100">
-                <span className="text-[10px] font-bold text-blue-700 block truncate">Corrección</span>
-                <span className="text-base font-black text-blue-800">
-                  {getEventCount('EN_CORRECCION')}
-                </span>
-              </div>
-              <div className="p-2 rounded-xl bg-slate-50 border border-slate-200">
-                <span className="text-[10px] font-bold text-slate-600 block truncate">Finalizados</span>
-                <span className="text-base font-black text-slate-800">
-                  {getEventCount('FINALIZADO')}
-                </span>
-              </div>
-              <div className="p-2 rounded-xl bg-slate-50 border border-slate-200">
-                <span className="text-[10px] font-bold text-slate-600 block truncate">Cancelados</span>
-                <span className="text-base font-black text-slate-800">
-                  {getEventCount('CANCELADO')}
-                </span>
-              </div>
-              <div className="p-2 rounded-xl bg-rose-50/60 border border-rose-100">
-                <span className="text-[10px] font-bold text-rose-700 block truncate">Suspendidos</span>
-                <span className="text-base font-black text-rose-800">
-                  {getEventCount('SUSPENDIDO')}
-                </span>
-              </div>
-            </div>
+        <div className="px-3 py-1 pt-3 md:pt-1">
+          <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider block flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#F5B800]" />
+            RUT PENDIENTE VALIDACIÓN
+          </span>
+          <div className="mt-1">
+            <span className="font-mono text-2xl font-bold text-[#D97706]">{pendientesValidacionRut}</span>
+            <span className="font-mono text-[10px] text-slate-400 block mt-0.5">En cola de revisión</span>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} />
-                <span>Organizaciones con más ventas</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => onNavigateTab('reportes')}
-                className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
-              >
-                <span>Ver reportes</span>
-                <ArrowUpRight className="w-3 h-3" />
-              </button>
-            </div>
-            {Array.isArray(commercialMetrics?.topOrganizaciones) && commercialMetrics.topOrganizaciones.length > 0 ? (
-              <div className="space-y-2">
-                {commercialMetrics.topOrganizaciones.slice(0, 5).map((org, index) => (
-                  <div
-                    key={org.organizacionId || org.id || index}
-                    className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2.5"
-                  >
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700">
-                        {index + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-bold text-slate-900">
-                          {org.razonSocial || org.nombre || 'Organización'}
-                        </p>
-                        <p className="text-[11px] text-slate-500">
-                          {Number(org.entradasVendidas || 0)} entradas vendidas
-                        </p>
-                      </div>
-                    </div>
-                    <span className="shrink-0 text-xs font-bold text-slate-900">
-                      {formatCOP(org.totalVentas)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="py-4 text-center text-xs text-slate-500">
-                No hay ventas de organizaciones registradas actualmente.
-              </p>
-            )}
+        <div className="px-3 py-1 pt-3 md:pt-1">
+          <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider block flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626]" />
+            SIN RUT REGISTRADO
+          </span>
+          <div className="mt-1">
+            <span className="font-mono text-2xl font-bold text-[#DC2626]">{sinRutCount}</span>
+            <span className="font-mono text-[10px] text-slate-400 block mt-0.5">Carga pendiente</span>
           </div>
+        </div>
+
+        <div className="px-3 py-1 pt-3 md:pt-1 border-b-2 border-b-[#F5B800]">
+          <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider block">
+            COMISIONES DE EVENT HIVE
+          </span>
+          <div className="mt-1">
+            <span className="font-mono text-2xl font-bold text-[#0F2342]">
+              {formatCOP(commercialMetrics?.comisionesVentas ?? metrics?.comisionesVentas ?? 0)}
+            </span>
+            <span className="font-mono text-[10px] text-[#15803D] block font-bold mt-0.5">Ventas directas</span>
+          </div>
+        </div>
       </div>
 
-      {/* Gráfica de Eventos por Categoría (Reemplaza densidad por zona) */}
+      {/* Desglose Detallado: Estado de Organizaciones y Estado de Eventos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Desglose Organizaciones */}
+        <div className="p-4 rounded-[2px] bg-white border border-[#E2E8F0] shadow-sm">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] mb-3">
+            <span className="font-mono text-xs font-bold text-[#0F2342] uppercase tracking-wider flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5 text-[#0F2342]" />
+              <span>ESTADO DE ORGANIZACIONES</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => onNavigateTab('organizaciones')}
+              className="font-mono text-[11px] font-bold text-[#0F2342] hover:text-[#F5B800] transition-colors inline-flex items-center gap-1"
+            >
+              <span>VER TODAS</span>
+              <ArrowUpRight className="w-3 h-3" />
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="p-3 rounded-[2px] bg-[#F8F9FA] border border-[#E2E8F0]">
+              <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Aprobadas</span>
+              <span className="font-mono text-xl font-bold text-[#15803D]">{aprobadasCount}</span>
+            </div>
+            <div className="p-3 rounded-[2px] bg-[#F8F9FA] border border-[#E2E8F0]">
+              <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider block mb-1">En Revisión</span>
+              <span className="font-mono text-xl font-bold text-[#D97706]">{pendientesValidacionRut}</span>
+            </div>
+            <div className="p-3 rounded-[2px] bg-[#F8F9FA] border border-[#E2E8F0]">
+              <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Suspendidas</span>
+              <span className="font-mono text-xl font-bold text-[#DC2626]">{suspendidasCount}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Desglose Estados de Eventos */}
+        <div className="p-4 rounded-[2px] bg-white border border-[#E2E8F0] shadow-sm">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] mb-3">
+            <span className="font-mono text-xs font-bold text-[#0F2342] uppercase tracking-wider flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-[#0F2342]" />
+              <span>ESTADOS DE EVENTOS</span>
+            </span>
+            <span className="font-mono text-[11px] font-bold text-slate-500">
+              TOTAL: {metrics?.totalEventos || 0}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
+            <div className="p-2 rounded-[2px] bg-[#F8F9FA] border border-[#E2E8F0]">
+              <span className="font-mono text-[9px] font-bold text-[#15803D] uppercase block truncate">Publicados</span>
+              <span className="font-mono text-base font-bold text-[#0F2342] mt-0.5 block">{getEventCount('PUBLICADO')}</span>
+            </div>
+            <div className="p-2 rounded-[2px] bg-[#F8F9FA] border border-[#E2E8F0]">
+              <span className="font-mono text-[9px] font-bold text-[#D97706] uppercase block truncate">Revisión</span>
+              <span className="font-mono text-base font-bold text-[#0F2342] mt-0.5 block">{getEventCount('PENDIENTE_REVISION')}</span>
+            </div>
+            <div className="p-2 rounded-[2px] bg-[#F8F9FA] border border-[#E2E8F0]">
+              <span className="font-mono text-[9px] font-bold text-[#0F2342] uppercase block truncate">Corrección</span>
+              <span className="font-mono text-base font-bold text-[#0F2342] mt-0.5 block">{getEventCount('EN_CORRECCION')}</span>
+            </div>
+            <div className="p-2 rounded-[2px] bg-[#F8F9FA] border border-[#E2E8F0]">
+              <span className="font-mono text-[9px] font-bold text-slate-500 uppercase block truncate">Finalizados</span>
+              <span className="font-mono text-base font-bold text-[#0F2342] mt-0.5 block">{getEventCount('FINALIZADO')}</span>
+            </div>
+            <div className="p-2 rounded-[2px] bg-[#F8F9FA] border border-[#E2E8F0]">
+              <span className="font-mono text-[9px] font-bold text-slate-500 uppercase block truncate">Cancelados</span>
+              <span className="font-mono text-base font-bold text-[#0F2342] mt-0.5 block">{getEventCount('CANCELADO')}</span>
+            </div>
+            <div className="p-2 rounded-[2px] bg-[#F8F9FA] border border-[#E2E8F0]">
+              <span className="font-mono text-[9px] font-bold text-[#DC2626] uppercase block truncate">Suspendidos</span>
+              <span className="font-mono text-base font-bold text-[#0F2342] mt-0.5 block">{getEventCount('SUSPENDIDO')}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Ranking Organizaciones con más ventas */}
+      <div className="p-4 rounded-[2px] bg-white border border-[#E2E8F0] shadow-sm">
+        <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] mb-3">
+          <span className="font-mono text-xs font-bold text-[#0F2342] uppercase tracking-wider flex items-center gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5 text-[#0F2342]" />
+            <span>ORGANIZACIONES CON MÁS VENTAS</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => onNavigateTab('reportes')}
+            className="font-mono text-[11px] font-bold text-[#0F2342] hover:text-[#F5B800] transition-colors inline-flex items-center gap-1"
+          >
+            <span>VER REPORTES COMPLETOS</span>
+            <ArrowUpRight className="w-3 h-3" />
+          </button>
+        </div>
+        {Array.isArray(commercialMetrics?.topOrganizaciones) && commercialMetrics.topOrganizaciones.length > 0 ? (
+          <div className="space-y-2">
+            {commercialMetrics.topOrganizaciones.slice(0, 5).map((org, index) => (
+              <div
+                key={org.organizacionId || org.id || index}
+                className="flex items-center justify-between gap-3 rounded-[2px] bg-[#F8F9FA] border border-[#E2E8F0] px-4 py-2.5"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="font-mono text-sm font-bold text-slate-400">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-bold text-[#0F2342]">
+                      {org.razonSocial || org.nombre || 'Organización'}
+                    </p>
+                    <p className="font-mono text-[10px] text-slate-500">
+                      {Number(org.entradasVendidas || 0)} ENTRADAS VENDIDAS
+                    </p>
+                  </div>
+                </div>
+                <span className="shrink-0 font-mono text-xs font-bold text-[#0F2342]">
+                  {formatCOP(org.totalVentas)}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="py-6 text-center font-mono text-xs text-slate-400">
+            No hay ventas de organizaciones registradas actualmente.
+          </p>
+        )}
+      </div>
+
+      {/* Gráfica de Eventos por Categoría */}
       <PlatformMetricsChart eventosPorCategoria={eventosPorCategoria} />
     </div>
   );

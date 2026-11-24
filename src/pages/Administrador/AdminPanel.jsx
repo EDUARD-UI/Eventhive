@@ -543,40 +543,60 @@ export default function AdminPanel() {
 
   // ==================== ACCIONES: CATEGORÍAS ====================
   const handleSaveCategoria = async (catData) => {
+    // 1. Actualización optimista inmediata en memoria
+    if (catData.id) {
+      setCategorias((prev) =>
+        prev.map((c) => (c.id === catData.id ? { ...c, ...catData } : c))
+      );
+      showToast('Categoría modificada con éxito.', 'success');
+    } else {
+      const tempId = Date.now().toString();
+      const nuevaTemp = {
+        ...catData,
+        id: tempId,
+        eventosAsociados: 0,
+        activa: true,
+      };
+      setCategorias((prev) => [...prev, nuevaTemp]);
+      showToast('Nueva categoría creada con éxito.', 'success');
+    }
+
+    // 2. Persistencia asíncrona en backend
     try {
       const res = await adminService.saveCategoria(catData);
-      if (res.success) {
-        if (catData.id) {
-          setCategorias((prev) =>
-            prev.map((c) => (c.id === catData.id ? { ...c, ...catData } : c))
-          );
-          showToast('Categoría modificada con éxito.', 'success');
-        } else {
-          setCategorias((prev) => [
-            ...prev,
-            { ...catData, id: Date.now().toString(), eventosAsociados: 0, activa: true },
-          ]);
-          showToast('Nueva categoría creada con éxito.', 'success');
-        }
+      if (res.success && res.data) {
+        // Reemplazar o sincronizar con ID real si fue creación
+        setCategorias((prev) =>
+          prev.map((c) => (c.nombre === catData.nombre ? { ...c, ...res.data } : c))
+        );
       }
     } catch (err) {
-      showToast('Error al guardar categoría.', 'error');
+      console.warn('Error asíncrono guardando categoría:', err);
+      // Re-sincronizar con el servidor en caso de error
+      const syncRes = await adminService.getCategorias();
+      if (syncRes.success) setCategorias(syncRes.data);
+      showToast('Error al sincronizar categoría con el servidor.', 'error');
     }
   };
 
   const handleToggleEstadoCategoria = async (catId, nuevoEstado) => {
+    // Actualización optimista inmediata
+    setCategorias((prev) =>
+      prev.map((c) => (c.id === catId ? { ...c, activa: nuevoEstado } : c))
+    );
+    showToast(
+      `Categoría ${nuevoEstado ? 'activada' : 'desactivada'} satisfactoriamente.`,
+      'success'
+    );
+
     try {
-      const res = await adminService.toggleEstadoCategoria(catId, nuevoEstado);
-      if (res.success) {
-        setCategorias((prev) =>
-          prev.map((c) => (c.id === catId ? { ...c, activa: nuevoEstado } : c))
-        );
-        showToast(
-          `Categoría ${nuevoEstado ? 'activada' : 'desactivada'} satisfactoriamente.`,
-          'success'
-        );
-      }
+      await adminService.toggleEstadoCategoria(catId, nuevoEstado);
     } catch (err) {
+      console.warn('Error asíncrono cambiando estado categoría:', err);
+      // Revertir
+      setCategorias((prev) =>
+        prev.map((c) => (c.id === catId ? { ...c, activa: !nuevoEstado } : c))
+      );
       showToast('Error al cambiar estado de la categoría.', 'error');
     }
   };
@@ -601,19 +621,22 @@ export default function AdminPanel() {
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#e11d48',
+      confirmButtonColor: '#DC2626',
     });
 
     if (!confirmRes.isConfirmed) return;
 
+    // Eliminación optimista inmediata
+    const prevList = [...categorias];
+    setCategorias((prev) => prev.filter((c) => c.id !== catId));
+    showToast('Categoría eliminada de la plataforma.', 'success');
+
     try {
-      const res = await adminService.deleteCategoria(catId);
-      if (res.success) {
-        setCategorias((prev) => prev.filter((c) => c.id !== catId));
-        showToast('Categoría eliminada de la plataforma.', 'success');
-      }
+      await adminService.deleteCategoria(catId);
     } catch (err) {
-      showToast('Error al eliminar categoría.', 'error');
+      console.warn('Error asíncrono eliminando categoría:', err);
+      setCategorias(prevList);
+      showToast('Error al eliminar categoría en el servidor.', 'error');
     }
   };
 
