@@ -32,7 +32,7 @@ export default function AuthVisualPanel() {
   };
 
   return (
-    <aside className={`hidden lg:flex lg:w-[48%] xl:w-[48%] h-full shrink-0 relative flex-col items-center justify-between p-8 sm:p-10 lg:p-12 overflow-hidden select-none border-r transition-colors duration-300 ${
+    <aside className={`hidden lg:flex lg:w-[48%] xl:w-[48%] h-full shrink-0 relative flex-col items-center justify-between p-8 sm:p-10 lg:px-12 lg:pb-8 lg:pt-[33vh] overflow-hidden select-none border-r transition-colors duration-300 ${
       isDark
         ? 'bg-[#091322] text-white border-[#1E3A5F]'
         : 'bg-[#F8F9FA] text-[#0F2342] border-[#E2E8F0]'
@@ -55,8 +55,8 @@ export default function AuthVisualPanel() {
       {/* 3. Hexágonos geométricos del panal de EventHive */}
       <HexagonalHivePattern variant="auth" className="opacity-75 dark:opacity-40" />
 
-      {/* 4. Nombre EventHive bajado hacia la mitad y ligeramente agrandado */}
-      <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-end pb-8 lg:pb-10 text-center">
+      {/* 4. Nombre EventHive alineado a la altura visual del input de correo (~32%–35% desde arriba) */}
+      <div className="relative z-10 w-full flex flex-col items-center justify-center text-center">
         <Link
           to="/"
           onMouseEnter={handleReplayBrandAnimation}
@@ -67,7 +67,7 @@ export default function AuthVisualPanel() {
           <span
             key={`brand-${animKey}`}
             aria-hidden="true"
-            className="font-display text-6xl sm:text-7xl xl:text-[4.75rem] font-black leading-none tracking-tight inline-flex items-baseline drop-shadow-sm"
+            className="font-display text-6xl sm:text-7xl xl:text-[4.75rem] font-black leading-none tracking-tight inline-flex items-baseline drop-shadow-sm text-center"
           >
             {BRAND_LETTERS.map(({ char, isHive }, index) => (
               <span
@@ -104,10 +104,10 @@ export default function AuthVisualPanel() {
         </div>
 
         {/* Lista limpia con íconos circulares en Amarillo Ámbar #F5B800 */}
-        <div className={`space-y-2 pt-3 border-t w-full text-left inline-flex flex-col items-center ${
+        <div className={`space-y-2 pt-3 border-t w-full inline-flex flex-col items-center text-center ${
           isDark ? 'border-white/10' : 'border-slate-200'
         }`}>
-          <div className="flex items-center gap-3 text-xs sm:text-sm font-semibold max-w-sm w-full">
+          <div className="flex items-center justify-center gap-3 text-xs sm:text-sm font-semibold max-w-sm w-full text-center">
             <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 bg-[#F5B800]/20 text-[#F5B800]">
               <FiCheck className="text-sm" />
             </div>
@@ -116,7 +116,7 @@ export default function AuthVisualPanel() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3 text-xs sm:text-sm font-semibold max-w-sm w-full">
+          <div className="flex items-center justify-center gap-3 text-xs sm:text-sm font-semibold max-w-sm w-full text-center">
             <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 bg-[#F5B800]/20 text-[#F5B800]">
               <FiMapPin className="text-sm" />
             </div>
@@ -125,7 +125,7 @@ export default function AuthVisualPanel() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3 text-xs sm:text-sm font-semibold max-w-sm w-full">
+          <div className="flex items-center justify-center gap-3 text-xs sm:text-sm font-semibold max-w-sm w-full text-center">
             <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 bg-[#F5B800]/20 text-[#F5B800]">
               <FiUsers className="text-sm" />
             </div>

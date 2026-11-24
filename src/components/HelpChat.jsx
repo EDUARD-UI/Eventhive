@@ -333,27 +333,36 @@ export default function HelpChat({
         </aside>
       )}
 
-      {/* 2. GLOBO DE DIÁLOGO ESTILO CARICATURA (Solo en Home, anclado al botón del chatbot) */}
-      <ChatbotWelcomeBubble
-        onOpenChat={handleOpen}
-        isChatOpen={isOpen}
-      />
+      {/* 2. CONTENEDOR FLOTANTE ANCLADO RESPONSIVO:
+          - Móvil (<768px): esquina inferior izquierda (left: 16px, bottom: 16px)
+          - Escritorio (>=768px): esquina inferior derecha (right: 24px, bottom: 24px)
+          El globo de bienvenida y el botón comparten este mismo contexto relativo.
+      */}
+      <div className="fixed z-[9999] left-4 bottom-4 right-auto md:left-auto md:right-6 md:bottom-6">
+        <div className="relative">
+          {/* Bocadillo de diálogo estilo cómic anclado dinámicamente */}
+          <ChatbotWelcomeBubble
+            onOpenChat={handleOpen}
+            isChatOpen={isOpen}
+          />
 
-      {/* 3. BOTÓN FLOTANTE ESTÁTICO (Fijo entre esquina inferior derecha y centro vertical) */}
-      <button
-        type="button"
-        onClick={handleToggle}
-        aria-label={isOpen ? "Cerrar chat de ayuda" : "Abrir chat de ayuda"}
-        className="fixed z-[9999] left-5 sm:left-auto sm:right-6 bottom-5 sm:bottom-6 w-14 h-14 sm:w-15 sm:h-15 rounded-full bg-[#0B132B] border-2 border-amber-500 hover:border-amber-400 shadow-2xl shadow-slate-900/60 hover:shadow-amber-500/30 flex items-center justify-center transition-all select-none group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 cursor-pointer hover:scale-105 active:scale-95 duration-200"
-      >
-        <img
-          src="/LOGO45x50.png"
-          alt="EventHive Bot"
-          loading="lazy"
-          decoding="async"
-          className="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-sm group-hover:rotate-6 transition-transform duration-200"
-        />
-      </button>
+          {/* Botón flotante del chatbot */}
+          <button
+            type="button"
+            onClick={handleToggle}
+            aria-label={isOpen ? "Cerrar chat de ayuda" : "Abrir chat de ayuda"}
+            className="w-14 h-14 sm:w-15 sm:h-15 rounded-full bg-[#0B132B] border-2 border-[#F5B800] hover:border-amber-400 shadow-2xl shadow-slate-900/60 hover:shadow-amber-500/30 flex items-center justify-center transition-all select-none group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 cursor-pointer hover:scale-105 active:scale-95 duration-200"
+          >
+            <img
+              src="/LOGO45x50.png"
+              alt="EventHive Bot"
+              loading="lazy"
+              decoding="async"
+              className="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-sm group-hover:rotate-6 transition-transform duration-200"
+            />
+          </button>
+        </div>
+      </div>
     </>
   );
 }
