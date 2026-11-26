@@ -264,7 +264,7 @@ export default function BuscarEventosPage() {
         <section aria-label="Buscador y filtros" className="w-full max-w-6xl mx-auto mb-8 sm:mb-10 relative z-50">
           <form
             onSubmit={handleSearchSubmit}
-            className="w-full relative z-50 rounded-2xl md:rounded-full bg-white dark:bg-[#111A2E]/95 border border-slate-200 dark:border-white/10 p-2 sm:p-2.5 shadow-lg dark:shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-center gap-2.5 md:gap-3 transition-colors"
+            className="w-full relative z-50 rounded-2xl md:rounded-full bg-white dark:bg-[#0E1626]/95 border border-slate-200 dark:border-white/10 p-2 sm:p-2.5 shadow-xl dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] backdrop-blur-md flex flex-col md:flex-row items-center gap-2.5 md:gap-3 transition-colors"
           >
             {/* Input 1: Search por Nombre (Alargado) */}
             <div className="relative flex-1 w-full min-w-0">
@@ -274,7 +274,7 @@ export default function BuscarEventosPage() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder={t("search.searchPlaceholder", "Buscar eventos por nombre...")}
-                className="h-12 w-full rounded-xl md:rounded-full border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0B1428] pl-11 pr-10 text-sm text-slate-900 dark:text-slate-100 shadow-inner transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                className="h-12 w-full rounded-xl md:rounded-full border border-slate-200 dark:border-white/10 bg-white dark:bg-[#060D1E] pl-11 pr-10 text-sm text-slate-900 dark:text-slate-100 shadow-inner transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
               />
               <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
               {searchInput && (
@@ -403,14 +403,15 @@ export default function BuscarEventosPage() {
           </div>
         )}
 
-        {/* TÍTULO DE {t("SELECCIÓN EDITORIAL")} */}
+        {/* TÍTULO DE SELECCIÓN EDITORIAL */}
         <section aria-label="Selección Editorial" className="w-full mb-6 sm:mb-8 relative z-0">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div aria-hidden="true" className="pointer-events-none absolute -top-12 left-8 w-72 h-28 rounded-full bg-amber-500/10 dark:bg-amber-400/[0.08] blur-3xl z-0" />
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <span className="text-amber-500 dark:text-amber-400 font-black text-xs uppercase tracking-widest block mb-1">
+              <span className="text-amber-500 dark:text-amber-400 font-mono font-bold text-xs uppercase tracking-widest block mb-1">
                 SELECCIÓN EDITORIAL
               </span>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-slate-950 dark:text-white">
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-slate-950 dark:text-white">
                 {t("Lo que está pasando")}
               </h2>
             </div>
@@ -503,8 +504,8 @@ export default function BuscarEventosPage() {
               @media (prefers-reduced-motion: reduce) { .category-motion { animation: none !important; transition: none !important; } }
             `}</style>
             <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-              <div className="absolute -top-10 left-[12%] h-40 w-40 rounded-full bg-amber-400/10 blur-3xl" />
-              <div className="absolute top-1/3 right-[8%] h-48 w-48 rounded-full bg-fuchsia-500/10 blur-3xl" />
+              <div className="absolute -top-10 left-[12%] h-40 w-40 rounded-full bg-amber-400/15 blur-3xl" />
+              <div className="absolute top-1/3 right-[8%] h-48 w-48 rounded-full bg-amber-500/10 blur-3xl" />
               {Array.from({ length: 9 }).map((_, i) => (
                 <span key={i} className="category-motion absolute h-1.5 w-1.5 rounded-full bg-amber-400/70 shadow-[0_0_14px_rgba(251,191,36,0.8)]" style={{ left: `${8 + ((i * 13) % 87)}%`, top: `${10 + ((i * 19) % 78)}%`, animation: `categoryDrift ${4 + (i % 4)}s ease-in-out ${i * -0.6}s infinite` }} />
               ))}
@@ -512,10 +513,9 @@ export default function BuscarEventosPage() {
 
             <div className="relative z-10 mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:mb-8">
               <div>
-                <span className="text-amber-500 dark:text-amber-400 font-black text-xs uppercase tracking-widest block mb-1">{t("EXPLORA POR INTERÉS")}</span>
-                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-950 dark:text-white">{t("Tu ciudad, a tu manera")}</h2>
+                <span className="text-amber-500 dark:text-amber-400 font-mono font-bold text-xs uppercase tracking-widest block mb-1">{t("EXPLORA POR INTERÉS")}</span>
+                <h2 className="font-display text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-950 dark:text-white">{t("Tu ciudad, a tu manera")}</h2>
               </div>
-              
             </div>
 
             {loadingCategories ? (
@@ -539,21 +539,21 @@ export default function BuscarEventosPage() {
                         setSearchParams(next);
                         window.scrollTo({ top: 180, behavior: 'smooth' });
                       }}
-                      className="group category-motion relative isolate flex h-52 w-full cursor-pointer flex-col justify-end overflow-hidden rounded-2xl border border-white/20 bg-slate-900 p-4 text-left shadow-lg transition-all duration-300 ease-out hover:-translate-y-2 hover:rotate-1 hover:shadow-[0_20px_50px_rgba(245,158,11,0.25)] active:scale-95 sm:h-60 sm:p-5 md:h-64"
+                      className="group category-motion relative isolate flex h-52 w-full cursor-pointer flex-col justify-end overflow-hidden rounded-2xl border border-white/20 bg-[#060D1E] p-4 text-left shadow-lg transition-all duration-300 ease-out hover:-translate-y-2 hover:rotate-1 hover:border-amber-400/80 hover:shadow-[0_20px_50px_rgba(245,158,11,0.25)] active:scale-95 sm:h-60 sm:p-5 md:h-64"
                       style={{ transitionDelay: `${index * 35}ms` }}
                     >
-                      <div aria-hidden="true" className="absolute -inset-[2px] -z-10 rounded-[18px] bg-[conic-gradient(from_var(--glow-angle),#f59e0b,#ec4899,#8b5cf6,#22d3ee,#f59e0b)] opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100 category-motion" style={{ animation: 'categoryGlow 5s linear infinite' }} />
+                      <div aria-hidden="true" className="absolute -inset-[2px] -z-10 rounded-[18px] bg-[conic-gradient(from_var(--glow-angle),#f59e0b,#fbbf24,#d97706,#f59e0b)] opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100 category-motion" style={{ animation: 'categoryGlow 5s linear infinite' }} />
                       {imageUrl && <div className="absolute inset-0"><ImageWithFallback src={imageUrl} alt={cat.nombre} className="w-full h-full" imgClassName="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" /></div>}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
-                      <span className="absolute right-3 top-3 z-10 rounded-full border border-white/25 bg-black/45 px-3 py-1.5 text-[10px] font-extrabold tracking-wide text-white backdrop-blur-md">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+                      <span className="absolute right-3 top-3 z-10 rounded-full border border-amber-400/30 bg-[#060D1E]/80 px-3 py-1.5 text-[10px] font-extrabold tracking-wide text-amber-300 backdrop-blur-md">
                         {eventCount} {eventCount === 1 ? 'EVENTO' : 'EVENTOS'}
                       </span>
                       <span aria-hidden="true" className="absolute right-3 bottom-14 z-10 flex h-9 w-9 translate-y-2 items-center justify-center rounded-full bg-amber-400 text-slate-950 opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100"><FiArrowUpRight size={18} /></span>
                       <div className="relative z-10 w-full min-w-0">
-                        <h4 className="text-sm sm:text-base font-extrabold uppercase text-white truncate tracking-tight transition-colors group-hover:text-amber-300 drop-shadow-sm">{(t(cat.nombre) || cat.nombre)}</h4>
+                        <h4 className="font-display text-sm sm:text-base font-extrabold uppercase text-white truncate tracking-tight transition-colors group-hover:text-amber-300 drop-shadow-sm">{(t(cat.nombre) || cat.nombre)}</h4>
                         <span className="mt-1 block text-xs font-semibold text-slate-200 drop-shadow-xs">{t("Descubre experiencias")}</span>
                       </div>
-                      <span aria-hidden="true" className="absolute bottom-0 left-0 h-1 w-full origin-left scale-x-0 bg-gradient-to-r from-amber-400 via-pink-500 to-violet-500 transition-transform duration-500 group-hover:scale-x-100" />
+                      <span aria-hidden="true" className="absolute bottom-0 left-0 h-1 w-full origin-left scale-x-0 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 transition-transform duration-500 group-hover:scale-x-100" />
                       <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 skew-x-[-20deg] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 category-motion" style={{ animation: 'categoryShimmer 1.1s ease-out' }} />
                     </button>
                   );

@@ -19,8 +19,8 @@ export default function EventCardSkeleton({
 
   return (
     <div
-      className={`relative bg-white dark:bg-[#151D2F] rounded-3xl border ${
-        featured ? 'border-amber-500/30' : 'border-slate-200/90 dark:border-white/[0.07]'
+      className={`relative bg-white dark:bg-[#0E1626] rounded-3xl border ${
+        featured ? 'border-amber-500/30' : 'border-slate-200/90 dark:border-white/[0.08]'
       } shadow-sm flex flex-col justify-between overflow-hidden animate-pulse h-auto`}
     >
       {/* Portada Skeleton */}

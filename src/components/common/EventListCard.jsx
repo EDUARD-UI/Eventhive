@@ -72,17 +72,17 @@ export default function EventListCard({
 
   return (
     <article
-      className={`group relative ${equalHeight ? 'h-full' : 'h-auto'} rounded-3xl transition-all duration-300 ease-out flex flex-col justify-between overflow-hidden bg-white dark:bg-[#151D2F] border ${
+      className={`group relative ${equalHeight ? 'h-full' : 'h-auto'} rounded-3xl transition-all duration-300 ease-out flex flex-col justify-between overflow-hidden bg-white dark:bg-[#0E1626] border ${
         featured
-          ? 'border-amber-500/40 dark:border-amber-400/40 shadow-md ring-1 ring-amber-500/10'
-          : 'border-slate-200/90 dark:border-white/[0.07]'
-      } hover:border-slate-400/80 hover:dark:bg-slate-800 hover:dark:border-white/15 shadow-sm hover:shadow-md hover:-translate-y-1`}
+          ? 'border-amber-500/50 dark:border-amber-400/50 shadow-md ring-1 ring-amber-500/20'
+          : 'border-slate-200/90 dark:border-white/[0.08]'
+      } hover:border-amber-500/50 dark:hover:border-amber-400/50 shadow-sm hover:shadow-[0_16px_32px_-8px_rgba(10,24,56,0.12),0_4px_12px_rgba(245,158,11,0.08)] dark:hover:shadow-[0_16px_36px_-8px_rgba(0,0,0,0.6),0_0_20px_rgba(245,158,11,0.12)] hover:-translate-y-1.5`}
     >
       {/* SECCIÓN SUPERIOR: Portada adaptable + Título */}
       <div className="relative z-10">
         {/* Imagen del evento: siempre ocupa el 100% del ancho disponible con fix-cover */}
         <div
-          className={`relative ${imageContainerHeight} overflow-hidden rounded-2xl m-3.5 mb-2.5 bg-slate-900 border border-slate-100 dark:border-white/10 shadow-xs transition-all duration-300`}
+          className={`relative ${imageContainerHeight} overflow-hidden rounded-2xl m-3.5 mb-2.5 bg-slate-950 border border-slate-100 dark:border-white/10 shadow-xs transition-all duration-300`}
         >
           <Link to={`/eventos/${id}`} className="block w-full h-full relative">
             <ImageWithFallback
@@ -95,12 +95,9 @@ export default function EventListCard({
               onLoad={handleImageLoad}
             />
 
-            {/* Máscara suave para legibilidad */}
+            {/* Máscara cinemática suave para legibilidad y ambiente de concierto */}
             <div
-              className="absolute inset-0 pointer-events-none opacity-40 group-hover:opacity-50 transition-opacity duration-300"
-              style={{
-                background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(0, 0, 0, 0.45) 100%)',
-              }}
+              className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-300"
             />
           </Link>
 
@@ -110,14 +107,14 @@ export default function EventListCard({
           {/* Categoría Badge */}
           {category && !isSoldOut && (
             <span
-              className="absolute top-2.5 left-2.5 bg-slate-950/85 text-amber-400 border border-slate-700/80 backdrop-blur-xs text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs font-semibold z-10"
+              className="absolute top-2.5 left-2.5 bg-[#060D1E]/90 text-amber-300 border border-amber-400/30 backdrop-blur-md text-[10px] uppercase font-black tracking-wider px-2.5 py-0.5 rounded-lg shadow-sm z-10"
             >
               {category}
             </span>
           )}
           {category && isSoldOut && (
             <span
-              className="absolute bottom-2.5 left-2.5 bg-slate-950/85 text-amber-400 border border-slate-700/80 backdrop-blur-xs text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs font-semibold z-10"
+              className="absolute bottom-2.5 left-2.5 bg-[#060D1E]/90 text-amber-300 border border-amber-400/30 backdrop-blur-md text-[10px] uppercase font-black tracking-wider px-2.5 py-0.5 rounded-lg shadow-sm z-10"
             >
               {category}
             </span>
@@ -125,7 +122,7 @@ export default function EventListCard({
 
           {/* Badge Destacado */}
           {isGolden && (
-            <span className="absolute top-2.5 right-2.5 bg-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-sm flex items-center gap-1 border border-amber-400 z-10">
+            <span className="absolute top-2.5 right-2.5 bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-lg shadow-sm flex items-center gap-1 border border-amber-300 z-10">
               <FiStar size={11} className="fill-slate-950 text-slate-950" />
               <span>{featured ? 'DESTACADO' : t('eventCard.featuredBadge')}</span>
             </span>
@@ -136,9 +133,9 @@ export default function EventListCard({
         <div className="px-4 sm:px-5 pt-1 pb-1.5">
           <Link
             to={`/eventos/${id}`}
-            className="block transition-colors duration-200 text-slate-950 dark:text-white hover:text-amber-600 dark:hover:text-amber-400 font-extrabold"
+            className="block transition-colors duration-200 text-slate-950 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 font-extrabold"
           >
-            <h3 className="text-sm sm:text-[15px] tracking-tight uppercase leading-snug line-clamp-2 min-h-[2.4rem]">
+            <h3 className="font-display font-black text-sm sm:text-[15px] tracking-tight uppercase leading-snug line-clamp-2 min-h-[2.4rem]">
               {title}
             </h3>
           </Link>
@@ -147,7 +144,7 @@ export default function EventListCard({
 
       {/* LÍNEA DE SEPARACIÓN ESTILO TIQUETE */}
       <div className="w-full px-4 my-0.5 z-1">
-        <div className="w-full border-b border-dashed border-slate-200 dark:border-white/[0.08]" />
+        <div className="w-full border-b border-dashed border-slate-200 dark:border-white/[0.09]" />
       </div>
 
       {/* SECCIÓN INTERMEDIA: Metadatos del Boleto */}
@@ -157,13 +154,13 @@ export default function EventListCard({
           <span className="text-[9px] uppercase tracking-wider block font-bold text-slate-400 dark:text-slate-500">
             {t('eventCard.dateAndTime')}
           </span>
-          <div className="flex items-center gap-1.5 text-xs mt-0.5 font-bold text-slate-800 dark:text-slate-200">
-            <FiCalendar className="text-amber-600 dark:text-amber-400 shrink-0" size={12.5} />
+          <div className="flex items-center gap-1.5 text-xs mt-0.5 font-bold text-slate-900 dark:text-slate-100">
+            <FiCalendar className="text-amber-500 dark:text-amber-400 shrink-0" size={13} />
             <span>{displayDate}</span>
             {displayTime && (
               <>
                 <span className="text-slate-300 dark:text-slate-600">•</span>
-                <FiClock className="text-amber-600 dark:text-amber-400 shrink-0" size={11.5} />
+                <FiClock className="text-amber-500 dark:text-amber-400 shrink-0" size={12} />
                 <span>{displayTime}</span>
               </>
             )}
@@ -171,22 +168,22 @@ export default function EventListCard({
         </div>
 
         {/* Cápsula de Ubicación */}
-        <div className="flex items-center gap-1.5 p-1.5 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-white/[0.06] text-slate-700 dark:text-slate-300">
-          <FiMapPin className="text-amber-600 dark:text-amber-400 shrink-0" size={12.5} />
+        <div className="flex items-center gap-1.5 p-1.5 px-2.5 rounded-xl text-xs bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 font-medium">
+          <FiMapPin className="text-amber-500 dark:text-amber-400 shrink-0" size={12.5} />
           <span className="truncate text-[11px] sm:text-xs">{location || t('eventCard.defaultCity')}</span>
         </div>
       </div>
 
       {/* SEGUNDA LÍNEA DE SEPARACIÓN ESTILO TIQUETE */}
       <div className="w-full px-4 my-0.5 z-1">
-        <div className="w-full border-b border-dashed border-slate-200 dark:border-white/[0.08]" />
+        <div className="w-full border-b border-dashed border-slate-200 dark:border-white/[0.09]" />
       </div>
 
       {/* SECCIÓN INFERIOR: Botón de Acción */}
       <div className="px-4 sm:px-5 pt-2 pb-4 flex flex-col items-center relative z-1">
         <Link
           to={`/eventos/${id}`}
-          className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer bg-slate-950 hover:bg-slate-800 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-slate-950 shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+          className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer bg-slate-950 hover:bg-amber-500 hover:text-slate-950 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-slate-950 shadow-xs hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
         >
           <FiEye size={13} />
           <span>{t('eventCard.viewEvent')}</span>

@@ -1,19 +1,18 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { FiCalendar } from 'react-icons/fi';
 import cartagenaHeroPoster from '../../assets/cartagena-hero.jpg';
 import { formatDisplayDate, formatDisplayTime } from '../../services/eventService.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 
 /**
  * FeaturedEventCountdownBanner
- * Banner cinemático panorámico en dorado ámbar con temporizador de alta visibilidad,
- * números en blanco, barra de progreso azul oscuro, e imagen a toda la altura con degradado integrador.
- * Calcula el tiempo faltante desde la fecha de creación hasta la fecha de ejecución del evento.
- *
- * @param {Object} props
- * @param {Object} props.event - Primer evento destacado devuelto por GET /api/eventos/primer-destacado.
- * @param {boolean} [props.isLoading] - Estado de carga opcional.
+ * Rediseño Apple Design + Emil Kowalski:
+ * - Superficie sólida en dorado ámbar (#F59E0B) sin degradados.
+ * - Imagen a sangre al 100% de la altura sin bordes ni márgenes.
+ * - Sin badges decorativos ni barras de progreso.
+ * - Título en azul oscuro/negro con jerarquía tipográfica contundente.
+ * - Fecha y hora limpia sin íconos.
+ * - Reloj regresivo tabular de gran escala con números en blanco puro y unidades en azul oscuro con tracking amplio.
  */
 export default function FeaturedEventCountdownBanner({ event, isLoading = false }) {
   const { language } = useLanguage();
@@ -135,45 +134,17 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
 
   const isLive = Boolean(activeEvent) && timeLeft.totalMs <= 0;
 
-  // Mantener todos los hooks antes de las salidas condicionales.
-  const progressRatio = useMemo(() => {
-    if (!activeEvent || !targetDate) return 0;
-    if (isLive) return 100;
-
-    const createdDate = activeEvent.fechaCreacion || activeEvent.createdAt || activeEvent.creadoEn;
-    if (createdDate) {
-      const startMs = new Date(createdDate).getTime();
-      const endMs = targetDate.getTime();
-      if (!Number.isNaN(startMs) && startMs < endMs) {
-        const totalDuration = endMs - startMs;
-        const elapsed = Date.now() - startMs;
-        if (elapsed <= 0) return 0;
-        return Math.max(5, Math.min(100, Math.round((elapsed / totalDuration) * 100)));
-      }
-    }
-
-    // Ventana de referencia de 30 días si no se cuenta con fecha de creación
-    const remainingMs = timeLeft.totalMs;
-    const referenceWindowMs = 30 * 24 * 60 * 60 * 1000;
-    if (remainingMs > referenceWindowMs) {
-      return Math.max(8, Math.min(25, Math.round((1 - remainingMs / (90 * 24 * 60 * 60 * 1000)) * 25)));
-    }
-
-    const elapsed = referenceWindowMs - remainingMs;
-    return Math.max(10, Math.min(100, Math.round((elapsed / referenceWindowMs) * 100)));
-  }, [isLive, targetDate, timeLeft.totalMs, activeEvent]);
-
   if (isLoading && !activeEvent) {
     return (
-      <div className="w-full my-2 sm:my-3 rounded-2xl bg-amber-500/20 border border-amber-400/30 p-3 sm:p-4 animate-pulse flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-amber-500/30 shrink-0" />
-          <div className="space-y-1.5">
-            <div className="w-40 sm:w-56 h-4 sm:h-5 bg-amber-500/30 rounded" />
-            <div className="w-28 sm:w-36 h-3 bg-amber-500/30 rounded" />
+      <div className="w-full my-3 sm:my-4 rounded-2xl bg-[#F59E0B]/20 p-4 animate-pulse flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-20 h-20 rounded-xl bg-[#F59E0B]/30 shrink-0" />
+          <div className="space-y-2">
+            <div className="w-48 sm:w-64 h-5 bg-[#F59E0B]/30 rounded" />
+            <div className="w-32 sm:w-40 h-4 bg-[#F59E0B]/30 rounded" />
           </div>
         </div>
-        <div className="w-32 sm:w-40 h-8 sm:h-9 bg-amber-500/30 rounded-xl hidden sm:block" />
+        <div className="w-32 sm:w-48 h-10 bg-[#F59E0B]/30 rounded-xl hidden sm:block" />
       </div>
     );
   }
@@ -188,117 +159,91 @@ export default function FeaturedEventCountdownBanner({ event, isLoading = false 
   const formattedTime = formatDisplayTime(activeEvent.hora, activeEvent.fecha);
 
   return (
-    <div className="w-full my-2 sm:my-3 transition-all duration-300">
+    <div className="w-full my-3 sm:my-4 transition-all duration-300">
       <Link
         to={`/eventos/${activeEvent.id}`}
-        aria-label={`Ver evento destacado: ${activeEvent.title}`}
-        className="group relative block w-full overflow-hidden rounded-2xl border border-amber-400/90 dark:border-amber-400/80 bg-gradient-to-r from-amber-500 via-amber-500 to-amber-600 shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
+        aria-label={`Ver evento: ${activeEvent.title}`}
+        className="group relative block w-full overflow-hidden rounded-2xl bg-[#F59E0B] shadow-md hover:shadow-xl transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#F59E0B]/50"
       >
-        <div className="relative flex flex-col md:flex-row items-stretch justify-between w-full min-h-[96px] sm:min-h-[105px] md:min-h-[110px]">
+        <div className="relative flex flex-col md:flex-row items-stretch justify-between w-full min-h-[110px] sm:min-h-[120px]">
           
-          {/* LADO IZQUIERDO: Imagen compacta a toda la altura sin degradado sobrepuesto */}
-          <div className="relative w-full md:w-44 lg:w-52 xl:w-60 shrink-0 self-stretch min-h-[120px] md:min-h-[105px] overflow-hidden">
+          {/* LADO IZQUIERDO: Imagen a sangre ocupando el 100% del alto sin bordes ni márgenes */}
+          <div className="relative w-full md:w-52 lg:w-60 xl:w-68 shrink-0 self-stretch min-h-[140px] md:min-h-full overflow-hidden bg-[#0B132B]">
             <img
               src={displayImage}
               alt={activeEvent.title}
               loading="lazy"
               decoding="async"
-              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
             />
-            {isLive && (
-              <span className="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-[#0B132B] text-white shadow-md animate-pulse">
-                {timeLabels.live}
-              </span>
-            )}
           </div>
 
-          {/* CENTRO: Título del Evento y Fecha/Hora */}
-          <div className="relative z-10 flex-1 flex flex-col justify-center text-left px-4 py-3 sm:px-5 sm:py-3.5 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-slate-950 text-amber-400 border border-amber-400/50">
-                {isEn ? 'Featured Event' : 'Evento Destacado'}
-              </span>
-            </div>
-            <h2 className="text-sm sm:text-base lg:text-lg font-black text-slate-950 tracking-tight leading-snug line-clamp-1 sm:line-clamp-2 drop-shadow-xs group-hover:text-black transition-colors">
+          {/* CENTRO: Jerarquía tipográfica pura (Título grande en azul oscuro/negro + Fecha/Hora limpia sin íconos) */}
+          <div className="relative z-10 flex-1 flex flex-col justify-center text-left px-5 py-4 sm:px-6 sm:py-5 min-w-0">
+            <h2 className="font-display font-extrabold text-lg sm:text-xl lg:text-2xl text-[#0B132B] tracking-[-0.02em] leading-snug line-clamp-2">
               {activeEvent.title}
             </h2>
 
             {formattedDate && (
-              <p className="text-[11px] sm:text-xs font-bold text-amber-950/90 truncate mt-1 flex items-center gap-1.5">
-                <FiCalendar size={12} className="text-slate-950 shrink-0" />
-                <span>
-                  {formattedDate} {formattedTime ? `• ${formattedTime}` : ''}
-                </span>
+              <p className="text-xs sm:text-sm font-semibold text-[#0B132B]/75 mt-1.5 truncate">
+                {formattedDate} {formattedTime ? `• ${formattedTime}` : ''}
               </p>
             )}
           </div>
 
-          {/* LADO DERECHO: Contador dinámico con números en blanco y barra en azul oscuro */}
-          <div className="relative z-10 shrink-0 flex flex-col items-center md:items-end justify-center px-4 py-3 sm:px-5 sm:py-3.5">
+          {/* LADO DERECHO: Reloj tabular de gran escala con números en blanco puro y unidades en azul oscuro */}
+          <div className="relative z-10 shrink-0 flex flex-col items-center md:items-end justify-center px-5 py-4 sm:px-6 sm:py-5">
             {isLive ? (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0B132B] text-white shadow-md">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                <span className="text-xs font-black uppercase tracking-widest">{timeLabels.live}</span>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B132B] text-white shadow-md">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B] animate-ping" />
+                <span className="text-xs sm:text-sm font-black uppercase tracking-widest">{timeLabels.live}</span>
               </div>
             ) : (
-              <div className="flex flex-col items-center md:items-end w-full max-w-[280px]">
-                {/* Números del contador en blanco */}
-                <div className="flex items-baseline justify-center md:justify-end gap-1.5 sm:gap-2 font-mono font-black text-xl sm:text-2xl lg:text-[26px] text-white tracking-tight select-none">
-                  <div className="flex flex-col items-center">
-                    <span className="tabular-nums drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
-                      {String(timeLeft.days).padStart(2, '0')}
-                    </span>
-                    <span className="text-[8px] sm:text-[9px] font-sans font-bold uppercase tracking-wider text-white/90 -mt-0.5">
-                      {timeLabels.days}
-                    </span>
-                  </div>
-
-                  <span className="text-white/80 font-bold -mt-2 animate-pulse">:</span>
-
-                  <div className="flex flex-col items-center">
-                    <span className="tabular-nums drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
-                      {String(timeLeft.hours).padStart(2, '0')}
-                    </span>
-                    <span className="text-[8px] sm:text-[9px] font-sans font-bold uppercase tracking-wider text-white/90 -mt-0.5">
-                      {timeLabels.hours}
-                    </span>
-                  </div>
-
-                  <span className="text-white/80 font-bold -mt-2 animate-pulse">:</span>
-
-                  <div className="flex flex-col items-center">
-                    <span className="tabular-nums drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
-                      {String(timeLeft.minutes).padStart(2, '0')}
-                    </span>
-                    <span className="text-[8px] sm:text-[9px] font-sans font-bold uppercase tracking-wider text-white/90 -mt-0.5">
-                      {timeLabels.mins}
-                    </span>
-                  </div>
-
-                  <span className="text-white/80 font-bold -mt-2 animate-pulse">:</span>
-
-                  <div className="flex flex-col items-center">
-                    <span className="tabular-nums text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
-                      {String(timeLeft.seconds).padStart(2, '0')}
-                    </span>
-                    <span className="text-[8px] sm:text-[9px] font-sans font-bold uppercase tracking-wider text-white/90 -mt-0.5">
-                      {timeLabels.secs}
-                    </span>
-                  </div>
+              <div className="flex items-baseline justify-center md:justify-end gap-2 sm:gap-3 select-none">
+                {/* DÍAS */}
+                <div className="flex flex-col items-center">
+                  <span className="font-mono font-black text-2xl sm:text-3xl lg:text-4xl text-white leading-none tabular-nums">
+                    {String(timeLeft.days).padStart(2, '0')}
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] font-bold tracking-[0.1em] text-[#0B132B] uppercase mt-1">
+                    {timeLabels.days}
+                  </span>
                 </div>
 
-                {/* Barra de progreso en azul oscuro con indicador */}
-                <div className="w-full mt-2.5">
-                  <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-950/80 mb-1">
-                    <span>{isEn ? 'Event Countdown' : 'Progreso al Evento'}</span>
-                    <span className="font-mono font-bold text-slate-950">{progressRatio}%</span>
-                  </div>
-                  <div className="w-full bg-[#070D1E]/20 border border-[#0B132B]/35 rounded-full h-2.5 overflow-hidden p-[1px] shadow-inner">
-                    <div
-                      className="h-full rounded-full bg-[#0B132B] shadow-sm transition-all duration-1000 ease-linear"
-                      style={{ width: `${progressRatio}%` }}
-                    />
-                  </div>
+                <span className="text-white/80 font-bold text-xl sm:text-2xl leading-none -mt-3.5">:</span>
+
+                {/* HORAS */}
+                <div className="flex flex-col items-center">
+                  <span className="font-mono font-black text-2xl sm:text-3xl lg:text-4xl text-white leading-none tabular-nums">
+                    {String(timeLeft.hours).padStart(2, '0')}
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] font-bold tracking-[0.1em] text-[#0B132B] uppercase mt-1">
+                    {timeLabels.hours}
+                  </span>
+                </div>
+
+                <span className="text-white/80 font-bold text-xl sm:text-2xl leading-none -mt-3.5">:</span>
+
+                {/* MINUTOS */}
+                <div className="flex flex-col items-center">
+                  <span className="font-mono font-black text-2xl sm:text-3xl lg:text-4xl text-white leading-none tabular-nums">
+                    {String(timeLeft.minutes).padStart(2, '0')}
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] font-bold tracking-[0.1em] text-[#0B132B] uppercase mt-1">
+                    {timeLabels.mins}
+                  </span>
+                </div>
+
+                <span className="text-white/80 font-bold text-xl sm:text-2xl leading-none -mt-3.5">:</span>
+
+                {/* SEGUNDOS */}
+                <div className="flex flex-col items-center">
+                  <span className="font-mono font-black text-2xl sm:text-3xl lg:text-4xl text-white leading-none tabular-nums">
+                    {String(timeLeft.seconds).padStart(2, '0')}
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] font-bold tracking-[0.1em] text-[#0B132B] uppercase mt-1">
+                    {timeLabels.secs}
+                  </span>
                 </div>
               </div>
             )}

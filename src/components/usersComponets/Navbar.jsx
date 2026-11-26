@@ -11,6 +11,7 @@ import { session, normalizeRole, getDashboardPathForRole } from "../../services/
 import userService from "../../services/userService.js";
 import { useTheme } from "../../context/ThemeContext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
+import { registerLenisScrollListener } from "../../hooks/useLenisScroll.js";
 
 /**
  * Navbar Global de EventHive
@@ -37,11 +38,16 @@ export default function Navbar({ variant = 'dark', embedded = false }) {
       }
     };
 
+    const unsubscribeLenis = typeof registerLenisScrollListener === 'function'
+      ? registerLenisScrollListener(updateProgress)
+      : () => {};
+
     window.addEventListener('scroll', updateProgress, { passive: true });
     window.addEventListener('resize', updateProgress, { passive: true });
     updateProgress();
 
     return () => {
+      unsubscribeLenis();
       window.removeEventListener('scroll', updateProgress);
       window.removeEventListener('resize', updateProgress);
     };
